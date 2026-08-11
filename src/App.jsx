@@ -11902,6 +11902,12 @@ async function copyTextRobust(text) {
   }
 }
 
+// Protects clinical proper nouns (special tests, classifications, named
+// signs) from the automatic lowercasing applied to ordinary checklist text
+// elsewhere in note generation - without this, note text would read "the
+// patient was positive for spurling" instead of "...Spurling".
+const EPONYM_TERMS_RE = /\b(Jobe|Neer|Hawkins|Spurling|Yergason|Speed|Phalen|Tinel|Finkelstein|Watson|Froment|Wartenberg|McMurray|Lachman|Cozen|Hornblower|Paxinos|Kienb\u00f6ck|Kienbock|Guyon|Dupuytren|Quervain|Volkmann|Colles|Smith|Galeazzi|Monteggia|Bennett|Rolando|Barton|Grashey|Zanca|Stryker|Bankart|Latarjet|Hill-Sachs|Stener|Mason|Rockwood|Eaton|Littler|Tubiana|Palmer|Cruess|Goutallier|Patte|Warner|Outerbridge|Kashiwagi|Lichtman|Essex|Lopresti|Jersey|Mallet|Bado|Sunderland|Seddon|Kapandji|Wassel|Preiser|Panner|Bunnell|Elson|Kleinert|Mayfield|Linscheid|Taleisnik|Geissler|Judet|Velpeau|Bernageau)\b/;
+
 function lowerListItem(item) {
   if (typeof item !== "string" || !item) return item;
   if (/^[A-Z]{2,}/.test(item)) return item;
