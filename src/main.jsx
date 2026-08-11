@@ -11,23 +11,29 @@ import "./index.css";
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, message: "", stack: "" };
   }
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, message: error?.message || String(error) };
   }
   componentDidCatch(error, info) {
     console.error("UpperTrack crashed:", error, info);
+    this.setState({ stack: (info && info.componentStack) || "" });
   }
   render() {
     if (this.state.hasError) {
       return (
         <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, fontFamily: "system-ui, sans-serif", background: "#F5F7F8" }}>
-          <div style={{ maxWidth: 360, textAlign: "center" }}>
+          <div style={{ maxWidth: 480, textAlign: "center" }}>
             <div style={{ fontWeight: 700, fontSize: 18, color: "#101E2B", marginBottom: 8 }}>Something went wrong</div>
-            <div style={{ fontSize: 14, color: "#4B5C68", marginBottom: 20 }}>
+            <div style={{ fontSize: 14, color: "#4B5C68", marginBottom: 16 }}>
               This usually clears up with a reload. If you were in the middle of a note, your entries for this session may need to be re-entered.
             </div>
+            {this.state.message && (
+              <div style={{ fontSize: 12, color: "#B91C1C", background: "#FCEAEA", border: "1px solid #B91C1C", borderRadius: 8, padding: 12, marginBottom: 16, textAlign: "left", fontFamily: "ui-monospace, monospace", wordBreak: "break-word" }}>
+                {this.state.message}
+              </div>
+            )}
             <button
               onClick={() => window.location.reload()}
               style={{ background: "#0A5D65", color: "#fff", border: "none", borderRadius: 12, padding: "12px 24px", fontWeight: 600, fontSize: 14 }}
