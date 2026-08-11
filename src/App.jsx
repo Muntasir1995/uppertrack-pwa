@@ -11679,7 +11679,7 @@ function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked,
   const noFlagsChecked = (checked || []).length === 0 && (urgentChecked || []).length === 0;
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.45)" }}>
-      <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, maxHeight: "85vh", overflowY: "auto", WebkitOverflowScrolling: "touch", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }}>
+      <div className="w-full sm:max-w-md lg:max-w-xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, maxHeight: "85vh", overflowY: "auto", WebkitOverflowScrolling: "touch", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }}>
         <div className="flex items-center gap-2 px-4 py-4 sticky top-0" style={{ background: T.amberTint, borderBottom: `1px solid ${T.amber}` }}>
           <AlertTriangle size={20} color={T.amber} />
           <span className="font-bold text-[15px] flex-1" style={{ color: T.amber }}>Red Flags</span>
@@ -13815,7 +13815,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         </button>
       </div>
 
-      <div className="px-3 pt-3 max-w-2xl mx-auto">
+      <div className="px-3 pt-3 max-w-2xl lg:max-w-4xl mx-auto">
         <RelatedConditionsBar conditionId={condition.id} sessionOrder={session.order} onOpen={onOpenCondition} />
 
         {condition.sections.map((section, sectionIdx) => {
@@ -14063,7 +14063,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
                 <ArrowLeft size={20} color={T.ink} />
@@ -14222,7 +14222,7 @@ function InstallPrompt() {
 function VisitTypeGate({ onSelect }) {
   return (
     <div className="min-h-screen px-4 pt-10 pb-8 flex items-center" style={{ background: T.bg }}>
-      <div className="max-w-md mx-auto w-full">
+      <div className="max-w-md md:max-w-xl mx-auto w-full">
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1 text-center" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
         <h1 className="text-[26px] font-bold mb-1 text-center" style={{ color: T.ink }}>UpperTrack</h1>
         <p className="text-[14px] mb-7 text-center" style={{ color: T.inkSoft }}>What kind of visit is this?</p>
@@ -14256,14 +14256,14 @@ function RegionPicker({ onSelect, onBack }) {
   };
   return (
     <div className="min-h-screen px-4 pt-4 pb-8" style={{ background: T.bg }}>
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl lg:max-w-4xl mx-auto">
         <button onClick={onBack} className="flex items-center gap-1.5 mb-4 active:opacity-60" style={{ color: T.inkSoft }}>
           <ArrowLeft size={18} /><span className="text-[14px] font-medium">Home</span>
         </button>
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
         <h1 className="text-[26px] font-bold mb-1" style={{ color: T.ink }}>UpperTrack</h1>
         <p className="text-[14px] mb-6" style={{ color: T.inkSoft }}>Choose a body region to open a structured consultation template.</p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {Object.entries(REGIONS).map(([key, r]) => (
             <button key={key} onClick={() => onSelect(key)} className="rounded-2xl p-4 text-left active:scale-95 transition" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 120, boxShadow: "0 1px 2px rgba(16,30,43,0.04)" }}>
               <div className="flex items-center justify-center rounded-xl mb-2.5 font-bold text-[13px] tracking-wide" style={{ width: 40, height: 40, background: T.tealTint, color: T.tealDark }}>{regionMeta[key].mono}</div>
@@ -14304,7 +14304,7 @@ function ConditionList({ regionKey, session, onSelect, onBack }) {
   const hasSubsections = !!region.subsections;
   return (
     <div className="min-h-screen px-4 pt-4 pb-8" style={{ background: T.bg }}>
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl lg:max-w-4xl mx-auto">
         <button onClick={onBack} className="flex items-center gap-1.5 mb-4 active:opacity-60" style={{ color: T.inkSoft }}>
           <ArrowLeft size={18} /><span className="text-[14px] font-medium">All regions</span>
         </button>
@@ -14468,14 +14468,14 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
 
   return (
     <div className="min-h-screen pb-28" style={{ background: T.bg }}>
-      <div className="px-4 pt-5 pb-2 max-w-2xl mx-auto">
+      <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
         <button onClick={onBack} className="flex items-center gap-1.5 text-[13.5px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal }}>
           <ArrowLeft size={16} /> Change diagnoses
         </button>
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Follow-up Visit</div>
         <h1 className="text-[20px] font-bold mb-4" style={{ color: T.ink }}>{conditions.length} diagnos{conditions.length === 1 ? "is" : "es"} being reviewed</h1>
       </div>
-      <div className="px-4 max-w-2xl mx-auto">
+      <div className="px-4 max-w-2xl lg:max-w-4xl mx-auto">
         {conditions.map((condition, i) => {
           const state = session.statesByConditionId[condition.id] || {};
           const fuState = state.followup || {};
@@ -14494,7 +14494,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-30 px-3 py-3" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
-        <div className="max-w-2xl mx-auto flex gap-2">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto flex gap-2">
           <button onClick={onGoHome} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
             Home
           </button>
@@ -14506,7 +14506,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
                 <ArrowLeft size={20} color={T.ink} />
@@ -14655,14 +14655,14 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 
   return (
     <div className="min-h-screen pb-28" style={{ background: T.bg }}>
-      <div className="px-4 pt-5 pb-2 max-w-2xl mx-auto">
+      <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
         <button onClick={onBack} className="flex items-center gap-1.5 text-[13.5px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal }}>
           <ArrowLeft size={16} /> Change diagnoses
         </button>
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Post-operative Follow-up</div>
         <h1 className="text-[20px] font-bold mb-4" style={{ color: T.ink }}>{conditions.length} procedure{conditions.length === 1 ? "" : "s"} being reviewed</h1>
       </div>
-      <div className="px-4 max-w-2xl mx-auto">
+      <div className="px-4 max-w-2xl lg:max-w-4xl mx-auto">
         {conditions.map((condition, i) => {
           const state = session.statesByConditionId[condition.id] || {};
           const poState = state.postop || {};
@@ -14680,7 +14680,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-30 px-3 py-3" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
-        <div className="max-w-2xl mx-auto flex gap-2">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto flex gap-2">
           <button onClick={onGoHome} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
             Home
           </button>
@@ -14692,7 +14692,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
                 <ArrowLeft size={20} color={T.ink} />
@@ -14836,7 +14836,7 @@ function TemplateSearch({ onSelect, onClose }) {
         </div>
       </div>
       <div className="px-3 pt-3 pb-8" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto">
           {groupedResults.length === 0 ? (
             <div className="rounded-2xl p-6 text-center mt-4" style={{ background: T.surface, border: `1px dashed ${T.borderStrong}` }}>
               <div className="text-[14px] font-medium" style={{ color: T.ink }}>No templates match "{query}"</div>
@@ -14906,7 +14906,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) 
         </div>
       </div>
       <div className="px-3 pt-3">
-        <div className="max-w-2xl mx-auto flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
+        <div className="max-w-2xl lg:max-w-4xl mx-auto flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
           <Search size={17} color={T.inkSoft} />
           <input
             type="text"
@@ -14922,7 +14922,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) 
         </div>
       </div>
       <div className="px-3 pt-3 pb-28" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto">
           {groupedResults.length === 0 ? (
             <div className="rounded-2xl p-6 text-center mt-4" style={{ background: T.surface, border: `1px dashed ${T.borderStrong}` }}>
               <div className="text-[14px] font-medium" style={{ color: T.ink }}>No diagnoses match "{query}"</div>
@@ -14955,7 +14955,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) 
         </div>
       </div>
       <div className="fixed bottom-0 left-0 right-0 px-3 py-3" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto">
           <button
             onClick={onContinue}
             disabled={!selectedIds.length}
@@ -15144,7 +15144,7 @@ export default function App() {
 
       {combinedNoteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setCombinedNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
                 <ArrowLeft size={20} color={T.ink} />
