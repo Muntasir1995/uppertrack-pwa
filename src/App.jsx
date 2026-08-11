@@ -11902,210 +11902,6 @@ async function copyTextRobust(text) {
   }
 }
 
-function escapeHtmlText(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-// Parses this app's plain-text note structure (ALL-CAPS section headings,
-// plain paragraphs, "\u2022 " bullet lines, "\u2550\u2550 CONDITION \u2550\u2550" group
-// dividers for combined notes, and the trailing "---"/disclaimer) into
-// clean, styled HTML - shared by both the print/PDF view and the Word
-// download below, so the two stay visually consistent and neither has to
-// re-implement the parsing.
-function noteToFormattedHtml(title, rawText) {
-  const lines = rawText.split("\n");
-  const blocks = [];
-  let current = null;
-  let pastHeader = false;
-
-  lines.forEach((rawLine) => {
-    const line = rawLine.trim();
-    if (!line) return;
-    if (line === "---") {
-      current = null;
-      pastHeader = true;
-      return;
-    }
-    if (pastHeader) return; // skip the trailing disclaimer line; we render our own
-    if (/^\u2550\u2550/.test(line)) {
-      blocks.push({ type: "group", text: line.replace(/\u2550/g, "").trim() });
-      current = null;
-      return;
-    }
-    // The very first non-empty line is the note's own title/subtitle
-    // (e.g. "CLINIC NOTE — X", "N diagnoses reviewed this visit") - skip it
-    // since we render our own title block above the content.
-    if (blocks.length === 0 && !current && /^(CLINIC NOTE|FOLLOW-UP VISIT NOTE|POST-OPERATIVE FOLLOW-UP NOTE|COMBINED)/i.test(line)) return;
-    if (blocks.length === 0 && !current && /diagnos(is|es) reviewed|condition(s)? documented/i.test(line)) return;
-
-    const isHeading = line === line.toUpperCase() && /[A-Z]/.test(line) && !line.startsWith("\u2022");
-    if (isHeading) {
-      current = { type: "section", heading: line, bullets: [], paragraphs: [] };
-      blocks.push(current);
-      return;
-    }
-    if (!current) {
-      current = { type: "section", heading: "", bullets: [], paragraphs: [] };
-      blocks.push(current);
-    }
-    if (line.startsWith("\u2022")) {
-      current.bullets.push(line.replace(/^\u2022\s*/, ""));
-    } else {
-      current.paragraphs.push(line);
-    }
-  });
-
-  const bodyHtml = blocks
-    .map((b) => {
-      if (b.type === "group") {
-        return `<h1 style="font-size:16px;border-bottom:2px solid #0E7C86;padding-bottom:4px;margin:24px 0 8px;color:#0A5D65;">${escapeHtmlText(b.text)}</h1>`;
-      }
-      let html = "";
-      if (b.heading) html += `<h2 style="font-size:11.5px;letter-spacing:0.5px;text-transform:uppercase;color:#0E7C86;margin:16px 0 4px;font-weight:700;">${escapeHtmlText(b.heading)}</h2>`;
-      b.paragraphs.forEach((p) => {
-        html += `<p style="margin:0 0 8px;line-height:1.5;font-size:13px;">${escapeHtmlText(p)}</p>`;
-      });
-      if (b.bullets.length) {
-        html += `<ul style="margin:0 0 8px;padding-left:20px;">${b.bullets.map((li) => `<li style="margin-bottom:4px;font-size:13px;line-height:1.5;">${escapeHtmlText(li)}</li>`).join("")}</ul>`;
-      }
-      return html;
-    })
-    .join("");
-
-  const generatedDate = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-  return `
-    <div style="font-family:Calibri,'Segoe UI',Arial,sans-serif;color:#101E2B;max-width:720px;margin:0 auto;">
-      <h1 style="font-size:20px;margin:0 0 2px;color:#0A5D65;">${escapeHtmlText(title)}</h1>
-      <div style="font-size:11px;color:#6B7A85;margin-bottom:20px;">Generated with UpperTrack \u2014 ${generatedDate}</div>
-      ${bodyHtml}
-      <div style="margin-top:24px;padding-top:12px;border-top:1px solid #D8DEE3;font-size:10px;color:#6B7A85;">For clinician review; not a diagnostic or treatment recommendation.</div>
-    </div>
-  `;
-}
-
-// window.print() targets the sandboxed iframe itself when this app is
-// embedded as an artifact, which many hosts either block outright or print
-// blank/incorrect content for. window.open() is a further option but
-// requires the embedding iframe to grant "allow-popups", which isn't
-// guaranteed - if it's missing, window.open() silently fails and nothing
-// happens when the button is pressed. A hidden iframe injected into the
-// current page sidesteps this entirely: it's just a DOM element (no new
-// browsing context, no popup permission needed), and calling print() on
-// its contentWindow opens the browser's native print dialog scoped to that
-// iframe's content. This is tried first; window.open() and finally
-// window.print() itself are kept as successive fallbacks for environments
-// where even that's restricted. Every browser's print dialog offers "Save
-// as PDF" as a destination, so this doubles as the PDF export path without
-// needing a PDF-generation library.
-function printPlainText(title, text) {
-  const bodyHtml = noteToFormattedHtml(title, text);
-  const pageHtml = `<html><head><title>${title}</title><style>@page { margin: 0.75in; } body { margin: 0.75in; }</style></head><body>${bodyHtml}</body></html>`;
-
-  try {
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    iframe.setAttribute("aria-hidden", "true");
-    document.body.appendChild(iframe);
-
-    const cleanup = () => {
-      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-    };
-
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(pageHtml);
-    doc.close();
-
-    iframe.onload = () => {
-      try {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-      } catch (e) {
-        // fall through to cleanup; caller will not know printing failed
-        // here, but the remaining fallbacks below only run if this whole
-        // try block throws synchronously, which onload errors don't.
-      }
-      setTimeout(cleanup, 1000);
-    };
-    // Some browsers don't reliably fire onload for document.write'd
-    // iframes; trigger the same print+cleanup after a short delay as a
-    // backstop so the dialog still opens even if onload never fires.
-    setTimeout(() => {
-      try {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-      } catch (e) {}
-      setTimeout(cleanup, 1000);
-    }, 400);
-    return;
-  } catch (e) {
-    // fall through to window.open below
-  }
-
-  try {
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(pageHtml);
-      printWindow.document.close();
-      printWindow.focus();
-      setTimeout(() => printWindow.print(), 300);
-      return;
-    }
-  } catch (e) {
-    // fall through to window.print below
-  }
-
-  window.print();
-}
-
-// Produces a genuine Word-openable document client-side, with no external
-// library: Word recognizes an HTML file served with the application/msword
-// MIME type and the Office XML namespaces below, and opens it as a native
-// document rather than as a web page. This is a long-established, reliable
-// technique - not a full .docx (Office Open XML) file, but a real
-// double-click-and-it-opens-in-Word document with headings, paragraphs,
-// and bullet lists preserved.
-function downloadAsWord(filename, title, text) {
-  try {
-    const bodyHtml = noteToFormattedHtml(title, text);
-    const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>${escapeHtmlText(title)}</title></head><body>${bodyHtml}</body></html>`;
-    const blob = new Blob(["\ufeff", html], { type: "application/msword" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${filename}.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// Most list items fed through humanizeList are plain descriptive phrases
-// pulled from checkbox/select options (e.g. "Physiotherapy", "Corticosteroid
-// injection") that were only capitalized because they're UI button labels -
-// mid-sentence, normal English lowercases them. Guards against the cases
-// where that would be wrong: leading abbreviations (MRI, NSAIDs, DRUJ, CT)
-// and apostrophe'd eponyms (O'Brien). Named clinical tests/signs (Jobe,
-// Neer, Hawkins-Kennedy) mostly live in this app's testGrid fields, which
-// build their own sentences separately and never pass through here, so
-// they're unaffected.
-// Named clinical signs/tests and eponymous diagnoses used somewhere across
-// this app's checkbox options - checked as a substring match so items like
-// "Froment Sign (if indicated)" or "Tinel sign (Guyon's canal)" are caught
-// wherever they appear, not just in fields specifically about special
-// tests. A key-based rule alone can't reliably catch every instance across
-// 56 templates, so this checks the actual content instead.
-const EPONYM_TERMS_RE = /\b(Jobe|Neer|Hawkins|Spurling|Yergason|Speed|Phalen|Tinel|Finkelstein|Watson|Froment|Wartenberg|McMurray|Lachman|Cozen|Hornblower|Paxinos|Kienb\u00f6ck|Kienbock|Guyon|Dupuytren|Quervain|Volkmann|Colles|Smith|Galeazzi|Monteggia|Bennett|Rolando|Barton|Grashey|Zanca|Stryker|Bankart|Latarjet|Hill-Sachs|Stener|Mason|Rockwood|Eaton|Littler|Tubiana|Palmer|Cruess|Goutallier|Patte|Warner|Outerbridge|Kashiwagi|Lichtman|Essex|Lopresti|Jersey|Mallet|Bado|Sunderland|Seddon|Kapandji|Wassel|Preiser|Panner|Bunnell|Elson|Kleinert|Mayfield|Linscheid|Taleisnik|Geissler|Judet|Velpeau|Bernageau)\b/;
-
 function lowerListItem(item) {
   if (typeof item !== "string" || !item) return item;
   if (/^[A-Z]{2,}/.test(item)) return item;
@@ -14291,18 +14087,10 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Back to editing
               </button>
-              <div className="flex gap-2">
-                <button onClick={copyNote} className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
-                  {copied ? <Check size={17} /> : <Copy size={17} />}
-                  {copied ? "Copied" : "Copy to clipboard"}
-                </button>
-                <button onClick={() => printPlainText("Clinic Note", note)} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Print / PDF
-                </button>
-                <button onClick={() => downloadAsWord("clinic-note", "Clinic Note", note)} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Word
-                </button>
-              </div>
+              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+                {copied ? <Check size={17} /> : <Copy size={17} />}
+                {copied ? "Copied" : "Copy to clipboard"}
+              </button>
               {copyError && (
                 <div className="text-[12.5px] text-center" style={{ color: T.red }}>
                   Couldn't copy automatically \u2014 tap and hold the note above to select and copy it manually.
@@ -14732,18 +14520,10 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Back to editing
               </button>
-              <div className="flex gap-2">
-                <button onClick={copyNote} className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
-                  {copied ? <Check size={17} /> : <Copy size={17} />}
-                  {copied ? "Copied" : "Copy to clipboard"}
-                </button>
-                <button onClick={() => printPlainText("Follow-up Visit Note", note)} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Print / PDF
-                </button>
-                <button onClick={() => downloadAsWord("followup-visit-note", "Follow-up Visit Note", note)} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Word
-                </button>
-              </div>
+              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+                {copied ? <Check size={17} /> : <Copy size={17} />}
+                {copied ? "Copied" : "Copy to clipboard"}
+              </button>
               {copyError && (
                 <div className="text-[12.5px] text-center" style={{ color: T.red }}>
                   Couldn't copy automatically \u2014 tap and hold the note above to select and copy it manually.
@@ -14926,18 +14706,10 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Back to editing
               </button>
-              <div className="flex gap-2">
-                <button onClick={copyNote} className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
-                  {copied ? <Check size={17} /> : <Copy size={17} />}
-                  {copied ? "Copied" : "Copy to clipboard"}
-                </button>
-                <button onClick={() => printPlainText("Post-operative Follow-up Note", note)} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Print / PDF
-                </button>
-                <button onClick={() => downloadAsWord("postop-followup-note", "Post-operative Follow-up Note", note)} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Word
-                </button>
-              </div>
+              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+                {copied ? <Check size={17} /> : <Copy size={17} />}
+                {copied ? "Copied" : "Copy to clipboard"}
+              </button>
               {copyError && (
                 <div className="text-[12.5px] text-center" style={{ color: T.red }}>
                   Couldn't copy automatically \u2014 tap and hold the note above to select and copy it manually.
@@ -15386,18 +15158,10 @@ export default function App() {
               <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Back to editing
               </button>
-              <div className="flex gap-2">
-                <button onClick={copyCombinedNote} className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
-                  {combinedCopied ? <Check size={17} /> : <Copy size={17} />}
-                  {combinedCopied ? "Copied" : "Copy to clipboard"}
-                </button>
-                <button onClick={() => printPlainText("Combined Clinic Note", combinedNote)} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Print / PDF
-                </button>
-                <button onClick={() => downloadAsWord("combined-clinic-note", "Combined Clinic Note", combinedNote)} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Word
-                </button>
-              </div>
+              <button onClick={copyCombinedNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+                {combinedCopied ? <Check size={17} /> : <Copy size={17} />}
+                {combinedCopied ? "Copied" : "Copy to clipboard"}
+              </button>
               {combinedCopyError && (
                 <div className="text-[12.5px] text-center mt-2" style={{ color: T.red }}>
                   Couldn't copy automatically \u2014 tap and hold the note above to select and copy it manually.
