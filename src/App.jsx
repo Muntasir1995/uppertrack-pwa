@@ -12,6 +12,9 @@ import {
   CheckCircle2,
   Search,
   Home,
+  FilePlus,
+  CalendarClock,
+  Stethoscope,
 } from "lucide-react";
 
 /* ============================================================================
@@ -34,6 +37,15 @@ const T = {
   green: "#166534",
   greenTint: "#E9F5EC",
   slateChip: "#EEF2F4",
+  // Elevated design system additions: layered shadows (replacing pure
+  // flat/bordered surfaces) and a teal gradient reserved for primary/hero
+  // elements - the region grid, the main "New Visit" action, and the
+  // active section indicator - so it reads as purposeful accent rather
+  // than decoration applied everywhere.
+  shadowCard: "0 1px 2px rgba(16,30,43,0.05), 0 4px 12px rgba(16,30,43,0.04)",
+  shadowElevated: "0 1px 2px rgba(16,30,43,0.05), 0 6px 16px rgba(16,30,43,0.06)",
+  shadowFloating: "0 8px 28px rgba(16,30,43,0.18)",
+  gradientTeal: "linear-gradient(135deg, #0A5D65, #12907E)",
 };
 
 /* ============================================================================
@@ -11087,10 +11099,1704 @@ const tendonLacerationData = {
     }],
 };
 
+const clavicleFxData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Assess displacement, shortening and skin integrity \u2192 Exclude neurovascular injury", next: "displaced" },
+      displaced: {
+        type: "question", text: "Is the fracture significantly displaced or shortened (>2cm)?",
+        options: [
+          { label: "Yes", next: "surgDiscuss" },
+          { label: "No", next: "conservative" },
+        ],
+      },
+      conservative: { type: "info", text: "Sling immobilisation for comfort \u2192 Early pendulum exercises \u2192 Progressive range of motion as pain allows \u2192 Review at 2 weeks with repeat radiograph", next: "reviewNonop" },
+      reviewNonop: {
+        type: "question", text: "Is fracture healing progressing satisfactorily?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 nonunion risk factors or displacement progressing", next: "surgDiscuss" },
+        ],
+      },
+      continueRehab: { type: "terminal", text: "Continue physiotherapy-guided rehabilitation \u2192 Progress to strengthening at union" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding open reduction internal fixation" },
+    },
+  },
+  id: "clavicle-fracture",
+  name: "Clavicle Fractures",
+  region: "shoulder",
+  urgentFlags: [
+    { text: "Open fracture or skin tenting at risk of breakdown", consider: "Urgent surgical review." },
+    { text: "Neurovascular compromise (brachial plexus or subclavian vessel injury)", consider: "Urgent vascular/neurological assessment." },
+    { text: "Significant respiratory distress or suspected pneumothorax", consider: "Urgent trauma assessment." },
+  ],
+  redFlags: [
+    { text: "Skin tenting or impending open injury", consider: "Expedite surgical review to avoid conversion to open fracture." },
+    { text: "Floating shoulder (concomitant scapular neck fracture)", consider: "Discuss with senior colleague \u2014 higher likelihood of operative management." },
+    { text: "Signs of brachial plexus traction injury", consider: "Formal neurological examination and consider EMG/nerve conduction studies." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Fall onto outstretched hand or shoulder", "Direct blow to the shoulder", "Visible/palpable deformity over the clavicle", "Shoulder held adducted and supported by the other arm", "Pain with any shoulder movement", "Skin tenting over the fracture"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Contact/collision sport", "Cycling", "Osteoporosis", "Previous clavicle fracture", "High-energy trauma (RTA)"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, duration, functional impact",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "date", key: "injuryDate", label: "Date of injury" },
+        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto shoulder", "Fall onto outstretched hand", "Direct blow", "Road traffic collision", "Sporting collision"], columns: 2 },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Deformity", "Bruising", "Swelling", "Numbness/tingling in the arm or hand", "Shortness of breath", "Chest pain"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty dressing", "Difficulty sleeping", "Unable to work/drive"] },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Smoking", "Diabetes", "Bleeding disorder / anticoagulation"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport (if applicable)" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Inspection, palpation, neurovascular status",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Visible deformity", "Shortening of the shoulder girdle", "Bruising", "Swelling", "Skin tenting", "Open wound", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Point tenderness over fracture", "Crepitus", "Tenderness at AC joint", "Tenderness at SC joint"] },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction"] },
+        { type: "testGrid", key: "neurovascular", label: "Neurovascular assessment", options: ["Radial pulse present", "Brachial plexus sensation intact", "Brachial plexus motor function intact", "Capillary refill normal"] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP clavicle", "15\u00b0 cephalic tilt view", "Chest X-ray (assess for pneumothorax)"] },
+        { type: "info", title: "Review for", items: ["Fracture location (medial/middle/lateral third)", "Displacement", "Shortening", "Comminution", "Associated rib or scapular fracture"] },
+        { type: "info", title: "CT (selected cases)", items: ["Complex or intra-articular medial/lateral third fractures", "Suspected floating shoulder", "Preoperative planning"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "text", key: "ctFinding", label: "CT \u2014 notable finding" },
+        { type: "numberGroup", key: "shorteningMeasurement", label: "Measured shortening", items: ["Shortening (mm)"], suffix: "mm" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["AC joint dislocation", "SC joint dislocation/injury", "Scapular fracture", "Proximal humerus fracture", "First rib fracture", "Brachial plexus injury"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagLocation", label: "Fracture location", options: ["Medial third", "Middle third", "Lateral third"], columns: 3, noteLabel: "Fracture location" },
+        { type: "select", key: "diagDisplacement", label: "Displacement", options: ["Undisplaced", "Minimally displaced", "Displaced (>100% shaft width or shortening >2cm)"], noteLabel: "Displacement" },
+        { type: "checkbox", key: "diagAssociated", label: "Associated features", options: ["Comminution", "Floating shoulder", "Open fracture"] },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "2 weeks", right: "Pain, skin integrity, neurovascular status, repeat radiograph if displaced" },
+          { left: "6 weeks", right: "Radiographic union, range of motion" },
+          { left: "3 months", right: "Functional recovery, return to sport/work" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["2 weeks", "6 weeks", "3 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine fracture review", "Radiographic union check", "Pre-operative planning", "Post-operative review", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + DASH" },
+          { left: "6 weeks", right: "VAS + DASH" },
+          { left: "3 months", right: "DASH + return to sport/work" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const parsonageTurnerData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Clinical diagnosis supported by MRI/EMG \u2192 Education regarding expected course", next: "phase" },
+      phase: {
+        type: "question", text: "Is the patient still in the acute pain phase?",
+        options: [
+          { label: "Yes", next: "acutePhase" },
+          { label: "No \u2014 in weakness/recovery phase", next: "recoveryPhase" },
+        ],
+      },
+      acutePhase: { type: "info", text: "Analgesia (including consideration of neuropathic agents) \u2192 Short course oral corticosteroids may be considered early \u2192 Rest from aggravating activity \u2192 Review in 4\u20136 weeks", next: "review1" },
+      recoveryPhase: { type: "info", text: "Structured physiotherapy \u2192 Scapular stabilisation and range of motion exercises \u2192 Splinting/bracing if scapular winging significant \u2192 Review at 3 months", next: "review2" },
+      review1: {
+        type: "question", text: "Has the patient progressed to the weakness/recovery phase?",
+        options: [
+          { label: "Yes", next: "recoveryPhase" },
+          { label: "No \u2014 pain persists", next: "acutePhase" },
+        ],
+      },
+      review2: {
+        type: "question", text: "Is recovery progressing as expected over serial reviews (recovery can take 1\u20133 years)?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 plateaued with functional deficit", next: "surgDiscuss" },
+        ],
+      },
+      continueRehab: { type: "terminal", text: "Pathway suggests continuing physiotherapy with serial review, given the typically prolonged (months to years) natural recovery course" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding tendon transfer for persistent isolated nerve palsy (e.g. long thoracic) not recovering by 18\u201324 months" },
+    },
+  },
+  id: "parsonage-turner-syndrome",
+  name: "Parsonage-Turner Syndrome (Brachial Neuritis)",
+  region: "shoulder",
+  urgentFlags: [
+    { text: "Bilateral or rapidly ascending weakness", consider: "Consider alternative neurological diagnosis \u2014 urgent neurology referral." },
+    { text: "Associated respiratory difficulty (phrenic nerve involvement)", consider: "Urgent assessment \u2014 risk of diaphragmatic paralysis." },
+  ],
+  redFlags: [
+    { text: "No improvement or progressive weakness beyond the expected pattern", consider: "Reconsider diagnosis and arrange EMG/nerve conduction studies and MRI of the brachial plexus." },
+    { text: "Preceding trauma rather than spontaneous onset", consider: "Reconsider a structural/traumatic cause (rotator cuff tear, nerve laceration) rather than brachial neuritis." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Sudden onset of severe shoulder/arm pain, often at night", "Pain lasting days to a few weeks then subsiding", "Patchy weakness developing as pain subsides", "Weakness out of proportion to structural findings", "Winging of the scapula (long thoracic nerve involvement)"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors/preceding triggers", options: ["Recent viral illness", "Recent vaccination", "Recent surgery (any site)", "Strenuous exercise", "Autoimmune disease", "Idiopathic (no identifiable trigger)"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset pattern, pain-to-weakness sequence",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },
+        { type: "vas", key: "vas", label: "Peak pain severity (VAS)" },
+        { type: "select", key: "painWeaknessPattern", label: "Pattern", options: ["Severe pain then resolving as weakness emerged", "Pain and weakness concurrent", "Weakness without significant pain"], noteLabel: "Pain-weakness pattern" },
+        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Scapular winging", "Numbness/tingling", "Muscle wasting", "Difficulty raising the arm overhead", "Night pain at onset"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty with overhead activities", "Difficulty dressing", "Reduced grip/manipulation"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Oral corticosteroids"] },
+        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Recent viral illness", "Recent vaccination", "Recent surgery", "Autoimmune disease", "Diabetes"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Pattern of weakness, scapular assessment",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Muscle wasting", "Scapular winging", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation"] },
+        { type: "strength", key: "strength", label: "Strength grading (document pattern \u2014 often patchy, multiple nerves)", muscles: [{ key: "deltoid", label: "Deltoid" }, { key: "supraspinatus", label: "Supraspinatus" }, { key: "infraspinatus", label: "Infraspinatus" }, { key: "serratusAnterior", label: "Serratus Anterior" }, { key: "biceps", label: "Biceps" }, { key: "triceps", label: "Triceps" }] },
+        { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Scapular winging with wall push-up (long thoracic nerve)", "Tinel's sign over brachial plexus"] },
+        { type: "testGrid", key: "stNeuro", label: "Neurovascular assessment", options: ["Sensation intact", "Radial pulse present"] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Imaging/investigations obtained", options: ["Shoulder X-ray (exclude structural cause)", "MRI shoulder and brachial plexus", "EMG/nerve conduction studies", "Inflammatory markers/autoimmune screen"] },
+        { type: "info", title: "Review for", items: ["Denervation changes on MRI (muscle oedema, atrophy)", "Exclusion of structural rotator cuff tear", "EMG pattern of patchy multi-nerve involvement"] },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
+        { type: "text", key: "emgFinding", label: "EMG/nerve conduction \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["Rotator cuff tear", "Cervical radiculopathy", "Suprascapular neuropathy", "Long thoracic nerve palsy (isolated)", "Adhesive capsulitis", "Brachial plexus tumour/infiltration"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "checkbox", key: "diagNervesInvolved", label: "Nerve(s) involved (if localised on EMG)", options: ["Suprascapular nerve", "Long thoracic nerve", "Axillary nerve", "Musculocutaneous nerve", "Multiple/diffuse brachial plexus"] },
+        { type: "select", key: "diagPhase", label: "Clinical phase", options: ["Acute pain phase", "Weakness phase", "Recovery phase"], noteLabel: "Clinical phase" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "4\u20136 weeks", right: "Pain resolution, emerging weakness pattern" },
+          { left: "3 months", right: "Strength, scapular control, functional impact" },
+          { left: "6\u201312 months", right: "Ongoing recovery \u2014 natural history can extend to 1\u20133 years" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["4\u20136 weeks", "3 months", "6\u201312 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Monitor recovery of weakness", "Assess need for splinting", "Consider tendon transfer if plateaued", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + DASH" },
+          { left: "3 months", right: "DASH + manual muscle testing" },
+          { left: "12 months", right: "DASH + manual muscle testing + return to function" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const suprascapularNeuropathyData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Confirm with MRI \u00b1 EMG \u2192 Identify compressive lesion if present", next: "cyst" },
+      cyst: {
+        type: "question", text: "Is there a compressive paralabral cyst identified on MRI?",
+        options: [
+          { label: "Yes", next: "surgDiscuss" },
+          { label: "No \u2014 no structural compressive lesion", next: "conservative" },
+        ],
+      },
+      conservative: { type: "info", text: "Activity modification \u2192 Structured physiotherapy (scapular stabilisation, rotator cuff strengthening) \u2192 Review at 8\u201312 weeks", next: "review" },
+      review: {
+        type: "question", text: "Improving with conservative management?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 persistent weakness/pain", next: "surgDiscuss" },
+        ],
+      },
+      continueRehab: { type: "terminal", text: "Pathway suggests continuing physiotherapy with review, discharging once strength recovers" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding arthroscopic nerve decompression \u00b1 cyst decompression" },
+    },
+  },
+  id: "suprascapular-neuropathy",
+  name: "Suprascapular Neuropathy",
+  region: "peripheralNerve",
+  redFlags: [
+    { text: "Rapidly progressive weakness or muscle wasting", consider: "Expedite MRI to exclude a mass lesion (e.g. paralabral cyst) requiring earlier surgical decompression." },
+    { text: "Signs suggesting a wider brachial plexopathy", consider: "Reconsider diagnosis \u2014 evaluate for Parsonage-Turner syndrome or cervical pathology." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Deep, poorly localised posterior/lateral shoulder pain", "Weakness with overhead activity", "Infraspinatus (\u00b1 supraspinatus) wasting", "Often insidious onset", "May be asymptomatic aside from visible wasting"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Overhead/throwing athlete (especially volleyball)", "Repetitive overhead occupational activity", "Large/massive rotator cuff tear (traction injury)", "Paralabral cyst (associated with SLAP tear)", "Direct trauma to the shoulder girdle"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset, activity pattern, associated pathology",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep posterior/lateral shoulder ache", "Weakness with overhead activity", "Visible wasting noticed by patient/others", "Painless weakness only"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Reduced overhead throwing/serving power", "Difficulty with overhead lifting", "Reaching behind the back"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection"] },
+        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport (especially volleyball/overhead throwing)" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Inspection, strength, provocative tests",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Infraspinatus wasting", "Supraspinatus wasting", "No visible wasting", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation"] },
+        { type: "strength", key: "strength", label: "Strength grading", muscles: [{ key: "supraspinatus", label: "Supraspinatus" }, { key: "infraspinatus", label: "Infraspinatus" }, { key: "deltoid", label: "Deltoid" }] },
+        { type: "testGrid", key: "specialTests", label: "Special tests", options: ["ER weakness/lag (infraspinatus)", "Cross-body adduction (nerve compression at spinoglenoid notch)"] },
+        { type: "testGrid", key: "stNeuro", label: "Neurovascular assessment", options: ["Sensation intact", "Radial pulse present"] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Imaging obtained", options: ["Shoulder X-ray", "MRI shoulder", "EMG/nerve conduction studies"] },
+        { type: "info", title: "Review for", items: ["Paralabral cyst at suprascapular or spinoglenoid notch", "Associated labral tear (SLAP)", "Muscle atrophy/fatty infiltration (supraspinatus/infraspinatus)", "Concomitant rotator cuff tear"] },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
+        { type: "text", key: "emgFinding", label: "EMG/nerve conduction \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["Rotator cuff tear", "Parsonage-Turner syndrome", "Cervical radiculopathy (C5/C6)", "Adhesive capsulitis", "SLAP lesion"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagSite", label: "Site of compression", options: ["Suprascapular notch (affects supraspinatus + infraspinatus)", "Spinoglenoid notch (affects infraspinatus only)"], noteLabel: "Site of compression" },
+        { type: "select", key: "diagCause", label: "Presumed cause", options: ["Paralabral/ganglion cyst", "Traction (associated massive cuff tear)", "Idiopathic/repetitive overhead activity", "Direct trauma"], noteLabel: "Presumed cause" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "8\u201312 weeks", right: "Strength, pain, functional recovery" },
+          { left: "6 months", right: "Strength recovery, return to sport" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["8\u201312 weeks", "6 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Monitor strength recovery", "Pre-operative planning", "Post-operative review", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + ASES" },
+          { left: "3 months", right: "ASES + manual muscle testing" },
+          { left: "6 months", right: "ASES + manual muscle testing + return to sport" },
+        ] },
+      ],
+    },
+  ],
+};
+const olecranonFxData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Assess displacement, articular involvement and extensor mechanism integrity", next: "displaced" },
+      displaced: {
+        type: "question", text: "Is the fracture displaced or is the extensor mechanism disrupted?",
+        options: [
+          { label: "Yes", next: "surgDiscuss" },
+          { label: "No \u2014 undisplaced, extensor mechanism intact", next: "conservative" },
+        ],
+      },
+      conservative: { type: "info", text: "Splint in slight flexion for comfort \u2192 Early protected range of motion \u2192 Review at 1\u20132 weeks with repeat radiograph to confirm no displacement", next: "review" },
+      review: {
+        type: "question", text: "Remains undisplaced with intact extension on review?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 has displaced", next: "surgDiscuss" },
+        ],
+      },
+      continueRehab: { type: "terminal", text: "Continue protected range of motion \u2192 Progress physiotherapy as fracture unites" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding tension band wiring or plate fixation" },
+    },
+  },
+  id: "olecranon-fracture",
+  name: "Olecranon Fractures",
+  region: "elbow",
+  urgentFlags: [
+    { text: "Open fracture", consider: "Urgent surgical review \u2014 tetanus status, antibiotics, theatre planning." },
+    { text: "Neurovascular compromise (ulnar nerve, brachial/ulnar artery)", consider: "Urgent vascular/neurological assessment." },
+  ],
+  redFlags: [
+    { text: "Inability to actively extend the elbow against gravity", consider: "Suggests extensor mechanism disruption \u2014 usually indicates operative fixation is needed." },
+    { text: "Signs of ulnar nerve injury", consider: "Formal neurological examination and document clearly before any intervention." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Fall directly onto the point of the elbow", "Direct blow to the posterior elbow", "Inability to extend the elbow against gravity", "Swelling and bruising over the olecranon", "Palpable defect at the olecranon"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Osteoporosis", "Older age (ground-level fall)", "High-energy trauma (younger patients)", "Contact/collision sport"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, duration, functional impact",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "date", key: "injuryDate", label: "Date of injury" },
+        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 1 day" },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto point of elbow", "Direct blow", "Fall onto outstretched hand with elbow flexed", "Road traffic collision"], columns: 2 },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Inability to extend the elbow", "Deformity", "Numbness/tingling in the ring/little finger", "Swelling"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the elbow", "Unable to bear weight through the arm", "Difficulty with self-care"] },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Diabetes", "Smoking", "Bleeding disorder / anticoagulation"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Extensor mechanism, palpation, neurovascular status",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Swelling over olecranon", "Bruising", "Palpable defect/gap", "Open wound", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Point tenderness over olecranon", "Palpable fracture gap"] },
+        { type: "select", key: "extensorMechanism", label: "Active extension against gravity", options: ["Intact", "Weak", "Absent (extensor lag)"], noteLabel: "Active extension" },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension"] },
+        { type: "testGrid", key: "neurovascular", label: "Neurovascular assessment", options: ["Ulnar nerve sensation intact", "Ulnar nerve motor function intact", "Radial pulse present", "Capillary refill normal"] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP elbow", "Lateral elbow"] },
+        { type: "info", title: "Review for", items: ["Fracture pattern and comminution", "Displacement", "Articular involvement/step-off", "Associated radial head or coronoid fracture"] },
+        { type: "info", title: "CT (selected cases)", items: ["Comminuted or intra-articular fractures", "Preoperative planning"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "text", key: "ctFinding", label: "CT \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["Radial head fracture", "Coronoid fracture", "Elbow dislocation", "Triceps tendon rupture", "Olecranon bursitis (without fracture)"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagMayoType", label: "Mayo classification", options: ["Type I (undisplaced/minimally displaced, stable)", "Type II (displaced, stable \u2014 collateral ligaments intact)", "Type III (displaced, unstable \u2014 associated instability)"], noteLabel: "Mayo classification" },
+        { type: "checkbox", key: "diagAssociated", label: "Associated features", options: ["Comminution", "Articular involvement", "Associated elbow instability"] },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "1\u20132 weeks", right: "Displacement check, wound review if operative" },
+          { left: "6 weeks", right: "Radiographic union, range of motion" },
+          { left: "3 months", right: "Functional recovery" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["1\u20132 weeks", "6 weeks", "3 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Displacement/union check", "Wound review", "Hardware-related symptoms", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + DASH" },
+          { left: "6 weeks", right: "VAS + DASH" },
+          { left: "3 months", right: "DASH + range of motion" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const olecranonBursitisData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Assess for signs of sepsis \u2192 Aspirate if diagnostic uncertainty or significant swelling", next: "septic" },
+      septic: {
+        type: "question", text: "Are there features of septic bursitis?",
+        options: [
+          { label: "Yes", next: "septicMgmt" },
+          { label: "No \u2014 aseptic bursitis", next: "conservative" },
+        ],
+      },
+      septicMgmt: { type: "terminal", text: "Aspirate for culture \u2192 Commence empirical antibiotics pending results \u2192 Consider surgical washout/bursectomy if not settling or recurrent \u2192 Closely monitor for systemic sepsis" },
+      conservative: { type: "info", text: "Activity modification and elbow padding \u2192 NSAIDs if not contraindicated \u2192 Aspiration if significantly symptomatic or for diagnostic clarity \u2192 Review at 2\u20134 weeks", next: "review" },
+      review: {
+        type: "question", text: "Resolving with conservative management?",
+        options: [
+          { label: "Yes", next: "resolved" },
+          { label: "No \u2014 persistent or recurrent", next: "surgDiscuss" },
+        ],
+      },
+      resolved: { type: "terminal", text: "Pathway suggests discharge once resolved, with advice on avoiding pressure over the elbow to prevent recurrence" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding bursectomy for recurrent or chronic symptomatic bursitis" },
+    },
+  },
+  id: "olecranon-bursitis",
+  name: "Olecranon Bursitis",
+  region: "elbow",
+  urgentFlags: [
+    { text: "Signs of septic bursitis (fever, spreading erythema, systemic upset)", consider: "Urgent assessment \u2014 aspirate for fluid analysis/culture and consider antibiotics." },
+  ],
+  redFlags: [
+    { text: "Fever, marked erythema extending beyond the bursa, or systemic symptoms", consider: "Treat as suspected septic bursitis until proven otherwise \u2014 aspirate and consider antibiotics/referral." },
+    { text: "Rapid onset following a penetrating injury near the elbow", consider: "Higher suspicion for a septic cause \u2014 lower threshold for aspiration." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Swelling over the posterior elbow", "Often minimally painful unless septic or inflamed", "Preserved range of motion", "History of leaning on the elbow or minor trauma", "Fluctuant, well-circumscribed swelling"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Repetitive leaning on the elbow (occupational)", "Direct trauma", "Gout", "Rheumatoid arthritis", "Diabetes", "Immunosuppression"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset, systemic symptoms, risk factors",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 days" },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Warmth", "Fever/systemic upset", "Recent skin break/penetrating injury near the elbow"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Discomfort leaning on the elbow", "Cosmetic concern", "Restricted clothing/sleeve fit"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Compression/elbow pad", "NSAIDs", "Aspiration", "Antibiotics"] },
+        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Gout", "Rheumatoid arthritis", "Diabetes", "Immunosuppression"] },
+        { type: "text", key: "occupation", label: "Occupation (especially roles involving leaning on elbows)" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Inspection, palpation, signs of infection",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Fluctuant swelling over olecranon", "Erythema", "Skin break/wound", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Fluctuance", "Warmth", "Tenderness", "Crepitus/nodules within the bursa (e.g. gout, RA)"] },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension"] },
+        { type: "select", key: "septicScreen", label: "Clinical impression", options: ["Non-septic (aseptic) bursitis", "Suspected septic bursitis"], noteLabel: "Clinical impression" },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Imaging/investigations obtained", options: ["Elbow X-ray (exclude bony spur/foreign body)", "Bursal fluid aspiration for cell count/culture", "Bloods (WCC/CRP) if septic bursitis suspected"] },
+        { type: "info", title: "Review for", items: ["Bony spur or foreign body on X-ray", "Aspirate appearance (clear/straw vs turbid/purulent)", "Crystal analysis if gout suspected"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "text", key: "aspirateFinding", label: "Aspirate \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["Septic bursitis", "Gout/pseudogout", "Rheumatoid nodule", "Olecranon fracture", "Cellulitis"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagType", label: "Type", options: ["Traumatic/mechanical", "Inflammatory (gout/pseudogout/RA)", "Septic", "Idiopathic"], noteLabel: "Type" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "48\u201372 hours", right: "If septic bursitis suspected \u2014 culture results, clinical response to antibiotics" },
+          { left: "2\u20134 weeks", right: "Resolution of swelling, recurrence" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["48\u201372 hours", "2\u20134 weeks", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Culture/sensitivity results", "Resolution check", "Recurrence", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + swelling size" },
+          { left: "2\u20134 weeks", right: "Resolution of swelling, recurrence" },
+        ] },
+      ],
+    },
+  ],
+};
+const intersectionSyndromeData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Activity modification advice \u2192 Splinting for the acute phase", next: "review1" },
+      review1: {
+        type: "question", text: "Improving with rest/splinting/NSAIDs at initial review?",
+        options: [
+          { label: "Yes", next: "continueConservative" },
+          { label: "No", next: "injectionConsider" },
+        ],
+      },
+      continueConservative: { type: "terminal", text: "Pathway suggests continuing activity modification and gradual return to activity, with a structured warm-up/technique review for the causative sport or task" },
+      injectionConsider: { type: "info", text: "Trial of corticosteroid injection into the affected compartment \u2192 Continue activity modification \u2192 Review at 4\u20136 weeks", next: "review2" },
+      review2: {
+        type: "question", text: "Resolved with injection and activity modification?",
+        options: [
+          { label: "Yes", next: "continueConservative" },
+          { label: "No \u2014 persistent symptoms", next: "surgDiscuss" },
+        ],
+      },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding surgical release/debridement of the affected compartments for recalcitrant cases" },
+    },
+  },
+  id: "intersection-syndrome",
+  name: "Intersection Syndrome",
+  region: "wrist",
+  redFlags: [
+    { text: "Marked erythema, warmth or systemic symptoms", consider: "Reconsider an infective or inflammatory cause rather than mechanical intersection syndrome." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Pain and swelling ~4\u20136cm proximal to the wrist on the dorsoradial forearm", "Palpable/audible crepitus with wrist movement (\u201csqueaker\u2019s wrist\u201d)", "Pain worse with resisted wrist extension", "Often confused with De Quervain's tenosynovitis"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Repetitive wrist extension/flexion (rowing, weightlifting, skiing)", "Occupational repetitive strain", "Recent increase in repetitive activity"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset, activity pattern, functional impact",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal forearm swelling/pain proximal to the wrist", "Crepitus with movement", "Pain worse with resisted extension"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty gripping", "Pain with repetitive wrist movement", "Difficulty with sport-specific activity"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Rest/activity modification", "Splinting", "NSAIDs", "Injection"] },
+        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport (rowing/weightlifting/racquet sports/skiing)" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Location relative to De Quervain's, provocative tests",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Swelling over the distal dorsoradial forearm", "Erythema", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Tenderness ~4\u20136cm proximal to the radial styloid (2nd/1st extensor compartment crossover)", "Palpable crepitus with wrist movement"] },
+        { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Pain with resisted wrist extension", "Finkelstein test (helps distinguish from De Quervain's \u2014 typically negative or less localised in intersection syndrome)"] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Imaging obtained (usually a clinical diagnosis)", options: ["Wrist/forearm X-ray (exclude bony cause)", "Ultrasound", "MRI (selected cases)"] },
+        { type: "info", title: "Review for", items: ["Peritendinous fluid/oedema at the 2nd/1st extensor compartment crossover point", "Tenosynovitis of ECRB/ECRL and APL/EPB"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound \u2014 notable finding" },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["De Quervain tenosynovitis", "Wartenberg syndrome", "Radial tunnel syndrome", "Extensor tendinopathy (generalised)"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagStage", label: "Stage", options: ["Acute (inflammatory)", "Chronic/recurrent"], noteLabel: "Stage" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "2\u20134 weeks", right: "Response to activity modification/splinting" },
+          { left: "6 weeks", right: "Response to injection if given" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["2\u20134 weeks", "6 weeks", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Response to conservative management", "Response to injection", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + QuickDASH" },
+          { left: "6 weeks", right: "VAS + QuickDASH" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const ecuTendinopathyData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Distinguish tendinopathy alone from true tendon subluxation", next: "subluxation" },
+      subluxation: {
+        type: "question", text: "Is there true, symptomatic ECU tendon subluxation?",
+        options: [
+          { label: "Yes", next: "immobilise" },
+          { label: "No \u2014 tendinopathy without instability", next: "conservative" },
+        ],
+      },
+      conservative: { type: "info", text: "Activity modification \u2192 Splinting in extension and radial deviation \u2192 NSAIDs \u2192 Review at 4\u20136 weeks", next: "review" },
+      immobilise: { type: "info", text: "Immobilise the wrist in extension and radial deviation for 4\u20136 weeks (acute subluxation) \u2192 Review clinically", next: "reviewSublux" },
+      review: {
+        type: "question", text: "Improving with conservative management?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 persistent symptoms", next: "surgDiscuss" },
+        ],
+      },
+      reviewSublux: {
+        type: "question", text: "Does the tendon remain stable after the immobilisation period?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 recurrent subluxation", next: "surgDiscuss" },
+        ],
+      },
+      continueRehab: { type: "terminal", text: "Pathway suggests progressive strengthening and gradual return to sport once symptoms and stability allow" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding subsheath repair/reconstruction for recurrent instability, or debridement for recalcitrant tendinopathy" },
+    },
+  },
+  id: "ecu-tendinopathy",
+  name: "ECU Tendinopathy & Subluxation",
+  region: "wrist",
+  redFlags: [
+    { text: "Acute post-traumatic snap/pop with inability to actively stabilize the wrist", consider: "Consider acute ECU subluxation/dislocation requiring urgent immobilization to prevent chronic instability." },
+    { text: "Concurrent signs of DRUJ instability or TFCC tenderness", consider: "These commonly coexist; examine specifically for concurrent DRUJ and TFCC pathology." },
+    { text: "Marked swelling, warmth, or systemic symptoms", consider: "Exclude infective tenosynovitis." },
+    { text: "Persistent symptoms despite splinting", consider: "Reconsider the diagnosis (TFCC tear, DRUJ instability, ulnar impaction) rather than repeating conservative treatment." },
+    { text: "Numbness or tingling in an ulnar nerve distribution", consider: "Assess for concurrent ulnar neuropathy at Guyon's canal." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Ulnar-sided wrist pain over the ECU tendon", "Painful snapping/clicking with wrist rotation (if subluxating)", "Pain with resisted wrist extension and ulnar deviation", "Often a racquet sport or repetitive rotation history"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Racquet sports (tennis, especially)", "Golf", "Rowing", "Direct trauma/forced supination with wrist flexion", "Rheumatoid arthritis (tendinopathy)"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset, subluxation symptoms, functional impact",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 months" },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Painful snapping/clicking", "Sensation of instability", "Weakness gripping"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with racquet sports/golf", "Difficulty gripping", "Pain with forearm rotation"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },
+        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport (racquet sports/golf/rowing)" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Palpation, subluxation testing, resisted movement",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Swelling over the ECU tendon (ulnar-dorsal wrist)", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Tenderness over the ECU tendon in the sixth dorsal compartment", "Palpable subluxation of the tendon with forearm rotation"] },
+        { type: "testGrid", key: "specialTests", label: "Special tests", options: ["ECU synergy test", "Pain with resisted wrist extension + ulnar deviation", "Visible/palpable subluxation with combined supination and wrist flexion"] },
+        { type: "select", key: "drujStability", label: "DRUJ stability", options: ["Stable", "Unstable"], columns: 2 },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Imaging obtained", options: ["Wrist X-ray (exclude bony pathology)", "Ultrasound (dynamic assessment of subluxation)", "MRI (selected cases)"] },
+        { type: "info", title: "Review for", items: ["ECU tendinopathy/tenosynovitis", "Subsheath tear allowing subluxation", "Split tears of the tendon", "Associated TFCC pathology"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound \u2014 notable finding" },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["TFCC injury", "DRUJ instability", "Ulnar impaction syndrome", "Lunotriquetral ligament injury"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagType", label: "Primary pathology", options: ["Tendinopathy (no instability)", "Subluxating ECU (subsheath tear)", "Split tear of the ECU tendon"], noteLabel: "Primary pathology" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "4\u20136 weeks", right: "Symptom response, tendon stability" },
+          { left: "3 months", right: "Return to sport/activity" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["4\u20136 weeks", "3 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Symptom response", "Tendon stability check", "Pre-operative planning", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + QuickDASH" },
+          { left: "3 months", right: "QuickDASH + return to sport" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const drujInstabilityData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Confirm instability clinically and correlate with imaging \u2192 Assess for established arthritis", next: "arthritis" },
+      arthritis: {
+        type: "question", text: "Is there established DRUJ arthritis?",
+        options: [
+          { label: "Yes", next: "surgDiscuss" },
+          { label: "No \u2014 instability without significant arthritis", next: "conservative" },
+        ],
+      },
+      conservative: { type: "info", text: "Activity modification \u2192 Splinting/bracing \u2192 Structured physiotherapy (forearm rotator strengthening) \u2192 Review at 6\u20138 weeks", next: "review" },
+      review: {
+        type: "question", text: "Improving with conservative management?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 persistent instability/pain", next: "surgDiscuss" },
+        ],
+      },
+      continueRehab: { type: "terminal", text: "Pathway suggests continuing bracing and rehabilitation with review, given the DRUJ's tolerance for symptomatic management in many patients" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding ligament reconstruction (instability without arthritis) or salvage procedures (e.g. Sauv\u00e9-Kapandji, Darrach, or DRUJ arthroplasty) if arthritis is established" },
+    },
+  },
+  id: "druj-instability",
+  name: "DRUJ Instability & Arthritis",
+  region: "wrist",
+  redFlags: [
+    { text: "Acute post-traumatic instability with gross deformity", consider: "Consider urgent reduction/immobilization and exclude a Galeazzi-equivalent injury." },
+    { text: "Signs of ulnar nerve or artery compromise", consider: "Assess neurovascular status urgently." },
+    { text: "Rapidly progressive pain and swelling", consider: "Exclude infection or an inflammatory arthropathy." },
+    { text: "Instability associated with distal radius malunion", consider: "Consider whether a corrective radius osteotomy is needed alongside DRUJ management." },
+    { text: "Persistent instability despite splinting in a young or high-demand patient", consider: "Consider early surgical opinion regarding ligament reconstruction rather than prolonged conservative trial." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Ulnar-sided wrist pain", "Clicking/clunking with forearm rotation", "Sensation of the wrist \u201cgiving way\u201d", "Pain with forceful gripping or push-up type loading", "Reduced/painful forearm rotation"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Previous distal radius fracture", "Previous TFCC injury", "Ligamentous laxity", "Inflammatory arthritis", "Repetitive rotational loading (gymnastics, racquet sports)"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset, mechanism, functional impact",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Clicking/clunking", "Instability/giving way", "Reduced forearm rotation"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with push-up/weight-bearing through the wrist", "Difficulty gripping/twisting", "Difficulty with sport"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },
+        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
+        { type: "text", key: "prevSurgery", label: "Previous surgery (if any)", placeholder: "Free text \u2014 procedure & date" },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport (gymnastics/racquet sports)" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "DRUJ stability, rotation, provocative tests",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Prominent ulnar head", "Swelling over the DRUJ", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Tenderness over the DRUJ", "Tenderness over the TFCC (foveal region)"] },
+        { type: "select", key: "drujStability", label: "DRUJ stability (piano key test / ballottement, compared to contralateral side)", options: ["Stable", "Unstable"], columns: 2 },
+        { type: "rom", key: "rom", label: "Forearm rotation", motions: ["Pronation", "Supination"] },
+        { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Piano key sign", "Ulnar fovea sign", "Painful/palpable clunk with forced rotation"] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["PA wrist (neutral rotation)", "Lateral wrist (true lateral)", "Bilateral comparison views"] },
+        { type: "info", title: "Review for", items: ["Ulnar variance", "DRUJ joint space/arthritic change", "Previous fracture malunion", "Sigmoid notch morphology"] },
+        { type: "info", title: "MRI/CT (selected cases)", items: ["TFCC integrity", "DRUJ subluxation on rotational CT", "Cartilage status if arthritis suspected"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
+        { type: "text", key: "ctFinding", label: "CT \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["TFCC injury", "ECU tendinopathy/subluxation", "Ulnar impaction syndrome", "Distal radius malunion"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagType", label: "Primary pathology", options: ["Instability without arthritis", "Instability with early arthritic change", "Established DRUJ arthritis"], noteLabel: "Primary pathology" },
+        { type: "select", key: "diagCause", label: "Presumed cause", options: ["Post-traumatic (fracture malunion)", "TFCC-related", "Ligamentous laxity", "Inflammatory arthritis", "Idiopathic"], noteLabel: "Presumed cause" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "6\u20138 weeks", right: "Response to bracing/physiotherapy" },
+          { left: "3 months", right: "Functional recovery, decision regarding further treatment" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["6\u20138 weeks", "3 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Response to conservative management", "Pre-operative planning", "Post-operative review", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + QuickDASH" },
+          { left: "3 months", right: "QuickDASH + PRWE" },
+          { left: "12 months (if surgical)", right: "QuickDASH + PRWE" },
+        ] },
+      ],
+    },
+  ],
+};
+const boutonniereDeformityData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Confirm with Elson's test \u2192 Any injury over the dorsal PIP joint should be treated as a possible central slip injury even without an established deformity", next: "fracture" },
+      fracture: {
+        type: "question", text: "Is there a significant (unstable/large) avulsion fracture or joint subluxation?",
+        options: [
+          { label: "Yes", next: "surgDiscuss" },
+          { label: "No \u2014 soft tissue injury or stable small avulsion", next: "splint" },
+        ],
+      },
+      splint: { type: "info", text: "Continuous PIP extension splinting for 6 weeks (DIP left free to actively flex) \u2192 Review at 1\u20132 weeks to confirm splint compliance and skin integrity \u2192 Then gradual PIP mobilisation from 6 weeks", next: "review" },
+      review: {
+        type: "question", text: "Full active PIP extension regained after the splinting course?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 persistent extensor lag/deformity", next: "surgDiscuss" },
+        ],
+      },
+      continueRehab: { type: "terminal", text: "Progress active and passive PIP/DIP mobilisation \u2192 Hand therapy for stiffness if needed" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding central slip repair/reconstruction or fixation of an associated fracture" },
+    },
+  },
+  id: "boutonniere-deformity",
+  name: "Boutonni\u00e8re Deformity (Central Slip Injury)",
+  region: "hand",
+  redFlags: [
+    { text: "Established fixed deformity with delayed presentation (>3\u20134 weeks)", consider: "More likely to require surgical reconstruction \u2014 counsel accordingly and refer promptly." },
+    { text: "Open wound over the dorsal PIP joint", consider: "Assess for direct tendon laceration and risk of joint infection \u2014 low threshold for surgical exploration." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Often initially mistaken for a simple \u201cjammed finger\u201d", "PIP joint flexion with DIP joint hyperextension (may not be apparent for 2\u20133 weeks)", "Dorsal PIP joint swelling and tenderness after injury", "Painful, swollen PIP joint without an established deformity yet", "History of forced flexion of an actively extended PIP joint, or a direct blow to the dorsum of the finger"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Ball sports (jammed finger)", "Direct blow/laceration to the dorsal PIP joint", "Rheumatoid arthritis (chronic/attritional)", "Volar PIP dislocation (associated central slip injury)"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, timing, functional impact",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "date", key: "injuryDate", label: "Date of injury" },
+        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 5 days" },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "select", key: "mechanism", label: "Mechanism", options: ["Forced flexion of an extended PIP joint (jammed finger)", "Direct blow to the dorsum of the finger", "Laceration over the dorsal PIP joint", "Volar PIP dislocation", "Chronic/attritional (e.g. rheumatoid arthritis)"], columns: 2 },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling over the dorsal PIP joint", "Inability to fully extend the PIP joint", "Fixed flexion deformity of the PIP joint", "DIP joint hyperextension"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine grip", "Difficulty fully extending the finger", "Catching on objects/gloves"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Buddy taping", "Splinting", "Analgesics"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport (if applicable)" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Deformity assessment, Elson's test",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["PIP flexion + DIP hyperextension (established deformity)", "Dorsal PIP swelling without established deformity", "Bruising over the dorsal PIP joint", "Open wound", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Tenderness over the central slip insertion (base of middle phalanx)"] },
+        { type: "select", key: "elsonTest", label: "Elson's test", options: ["Negative (DIP remains supple \u2014 central slip intact)", "Positive (DIP rigid, weak PIP extension \u2014 central slip injury)"], noteLabel: "Elson's test" },
+        { type: "select", key: "activeExtension", label: "Active PIP extension", options: ["Full/preserved", "Extensor lag present", "Unable to actively extend"], noteLabel: "Active PIP extension" },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["PIP Flexion", "PIP Extension", "DIP Flexion", "DIP Extension"] },
+        { type: "testGrid", key: "stNeuro", label: "Neurovascular assessment", options: ["Digital nerve sensation intact", "Capillary refill normal"] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP finger", "Lateral finger", "Oblique finger"] },
+        { type: "info", title: "Review for", items: ["Avulsion fracture at the base of the middle phalanx (central slip insertion)", "PIP joint congruency/subluxation", "Associated volar plate injury"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["Simple PIP sprain (\u201cjammed finger\u201d)", "PIP volar plate injury/dislocation", "Mallet finger", "Pseudoboutonni\u00e8re deformity", "PIP joint fracture-dislocation"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagStage", label: "Nalebuff-Millender stage", options: ["Stage I (synovitis, fully correctable extensor lag)", "Stage II (mild fixed deformity, lateral bands subluxated)", "Stage III (fixed, established deformity with contracture)"], noteLabel: "Nalebuff-Millender stage" },
+        { type: "select", key: "diagAcuteChronic", label: "Timing", options: ["Acute (<3 weeks)", "Chronic/established (>3 weeks)"], noteLabel: "Timing" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "1\u20132 weeks", right: "Splint compliance, skin integrity" },
+          { left: "6 weeks", right: "Active PIP extension, readiness to mobilise" },
+          { left: "3 months", right: "Functional recovery, residual stiffness" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["1\u20132 weeks", "6 weeks", "3 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Splint check", "Extension recovery check", "Pre-operative planning", "Post-operative review", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + QuickDASH" },
+          { left: "6 weeks", right: "PIP extension deficit (degrees)" },
+          { left: "3 months", right: "QuickDASH + range of motion" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const pipDislocationData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Reduce if not already reduced \u2192 Confirm joint congruency and stability post-reduction", next: "stability" },
+      stability: {
+        type: "question", text: "Is the joint stable and congruent post-reduction (or is there a large/unstable fracture fragment)?",
+        options: [
+          { label: "Stable, congruent joint", next: "buddyTape" },
+          { label: "Unstable or incongruent joint / large fragment", next: "surgDiscuss" },
+        ],
+      },
+      buddyTape: { type: "info", text: "Buddy taping to the adjacent digit \u2192 Early protected active motion (avoid full extension if volar plate injury) \u2192 Extension block splinting if dorsal instability present \u2192 Review at 1\u20132 weeks", next: "review" },
+      review: {
+        type: "question", text: "Remains stable and congruent on review?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 recurrent instability/subluxation", next: "surgDiscuss" },
+        ],
+      },
+      continueRehab: { type: "terminal", text: "Continue buddy taping and progressive range of motion \u2192 Hand therapy for stiffness \u2192 Wean splint/taping as stability and comfort allow" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding open reduction and fixation for unstable fracture-dislocations" },
+    },
+  },
+  id: "pip-dislocation-volar-plate",
+  name: "PIP Joint Dislocation & Volar Plate Injury",
+  region: "hand",
+  urgentFlags: [
+    { text: "Irreducible dislocation", consider: "Urgent reduction attempt \u2014 may indicate an interposed structure (e.g. volar plate) requiring surgical reduction." },
+    { text: "Open dislocation or associated neurovascular compromise", consider: "Urgent surgical assessment." },
+  ],
+  redFlags: [
+    { text: "Persistent instability/re-subluxation after reduction", consider: "Reassess for a significant volar plate/collateral ligament injury or fracture-dislocation requiring surgical stabilisation." },
+    { text: "Large volar fragment or joint incongruency on X-ray", consider: "Discuss with a senior colleague \u2014 higher likelihood of needing operative fixation." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Ball sport \u201cjammed finger\u201d injury", "Visible deformity at the time of injury (often reduced before presentation)", "Swollen, painful PIP joint", "Hyperextension or axial load mechanism"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Ball sports (basketball, volleyball, cricket)", "Contact sport", "Previous PIP joint injury"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, reduction history, functional impact",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "date", key: "injuryDate", label: "Date of injury" },
+        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "select", key: "mechanism", label: "Mechanism", options: ["Axial load/hyperextension (ball to fingertip)", "Direct blow", "Twisting injury"], columns: 2 },
+        { type: "select", key: "dislocationDirection", label: "Direction of dislocation (if witnessed/known)", options: ["Dorsal", "Volar", "Lateral", "Unknown/already reduced"], noteLabel: "Direction of dislocation" },
+        { type: "select", key: "priorReduction", label: "Already reduced prior to this assessment?", options: ["Yes, reduced on-field/by patient", "Yes, reduced by another clinician", "No, still dislocated"], noteLabel: "Prior reduction" },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling", "Bruising", "Sensation of instability", "Numbness/tingling in the digit"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to fully extend the finger", "Difficulty gripping", "Unable to continue sport"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Stability, active motion, neurovascular status",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Swelling over the PIP joint", "Deformity (if not yet reduced)", "Bruising", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Tenderness over the volar plate", "Tenderness over the collateral ligaments"] },
+        { type: "select", key: "pipStability", label: "PIP joint stability after reduction (active motion / gentle stress testing)", options: ["Stable through full range", "Stable in flexion, unstable in extension", "Grossly unstable"], noteLabel: "PIP joint stability" },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["PIP Flexion", "PIP Extension"] },
+        { type: "select", key: "elsonTest", label: "Elson's test (exclude associated central slip injury)", options: ["Negative", "Positive"], noteLabel: "Elson's test" },
+        { type: "testGrid", key: "stNeuro", label: "Neurovascular assessment", options: ["Digital nerve sensation intact", "Capillary refill normal"] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP finger", "Lateral finger (true lateral)", "Oblique finger", "Post-reduction views"] },
+        { type: "info", title: "Review for", items: ["Volar plate avulsion fracture at the base of the middle phalanx", "Joint congruency post-reduction", "Pilon/comminuted fracture-dislocation pattern", "Collateral ligament avulsion"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["Boutonni\u00e8re deformity (central slip injury)", "Collateral ligament injury alone", "PIP fracture-dislocation", "Mallet finger"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagPattern", label: "Injury pattern", options: ["Simple dislocation, stable post-reduction", "Volar plate avulsion, stable", "Fracture-dislocation (unstable/pilon pattern)"], noteLabel: "Injury pattern" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "1\u20132 weeks", right: "Stability, joint congruency, skin/splint check" },
+          { left: "6 weeks", right: "Range of motion, residual instability" },
+          { left: "3 months", right: "Functional recovery, residual stiffness" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["1\u20132 weeks", "6 weeks", "3 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Stability/congruency check", "Range of motion check", "Pre-operative planning", "Post-operative review", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + QuickDASH" },
+          { left: "6 weeks", right: "Range of motion" },
+          { left: "3 months", right: "QuickDASH + range of motion + return to sport" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const handOAData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Education regarding the condition and expected course \u2192 Activity modification advice", next: "review1" },
+      review1: {
+        type: "question", text: "Adequate symptom control with education, activity modification and analgesia/topical NSAIDs?",
+        options: [
+          { label: "Yes", next: "continueConservative" },
+          { label: "No", next: "splintInject" },
+        ],
+      },
+      continueConservative: { type: "terminal", text: "Pathway suggests continuing simple analgesia and activity modification, with review if symptoms progress" },
+      splintInject: { type: "info", text: "Consider joint-specific splinting \u2192 Consider corticosteroid injection for a flaring joint \u2192 Hand therapy for joint protection techniques \u2192 Review at 8\u201312 weeks", next: "review2" },
+      review2: {
+        type: "question", text: "Adequate symptom control after splinting/injection?",
+        options: [
+          { label: "Yes", next: "continueConservative" },
+          { label: "No \u2014 persistent pain/functional limitation", next: "surgDiscuss" },
+        ],
+      },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding joint fusion (arthrodesis) or arthroplasty for a persistently symptomatic joint" },
+    },
+  },
+  id: "hand-osteoarthritis",
+  name: "Hand Osteoarthritis (PIP/DIP Joint OA)",
+  region: "hand",
+  redFlags: [
+    { text: "Rapid onset of multiple swollen, painful joints with prolonged morning stiffness", consider: "Consider inflammatory arthritis (rheumatoid, psoriatic) rather than primary osteoarthritis." },
+    { text: "A single hot, swollen joint out of proportion to the others", consider: "Exclude septic arthritis or crystal arthropathy (gout, CPPD)." },
+    { text: "Nail pitting or psoriatic skin lesions", consider: "Consider psoriatic arthritis." },
+    { text: "Rapidly destructive joint changes on imaging", consider: "Consider an erosive/inflammatory OA variant and involve rheumatology." },
+    { text: "Fever, weight loss, or malaise", consider: "Exclude a systemic inflammatory or infective process." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Gradual onset joint pain and stiffness", "Bony swelling of the DIP joints (Heberden's nodes)", "Bony swelling of the PIP joints (Bouchard's nodes)", "Morning stiffness improving with activity", "Intermittent flares with activity"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Increasing age", "Female sex", "Family history of hand OA", "Previous joint trauma", "Repetitive manual occupation", "Obesity"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Pattern, functional impact, comorbidities",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Joint pain", "Bony swelling", "Stiffness (especially morning)", "Reduced grip strength", "Intermittent locking/catching", "Mucous cyst at the DIP joint"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine motor tasks", "Difficulty opening jars/gripping", "Cosmetic concern regarding nodal swelling", "Difficulty with occupational tasks"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs (oral or topical)", "Splinting", "Injection"] },
+        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Family history of hand OA", "Rheumatoid arthritis", "Psoriatic arthritis", "Gout/pseudogout"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Joint-by-joint assessment, deformity, grip",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Heberden's nodes (DIP)", "Bouchard's nodes (PIP)", "Mucous cyst (DIP)", "Angular deformity", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Bony tenderness", "Synovitis/soft tissue swelling", "Crepitus with movement"] },
+        { type: "rom", key: "rom", label: "Range of motion (affected joint)", motions: ["Flexion", "Extension"] },
+        { type: "numberGroup", key: "gripStrength", label: "Grip strength", items: ["Affected hand (kg)", "Contralateral hand (kg)"], suffix: "kg" },
+        { type: "select", key: "deformity", label: "Deformity", options: ["None", "Lateral/angular deviation", "Mucous cyst with nail ridging"], noteLabel: "Deformity" },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["PA hand", "Lateral/oblique views of the affected digit"] },
+        { type: "info", title: "Review for", items: ["Joint space narrowing", "Osteophytes", "Subchondral sclerosis/cysts", "Erosive change (erosive OA)", "Angular deformity"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["Rheumatoid arthritis", "Psoriatic arthritis", "Gout/pseudogout", "Erosive/inflammatory OA", "Trigger finger (if catching/locking)"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "checkbox", key: "diagJointsInvolved", label: "Joint(s) involved", options: ["DIP", "PIP", "Multiple joints (polyarticular)"] },
+        { type: "select", key: "diagPattern", label: "Pattern", options: ["Typical nodal OA", "Erosive/inflammatory OA"], noteLabel: "Pattern" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "8\u201312 weeks", right: "Symptom control, splint/injection response" },
+          { left: "6\u201312 months", right: "Disease progression, functional impact" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["8\u201312 weeks", "6\u201312 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Symptom/flare review", "Splint/injection response", "Pre-operative planning", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + QuickDASH" },
+          { left: "3 months", right: "QuickDASH + grip strength" },
+          { left: "12 months", right: "QuickDASH + grip strength" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const flexorTenosynovitisData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Assess Kanavel's signs \u2192 Assess for systemic sepsis \u2192 This is a surgical emergency if pyogenic flexor tenosynovitis is confirmed or strongly suspected", next: "kanavel" },
+      kanavel: {
+        type: "question", text: "Are Kanavel's signs present (any of the four)?",
+        options: [
+          { label: "Yes", next: "surgDiscuss" },
+          { label: "No \u2014 early/equivocal presentation", next: "closeObservation" },
+        ],
+      },
+      closeObservation: { type: "terminal", text: "Elevation, splintage and close interval review within 12\u201324 hours \u2192 Empirical antibiotics if any concern for evolving infection \u2192 Low threshold to escalate to urgent surgical referral if any Kanavel sign develops" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Urgent surgical washout/drainage of the flexor sheath \u2192 IV antibiotics \u2192 This is not an elective shared decision-making discussion \u2014 delay risks tendon necrosis and irreversible loss of function" },
+    },
+  },
+  id: "flexor-tenosynovitis",
+  name: "Flexor Tenosynovitis (Hand Infection)",
+  region: "hand",
+  urgentFlags: [
+    { text: "Kanavel's signs present (fusiform swelling, flexed posture, tenderness along the sheath, pain on passive extension)", consider: "Urgent same-day surgical referral \u2014 pyogenic flexor tenosynovitis requires urgent surgical washout." },
+    { text: "Signs of spreading infection (cellulitis, lymphangitis) or systemic sepsis", consider: "Urgent assessment \u2014 IV antibiotics and urgent surgical review." },
+    { text: "Immunocompromised or diabetic patient with hand infection", consider: "Lower threshold for urgent referral \u2014 higher risk of rapid progression." },
+  ],
+  redFlags: [
+    { text: "Any of Kanavel's four cardinal signs", consider: "Treat as pyogenic flexor tenosynovitis until proven otherwise \u2014 urgent surgical referral, do not delay for imaging." },
+    { text: "Rapid progression over hours", consider: "Reassess urgently \u2014 necrotising infection must be considered." },
+    { text: "Bite injury (human or animal) as the mechanism", consider: "High-risk inoculation injury \u2014 low threshold for exploration and broad-spectrum antibiotics." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Fusiform (\u201csausage\u201d) swelling of the digit", "Finger held in slight flexion at rest", "Tenderness along the flexor tendon sheath", "Pain with passive extension of the finger", "Preceding penetrating injury (may be trivial/unnoticed)"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Penetrating injury/laceration", "Human or animal bite", "Diabetes", "Immunosuppression", "IV drug use", "Peripheral vascular disease"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, timeline, systemic symptoms",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "date", key: "injuryDate", label: "Date of injury/onset" },
+        { type: "text", key: "timeSinceInjury", label: "Time since injury/onset", placeholder: "e.g. 2 days" },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Rapidly worsening"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "select", key: "mechanism", label: "Mechanism", options: ["Penetrating injury/laceration", "Human bite", "Animal bite", "Splinter/foreign body", "No identifiable injury (haematogenous spread)"], columns: 2 },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Fever/chills", "Malaise", "Rapidly spreading redness up the hand/forearm"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the finger", "Unable to use the hand", "Difficulty with any grip"] },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Immunosuppression", "IV drug use", "Peripheral vascular disease"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Kanavel's signs, spread of infection",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Fusiform swelling of the digit", "Erythema", "Finger held in flexion at rest", "Wound/puncture site visible", "Spreading erythema/lymphangitic streaking", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "kanavelSigns", label: "Kanavel's four cardinal signs", options: ["Fusiform swelling of the whole digit", "Finger held in slight flexion", "Tenderness along the flexor tendon sheath", "Pain with passive extension of the finger"] },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["MCP Flexion", "PIP Flexion", "DIP Flexion"] },
+        { type: "testGrid", key: "stNeuro", label: "Neurovascular assessment", options: ["Digital nerve sensation intact", "Capillary refill normal"] },
+        { type: "select", key: "systemicSigns", label: "Systemic signs", options: ["None", "Fever", "Tachycardia", "Features of sepsis"], noteLabel: "Systemic signs" },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Imaging/investigations obtained", options: ["Hand X-ray (exclude foreign body/osteomyelitis)", "Bloods (WCC/CRP)", "Blood cultures if systemically unwell", "Ultrasound (selected cases \u2014 assess for collection)"] },
+        { type: "info", title: "Review for", items: ["Foreign body", "Bony involvement/osteomyelitis", "Fluid within the flexor sheath on ultrasound"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "text", key: "bloodsFinding", label: "Bloods \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["Cellulitis without tendon sheath involvement", "Septic arthritis (adjacent joint)", "Herpetic whitlow", "Gout/pseudogout flare", "Necrotising soft tissue infection"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagKanavelCount", label: "Number of Kanavel's signs present", options: ["0", "1", "2", "3", "4 (all present)"], columns: 5, noteLabel: "Kanavel's signs present" },
+        { type: "select", key: "diagSeverity", label: "Clinical severity", options: ["Early/mild", "Moderate", "Severe/systemic sepsis"], noteLabel: "Clinical severity" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "12\u201324 hours", right: "Clinical progression if managed with close observation" },
+          { left: "48\u201372 hours (post-operative)", right: "Wound review, culture results, antibiotic response" },
+          { left: "2\u20134 weeks", right: "Range of motion, hand therapy progress" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["12\u201324 hours", "48\u201372 hours", "2\u20134 weeks", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Clinical progression check", "Wound/culture review", "Post-operative review", "Hand therapy progress", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + Kanavel's signs count" },
+          { left: "2\u20134 weeks", right: "Range of motion + QuickDASH" },
+          { left: "3 months", right: "QuickDASH + range of motion + complications" },
+        ] },
+      ],
+    },
+  ],
+};
+const thoracicOutletSyndromeData = {
+  pathway: {
+    start: "diagnosis",
+    nodes: {
+      diagnosis: { type: "info", text: "Diagnosis \u2192 No single test is diagnostic \u2014 correlate history, examination cluster and imaging \u2192 Determine subtype", next: "subtype" },
+      subtype: {
+        type: "question", text: "Is this a vascular subtype (arterial or venous)?",
+        options: [
+          { label: "Yes", next: "vascularUrgent" },
+          { label: "No \u2014 neurogenic or disputed TOS", next: "conservative" },
+        ],
+      },
+      vascularUrgent: { type: "terminal", text: "Urgent vascular surgical referral \u2192 Vascular subtypes are managed jointly with vascular surgery and typically require earlier operative intervention (first rib resection/scalenectomy \u00b1 vascular repair)" },
+      conservative: { type: "info", text: "Structured physiotherapy (postural correction, scalene stretching, nerve gliding, scapular stabilisation) \u2192 Activity modification \u2192 Review at 8\u201312 weeks", next: "review" },
+      review: {
+        type: "question", text: "Improving with structured physiotherapy?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 persistent significant symptoms", next: "surgDiscuss" },
+        ],
+      },
+      continueRehab: { type: "terminal", text: "Pathway suggests continuing physiotherapy with review, given neurogenic TOS often responds to a structured, sustained conservative programme" },
+      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding first rib resection and/or scalenectomy for persistent neurogenic TOS despite structured conservative management" },
+    },
+  },
+  id: "thoracic-outlet-syndrome",
+  name: "Thoracic Outlet Syndrome",
+  region: "peripheralNerve",
+  urgentFlags: [
+    { text: "Signs of acute arterial occlusion (pallor, coldness, absent pulse)", consider: "Urgent vascular surgical referral \u2014 limb-threatening emergency." },
+    { text: "Signs of acute venous thrombosis (Paget-Schroetter syndrome \u2014 sudden swelling, cyanosis, distended veins)", consider: "Urgent vascular referral for anticoagulation/thrombolysis assessment." },
+  ],
+  redFlags: [
+    { text: "Asymmetric pulses or a pulsatile supraclavicular mass", consider: "Reconsider a vascular subtype (arterial TOS, subclavian aneurysm) \u2014 arrange urgent vascular imaging." },
+    { text: "Progressive neurological deficit or muscle wasting", consider: "Expedite imaging and EMG \u2014 exclude a structural/compressive or malignant cause (e.g. Pancoast tumour)." },
+  ],
+  sections: [
+    {
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Presentation summary + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Diffuse arm/hand pain and paraesthesia, often ulnar-sided", "Symptoms worse with overhead activity or prolonged arm elevation", "Neck/shoulder girdle discomfort", "Symptoms frequently misattributed to cervical radiculopathy or distal nerve entrapment", "Occasionally arm swelling/discolouration (venous) or diminished pulse (arterial)"] },
+        { type: "checkbox", key: "riskFactors", label: "Common risk factors", options: ["Repetitive overhead activity (swimming, throwing, volleyball)", "Cervical rib or anomalous first rib", "Poor posture / drooped shoulder girdle", "Previous clavicle fracture (callus/malunion)", "Whiplash or neck trauma", "Occupational repetitive overhead work"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Symptom pattern, subtype clues, functional impact",
+      fields: [
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
+        { type: "text", key: "age", label: "Age" },
+        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 months" },
+        { type: "vas", key: "vas", label: "Pain (VAS)" },
+        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Diffuse arm/hand pain", "Paraesthesia (often ulnar distribution)", "Weakness/heaviness of the arm with use", "Symptoms provoked by overhead activity", "Swelling/discolouration of the arm", "Diminished pulse/coolness of the hand", "Neck/shoulder girdle pain"] },
+        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to sustain overhead activity", "Difficulty carrying bags/backpacks", "Difficulty sleeping with arm elevated", "Reduced work tolerance (especially overhead tasks)"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Physiotherapy", "Postural/nerve gliding exercises", "Analgesics", "Injection (scalene block)"] },
+        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Cervical rib (known)", "Previous clavicle fracture", "Previous neck/whiplash injury", "Hypermobility"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport (overhead/throwing/swimming)" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Provocative tests, vascular assessment, posture",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Drooped/asymmetric shoulder girdle posture", "Supraclavicular fullness/mass", "Arm swelling or discolouration", "Muscle wasting (intrinsic hand muscles)", "No deformity", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "palpation", label: "Palpation", options: ["Tenderness over the scalene triangle", "Palpable cervical rib", "Supraclavicular tenderness"] },
+        { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Adson's test", "Wright's test (hyperabduction)", "Roos test (EAST \u2014 elevated arm stress test)", "Halstead manoeuvre (costoclavicular)", "Upper limb tension test", "Cervical rotation lateral flexion test"] },
+        { type: "strength", key: "strength", label: "Strength grading (especially intrinsic hand muscles \u2014 look for a T1-predominant pattern)", muscles: [{ key: "grip", label: "Grip" }, { key: "intrinsics", label: "Intrinsic hand muscles" }, { key: "wristExtension", label: "Wrist Extension" }, { key: "elbowFlexion", label: "Elbow Flexion" }] },
+        { type: "testGrid", key: "stNeuro", label: "Neurovascular assessment", options: ["Radial pulse present at rest", "Radial pulse maintained with provocative positioning", "Sensation intact (ulnar distribution)", "Capillary refill normal"] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging",
+      fields: [
+        { type: "checkbox", key: "imgEssential", label: "Imaging/investigations obtained", options: ["Chest/cervical spine X-ray (assess for cervical rib)", "MRI cervical spine and brachial plexus", "MR/CT angiography (if vascular subtype suspected)", "EMG/nerve conduction studies", "Duplex ultrasound (if venous subtype suspected)"] },
+        { type: "info", title: "Review for", items: ["Cervical rib or elongated C7 transverse process", "Brachial plexus compression at the scalene triangle", "Subclavian artery/vein compression or thrombosis on positional imaging", "EMG evidence of a lower trunk/T1-predominant pattern"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
+        { type: "text", key: "angiographyFinding", label: "CT/MR angiography \u2014 notable finding" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis",
+      fields: [
+        { type: "checkbox", key: "differential", label: "Always consider", options: ["Cervical radiculopathy", "Carpal tunnel syndrome", "Cubital tunnel syndrome", "Double crush syndrome", "Complex regional pain syndrome", "Pancoast tumour (rare but must not be missed)"], preserveCase: true },
+      ],
+    },
+    {
+      id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      fields: [
+        { type: "select", key: "diagSubtype", label: "Subtype", options: ["Neurogenic (most common, ~90%)", "Venous (Paget-Schroetter)", "Arterial (rarest)", "Disputed/non-specific"], noteLabel: "Subtype" },
+        { type: "select", key: "diagCause", label: "Presumed anatomical cause", options: ["Cervical rib/bony anomaly", "Fibrous band", "Muscular (scalene) hypertrophy/spasm", "Post-traumatic (clavicle malunion, whiplash)", "Postural/idiopathic"], noteLabel: "Presumed cause" },
+      ],
+    },
+    {
+      id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags requiring escalation",
+      fields: [{ type: "redflag", key: "redFlagsChecked" }],
+    },
+    {
+      id: "pathway", index: 8, title: "Management Pathway",
+      fields: [{ type: "pathway" }],
+    },
+    {
+      id: "followup", index: 9, title: "Standard Follow-up",
+      fields: [
+        { type: "table", title: "Review schedule", rows: [
+          { left: "8\u201312 weeks", right: "Response to physiotherapy, symptom pattern" },
+          { left: "3\u20136 months", right: "Functional recovery, decision regarding further treatment" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["8\u201312 weeks", "3\u20136 months", "Other"], noteLabel: "Follow-up interval" },
+        { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Response to physiotherapy", "Pre-operative planning", "Post-operative review", "Other"] },
+        { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+      ],
+    },
+    {
+      id: "outcomes", index: 10, title: "Outcome Measures",
+      fields: [
+        { type: "table", title: "Outcome measures by visit", rows: [
+          { left: "Initial", right: "VAS + QuickDASH" },
+          { left: "3 months", right: "QuickDASH + symptom frequency" },
+          { left: "12 months (if surgical)", right: "QuickDASH + return to sport/work" },
+        ] },
+      ],
+    },
+  ],
+};
+
 const REGIONS = {
-  shoulder: { label: "Shoulder", conditions: [rotatorCuffData, sapsData, adhesiveCapsulitisData, instabilityData, bicepsData, acJointData, gleroarthritisData, avnData, calcificTendinitisData, proximalHumerusFxData, scapularDyskinesisData, slapData, pecMajorRuptureData] },
-  elbow: { label: "Elbow", conditions: [lateralEpicondylopathyData, medialEpicondylopathyData, distalBicepsRuptureData, elbowOAData, distalTricepsRuptureData, radialHeadFxData, coronoidTerribleTriadData, elbowInstabilityData, elbowStiffnessData, athleticElbowData] },
-  wrist: { label: "Wrist", conditions: [deQuervainData, thumbCMCOAData, wristOAData, tfccInjuryData, scapholunateInjuryData, kienbockDiseaseData, ulnarImpactionData, wristGanglionData] },
+  shoulder: { label: "Shoulder", conditions: [rotatorCuffData, sapsData, adhesiveCapsulitisData, instabilityData, bicepsData, acJointData, gleroarthritisData, avnData, calcificTendinitisData, proximalHumerusFxData, scapularDyskinesisData, slapData, pecMajorRuptureData, clavicleFxData, parsonageTurnerData] },
+  elbow: { label: "Elbow", conditions: [lateralEpicondylopathyData, medialEpicondylopathyData, distalBicepsRuptureData, elbowOAData, distalTricepsRuptureData, radialHeadFxData, coronoidTerribleTriadData, elbowInstabilityData, elbowStiffnessData, athleticElbowData, olecranonFxData, olecranonBursitisData] },
+  wrist: { label: "Wrist", conditions: [deQuervainData, thumbCMCOAData, wristOAData, tfccInjuryData, scapholunateInjuryData, kienbockDiseaseData, ulnarImpactionData, wristGanglionData, intersectionSyndromeData, ecuTendinopathyData, drujInstabilityData] },
   // Hand is organized into subsections rather than one flat list, since the
   // remaining condition set still spans distinct clinical categories
   // (general hand pathology and acute hand/wrist trauma). Peripheral Nerve
@@ -11100,11 +12806,11 @@ const REGIONS = {
   hand: {
     label: "Hand",
     subsections: [
-      { id: "general-hand", label: "General Hand", conditions: [triggerFingerData, dupuytrenDiseaseData, malletFingerData, jerseyFingerData, sagittalBandInjuryData, extensorTendonInjuriesData] },
+      { id: "general-hand", label: "General Hand", conditions: [triggerFingerData, dupuytrenDiseaseData, malletFingerData, jerseyFingerData, sagittalBandInjuryData, extensorTendonInjuriesData, boutonniereDeformityData, pipDislocationData, handOAData, flexorTenosynovitisData] },
       { id: "hand-wrist-trauma", label: "Hand & Wrist Trauma", conditions: [distalRadiusFxData, scaphoidFxData, thumbUCLInjuryData, metacarpalFxData, phalangealFxData, bennettRolandoFxData, perilunateInjuryData, hookOfHamateFxData, fingertipInjuryData, tendonLacerationData] },
     ],
   },
-  peripheralNerve: { label: "Peripheral Nerve", conditions: [carpalTunnelSyndromeData, cubitalTunnelData, lacertusSyndromeData, guyonsCanalSyndromeData, radialTunnelSyndromeData, pinSyndromeData, ainSyndromeData, wartenbergSyndromeData, doubleCrushSyndromeData] },
+  peripheralNerve: { label: "Peripheral Nerve", conditions: [carpalTunnelSyndromeData, cubitalTunnelData, lacertusSyndromeData, guyonsCanalSyndromeData, radialTunnelSyndromeData, pinSyndromeData, ainSyndromeData, wartenbergSyndromeData, doubleCrushSyndromeData, suprascapularNeuropathyData, thoracicOutletSyndromeData] },
 };
 
 // Returns a flat array of every condition in a region, whether that region
@@ -11132,24 +12838,37 @@ function getRegionConditions(region) {
 // strip on each template. Ids that don't yet have a built template (e.g.
 // future Elbow/Wrist/Hand conditions) simply won't resolve and are skipped.
 const RELATED_CONDITIONS = {
-  "rotator-cuff": ["saps", "ac-joint", "long-head-biceps", "calcific-tendinitis", "adhesive-capsulitis", "gh-osteoarthritis"],
+  "clavicle-fracture": ["ac-joint", "proximal-humerus-fracture"],
+  "parsonage-turner-syndrome": ["suprascapular-neuropathy", "rotator-cuff", "scapular-dyskinesis"],
+  "suprascapular-neuropathy": ["parsonage-turner-syndrome", "rotator-cuff", "scapular-dyskinesis", "slap-lesion"],
+  "olecranon-fracture": ["radial-head-fracture", "coronoid-terrible-triad", "elbow-instability", "olecranon-bursitis"],
+  "olecranon-bursitis": ["olecranon-fracture", "elbow-osteoarthritis"],
+  "intersection-syndrome": ["de-quervain", "wartenberg-syndrome"],
+  "ecu-tendinopathy": ["druj-instability", "tfcc-injury", "ulnar-impaction"],
+  "druj-instability": ["ecu-tendinopathy", "tfcc-injury", "distal-radius-fracture", "ulnar-impaction"],
+  "boutonniere-deformity": ["sagittal-band-injury", "mallet-finger", "pip-dislocation-volar-plate"],
+  "pip-dislocation-volar-plate": ["boutonniere-deformity", "phalangeal-fracture", "hand-osteoarthritis"],
+  "hand-osteoarthritis": ["thumb-cmc-oa", "pip-dislocation-volar-plate"],
+  "flexor-tenosynovitis": ["tendon-laceration", "trigger-finger"],
+  "thoracic-outlet-syndrome": ["cubital-tunnel-syndrome", "double-crush-syndrome", "carpal-tunnel-syndrome"],
+  "rotator-cuff": ["saps", "ac-joint", "long-head-biceps", "calcific-tendinitis", "adhesive-capsulitis", "gh-osteoarthritis", "suprascapular-neuropathy"],
   saps: ["rotator-cuff", "ac-joint", "long-head-biceps", "adhesive-capsulitis"],
   "adhesive-capsulitis": ["rotator-cuff", "gh-osteoarthritis", "saps"],
   "glenohumeral-instability": ["slap-lesion", "scapular-dyskinesis", "long-head-biceps"],
   "long-head-biceps": ["rotator-cuff", "slap-lesion", "glenohumeral-instability", "saps", "distal-biceps-rupture"],
-  "ac-joint": ["rotator-cuff", "saps", "long-head-biceps"],
+  "ac-joint": ["rotator-cuff", "saps", "long-head-biceps", "clavicle-fracture"],
   "gh-osteoarthritis": ["rotator-cuff", "avn-humeral-head", "adhesive-capsulitis"],
   "avn-humeral-head": ["gh-osteoarthritis"],
   "calcific-tendinitis": ["rotator-cuff", "saps", "adhesive-capsulitis"],
-  "proximal-humerus-fracture": ["rotator-cuff", "glenohumeral-instability"],
-  "scapular-dyskinesis": ["rotator-cuff", "glenohumeral-instability", "ac-joint", "slap-lesion"],
+  "proximal-humerus-fracture": ["rotator-cuff", "glenohumeral-instability", "clavicle-fracture"],
+  "scapular-dyskinesis": ["rotator-cuff", "glenohumeral-instability", "ac-joint", "slap-lesion", "suprascapular-neuropathy"],
   "slap-lesion": ["long-head-biceps", "glenohumeral-instability", "rotator-cuff", "scapular-dyskinesis"],
   "pec-major-rupture": ["rotator-cuff", "long-head-biceps"],
   "lateral-epicondylopathy": ["medial-epicondylopathy", "radial-tunnel-syndrome"],
   "radial-tunnel-syndrome": ["lateral-epicondylopathy", "pin-syndrome", "wartenberg-syndrome", "double-crush-syndrome"],
   "pin-syndrome": ["radial-tunnel-syndrome", "wartenberg-syndrome", "double-crush-syndrome"],
   "medial-epicondylopathy": ["lateral-epicondylopathy", "cubital-tunnel-syndrome", "athletic-elbow-ocd-veo"],
-  "cubital-tunnel-syndrome": ["medial-epicondylopathy", "elbow-osteoarthritis", "athletic-elbow-ocd-veo", "carpal-tunnel-syndrome", "guyons-canal-syndrome", "double-crush-syndrome"],
+  "cubital-tunnel-syndrome": ["medial-epicondylopathy", "elbow-osteoarthritis", "athletic-elbow-ocd-veo", "carpal-tunnel-syndrome", "guyons-canal-syndrome", "double-crush-syndrome", "thoracic-outlet-syndrome"],
   "elbow-osteoarthritis": ["cubital-tunnel-syndrome", "radial-head-fracture", "coronoid-terrible-triad", "elbow-instability", "elbow-stiffness"],
   "radial-head-fracture": ["elbow-osteoarthritis", "coronoid-terrible-triad", "elbow-instability", "elbow-stiffness"],
   "coronoid-terrible-triad": ["radial-head-fracture", "elbow-osteoarthritis", "elbow-instability", "elbow-stiffness"],
@@ -11158,32 +12877,32 @@ const RELATED_CONDITIONS = {
   "athletic-elbow-ocd-veo": ["medial-epicondylopathy", "cubital-tunnel-syndrome", "elbow-instability"],
   "distal-biceps-rupture": ["long-head-biceps", "distal-triceps-rupture"],
   "distal-triceps-rupture": ["distal-biceps-rupture"],
-  "de-quervain": ["thumb-cmc-oa", "wrist-oa", "wartenberg-syndrome"],
+  "de-quervain": ["thumb-cmc-oa", "wrist-oa", "wartenberg-syndrome", "intersection-syndrome"],
   "wartenberg-syndrome": ["de-quervain", "radial-tunnel-syndrome", "pin-syndrome", "double-crush-syndrome"],
-  "thumb-cmc-oa": ["de-quervain", "wrist-oa", "thumb-ucl-injury", "carpal-tunnel-syndrome", "bennett-rolando-fracture"],
+  "thumb-cmc-oa": ["de-quervain", "wrist-oa", "thumb-ucl-injury", "carpal-tunnel-syndrome", "bennett-rolando-fracture", "hand-osteoarthritis"],
   "thumb-ucl-injury": ["thumb-cmc-oa", "scaphoid-fracture", "bennett-rolando-fracture"],
   "wrist-oa": ["de-quervain", "thumb-cmc-oa", "tfcc-injury", "scapholunate-injury", "kienbock-disease", "ulnar-impaction", "wrist-ganglion", "distal-radius-fracture", "scaphoid-fracture"],
-  "tfcc-injury": ["wrist-oa", "scapholunate-injury", "kienbock-disease", "ulnar-impaction", "distal-radius-fracture", "scaphoid-fracture", "perilunate-injury", "hook-of-hamate-fracture"],
+  "tfcc-injury": ["wrist-oa", "scapholunate-injury", "kienbock-disease", "ulnar-impaction", "distal-radius-fracture", "scaphoid-fracture", "perilunate-injury", "hook-of-hamate-fracture", "ecu-tendinopathy"],
   "scapholunate-injury": ["wrist-oa", "tfcc-injury", "kienbock-disease", "wrist-ganglion", "distal-radius-fracture", "scaphoid-fracture", "perilunate-injury"],
   "kienbock-disease": ["scapholunate-injury", "wrist-oa", "tfcc-injury", "ulnar-impaction"],
-  "ulnar-impaction": ["tfcc-injury", "wrist-oa", "kienbock-disease", "hook-of-hamate-fracture"],
+  "ulnar-impaction": ["tfcc-injury", "wrist-oa", "kienbock-disease", "hook-of-hamate-fracture", "druj-instability"],
   "wrist-ganglion": ["scapholunate-injury", "wrist-oa", "guyons-canal-syndrome"],
   "guyons-canal-syndrome": ["cubital-tunnel-syndrome", "wrist-ganglion", "double-crush-syndrome", "hook-of-hamate-fracture"],
-  "trigger-finger": ["dupuytren-disease", "mallet-finger", "sagittal-band-injury", "carpal-tunnel-syndrome"],
-  "carpal-tunnel-syndrome": ["cubital-tunnel-syndrome", "trigger-finger", "thumb-cmc-oa", "lacertus-syndrome", "double-crush-syndrome", "distal-radius-fracture", "perilunate-injury"],
-  "distal-radius-fracture": ["scapholunate-injury", "tfcc-injury", "carpal-tunnel-syndrome", "wrist-oa", "scaphoid-fracture", "metacarpal-fracture", "perilunate-injury"],
+  "trigger-finger": ["dupuytren-disease", "mallet-finger", "sagittal-band-injury", "carpal-tunnel-syndrome", "flexor-tenosynovitis"],
+  "carpal-tunnel-syndrome": ["cubital-tunnel-syndrome", "trigger-finger", "thumb-cmc-oa", "lacertus-syndrome", "double-crush-syndrome", "distal-radius-fracture", "perilunate-injury", "thoracic-outlet-syndrome"],
+  "distal-radius-fracture": ["scapholunate-injury", "tfcc-injury", "carpal-tunnel-syndrome", "wrist-oa", "scaphoid-fracture", "metacarpal-fracture", "perilunate-injury", "druj-instability"],
   "scaphoid-fracture": ["scapholunate-injury", "distal-radius-fracture", "wrist-oa", "tfcc-injury", "thumb-ucl-injury", "metacarpal-fracture", "bennett-rolando-fracture", "perilunate-injury"],
   "perilunate-injury": ["scapholunate-injury", "scaphoid-fracture", "carpal-tunnel-syndrome", "distal-radius-fracture", "tfcc-injury"],
   "lacertus-syndrome": ["carpal-tunnel-syndrome", "ain-syndrome", "double-crush-syndrome"],
   "ain-syndrome": ["lacertus-syndrome", "double-crush-syndrome"],
-  "double-crush-syndrome": ["carpal-tunnel-syndrome", "cubital-tunnel-syndrome", "lacertus-syndrome", "guyons-canal-syndrome", "radial-tunnel-syndrome", "pin-syndrome", "ain-syndrome", "wartenberg-syndrome"],
-  "sagittal-band-injury": ["trigger-finger", "extensor-tendon-injuries", "metacarpal-fracture"],
-  "mallet-finger": ["trigger-finger", "jersey-finger", "extensor-tendon-injuries", "phalangeal-fracture", "fingertip-injury", "tendon-laceration"],
+  "double-crush-syndrome": ["carpal-tunnel-syndrome", "cubital-tunnel-syndrome", "lacertus-syndrome", "guyons-canal-syndrome", "radial-tunnel-syndrome", "pin-syndrome", "ain-syndrome", "wartenberg-syndrome", "thoracic-outlet-syndrome"],
+  "sagittal-band-injury": ["trigger-finger", "extensor-tendon-injuries", "metacarpal-fracture", "boutonniere-deformity"],
+  "mallet-finger": ["trigger-finger", "jersey-finger", "extensor-tendon-injuries", "phalangeal-fracture", "fingertip-injury", "tendon-laceration", "boutonniere-deformity"],
   "extensor-tendon-injuries": ["sagittal-band-injury", "mallet-finger", "metacarpal-fracture", "phalangeal-fracture", "tendon-laceration"],
   "metacarpal-fracture": ["distal-radius-fracture", "scaphoid-fracture", "sagittal-band-injury", "extensor-tendon-injuries", "phalangeal-fracture", "bennett-rolando-fracture"],
   "bennett-rolando-fracture": ["thumb-cmc-oa", "thumb-ucl-injury", "scaphoid-fracture", "metacarpal-fracture"],
   "jersey-finger": ["mallet-finger", "phalangeal-fracture", "hook-of-hamate-fracture", "fingertip-injury", "tendon-laceration"],
-  "tendon-laceration": ["extensor-tendon-injuries", "jersey-finger", "mallet-finger"],
+  "tendon-laceration": ["extensor-tendon-injuries", "jersey-finger", "mallet-finger", "flexor-tenosynovitis"],
   "hook-of-hamate-fracture": ["guyons-canal-syndrome", "tfcc-injury", "ulnar-impaction", "jersey-finger"],
   "phalangeal-fracture": ["metacarpal-fracture", "mallet-finger", "extensor-tendon-injuries", "jersey-finger", "fingertip-injury"],
   "fingertip-injury": ["mallet-finger", "jersey-finger", "phalangeal-fracture"],
@@ -11249,10 +12968,12 @@ function ProgressDot({ done }) {
 }
 
 function CollapsibleSection({ index, title, subtitle, isOpen, onToggle, hasContent, children, nextTitle, onNext }) {
+  const badgeBg = isOpen ? T.tealDark : hasContent ? T.tealTint : T.slateChip;
+  const badgeColor = isOpen ? "#fff" : hasContent ? T.tealDark : T.inkSoft;
   return (
-    <div className="rounded-2xl mb-3 overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+    <div className="rounded-2xl mb-3 overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface, boxShadow: T.shadowCard }}>
       <button onClick={onToggle} className="w-full flex items-center gap-3 px-4 py-4 text-left active:opacity-70" style={{ minHeight: 56 }}>
-        <span className="flex items-center justify-center rounded-full text-sm font-semibold shrink-0" style={{ width: 28, height: 28, background: T.tealTint, color: T.tealDark }}>
+        <span className="flex items-center justify-center rounded-full text-sm font-semibold shrink-0 transition" style={{ width: 28, height: 28, background: badgeBg, color: badgeColor }}>
           {index}
         </span>
         <span className="flex-1 min-w-0">
@@ -11269,7 +12990,7 @@ function CollapsibleSection({ index, title, subtitle, isOpen, onToggle, hasConte
             <button
               onClick={onNext}
               className="w-full mt-5 rounded-xl px-4 py-3 font-semibold text-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
-              style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}`, minHeight: 48 }}
+              style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
             >
               Next: {nextTitle} <ChevronRight size={17} />
             </button>
@@ -11578,9 +13299,14 @@ function MeasurementGrid({ rows, columns, values, onChange, suffix }) {
 }
 
 function StrengthGrid({ muscles, values, onChange }) {
+  // Tolerates either a plain string ("Deltoid") or the standard {key,label}
+  // object shape - a plain string alone would give every row the same
+  // (undefined) state key, silently collapsing all muscles' grades into
+  // one shared value. Normalizing here means that mistake can't recur.
+  const normalized = (muscles || []).map((m) => (typeof m === "string" ? { key: m, label: m } : m));
   return (
     <div className="flex flex-col gap-3">
-      {muscles.map((m) => (
+      {normalized.map((m) => (
         <div key={m.key}>
           <div className="text-[13px] mb-1.5" style={{ color: T.ink }}>{m.label}</div>
           <div className="grid grid-cols-6 gap-1.5">
@@ -11657,7 +13383,7 @@ function PathwayFlow({ schema, answers, onAnswer, priorTreatmentGiven }) {
 function RedFlagChecklist({ items, checked, onToggle }) {
   return (
     <>
-      {items.map((rf, i) => {
+      {(items || []).map((rf, i) => {
         const active = checked.includes(i);
         return (
           <button key={i} onClick={() => onToggle(i)} className="w-full text-left rounded-xl px-3 py-3 mb-2 flex gap-3 items-start active:opacity-80" style={{ background: active ? T.redTint : T.slateChip, border: `1px solid ${active ? T.red : T.border}` }}>
@@ -11679,7 +13405,7 @@ function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked,
   const noFlagsChecked = (checked || []).length === 0 && (urgentChecked || []).length === 0;
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.45)" }}>
-      <div className="w-full sm:max-w-md lg:max-w-xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, maxHeight: "85vh", overflowY: "auto", WebkitOverflowScrolling: "touch", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }}>
+      <div className="w-full sm:max-w-md lg:max-w-xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, maxHeight: "85vh", overflowY: "auto", WebkitOverflowScrolling: "touch", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
         <div className="flex items-center gap-2 px-4 py-4 sticky top-0" style={{ background: T.amberTint, borderBottom: `1px solid ${T.amber}` }}>
           <AlertTriangle size={20} color={T.amber} />
           <span className="font-bold text-[15px] flex-1" style={{ color: T.amber }}>Red Flags</span>
@@ -11906,7 +13632,7 @@ async function copyTextRobust(text) {
 // signs) from the automatic lowercasing applied to ordinary checklist text
 // elsewhere in note generation - without this, note text would read "the
 // patient was positive for spurling" instead of "...Spurling".
-const EPONYM_TERMS_RE = /\b(Jobe|Neer|Hawkins|Spurling|Yergason|Speed|Phalen|Tinel|Finkelstein|Watson|Froment|Wartenberg|McMurray|Lachman|Cozen|Hornblower|Paxinos|Kienb\u00f6ck|Kienbock|Guyon|Dupuytren|Quervain|Volkmann|Colles|Smith|Galeazzi|Monteggia|Bennett|Rolando|Barton|Grashey|Zanca|Stryker|Bankart|Latarjet|Hill-Sachs|Stener|Mason|Rockwood|Eaton|Littler|Tubiana|Palmer|Cruess|Goutallier|Patte|Warner|Outerbridge|Kashiwagi|Lichtman|Essex|Lopresti|Jersey|Mallet|Bado|Sunderland|Seddon|Kapandji|Wassel|Preiser|Panner|Bunnell|Elson|Kleinert|Mayfield|Linscheid|Taleisnik|Geissler|Judet|Velpeau|Bernageau)\b/;
+const EPONYM_TERMS_RE = /\b(Jobe|Neer|Hawkins|Spurling|Yergason|Speed|Phalen|Tinel|Finkelstein|Watson|Froment|Wartenberg|McMurray|Lachman|Cozen|Hornblower|Paxinos|Kienb\u00f6ck|Kienbock|Guyon|Dupuytren|Quervain|Volkmann|Colles|Smith|Galeazzi|Monteggia|Bennett|Rolando|Barton|Grashey|Zanca|Stryker|Bankart|Latarjet|Hill-Sachs|Stener|Mason|Rockwood|Eaton|Littler|Tubiana|Palmer|Cruess|Goutallier|Patte|Warner|Outerbridge|Kashiwagi|Lichtman|Essex|Lopresti|Jersey|Mallet|Bado|Sunderland|Seddon|Kapandji|Wassel|Preiser|Panner|Bunnell|Elson|Kleinert|Mayfield|Linscheid|Taleisnik|Geissler|Judet|Velpeau|Bernageau|Adson|Wright|Roos|Halstead|Kanavel|Nalebuff|Millender|Heberden|Bouchard|Paget|Schroetter)\b/;
 
 function lowerListItem(item) {
   if (typeof item !== "string" || !item) return item;
@@ -12637,6 +14363,20 @@ const SURGICAL_OPTIONS_BY_CONDITION = {
   "hook-of-hamate-fracture": ["Excision of hook fragment", "ORIF"],
   "fingertip-injury": ["Local flap coverage", "Skin graft", "Revision amputation", "Nail bed repair"],
   "tendon-laceration": ["Primary flexor tendon repair", "Primary extensor tendon repair", "Staged tendon reconstruction (chronic)"],
+  // Newly added conditions
+  "clavicle-fracture": ["Open reduction internal fixation (plate)", "Intramedullary fixation"],
+  "parsonage-turner-syndrome": ["Tendon transfer (for persistent isolated nerve palsy)"],
+  "suprascapular-neuropathy": ["Arthroscopic suprascapular nerve decompression", "Arthroscopic cyst decompression"],
+  "olecranon-fracture": ["Tension band wiring", "Plate fixation", "Fragment excision with triceps advancement (comminuted, elderly)"],
+  "olecranon-bursitis": ["Bursectomy (open)", "Bursectomy (endoscopic)"],
+  "intersection-syndrome": ["Surgical release/debridement of the first and second dorsal compartments"],
+  "ecu-tendinopathy": ["ECU subsheath repair/reconstruction", "Tendon debridement", "Groove deepening (recurrent instability)"],
+  "druj-instability": ["Ligament reconstruction (TFCC/DRUJ)", "Sauv\u00e9-Kapandji procedure", "Darrach procedure", "DRUJ arthroplasty"],
+  "boutonniere-deformity": ["Central slip repair", "Central slip reconstruction (chronic)", "Extensor tenotomy (Fowler procedure, chronic fixed deformity)"],
+  "pip-dislocation-volar-plate": ["Open reduction internal fixation", "Volar plate arthroplasty", "External fixation (dynamic/hinged)"],
+  "hand-osteoarthritis": ["Joint arthrodesis (fusion)", "Joint arthroplasty (implant)"],
+  "flexor-tenosynovitis": ["Urgent surgical washout/drainage of the flexor sheath", "Open debridement"],
+  "thoracic-outlet-syndrome": ["First rib resection", "Scalenectomy", "Combined first rib resection and scalenectomy", "Vascular repair/reconstruction (vascular subtypes)"],
 };
 
 function surgicalOptionsFor(conditionId) {
@@ -13806,6 +15546,10 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   // Live progress so the clinician can see how much of the template is
   // documented without scrolling the whole section list.
   const sectionsDone = condition.sections.filter((s) => sectionHasContent(s, state, condition.id)).length;
+  const progressPct = condition.sections.length ? sectionsDone / condition.sections.length : 0;
+  const ringR = 13;
+  const ringCircumference = 2 * Math.PI * ringR;
+  const ringOffset = ringCircumference * (1 - progressPct);
 
   return (
     <div className="min-h-screen pb-32" style={{ background: T.bg }}>
@@ -13813,7 +15557,13 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <button onClick={onBack} className="p-2 -ml-1 active:opacity-60"><ArrowLeft size={22} color={T.ink} /></button>
         <div className="flex-1 min-w-0">
           <div className="font-bold text-[16px] truncate" style={{ color: T.ink }}>{condition.name}</div>
-          <div className="text-[12px] capitalize" style={{ color: T.inkSoft }}>{condition.region} \u00b7 {sectionsDone}/{condition.sections.length} sections documented</div>
+          <div className="text-[12px] capitalize" style={{ color: T.inkSoft }}>{condition.region} \u00b7 {sectionsDone}/{condition.sections.length} sections</div>
+        </div>
+        <div style={{ width: 34, height: 34, position: "relative", flexShrink: 0 }} aria-label={`${sectionsDone} of ${condition.sections.length} sections documented`}>
+          <svg width="34" height="34" style={{ transform: "rotate(-90deg)" }}>
+            <circle cx="17" cy="17" r={ringR} fill="none" stroke={T.tealTint} strokeWidth="3" />
+            <circle cx="17" cy="17" r={ringR} fill="none" stroke={T.tealDark} strokeWidth="3" strokeDasharray={ringCircumference} strokeDashoffset={ringOffset} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.3s ease" }} />
+          </svg>
         </div>
         <button onClick={() => setFlagsOpen(true)} className="flex items-center gap-1 rounded-full px-3 py-2 active:scale-95" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
           <AlertTriangle size={16} color={T.amber} />
@@ -14062,14 +15812,14 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
           <RotateCcw size={17} /> New patient
         </button>
-        <button onClick={() => { setNoteScope("this"); setNoteOpen(true); }} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+        <button onClick={() => { setNoteScope("this"); setNoteOpen(true); }} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
           Preview clinic note
         </button>
       </div>
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
                 <ArrowLeft size={20} color={T.ink} />
@@ -14093,7 +15843,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Back to editing
               </button>
-              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
                 {copied ? "Copied" : "Copy to clipboard"}
               </button>
@@ -14112,7 +15862,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
 
       {confirmReset && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
-          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: "0 8px 32px rgba(16,30,43,0.18)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
             <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>This clears every entry for {condition.name} \u2014 history, examination, pathway progress, and red flags \u2014 so it's ready for the next patient. The template itself stays selected. Other conditions in this session are unaffected. This cannot be undone.</div>
             <div className="flex gap-2">
@@ -14234,17 +15984,32 @@ function VisitTypeGate({ onSelect }) {
         <p className="text-[14px] mb-7 text-center" style={{ color: T.inkSoft }}>What kind of visit is this?</p>
         <InstallPrompt />
         <div className="flex flex-col gap-3">
-          <button onClick={() => onSelect("new")} className="rounded-2xl p-5 text-left active:scale-95 transition" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88 }}>
-            <div className="font-bold text-[17px]" style={{ color: T.ink }}>New Visit</div>
-            <div className="text-[13px] mt-1" style={{ color: T.inkSoft }}>First presentation for this problem. Choose a body region and work through the full structured template.</div>
+          <button onClick={() => onSelect("new")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-start gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
+            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 44, height: 44, background: T.gradientTeal }}>
+              <FilePlus size={21} color="#fff" />
+            </div>
+            <div>
+              <div className="font-bold text-[17px]" style={{ color: T.ink }}>New Visit</div>
+              <div className="text-[13px] mt-1" style={{ color: T.inkSoft }}>First presentation for this problem. Choose a body region and work through the full structured template.</div>
+            </div>
           </button>
-          <button onClick={() => onSelect("followup")} className="rounded-2xl p-5 text-left active:scale-95 transition" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88 }}>
-            <div className="font-bold text-[17px]" style={{ color: T.ink }}>Follow-up Visit</div>
-            <div className="text-[13px] mt-1" style={{ color: T.inkSoft }}>Reviewing an existing diagnosis. Pick the diagnosis (or diagnoses), then record the reason for review, treatment given, outcome, and the new plan.</div>
+          <button onClick={() => onSelect("followup")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-start gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
+            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 44, height: 44, background: T.tealTint }}>
+              <CalendarClock size={21} color={T.tealDark} />
+            </div>
+            <div>
+              <div className="font-bold text-[17px]" style={{ color: T.ink }}>Follow-up Visit</div>
+              <div className="text-[13px] mt-1" style={{ color: T.inkSoft }}>Reviewing an existing diagnosis. Pick the diagnosis (or diagnoses), then record the reason for review, treatment given, outcome, and the new plan.</div>
+            </div>
           </button>
-          <button onClick={() => onSelect("postop")} className="rounded-2xl p-5 text-left active:scale-95 transition" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88 }}>
-            <div className="font-bold text-[17px]" style={{ color: T.ink }}>Post-operative Follow-up</div>
-            <div className="text-[13px] mt-1" style={{ color: T.inkSoft }}>Reviewing a patient after surgery. Record the procedure and surgery date, reason for review, current status, complications, and the follow-up plan.</div>
+          <button onClick={() => onSelect("postop")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-start gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
+            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 44, height: 44, background: T.tealTint }}>
+              <Stethoscope size={21} color={T.tealDark} />
+            </div>
+            <div>
+              <div className="font-bold text-[17px]" style={{ color: T.ink }}>Post-operative Follow-up</div>
+              <div className="text-[13px] mt-1" style={{ color: T.inkSoft }}>Reviewing a patient after surgery. Record the procedure and surgery date, reason for review, current status, complications, and the follow-up plan.</div>
+            </div>
           </button>
         </div>
       </div>
@@ -14271,8 +16036,8 @@ function RegionPicker({ onSelect, onBack }) {
         <p className="text-[14px] mb-6" style={{ color: T.inkSoft }}>Choose a body region to open a structured consultation template.</p>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {Object.entries(REGIONS).map(([key, r]) => (
-            <button key={key} onClick={() => onSelect(key)} className="rounded-2xl p-4 text-left active:scale-95 transition" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 120, boxShadow: "0 1px 2px rgba(16,30,43,0.04)" }}>
-              <div className="flex items-center justify-center rounded-xl mb-2.5 font-bold text-[13px] tracking-wide" style={{ width: 40, height: 40, background: T.tealTint, color: T.tealDark }}>{regionMeta[key].mono}</div>
+            <button key={key} onClick={() => onSelect(key)} className="rounded-2xl p-4 text-left active:scale-95 transition" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 120, boxShadow: T.shadowElevated }}>
+              <div className="flex items-center justify-center rounded-xl mb-2.5 font-bold text-[13px] tracking-wide" style={{ width: 40, height: 40, background: T.gradientTeal, color: "#fff" }}>{regionMeta[key].mono}</div>
               <div className="font-bold text-[16px]" style={{ color: T.ink }}>{r.label}</div>
               <div className="text-[12px] mt-0.5" style={{ color: T.inkSoft }}>{regionMeta[key].tag}</div>
               <div className="text-[11px] mt-2 font-semibold" style={{ color: T.teal }}>{getRegionConditions(r).length} template{getRegionConditions(r).length === 1 ? "" : "s"}</div>
@@ -14504,7 +16269,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
           <button onClick={onGoHome} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
             Home
           </button>
-          <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+          <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
             Preview follow-up note
           </button>
         </div>
@@ -14512,7 +16277,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
                 <ArrowLeft size={20} color={T.ink} />
@@ -14526,7 +16291,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Back to editing
               </button>
-              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
                 {copied ? "Copied" : "Copy to clipboard"}
               </button>
@@ -14690,7 +16455,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
           <button onClick={onGoHome} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
             Home
           </button>
-          <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+          <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
             Preview post-op note
           </button>
         </div>
@@ -14698,7 +16463,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
                 <ArrowLeft size={20} color={T.ink} />
@@ -14712,7 +16477,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Back to editing
               </button>
-              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
                 {copied ? "Copied" : "Copy to clipboard"}
               </button>
@@ -14771,7 +16536,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
 
       {confirmEnd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
-          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: "0 8px 32px rgba(16,30,43,0.18)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>End patient session?</div>
             <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>This clears every active condition and all entries for this session. It cannot be undone.</div>
             <div className="flex gap-2">
@@ -15150,7 +16915,7 @@ export default function App() {
 
       {combinedNoteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setCombinedNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -4px 24px rgba(16,30,43,0.12)" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
               <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
                 <ArrowLeft size={20} color={T.ink} />
@@ -15164,7 +16929,7 @@ export default function App() {
               <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Back to editing
               </button>
-              <button onClick={copyCombinedNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.teal, color: "#fff", minHeight: 48 }}>
+              <button onClick={copyCombinedNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {combinedCopied ? <Check size={17} /> : <Copy size={17} />}
                 {combinedCopied ? "Copied" : "Copy to clipboard"}
               </button>
