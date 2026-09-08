@@ -15530,7 +15530,7 @@ function RelatedConditionsBar({ conditionId, sessionOrder, onOpen }) {
   );
 }
 
-function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack }) {
+function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome }) {
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -15967,6 +15967,11 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
           <RotateCcw size={17} /> New patient
         </button>
+        {onGoHome && (
+          <button onClick={onGoHome} aria-label="Home" className="flex items-center justify-center rounded-xl active:scale-95" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 48, width: 48, flexShrink: 0 }}>
+            <Home size={19} color={T.ink} />
+          </button>
+        )}
         <button onClick={() => { setNoteScope("this"); setNoteOpen(true); }} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
           Preview clinic note
         </button>
@@ -17065,6 +17070,7 @@ export default function App() {
           onOpenCondition={openCondition}
           onResetCondition={() => resetCondition(screen.condition.id)}
           onBack={() => setScreen({ view: "conditions", regionKey: screen.regionKey })}
+          onGoHome={goHome}
         />
       )}
 
