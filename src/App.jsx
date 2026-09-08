@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -13199,24 +13199,89 @@ const ROM_REFERENCE = {
   peripheralNerve: {},
 };
 
+// Slider ceilings, separate from the free-text ROM_REFERENCE strings above
+// (those aren't reliably parseable - "0\u201370\u00b0 (approx.; commonly
+// reported...)" isn't a clean number to extract). Set a little above each
+// motion's normal ceiling so genuine hypermobility can still be recorded,
+// rather than exactly at it. Any motion name not listed here (e.g. the
+// finger-joint-specific motions like "PIP Flexion") falls back to a
+// sensible general default.
+const ROM_SLIDER_MAX = {
+  shoulder: { "Forward Flexion": 180, Abduction: 180, "External Rotation": 100, "Internal Rotation": 90 },
+  elbow: { Flexion: 150, Extension: 30, Pronation: 90, Supination: 90 },
+  wrist: { Flexion: 90, Extension: 90, Pronation: 90, Supination: 90, "Radial deviation": 30, "Ulnar deviation": 40 },
+  hand: { Flexion: 90, Extension: 90, Pronation: 90, Supination: 90, "Radial deviation": 30, "Ulnar deviation": 40, "MCP flexion": 100, "Palmar abduction": 80, "Radial abduction": 70 },
+  peripheralNerve: {},
+};
+function romSliderMax(region, motion) {
+  return (ROM_SLIDER_MAX[region] && ROM_SLIDER_MAX[region][motion]) || 150;
+}
+
+// The true normal ceiling per motion (unlike ROM_SLIDER_MAX above, which
+// is deliberately padded a little higher to leave room for recording
+// hypermobility) - this is what "full range of motion" actually means for
+// note-generation purposes. A motion not listed here has no reference to
+// compare against, so it's never reported as "full", only by its numbers.
+const ROM_NORMAL_MAX = {
+  shoulder: { "Forward Flexion": 180, Abduction: 180, "External Rotation": 90, "Internal Rotation": 70 },
+  elbow: { Flexion: 150, Extension: 0, Pronation: 80, Supination: 80 },
+  wrist: { Flexion: 80, Extension: 70, Pronation: 80, Supination: 80, "Radial deviation": 20, "Ulnar deviation": 30 },
+  hand: { Flexion: 80, Extension: 70, Pronation: 80, Supination: 80, "Radial deviation": 20, "Ulnar deviation": 30, "MCP flexion": 90, "Palmar abduction": 70, "Radial abduction": 60 },
+  peripheralNerve: {},
+};
+function romNormalMax(region, motion) {
+  const v = ROM_NORMAL_MAX[region] && ROM_NORMAL_MAX[region][motion];
+  return v == null ? null : v;
+}
+// Extension-type motions can have a genuine deficit (a flexion contracture
+// - the joint can't reach 0deg) which is clinically important to record,
+// unlike most other motions where a negative value has no real meaning.
+function romSliderMin(motion) {
+  return /extension/i.test(motion) ? -30 : 0;
+}
+
+// Drag-to-set entry for a single Active or Passive value: a native range
+// input (handles touch/mouse/keyboard drag natively, and its step
+// attribute gives the agreed 5-degree snapping for free) paired with a
+// small editable number box for typing an exact value when precision
+// matters more than speed - the two stay in sync since both read/write
+// the same value.
+function ROMSlider({ label, value, onChange, max, min, color }) {
+  return (
+    <div className="flex items-center gap-2 py-1">
+      <span className="text-[11px] w-14 shrink-0" style={{ color: T.inkSoft }}>{label}</span>
+      <input type="range" min={min} max={max} step={5} value={value ?? 0} onChange={(e) => onChange(Number(e.target.value))} className="flex-1" style={{ accentColor: color, height: 32 }} />
+      <div className="flex items-center gap-0.5 shrink-0">
+        <input
+          type="number"
+          inputMode="numeric"
+          value={value ?? ""}
+          onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+          className="text-right rounded-lg px-1.5 py-1 text-[13px] font-semibold"
+          style={{ width: 44, border: `1px solid ${T.border}`, color }}
+        />
+        <span className="text-[12px]" style={{ color: T.inkSoft }}>°</span>
+      </div>
+    </div>
+  );
+}
+
 function ROMTable({ motions, values, onChange, region }) {
   const refs = ROM_REFERENCE[region] || {};
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
-      <div className="grid text-[12px] font-semibold uppercase tracking-wide px-3 py-2" style={{ gridTemplateColumns: "1.4fr 1fr 1fr", background: T.tealTint, color: T.tealDark }}>
-        <span>Motion</span><span className="text-center">Active °</span><span className="text-center">Passive °</span>
-      </div>
       {motions.map((m, i) => {
         const row = values[m] || {};
         const ref = refs[m];
+        const max = romSliderMax(region, m);
+        const min = romSliderMin(m);
         return (
-          <div key={m} className="px-3 py-2" style={{ background: i % 2 ? T.surface : "#FAFCFC", borderTop: `1px solid ${T.border}` }}>
-            <div className="grid items-center" style={{ gridTemplateColumns: "1.4fr 1fr 1fr" }}>
-              <span className="text-[13px]" style={{ color: T.ink }}>{m}</span>
-              <input type="number" inputMode="numeric" value={row.active ?? ""} onChange={(e) => onChange(m, { ...row, active: e.target.value === "" ? null : Number(e.target.value) })} className="mx-auto text-center rounded-lg px-1 py-1.5 text-[14px]" style={{ width: 56, border: `1px solid ${T.border}` }} />
-              <input type="number" inputMode="numeric" value={row.passive ?? ""} onChange={(e) => onChange(m, { ...row, passive: e.target.value === "" ? null : Number(e.target.value) })} className="mx-auto text-center rounded-lg px-1 py-1.5 text-[14px]" style={{ width: 56, border: `1px solid ${T.border}` }} />
-            </div>
+          <div key={m} className="px-3 py-2.5" style={{ background: i % 2 ? T.surface : "#FAFCFC", borderTop: `1px solid ${T.border}` }}>
+            <div className="text-[13px] font-semibold mb-1" style={{ color: T.ink }}>{m}</div>
+            <ROMSlider label="Active" value={row.active} onChange={(v) => onChange(m, { ...row, active: v })} max={max} min={min} color={T.teal} />
+            <ROMSlider label="Passive" value={row.passive} onChange={(v) => onChange(m, { ...row, passive: v })} max={max} min={min} color={T.tealDark} />
             {ref && <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
+            {min < 0 && <div className="text-[10.5px]" style={{ color: T.inkSoft }}>Drag below 0° to record a deficit/contracture.</div>}
           </div>
         );
       })}
@@ -13657,6 +13722,30 @@ function lowerFirst(s) {
   return s.charAt(0).toLowerCase() + s.slice(1);
 }
 
+// HTML date inputs always store/produce yyyy-mm-dd regardless of locale
+// display; converts that to dd/mm/yy for note text. Falls back to the raw
+// value if it isn't in the expected format, rather than showing nothing.
+function formatDateDMY(iso) {
+  if (!iso) return iso;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  const [, y, mo, d] = m;
+  return `${d}/${mo}/${y.slice(2)}`;
+}
+
+// This app has three inconsistently-named variants of the same
+// "time since injury" free-text field across different templates
+// (timeSinceInjury, timeFromInjury, timeSinceInjurySurgery) - this checks
+// all three so the injury-date clause below can find whichever one a
+// given condition actually uses, and the standalone text clause can
+// suppress the one that's present once it's been merged in.
+function timeSinceInjuryKey(state) {
+  if (state.timeSinceInjury && state.timeSinceInjury.trim()) return "timeSinceInjury";
+  if (state.timeFromInjury && state.timeFromInjury.trim()) return "timeFromInjury";
+  if (state.timeSinceInjurySurgery && state.timeSinceInjurySurgery.trim()) return "timeSinceInjurySurgery";
+  return null;
+}
+
 // Expands "conditional" field wrappers according to current state, so
 // callers see a flat list of fields actually visible/relevant right now.
 function resolveFields(fields, state) {
@@ -13722,8 +13811,8 @@ function fieldClause(field, state) {
       if (/mechanismOfInjury/i.test(key)) return `the mechanism of injury was ${list}`;
       if (/injuryFactors/i.test(key)) return `injury factors included ${list}`;
       if (/(patientGoals|patientPriorities)/i.test(key)) return `the patient's goals included ${list}`;
-      if (/inspection/i.test(key)) return `inspection revealed ${list}`;
-      if (/palpation/i.test(key)) return `palpation was notable for ${list}`;
+      if (/inspection/i.test(key)) return list;
+      if (/palpation/i.test(key)) return list;
       if (/abnormal in$/i.test(label)) return `abnormal findings were noted in ${list}`;
       if (label) {
         // Labels of the form "Special tests — Rotator Cuff" read awkwardly
@@ -13751,14 +13840,18 @@ function fieldClause(field, state) {
       if (!clauses.length) return null;
       // Same "Special tests — Rotator Cuff" -> "rotator cuff tests" promotion
       // used for the plain-checkbox fallback, so testGrid-typed special
-      // tests read consistently rather than with the raw label prefix.
+      // tests read consistently rather than with the raw label prefix. Each
+      // one is now its own standalone bulleted line rather than a
+      // continuation of a joined sentence, so it's capitalized like any
+      // other list item instead of the lowercase mid-sentence form used
+      // elsewhere.
       const subGrouped = label.match(/^special tests\s*\u2014\s*(.+)$/i);
       if (subGrouped) {
         const qualifier = subGrouped[1].replace(/\s*\([^)]*\)\s*$/, "").trim();
         const lowered = qualifier.split(" ").map(lowerListItem).join(" ");
-        return `${lowered} tests: ${clauses.join("; ")}`;
+        return `  \u2022 ${lowered.charAt(0).toUpperCase()}${lowered.slice(1)} tests: ${clauses.join("; ")}`;
       }
-      return `${lowerLabel}: ${clauses.join("; ")}`;
+      return `  \u2022 ${lowerLabel.charAt(0).toUpperCase()}${lowerLabel.slice(1)}: ${clauses.join("; ")}`;
     }
     case "select": {
       const v = state[key];
@@ -13773,6 +13866,14 @@ function fieldClause(field, state) {
       if (/workDemand/i.test(key)) return `work demand is ${lowerFirst(v)}`;
       if (/activityLevel/i.test(key)) return `activity level is ${lowerFirst(v)}`;
       if (/neuro\w*Status$/i.test(key)) return `${lowerFirst(label.replace(/ \u2014 overall$/i, ""))} status was ${v.toLowerCase()}`;
+      // A bare "Yes"/"No" answer reads like a form field, not prose, once
+      // it lands after "was" ("mechanical block was no"). Detected from
+      // the field's own options rather than by name, so this covers every
+      // Yes/No field in the app, not just ones matched individually.
+      if (label && Array.isArray(field.options) && field.options.length === 2 && field.options.includes("Yes") && field.options.includes("No")) {
+        const cleanLabel = lowerLabel.replace(/\?$/, "");
+        return v === "No" ? `no ${cleanLabel}` : `${cleanLabel} present`;
+      }
       if (label) return `${lowerLabel} was ${lowerListItem(v)}`;
       return v;
     }
@@ -13787,6 +13888,13 @@ function fieldClause(field, state) {
       // purpose elsewhere isn't accidentally swallowed.
       const otherMatch = key.match(/^(\w+)Other$/);
       if (otherMatch && Array.isArray(state[otherMatch[1]]) && state[otherMatch[1]].includes("Other")) return null;
+      // Same idea for time-since-injury: once an injury date is present,
+      // its value is folded directly into the injury-date clause above
+      // ("occurred on 4/6/26, 4 weeks ago"), so the standalone "time from
+      // injury: 4 weeks" bullet would just repeat it. Only suppressed when
+      // there's actually a date to merge into - if no date was entered,
+      // this remains the only place the duration is recorded.
+      if (/^(timeSinceInjury|timeFromInjury|timeSinceInjurySurgery)$/i.test(key) && state.injuryDate && state.injuryDate.trim()) return null;
       if (/^occupation/i.test(key)) return `works as a ${v}`;
       if (/^(sport|hobby|hobbies|sportHobby)$/i.test(key)) return `participates in ${v}`;
       if (/notable finding$/i.test(label)) return v;
@@ -13796,8 +13904,12 @@ function fieldClause(field, state) {
     case "date": {
       const v = state[key];
       if (!v || !v.trim()) return null;
-      if (/^injuryDate$/i.test(key)) return `the injury occurred on ${v}`;
-      return `${lowerLabel || "date"} was ${v}`;
+      if (/^injuryDate$/i.test(key)) {
+        const sinceKey = timeSinceInjuryKey(state);
+        const since = sinceKey ? state[sinceKey].trim() : null;
+        return `the injury occurred on ${formatDateDMY(v)}${since ? `, ${lowerFirst(since)} ago` : ""}`;
+      }
+      return `${lowerLabel || "date"} was ${formatDateDMY(v)}`;
     }
     case "number": {
       const v = state[key];
@@ -13812,17 +13924,24 @@ function fieldClause(field, state) {
       return `pain was rated ${v}/10`;
     }
     case "rom": {
-      if (state[`${key}Full`] === "Full") return "range of motion was full";
+      if (state[`${key}Full`] === "Full") return "  \u2022 Range of motion: full";
       const v = state[key] || {};
-      const parts = Object.entries(v)
-        .filter(([, r]) => r && (r.active != null || r.passive != null))
-        .map(([m, r]) => {
-          const bits = [];
-          if (r.active != null) bits.push(`${r.active}\u00b0 actively`);
-          if (r.passive != null) bits.push(`${r.passive}\u00b0 passively`);
-          return `${m} was ${bits.join(" and ")}`;
-        });
-      return parts.length ? parts.join("; ") : null;
+      const region = state.__region;
+      const lines = [];
+      Object.entries(v).forEach(([m, r]) => {
+        if (!r || (r.active == null && r.passive == null)) return;
+        const normalMax = romNormalMax(region, m);
+        const isFull = normalMax != null && r.active != null && r.passive != null && r.active >= normalMax && r.passive >= normalMax;
+        if (isFull) {
+          lines.push(`  \u2022 ${m}: full`);
+          return;
+        }
+        const bits = [];
+        if (r.active != null) bits.push(`${r.active}\u00b0 active`);
+        if (r.passive != null) bits.push(`${r.passive}\u00b0 passive`);
+        lines.push(`  \u2022 ${m}: ${bits.join(", ")}`);
+      });
+      return lines.length ? lines.join("\n") : null;
     }
     case "numberGroup": {
       const v = state[key] || {};
@@ -13844,8 +13963,8 @@ function fieldClause(field, state) {
     case "strength": {
       const v = state[key] || {};
       const muscles = field.muscles || [];
-      const parts = muscles.filter((m) => v[m.key] != null).map((m) => `${m.label} was graded ${v[m.key]}/5`);
-      return parts.length ? parts.join("; ") : null;
+      const lines = muscles.filter((m) => v[m.key] != null).map((m) => `  \u2022 ${m.label}: ${v[m.key]}/5`);
+      return lines.length ? lines.join("\n") : null;
     }
     default:
       return null;
@@ -13956,7 +14075,7 @@ function historyGroupsFor(fields, state) {
     if (/^typicalPresentation/i.test(key)) return; // handled as its own leading sentence in buildHistory
     const c = fieldClause(f, state);
     if (!c) return;
-    if (/mechanismOfInjury/i.test(key) || /injuryFactors/i.test(key) || /^mechanism$/i.test(key) || /^onset$/i.test(key) || /duration/i.test(key) || /timeSinceInjury/i.test(key) || /symptomProgression/i.test(key) || /affectedDigit/i.test(key) || f.type === "vas" || f.type === "date") {
+    if (/mechanismOfInjury/i.test(key) || /injuryFactors/i.test(key) || /^mechanism$/i.test(key) || /^onset$/i.test(key) || /duration/i.test(key) || /^(timeSinceInjury|timeFromInjury|timeSinceInjurySurgery)$/i.test(key) || /symptomProgression/i.test(key) || /affectedDigit/i.test(key) || f.type === "vas" || f.type === "date") {
       groups.presenting.push(c);
     } else if (/symptom/i.test(key) || /painChar/i.test(key)) {
       groups.symptoms.push(c);
@@ -14000,9 +14119,11 @@ function historyGroupsToText(groups) {
 
 // Builds the standalone opening sentence of History from the Typical
 // Patient section's typicalPresentation checklist, naming the body region
-// explicitly rather than the previous "presentation was consistent with"
-// phrasing - this reads as a proper clinical opening statement rather than
-// a clause buried mid-list alongside duration and pain score.
+// (and laterality, if documented) explicitly rather than the previous
+// "presentation was consistent with" phrasing, and rather than stating
+// the side as a separate sentence afterward - "right shoulder symptoms"
+// reads as one clean presenting complaint instead of two disconnected
+// statements.
 function typicalPresentationSentence(typical, state, region) {
   if (!typical) return null;
   const field = resolveFields(typical.fields, state).find((f) => f.key && /^typicalPresentation/i.test(f.key));
@@ -14010,7 +14131,8 @@ function typicalPresentationSentence(typical, state, region) {
   const items = state[field.key];
   if (!items || !items.length) return null;
   const regionLabel = region && REGIONS[region] ? REGIONS[region].label.toLowerCase() : null;
-  return `The patient presented with ${regionLabel ? `${regionLabel} symptoms: ` : ""}${humanizeList(items)}.`;
+  const sidePrefix = state.side ? `${String(state.side).toLowerCase()} ` : "";
+  return `The patient presented with ${regionLabel ? `${sidePrefix}${regionLabel} symptoms: ` : ""}${humanizeList(items)}.`;
 }
 
 function buildHistory(condition, state) {
@@ -14032,7 +14154,6 @@ function buildHistory(condition, state) {
     const leftGroups = historyGroupsFor(history.fields, leftState);
     const parts = [];
     if (openingSentence) parts.push(openingSentence);
-    parts.push("Bilateral involvement is present.");
     const typicalText = typicalGroups && historyGroupsToText(typicalGroups);
     if (typicalText) parts.push(typicalText);
     const rightText = historyGroupsToText(rightGroups);
@@ -14044,14 +14165,10 @@ function buildHistory(condition, state) {
 
   const historyGroups = history ? historyGroupsFor(history.fields, state) : null;
   const mergedText = historyGroupsToText(mergeHistoryGroups(typicalGroups, historyGroups));
-  const side = state.side;
-  const sideStatement = side && String(side).toLowerCase() !== "bilateral" ? `The ${String(side).toLowerCase()} side is affected.` : null;
-  // Opening sentence first, then laterality, then the rest of the grouped
-  // history - each joined by a newline so the bulleted content starts
-  // cleanly on its own line rather than running on from the sentence above.
-  const leading = [openingSentence, sideStatement].filter(Boolean).join("\n");
-  if (leading && mergedText) return `${leading}\n${mergedText}`;
-  if (leading) return leading;
+  // The opening sentence now already states which side is affected, so
+  // there's no separate laterality statement to add here anymore.
+  if (openingSentence && mergedText) return `${openingSentence}\n${mergedText}`;
+  if (openingSentence) return openingSentence;
   return mergedText;
 }
 
@@ -14087,8 +14204,8 @@ function examinationTextFor(exam, state) {
   const bullets = [];
   if (groups.inspection.length) bullets.push(`\u2022 Inspection: ${joinClausesLower(groups.inspection)}`);
   if (groups.palpation.length) bullets.push(`\u2022 Palpation: ${joinClausesLower(groups.palpation)}`);
-  if (groups.motion.length) bullets.push(`\u2022 Range of motion and strength: ${joinClausesLower(groups.motion)}`);
-  if (groups.special.length) bullets.push(`\u2022 Special tests: ${joinClausesLower(groups.special)}`);
+  if (groups.motion.length) bullets.push(`\u2022 Range of motion and strength:\n${groups.motion.join("\n")}`);
+  if (groups.special.length) bullets.push(`\u2022 Special tests:\n${groups.special.join("\n")}`);
   if (groups.other.length) bullets.push(`\u2022 Other findings: ${joinClausesLower(groups.other)}`);
 
   return bullets.length ? bullets.join("\n") : null;
@@ -14106,19 +14223,19 @@ function buildExamination(condition, state) {
     const digitSpecificKeys = new Set(["palpation", "activeFlexion", "activeExtension", "passiveMotion", "compositeFist", "tendonGliding", "triggerSeverity"]);
     const sharedSection = { fields: exam.fields.filter((f) => !digitSpecificKeys.has(f.key)) };
     const perDigitFieldsList = exam.fields.filter((f) => digitSpecificKeys.has(f.key));
-    const sharedText = examinationTextFor(sharedSection, state);
+    const sharedText = examinationTextFor(sharedSection, { ...state, __region: condition.region });
     const parts = [];
     if (sharedText) parts.push(sharedText);
     (state.affectedDigits || []).forEach((digit) => {
-      const digitText = examinationTextFor({ fields: perDigitFieldsList }, state.digitData?.[digit] || {});
+      const digitText = examinationTextFor({ fields: perDigitFieldsList }, { ...(state.digitData?.[digit] || {}), __region: condition.region });
       if (digitText) parts.push(`${digit}:\n${digitText}`);
     });
     return parts.length ? parts.join("\n\n") : null;
   }
 
   if (state.side === "Bilateral") {
-    const rightState = { ...state, ...(state.limbData?.right || {}) };
-    const leftState = { ...state, ...(state.limbData?.left || {}) };
+    const rightState = { ...state, ...(state.limbData?.right || {}), __region: condition.region };
+    const leftState = { ...state, ...(state.limbData?.left || {}), __region: condition.region };
     const rightText = examinationTextFor(exam, rightState);
     const leftText = examinationTextFor(exam, leftState);
     const parts = [];
@@ -14127,7 +14244,7 @@ function buildExamination(condition, state) {
     return parts.length ? parts.join("\n\n") : null;
   }
 
-  return examinationTextFor(exam, state);
+  return examinationTextFor(exam, { ...state, __region: condition.region });
 }
 
 // Groups imaging clauses by modality (Radiographs, Ultrasound, MRI, CT,
@@ -14423,6 +14540,14 @@ const PATIENT_RISK_MODIFIER_RULES = [
   { test: /smoking/i, text: "Smoking \u2014 increased risk of delayed healing, infection, and higher re-tear/nonunion rate" },
   { test: /diabetes/i, text: "Diabetes \u2014 increased risk of infection and delayed or impaired healing" },
   { test: /rheumatoid|inflammatory/i, text: "Inflammatory arthritis \u2014 delayed rehabilitation and higher revision risk" },
+  { test: /anabolic steroid/i, text: "Anabolic steroid use \u2014 increased risk of tendon re-rupture and impaired tendon healing" },
+  { test: /obesity/i, text: "Obesity \u2014 increased risk of wound complications, infection, and venous thromboembolism" },
+  { test: /corticosteroid/i, text: "Corticosteroid use \u2014 increased risk of impaired wound healing, infection, and tissue fragility" },
+  { test: /immunosuppression|organ transplant|chemotherapy/i, text: "Immunosuppression \u2014 increased risk of infection and delayed healing" },
+  { test: /chronic renal disease|dialysis/i, text: "Chronic renal disease \u2014 increased risk of impaired wound healing and infection" },
+  { test: /peripheral vascular disease/i, text: "Peripheral vascular disease \u2014 increased risk of impaired wound healing due to reduced perfusion" },
+  { test: /osteoporosis/i, text: "Osteoporosis \u2014 increased risk of fixation failure or periprosthetic fracture" },
+  { test: /alcohol excess/i, text: "Alcohol excess \u2014 increased risk of impaired wound healing, bleeding, and perioperative complications" },
 ];
 
 function patientRiskModifiers(state) {
@@ -14607,9 +14732,17 @@ function buildInjectionSentence(detail) {
 // discussed and consent given; "Not agreed" records the alternate outcome
 // plainly; leaving it unanswered omits the sentence entirely rather than
 // guessing.
-function trailToBullets(trail, surgeryAgreement, surgicalDiscussion) {
+function trailToBullets(trail, surgeryAgreement, surgicalDiscussion, state) {
   const stepTexts = trail.filter((t) => t.node.type === "info" || t.node.type === "terminal").map((t) => t.node.text);
   if (!stepTexts.length) return [];
+
+  // If the clinician has already recorded MRI findings in the Imaging
+  // section, a pathway step suggesting to order one ("MRI if indicated")
+  // no longer makes sense - it's already been done. Only the specific
+  // "if/as indicated" phrasing is targeted, not sentences that describe
+  // what an MRI showed (those are decision-point context, not a to-do).
+  const mriAlreadyDone = !!(state && state.mriFinding && String(state.mriFinding).trim());
+  const MRI_SUGGESTION_RE = /^MRI\b.*\b(if|as)\s+indicated\b/i;
 
   const bullets = [];
   stepTexts.forEach((text) => {
@@ -14617,7 +14750,10 @@ function trailToBullets(trail, surgeryAgreement, surgicalDiscussion) {
       .split("\u2192")
       .map((s) => s.trim())
       .filter(Boolean)
-      .forEach((s) => bullets.push(/^diagnosis$/i.test(s) ? "The probable diagnosis was discussed with the patient." : s));
+      .forEach((s) => {
+        if (mriAlreadyDone && MRI_SUGGESTION_RE.test(s)) return;
+        bullets.push(/^diagnosis$/i.test(s) ? "The probable diagnosis was discussed with the patient." : s);
+      });
   });
   if (!bullets.length) return [];
 
@@ -14664,7 +14800,7 @@ function buildManagementPlan(condition, state) {
       const bullets = [];
       if (Object.keys(digitAnswers).length) {
         const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, priorTx);
-        bullets.push(...trailToBullets(walkPathwayTrail(condition.pathway, digitAnswers, effectiveStart), state.pathwaySurgeryAgreementByDigit?.[digit], digitDiscussion));
+        bullets.push(...trailToBullets(walkPathwayTrail(condition.pathway, digitAnswers, effectiveStart), state.pathwaySurgeryAgreementByDigit?.[digit], digitDiscussion, state));
       }
       const digitAltPlan = (digitAlt.options || []).filter((p) => p !== "Other");
       if ((digitAlt.options || []).includes("Other") && digitAlt.optionsOther && digitAlt.optionsOther.trim()) digitAltPlan.push(digitAlt.optionsOther.trim());
@@ -14693,7 +14829,7 @@ function buildManagementPlan(condition, state) {
     const parts = [];
     if (Object.keys(rightAnswers).length) {
       const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, rightPriorTx);
-      const bullets = trailToBullets(walkPathwayTrail(condition.pathway, rightAnswers, effectiveStart), state.pathwaySurgeryAgreementRight, state.surgicalDiscussionRight);
+      const bullets = trailToBullets(walkPathwayTrail(condition.pathway, rightAnswers, effectiveStart), state.pathwaySurgeryAgreementRight, state.surgicalDiscussionRight, { mriFinding: state.limbData?.right?.mriFinding });
       const rightInjectionSentence = buildInjectionSentence(state.injectionDetailRight);
       if (rightInjectionSentence) bullets.push(rightInjectionSentence);
       if (state.surgicalDiscussionRight && state.surgicalDiscussionRight.complicationsDiscussed) {
@@ -14704,7 +14840,7 @@ function buildManagementPlan(condition, state) {
     }
     if (Object.keys(leftAnswers).length) {
       const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, leftPriorTx);
-      const bullets = trailToBullets(walkPathwayTrail(condition.pathway, leftAnswers, effectiveStart), state.pathwaySurgeryAgreementLeft, state.surgicalDiscussionLeft);
+      const bullets = trailToBullets(walkPathwayTrail(condition.pathway, leftAnswers, effectiveStart), state.pathwaySurgeryAgreementLeft, state.surgicalDiscussionLeft, { mriFinding: state.limbData?.left?.mriFinding });
       const leftInjectionSentence = buildInjectionSentence(state.injectionDetailLeft);
       if (leftInjectionSentence) bullets.push(leftInjectionSentence);
       if (state.surgicalDiscussionLeft && state.surgicalDiscussionLeft.complicationsDiscussed) {
@@ -14722,7 +14858,7 @@ function buildManagementPlan(condition, state) {
   const answers = state.pathwayAnswers || {};
   const priorTx = (state.prevTreatment || []).length > 0;
   const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, priorTx);
-  const bullets = Object.keys(answers).length ? trailToBullets(walkPathwayTrail(condition.pathway, answers, effectiveStart), state.pathwaySurgeryAgreement, state.surgicalDiscussion) : [];
+  const bullets = Object.keys(answers).length ? trailToBullets(walkPathwayTrail(condition.pathway, answers, effectiveStart), state.pathwaySurgeryAgreement, state.surgicalDiscussion, state) : [];
   bullets.push(...altPlan);
   const injectionSentence = buildInjectionSentence(state.injectionDetail);
   if (injectionSentence) bullets.push(injectionSentence);
@@ -15055,7 +15191,7 @@ function buildFollowupNoteParts(condition, fuState, fullState) {
   if (condition.pathway && fuState.pathwayAnswers && Object.keys(fuState.pathwayAnswers).length) {
     const priorTx = (fuState.treatmentOffered || []).length > 0;
     const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, priorTx);
-    planBullets.push(...trailToBullets(walkPathwayTrail(condition.pathway, fuState.pathwayAnswers, effectiveStart), fuState.pathwaySurgeryAgreement, fuState.surgicalDiscussion));
+    planBullets.push(...trailToBullets(walkPathwayTrail(condition.pathway, fuState.pathwayAnswers, effectiveStart), fuState.pathwaySurgeryAgreement, fuState.surgicalDiscussion, { mriFinding: fullState?.mriFinding || fullState?.limbData?.right?.mriFinding || fullState?.limbData?.left?.mriFinding }));
   }
   const altPlan = (fuState.planOptions || []).filter((p) => p !== "Other");
   if ((fuState.planOptions || []).includes("Other") && fuState.planOptionsOther && fuState.planOptionsOther.trim()) altPlan.push(fuState.planOptionsOther.trim());
@@ -15189,7 +15325,7 @@ function buildPostopNoteParts(condition, poState) {
   const parts = [];
 
   if (poState.procedureName && poState.procedureName.trim()) {
-    const dateText = poState.surgeryDate ? ` on ${poState.surgeryDate}` : "";
+    const dateText = poState.surgeryDate ? ` on ${formatDateDMY(poState.surgeryDate)}` : "";
     const sinceText = poState.surgeryDate ? timeSinceSurgery(poState.surgeryDate) : null;
     const sinceClause = sinceText ? ` (${sinceText} since surgery)` : "";
     parts.push({ heading: "Procedure", text: `The patient underwent ${poState.procedureName.trim()}${dateText}${sinceClause}.` });
@@ -15403,6 +15539,22 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const [copyError, setCopyError] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
+  // Scrolls the newly-opened section into view automatically, so tapping
+  // "Next" or a different section header lands the user at that section's
+  // top rather than leaving them wherever they happened to be scrolled to
+  // - previously this required manually scrolling up every time.
+  const sectionRefs = useRef({});
+  const isFirstSectionRender = useRef(true);
+  useEffect(() => {
+    if (isFirstSectionRender.current) {
+      isFirstSectionRender.current = false;
+      return;
+    }
+    if (openSection && sectionRefs.current[openSection]) {
+      sectionRefs.current[openSection].scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [openSection]);
+
   const setField = useCallback((key, val) => onFieldChange({ [key]: val }), [onFieldChange]);
   const toggleSection = (id) => setOpenSection((cur) => (cur === id ? null : id));
   const hasMultipleActive = session.order.length > 1;
@@ -15545,30 +15697,32 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const totalFlagsChecked = redFlagsChecked.length + urgentFlagsChecked.length;
   // Live progress so the clinician can see how much of the template is
   // documented without scrolling the whole section list.
-  const sectionsDone = condition.sections.filter((s) => sectionHasContent(s, state, condition.id)).length;
-  const progressPct = condition.sections.length ? sectionsDone / condition.sections.length : 0;
-  const ringR = 13;
-  const ringCircumference = 2 * Math.PI * ringR;
-  const ringOffset = ringCircumference * (1 - progressPct);
+  // Outcome Measures is a static reference table with no fields for the
+  // clinician to fill in - counting it meant progress could never reach
+  // 100% even once everything actually fillable was documented.
+  const countableSections = condition.sections.filter((s) => s.id !== "outcomes");
+  const sectionsDone = countableSections.filter((s) => sectionHasContent(s, state, condition.id)).length;
+  const progressPct = countableSections.length ? sectionsDone / countableSections.length : 0;
 
   return (
     <div className="min-h-screen pb-32" style={{ background: T.bg }}>
-      <div className="sticky top-0 z-30 flex items-center gap-2 px-3 py-3" style={{ background: T.surface, borderBottom: `1px solid ${T.border}`, boxShadow: "0 1px 3px rgba(16,30,43,0.04)" }}>
-        <button onClick={onBack} className="p-2 -ml-1 active:opacity-60"><ArrowLeft size={22} color={T.ink} /></button>
-        <div className="flex-1 min-w-0">
-          <div className="font-bold text-[16px] truncate" style={{ color: T.ink }}>{condition.name}</div>
-          <div className="text-[12px] capitalize" style={{ color: T.inkSoft }}>{condition.region} \u00b7 {sectionsDone}/{condition.sections.length} sections</div>
+      <div className="sticky z-30" style={{ top: 48, background: T.surface, boxShadow: "0 1px 3px rgba(16,30,43,0.04)" }}>
+        <div className="flex items-center gap-2 px-3 py-3">
+          <button onClick={onBack} className="p-2 -ml-1 active:opacity-60"><ArrowLeft size={22} color={T.ink} /></button>
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-[16px] truncate" style={{ color: T.ink }}>{condition.name}</div>
+            <div className="text-[12px] capitalize" style={{ color: T.inkSoft }}>
+              {condition.region} · <span className="font-bold" style={{ color: T.tealDark }}>{sectionsDone}/{countableSections.length}</span> sections
+            </div>
+          </div>
+          <button onClick={() => setFlagsOpen(true)} className="flex items-center gap-1 rounded-full px-3 py-2 active:scale-95" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+            <AlertTriangle size={16} color={T.amber} />
+            <span className="text-[13px] font-semibold" style={{ color: T.amber }}>{totalFlagsChecked > 0 ? totalFlagsChecked : ""} Red flags</span>
+          </button>
         </div>
-        <div style={{ width: 34, height: 34, position: "relative", flexShrink: 0 }} aria-label={`${sectionsDone} of ${condition.sections.length} sections documented`}>
-          <svg width="34" height="34" style={{ transform: "rotate(-90deg)" }}>
-            <circle cx="17" cy="17" r={ringR} fill="none" stroke={T.tealTint} strokeWidth="3" />
-            <circle cx="17" cy="17" r={ringR} fill="none" stroke={T.tealDark} strokeWidth="3" strokeDasharray={ringCircumference} strokeDashoffset={ringOffset} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.3s ease" }} />
-          </svg>
+        <div style={{ height: 3, background: T.tealTint }} aria-label={`${sectionsDone} of ${countableSections.length} sections documented`}>
+          <div style={{ height: "100%", width: `${Math.round(progressPct * 100)}%`, background: T.gradientTeal, transition: "width 0.3s ease" }} />
         </div>
-        <button onClick={() => setFlagsOpen(true)} className="flex items-center gap-1 rounded-full px-3 py-2 active:scale-95" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
-          <AlertTriangle size={16} color={T.amber} />
-          <span className="text-[13px] font-semibold" style={{ color: T.amber }}>{totalFlagsChecked > 0 ? totalFlagsChecked : ""} Red flags</span>
-        </button>
       </div>
 
       <div className="px-3 pt-3 max-w-2xl lg:max-w-4xl mx-auto">
@@ -15577,8 +15731,8 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         {condition.sections.map((section, sectionIdx) => {
           const nextSection = condition.sections[sectionIdx + 1];
           return (
+          <div key={section.id} ref={(el) => { sectionRefs.current[section.id] = el; }} style={{ scrollMarginTop: 130 }}>
           <CollapsibleSection
-            key={section.id}
             index={section.index}
             title={section.title}
             subtitle={section.subtitle}
@@ -15591,7 +15745,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
             {isPerDigitCondition && section.id === "pathway" ? (
               <>
                 <div className="text-[12.5px] mb-3 italic" style={{ color: T.inkSoft }}>
-                  Pathway suggests next steps for each affected digit independently, based on your answers \u2014 clinical judgement remains central.
+                  Pathway suggests next steps for each affected digit independently, based on your answers — clinical judgement remains central.
                 </div>
                 {affectedDigitsList.length === 0 ? (
                   <div className="text-[13px] rounded-xl px-4 py-3" style={{ color: T.inkSoft, background: T.slateChip, border: `1px solid ${T.border}` }}>
@@ -15804,6 +15958,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               dedupeFields(section.fields).map((f, i) => <Field key={i} field={f} state={state} setField={setField} region={condition.region} />)
             )}
           </CollapsibleSection>
+          </div>
           );
         })}
       </div>
