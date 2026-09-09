@@ -17208,42 +17208,195 @@ function VisitTypeGate({ onSelect }) {
 // tap targets matter more than anatomical realism. Every zone is also
 // reachable from the labelled list beneath, which keeps the screen usable
 // for anyone who finds the diagram fiddly and keeps it accessible.
-function BodyMap({ onSelect, activeRegion }) {
+// Original anatomical region picker. Every path here is hand-authored for
+// this app, so there is no third-party licensing attached to it. It is an
+// SVG rather than a raster illustration for three reasons that matter in
+// this app specifically: each region needs to be independently tappable,
+// it has to stay crisp at any tablet size, and the PWA caches it offline
+// so a few KB of vector beats a large bitmap.
+//
+// Layout: colour bands run behind the limb, muscle groups are tinted to
+// match their band, and the median/ulnar/radial nerves are traced down the
+// whole limb - which is also why Peripheral Nerve gets its own band rather
+// than a point on the arm, since it spans every region.
+function BodyMap({ onSelect, counts }) {
+  // Contiguous horizontal hit zones, so there are no dead gaps between
+  // regions - a tap anywhere in a band's vertical slice selects it, which
+  // is far more forgiving than requiring a hit on the muscle itself.
   const zones = [
-    { key: "shoulder", label: "Shoulder", cx: 96, cy: 62, r: 34 },
-    { key: "elbow", label: "Elbow", cx: 128, cy: 158, r: 28 },
-    { key: "wrist", label: "Wrist", cx: 150, cy: 242, r: 24 },
-    { key: "hand", label: "Hand", cx: 160, cy: 300, r: 26 },
+    { key: "shoulder", y: 0, h: 215, label: "Shoulder" },
+    { key: "elbow", y: 215, h: 125, label: "Elbow" },
+    { key: "wrist", y: 340, h: 105, label: "Wrist" },
+    { key: "hand", y: 445, h: 105, label: "Hand" },
+    { key: "peripheralNerve", y: 550, h: 60, label: "Peripheral nerve" },
   ];
+  const n = (k) => (counts && counts[k] != null ? counts[k] : 0);
   return (
-    <svg viewBox="0 0 240 340" width="100%" style={{ maxHeight: 300 }} role="img" aria-label="Upper limb region selector">
-      {/* Schematic torso edge and arm, purely as orientation for the zones */}
-      <path d="M 40 40 L 40 330" stroke={T.border} strokeWidth="2" fill="none" />
-      <path d="M 62 44 Q 96 30 122 62 L 132 130 Q 140 180 150 224 L 158 278" stroke={T.borderStrong} strokeWidth="22" fill="none" strokeLinecap="round" opacity="0.35" />
-      <circle cx="166" cy="304" r="20" fill={T.borderStrong} opacity="0.35" />
-      {zones.map((z) => {
-        const active = activeRegion === z.key;
-        return (
-          <g key={z.key} onClick={() => onSelect(z.key)} style={{ cursor: "pointer" }} role="button" aria-label={z.label}>
-            <circle cx={z.cx} cy={z.cy} r={z.r} fill={active ? T.tealDark : T.tealTint} stroke={active ? T.tealDark : T.teal} strokeWidth="2" />
-            <text x={z.cx} y={z.cy + 4} textAnchor="middle" fontSize="12" fontWeight="600" fill={active ? "#fff" : T.tealDark}>
-              {z.label}
-            </text>
-          </g>
-        );
-      })}
+    <svg viewBox="0 0 348 610" width="100%" style={{ display: "block", maxHeight: "72vh" }} role="group" aria-label="Upper limb region picker">
+      <defs>
+        <linearGradient id="ut-d1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#8FCDEC"/><stop offset="100%" stopColor="#3B87BD"/></linearGradient>
+        <linearGradient id="ut-d2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#6FB9E0"/><stop offset="100%" stopColor="#276F9F"/></linearGradient>
+        <linearGradient id="ut-d3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#A5D8F0"/><stop offset="100%" stopColor="#4E96C6"/></linearGradient>
+        <linearGradient id="ut-bi" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#C2DE94"/><stop offset="100%" stopColor="#6FA43F"/></linearGradient>
+        <linearGradient id="ut-brl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#B2D283"/><stop offset="100%" stopColor="#5C8D30"/></linearGradient>
+        <linearGradient id="ut-tri" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#9CC46E"/><stop offset="100%" stopColor="#4E7B27"/></linearGradient>
+        <linearGradient id="ut-fx" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F7D089"/><stop offset="100%" stopColor="#DE9234"/></linearGradient>
+        <linearGradient id="ut-ex" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F3C070"/><stop offset="100%" stopColor="#C97C20"/></linearGradient>
+        <linearGradient id="ut-brd" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#EFCE96"/><stop offset="100%" stopColor="#C78A3E"/></linearGradient>
+        <linearGradient id="ut-th" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F2A79E"/><stop offset="100%" stopColor="#D25E51"/></linearGradient>
+        <linearGradient id="ut-hy" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#EE968F"/><stop offset="100%" stopColor="#BE4A40"/></linearGradient>
+        <linearGradient id="ut-pec" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#EDC4C4"/><stop offset="100%" stopColor="#BE7E86"/></linearGradient>
+        <pattern id="ut-gr" width="14" height="14" patternUnits="userSpaceOnUse">
+          <path d="M14 0 L0 0 0 14" fill="none" stroke="#C9C7BE" strokeWidth="0.4" opacity="0.45"/>
+        </pattern>
+      </defs>
+
+      <rect width="348" height="610" fill="#FBF9F3"/>
+      <rect width="348" height="610" fill="url(#ut-gr)"/>
+
+      <rect x="118" y="52" width="230" height="112" rx="7" fill="#BEDDF0" opacity="0.7"/>
+      <rect x="0" y="238" width="228" height="88" rx="7" fill="#F5DE96" opacity="0.7"/>
+      <rect x="0" y="356" width="206" height="80" rx="7" fill="#F7C89A" opacity="0.7"/>
+      <rect x="0" y="456" width="188" height="84" rx="7" fill="#F2AFAF" opacity="0.7"/>
+
+      <g stroke="#9AA6AE" strokeWidth="0.9" fill="none" opacity="0.35">
+        <path d="M30 20 h16 M30 36 h16 M30 52 h16 M30 68 h16 M30 84 h16 M30 100 h16 M30 116 h16"/>
+        <path d="M38 16 v112"/>
+        <path d="M46 32 q34 8 54 26 M46 50 q40 10 60 30 M46 68 q42 14 60 36 M46 86 q40 16 56 40 M46 104 q34 18 48 40 M46 122 q28 18 40 38"/>
+      </g>
+
+      <path d="M52 54 q44 4 74 26" stroke="#E8E0CE" strokeWidth="7" fill="none" strokeLinecap="round"/>
+      <path d="M52 54 q44 4 74 26" stroke="#8A7B5F" strokeWidth="0.9" fill="none"/>
+      <path d="M126 70 q16 2 22 12 q4 8 -2 14" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
+      <path d="M110 96 q22 -14 42 2 q14 12 8 30 q-24 12 -46 -2 q-10 -16 -4 -30 z" fill="#E8E0CE" stroke="#8A7B5F" strokeWidth="0.9"/>
+      <path d="M148 122 q12 46 26 82 q10 26 18 44" stroke="#E8E0CE" strokeWidth="13" fill="none" strokeLinecap="round"/>
+      <path d="M148 122 q12 46 26 82 q10 26 18 44" stroke="#8A7B5F" strokeWidth="0.8" fill="none" opacity="0.65"/>
+
+      <path d="M20 52 q34 -4 62 6 q30 10 50 30 q14 14 6 34 q-14 16 -42 14 q-34 -2 -60 -12 q-22 -10 -26 -32 q-2 -24 10 -40 z" fill="url(#ut-pec)" opacity="0.9"/>
+      <path d="M22 96 q30 6 56 20 q24 12 40 24 q-8 14 -32 14 q-32 -2 -56 -12 q-14 -8 -12 -26 q0 -14 4 -20 z" fill="url(#ut-pec)" opacity="0.75"/>
+      <g stroke="#9F6A73" strokeWidth="0.65" fill="none" opacity="0.55">
+        <path d="M24 62 q46 6 78 34"/><path d="M22 78 q48 8 76 38"/><path d="M22 94 q46 12 72 40"/><path d="M24 110 q42 14 64 38"/><path d="M28 126 q36 14 54 34"/>
+      </g>
+
+      <path d="M122 74 q24 -12 44 6 q14 14 14 34 q-18 14 -38 6 q-16 -16 -22 -28 q-2 -12 2 -18 z" fill="url(#ut-d1)" stroke="#1F5A85" strokeWidth="0.9"/>
+      <path d="M150 68 q30 2 44 28 q12 24 4 52 q-6 14 -16 20 q-16 -4 -24 -18 q-10 -34 -12 -56 q0 -18 4 -26 z" fill="url(#ut-d2)" stroke="#1F5A85" strokeWidth="0.9"/>
+      <path d="M188 84 q20 14 20 42 q0 26 -14 42 q-12 0 -16 -14 q2 -34 6 -54 q2 -12 4 -16 z" fill="url(#ut-d3)" stroke="#1F5A85" strokeWidth="0.9"/>
+      <g stroke="#1F5A85" strokeWidth="0.65" fill="none" opacity="0.5">
+        <path d="M130 84 q14 40 26 72"/><path d="M152 76 q12 46 22 78"/><path d="M172 78 q8 46 12 76"/><path d="M192 92 q2 40 -2 64"/>
+      </g>
+
+      <path d="M184 148 q22 6 30 22 q10 30 16 54 q6 22 8 40 q-16 12 -32 4 q-8 -34 -14 -58 q-6 -30 -8 -62 z" fill="url(#ut-tri)" stroke="#3E661F" strokeWidth="0.9"/>
+      <path d="M146 140 q34 18 66 4 q6 30 12 56 q6 26 10 46 q6 22 8 34 q-28 16 -56 2 q-8 -34 -16 -64 q-10 -40 -16 -60 q-6 -12 -8 -18 z" fill="url(#ut-bi)" stroke="#3E661F" strokeWidth="1"/>
+      <path d="M158 196 q32 14 56 -2 q8 30 14 52 q6 20 8 32 q-26 14 -50 0 q-10 -30 -18 -52 q-6 -18 -10 -30 z" fill="url(#ut-brl)" stroke="#3E661F" strokeWidth="0.85" opacity="0.9"/>
+      <g stroke="#3E661F" strokeWidth="0.7" fill="none" opacity="0.5">
+        <path d="M156 152 q14 54 30 100"/><path d="M176 154 q12 54 26 98"/><path d="M196 148 q10 52 22 94"/>
+      </g>
+
+      <path d="M172 262 q20 -6 28 4 q6 8 2 16 q-18 8 -32 -2 q-4 -10 2 -18 z" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
+      <path d="M206 258 q14 -2 20 8 q4 8 -2 14 q-14 6 -22 -4 q-2 -10 4 -18 z" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
+
+      <path d="M200 300 q12 34 22 58 q8 18 14 30" stroke="#E8E0CE" strokeWidth="6.5" fill="none" strokeLinecap="round"/>
+      <path d="M214 296 q12 34 22 58 q8 18 14 30" stroke="#E8E0CE" strokeWidth="6" fill="none" strokeLinecap="round"/>
+      <g stroke="#8A7B5F" strokeWidth="0.7" fill="none" opacity="0.55">
+        <path d="M200 300 q12 34 22 58 q8 18 14 30"/><path d="M214 296 q12 34 22 58 q8 18 14 30"/>
+      </g>
+
+      <path d="M182 268 q20 12 38 2 q8 22 14 42 q6 20 11 38 q4 16 7 28 q3 10 4 16 q-8 5 -16 2 q-3 -14 -7 -28 q-7 -26 -14 -46 q-8 -24 -17 -38 q-10 -10 -20 -16 z" fill="url(#ut-fx)" stroke="#9A5C17" strokeWidth="0.95"/>
+      <path d="M224 264 q12 7 19 0 q7 19 12 38 q5 18 8 32 q3 14 5 24 q2 8 3 13 q-7 5 -14 1 q-3 -14 -6 -27 q-6 -26 -12 -45 q-6 -22 -12 -30 q-2 -4 -3 -6 z" fill="url(#ut-ex)" stroke="#9A5C17" strokeWidth="0.9"/>
+      <path d="M177 272 q-6 22 1 44 q6 20 15 37 q6 12 10 20 q3 6 5 10 q7 -2 6 -11 q-6 -14 -13 -30 q-10 -24 -16 -44 q-5 -17 -7 -27 q-1 -3 -1 1 z" fill="url(#ut-brd)" stroke="#9A5C17" strokeWidth="0.9"/>
+      <g stroke="#9A5C17" strokeWidth="0.6" fill="none" opacity="0.5">
+        <path d="M194 280 q14 42 25 78"/><path d="M209 277 q12 42 21 76"/><path d="M226 273 q10 38 17 68"/>
+      </g>
+
+      <g stroke="#F0EBDD" strokeWidth="2.2" fill="none" opacity="0.95">
+        <path d="M232 386 q5 14 10 24"/><path d="M239 384 q5 14 10 24"/><path d="M246 382 q5 14 10 24"/>
+      </g>
+      <path d="M238 408 q20 8 34 -2 q4 9 0 16 q-18 9 -38 0 q-2 -9 4 -14 z" fill="#E8E0CE" stroke="#8A7B5F" strokeWidth="0.9"/>
+      <g fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.75">
+        <path d="M242 426 q9 -4 15 2 q4 6 -2 9 q-9 4 -15 -2 q-2 -5 2 -9 z"/>
+        <path d="M260 424 q9 -4 15 2 q4 6 -2 9 q-9 4 -15 -2 q-2 -5 2 -9 z"/>
+      </g>
+
+      <g stroke="#E8E0CE" strokeWidth="4" fill="none" strokeLinecap="round">
+        <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
+      </g>
+      <g stroke="#8A7B5F" strokeWidth="0.6" fill="none" opacity="0.55">
+        <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
+      </g>
+      <g stroke="#E8E0CE" strokeWidth="3.4" fill="none" strokeLinecap="round">
+        <path d="M248 478 l-4 28"/><path d="M264 482 l0 32"/><path d="M282 478 l6 30"/><path d="M300 468 l10 24"/>
+      </g>
+
+      <path d="M241 432 q-11 6 -19 16" stroke="#E8E0CE" strokeWidth="6" fill="none" strokeLinecap="round"/>
+      <path d="M241 432 q-11 6 -19 16" stroke="#8A7B5F" strokeWidth="0.6" fill="none" opacity="0.55"/>
+      <path d="M222 448 q-8 7 -14 14" stroke="#E8E0CE" strokeWidth="5" fill="none" strokeLinecap="round"/>
+      <path d="M222 448 q-8 7 -14 14" stroke="#8A7B5F" strokeWidth="0.55" fill="none" opacity="0.55"/>
+      <path d="M208 462 q-6 6 -10 11" stroke="#E8E0CE" strokeWidth="4.2" fill="none" strokeLinecap="round"/>
+      <path d="M208 462 q-6 6 -10 11" stroke="#8A7B5F" strokeWidth="0.5" fill="none" opacity="0.55"/>
+
+      <path d="M244 418 q-16 10 -20 30 q-4 20 4 32 q10 6 16 -4 q-8 -16 -6 -30 q2 -16 10 -26 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.9"/>
+      <path d="M240 430 q-10 5 -17 15 q-3 5 -1 9 q6 4 10 -1 q3 -8 9 -14 q3 -4 1 -8 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.8"/>
+      <path d="M282 418 q16 8 20 26 q4 18 -4 30 q-10 4 -14 -6 q4 -16 2 -28 q-2 -14 -4 -22 z" fill="url(#ut-hy)" stroke="#9C3C31" strokeWidth="0.9"/>
+      <path d="M244 426 q24 10 42 -4 q6 16 4 30 q-25 12 -50 2 q-2 -16 4 -28 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.85" opacity="0.9"/>
+      <g stroke="#9C3C31" strokeWidth="0.6" fill="none" opacity="0.55">
+        <path d="M254 436 l-2 20"/><path d="M266 436 l0 22"/><path d="M278 434 l4 22"/>
+      </g>
+
+      <g fill="none" strokeLinecap="round">
+        <path d="M48 24 q22 14 34 28 M48 40 q24 12 34 26 M48 56 q24 10 32 24 M48 72 q22 10 30 22" stroke="#F0C64A" strokeWidth="2" opacity="0.85"/>
+        <path d="M82 54 q18 10 26 24 q12 20 16 40" stroke="#F0C64A" strokeWidth="3.6" opacity="0.92"/>
+        <path d="M132 122 q16 42 30 82 q14 36 26 66 q11 26 20 44" stroke="#F0C64A" strokeWidth="3" opacity="0.9"/>
+        <path d="M192 320 q11 32 20 56 q6 14 11 22" stroke="#F0C64A" strokeWidth="2.4" opacity="0.85"/>
+        <path d="M232 404 q7 14 12 24" stroke="#F0C64A" strokeWidth="2" opacity="0.8"/>
+        <path d="M128 118 q20 36 28 70 q8 28 6 48" stroke="#7FD4DC" strokeWidth="2.8" opacity="0.88"/>
+        <path d="M162 240 q14 36 23 64 q6 20 8 36" stroke="#7FD4DC" strokeWidth="2.4" opacity="0.82"/>
+        <path d="M200 346 q11 30 19 52" stroke="#7FD4DC" strokeWidth="2" opacity="0.78"/>
+        <path d="M140 116 q24 30 32 64 q6 26 2 44" stroke="#C58ED8" strokeWidth="2.4" opacity="0.75"/>
+        <path d="M176 232 q15 32 22 60" stroke="#C58ED8" strokeWidth="2" opacity="0.7"/>
+      </g>
+
+      <text x="208" y="96" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#2C5468">SHOULDER</text>
+      <text x="208" y="118" fontSize="11" fill="#3F6D84">{n("shoulder")} templates</text>
+      <text x="20" y="278" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#6B5410">ELBOW</text>
+      <text x="20" y="300" fontSize="11" fill="#8A6C16">{n("elbow")} templates</text>
+      <text x="20" y="394" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#7A4A14">WRIST</text>
+      <text x="20" y="416" fontSize="11" fill="#98601C">{n("wrist")} templates</text>
+      <text x="20" y="496" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#7E2F2A">HAND</text>
+      <text x="20" y="518" fontSize="11" fill="#9C443C">{n("hand")} templates</text>
+
+      <rect x="0" y="556" width="348" height="46" rx="7" fill="#DCD3EC" opacity="0.6"/>
+      <text x="20" y="576" fontSize="17" fontWeight="700" letterSpacing="1.2" fill="#463A66">PERIPHERAL NERVE</text>
+      <text x="20" y="592" fontSize="11" fill="#5A4B80">{n("peripheralNerve")} templates</text>
+      <g strokeLinecap="round" fill="none">
+        <path d="M250 566 h30" stroke="#F0C64A" strokeWidth="3"/>
+        <path d="M250 580 h30" stroke="#7FD4DC" strokeWidth="3"/>
+        <path d="M250 594 h30" stroke="#C58ED8" strokeWidth="3"/>
+      </g>
+      <text x="286" y="570" fontSize="9" fill="#5A4B80">median</text>
+      <text x="286" y="584" fontSize="9" fill="#5A4B80">ulnar</text>
+      <text x="286" y="598" fontSize="9" fill="#5A4B80">radial</text>
+
+      {zones.map((z) => (
+        <rect
+          key={z.key}
+          x="0"
+          y={z.y}
+          width="348"
+          height={z.h}
+          fill="transparent"
+          style={{ cursor: "pointer" }}
+          onClick={() => onSelect(z.key)}
+          role="button"
+          aria-label={`${z.label}, ${n(z.key)} templates`}
+        />
+      ))}
     </svg>
   );
 }
 
 function RegionPicker({ onSelect, onBack }) {
-  const regionMeta = {
-    shoulder: { mono: "SH", tag: "Cuff \u00b7 SAPS \u00b7 Instability" },
-    elbow: { mono: "EL", tag: "Epicondylitis \u00b7 Instability" },
-    wrist: { mono: "WR", tag: "De Quervain's \u00b7 Wrist OA \u00b7 TFCC" },
-    hand: { mono: "HA", tag: "Trigger finger \u00b7 Dupuytren's" },
-    peripheralNerve: { mono: "PN", tag: "CTS \u00b7 Cubital \u00b7 Double Crush" },
-  };
+  const counts = {};
+  Object.entries(REGIONS).forEach(([key, r]) => { counts[key] = getRegionConditions(r).length; });
   return (
     <div className="min-h-screen px-4 pt-4 pb-8" style={{ background: T.bg }}>
       <div className="max-w-2xl lg:max-w-4xl mx-auto">
@@ -17252,19 +17405,9 @@ function RegionPicker({ onSelect, onBack }) {
         </button>
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
         <h1 className="text-[26px] font-bold mb-1" style={{ color: T.ink }}>UpperTrack</h1>
-        <p className="text-[14px] mb-3" style={{ color: T.inkSoft }}>Tap the affected area, or choose a region below.</p>
-        <div className="rounded-2xl mb-5 px-3 py-2 flex justify-center" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowCard }}>
-          <BodyMap onSelect={onSelect} />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {Object.entries(REGIONS).map(([key, r]) => (
-            <button key={key} onClick={() => onSelect(key)} className="rounded-2xl p-4 text-left active:scale-95 transition" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 120, boxShadow: T.shadowElevated }}>
-              <div className="flex items-center justify-center rounded-xl mb-2.5 font-bold text-[13px] tracking-wide" style={{ width: 40, height: 40, background: T.gradientTeal, color: "#fff" }}>{regionMeta[key].mono}</div>
-              <div className="font-bold text-[16px]" style={{ color: T.ink }}>{r.label}</div>
-              <div className="text-[12px] mt-0.5" style={{ color: T.inkSoft }}>{regionMeta[key].tag}</div>
-              <div className="text-[11px] mt-2 font-semibold" style={{ color: T.teal }}>{getRegionConditions(r).length} template{getRegionConditions(r).length === 1 ? "" : "s"}</div>
-            </button>
-          ))}
+        <p className="text-[14px] mb-3" style={{ color: T.inkSoft }}>Tap the affected region.</p>
+        <div className="rounded-2xl overflow-hidden" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+          <BodyMap onSelect={onSelect} counts={counts} />
         </div>
       </div>
     </div>
