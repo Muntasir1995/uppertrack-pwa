@@ -12793,6 +12793,645 @@ const thoracicOutletSyndromeData = {
   ],
 };
 
+/* ----------------------------------------------------------------------------
+   GENERAL (UNDIFFERENTIATED) REGIONAL ASSESSMENTS
+   For a first presentation where the diagnosis isn't yet clear. These use the
+   same section/pathway machinery as the diagnosis-specific templates, so note
+   generation, progress tracking and red-flag handling all work identically -
+   the difference is content: a regional screen aimed at narrowing the
+   differential rather than documenting one known condition. Each links out to
+   that region's specific templates via RELATED_CONDITIONS, so once the picture
+   clarifies the clinician moves straight into the detailed template.
+---------------------------------------------------------------------------- */
+
+const generalShoulderData = {
+  id: "general-shoulder",
+  name: "General Shoulder Assessment",
+  region: "shoulder",
+  isGeneralAssessment: true,
+  urgentFlags: [
+    { text: "Suspected septic arthritis (hot, swollen joint with fever or systemic upset)", consider: "Urgent aspiration and inflammatory markers." },
+    { text: "Neurovascular compromise of the limb", consider: "Urgent vascular/neurological assessment." },
+    { text: "Suspected malignancy (unexplained weight loss, night pain unrelieved by rest, known primary)", consider: "Urgent imaging and appropriate referral." },
+    { text: "Acute high-energy trauma with deformity or inability to move the arm", consider: "Urgent radiographs to exclude fracture or dislocation." },
+  ],
+  redFlags: [
+    { text: "Passive range of motion is restricted as well as active", consider: "Consider adhesive capsulitis or glenohumeral arthritis rather than a cuff problem." },
+    { text: "Pain radiates below the elbow or there are neck symptoms", consider: "Assess the cervical spine as a source of referred pain." },
+    { text: "Weakness disproportionate to pain, or involving several muscle groups", consider: "Consider neurological pathology (cervical radiculopathy, brachial neuritis, suprascapular neuropathy)." },
+    { text: "Symptoms unchanged despite structured rehabilitation", consider: "Reassess the diagnosis rather than repeating the same treatment." },
+    { text: "Constitutional symptoms, fever or raised inflammatory markers", consider: "Exclude infection or inflammatory arthropathy." },
+  ],
+  pathway: {
+    start: "assess",
+    nodes: {
+      assess: { type: "info", title: "Initial assessment", text: "Focused history \u2192 Regional examination \u2192 Cervical spine screen \u2192 Red flag review", next: "redFlagQ" },
+      redFlagQ: {
+        type: "question",
+        title: "Red flags (Decision Point 1)",
+        text: "Pathway suggests confirming whether anything requires escalation before continuing.",
+        options: [
+          { label: "Yes", next: "urgentTerminal" },
+          { label: "No", next: "traumaQ" },
+        ],
+      },
+      urgentTerminal: { type: "terminal", tone: "red", title: "Escalate", text: "Pathway suggests urgent investigation and escalation appropriate to the flag identified, before pursuing a musculoskeletal working diagnosis." },
+      traumaQ: {
+        type: "question",
+        title: "Acute traumatic presentation? (Decision Point 2)",
+        text: "Pathway suggests separating acute injury from atraumatic or gradual-onset presentations, as initial imaging differs.",
+        options: [
+          { label: "Yes", next: "traumaImaging" },
+          { label: "No", next: "patternQ" },
+        ],
+      },
+      traumaImaging: { type: "info", title: "Injury imaging", text: "Radiographs (AP, Grashey, axillary) \u2192 Exclude fracture, dislocation and acromioclavicular injury", next: "patternQ" },
+      patternQ: {
+        type: "question",
+        title: "Does the pattern fit a specific diagnosis? (Decision Point 3)",
+        text: "Pathway suggests reviewing whether history and examination now point to a defined condition.",
+        options: [
+          { label: "Yes", next: "specificTerminal" },
+          { label: "No", next: "empiricTerminal" },
+        ],
+      },
+      specificTerminal: { type: "terminal", tone: "teal", title: "Move to the specific template", text: "Pathway suggests continuing in the condition-specific template for the working diagnosis, where the full structured assessment and management pathway are available." },
+      empiricTerminal: { type: "terminal", tone: "amber", title: "Initial non-operative management", text: "Pathway suggests education \u2192 Activity modification \u2192 Analgesia / NSAIDs \u2192 Structured physiotherapy \u2192 Review in 6\u20138 weeks, reassessing the diagnosis if symptoms do not settle." },
+    },
+  },
+  sections: [
+    {
+      id: "typical", index: 1, title: "Presenting Complaint", subtitle: "Symptoms + risk factors",
+      fields: [
+        { type: "select", key: "age", label: "Age", options: ["Under 20", "20\u201339", "40\u201359", "60\u201374", "75+"], columns: 3 },
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "side", label: "Side affected", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Pain over the lateral shoulder", "Anterior shoulder pain", "Posterior shoulder pain", "Night pain", "Pain with overhead activity", "Weakness", "Stiffness", "Instability or a sense of the shoulder slipping", "Clicking or catching", "Neck or arm radiation", "Other"] },
+        { type: "conditional", when: (s) => (s.typicalPresentation || []).includes("Other"), fields: [
+          { type: "text", key: "typicalPresentationOther", label: "Specify other presenting symptom" },
+        ] },
+        { type: "checkbox", key: "riskFactors", label: "Relevant risk factors", options: ["Increasing age", "Repetitive overhead activity", "Manual occupation", "Diabetes", "Smoking", "Inflammatory arthritis", "Previous shoulder injury", "Previous shoulder surgery", "Contralateral shoulder problems", "None"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset, pattern, impact",
+      fields: [
+        { type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },
+        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },
+        { type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },
+        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
+        { type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },
+        { type: "vas", key: "vas", label: "Pain severity (VAS)" },
+        { type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse at night", "Worse with activity", "Worse at rest", "Constant", "Intermittent", "Wakes from sleep"] },
+        { type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Reaching overhead", "Reaching behind back", "Dressing", "Sleeping on the affected side", "Carrying", "Driving", "Work tasks", "Sport", "None"] },
+        { type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["Numbness", "Tingling", "Weakness", "Neck pain", "Radiation below the elbow", "None"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Surgery"] },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Cardiac/respiratory disease", "Malignancy", "None"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport / hobbies" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Regional screening examination",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["No deformity", "Muscle wasting", "Scapular dyskinesis", "Swelling", "Deformity", "Scars", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "checkbox", key: "palpation", label: "Palpation", options: ["No tenderness", "Greater tuberosity", "Acromioclavicular joint", "Bicipital groove", "Sternoclavicular joint", "Scapular border", "Cervical spine"] },
+        { type: "select", key: "romFullToggle", label: "Range of motion", options: ["Full", "Not full"], columns: 2 },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
+        { type: "strength", key: "strength", label: "Strength", muscles: [
+          { key: "supraspinatus", label: "Supraspinatus (Jobe)" },
+          { key: "infraspinatus", label: "Infraspinatus" },
+          { key: "subscapularis", label: "Subscapularis" },
+          { key: "deltoid", label: "Deltoid" },
+        ] },
+        { type: "testGrid", key: "stImpingement", label: "Special tests \u2014 Impingement", options: ["Neer", "Hawkins", "Painful Arc"] },
+        { type: "testGrid", key: "stRotatorCuff", label: "Special tests \u2014 Rotator Cuff", options: ["Jobe", "Drop Arm", "ER Lag", "Belly Press", "Lift-off"] },
+        { type: "testGrid", key: "stBiceps", label: "Special tests \u2014 Biceps", options: ["Speed", "Yergason"] },
+        { type: "testGrid", key: "stAC", label: "Special tests \u2014 AC Joint", options: ["Cross-body Adduction"] },
+        { type: "testGrid", key: "stInstability", label: "Special tests \u2014 Instability", options: ["Apprehension", "Relocation", "Sulcus Sign"] },
+        { type: "testGrid", key: "stCervical", label: "Special tests \u2014 Cervical Screen", options: ["Spurling", "Neck ROM restriction"] },
+        { type: "select", key: "neurovascular", label: "Neurovascular assessment", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.neurovascular === "Abnormal", fields: [
+          { type: "text", key: "neurovascularDetail", label: "Neurovascular abnormality \u2014 notable finding" },
+        ] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging", subtitle: "If obtained",
+      fields: [
+        { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["AP", "Grashey", "Axillary", "Scapular Y", "Not performed"] },
+        { type: "text", key: "radiographsFinding", label: "Radiograph findings" },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound findings" },
+        { type: "text", key: "mriFinding", label: "MRI findings" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
+      fields: [
+        { type: "info", title: "Using this section", items: ["Tick the conditions still under consideration.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen \u2014 the full structured assessment and management pathway are there."] },
+        { type: "checkbox", key: "differentialConsidered", label: "Under consideration", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
+        { type: "text", key: "workingDiagnosis", label: "Working diagnosis (if one has emerged)" },
+      ],
+    },
+    {
+      id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review",
+      fields: [],
+    },
+    {
+      id: "pathway", index: 7, title: "Management Pathway", subtitle: "Initial decision making",
+      fields: [],
+    },
+    {
+      id: "followup", index: 8, title: "Standard Follow-up", subtitle: "Review plan",
+      fields: [
+        { type: "table", title: "Suggested review points", rows: [
+          { left: "6\u20138 weeks", right: "response to initial management, and whether the diagnosis is now clearer" },
+          { left: "3 months", right: "functional progress and the need for further imaging or referral" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Review interval", options: ["6\u20138 weeks", "3 months", "Other", "Discharge"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [
+          { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        ] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Reassess diagnosis", "Review response to physiotherapy", "Review imaging", "Consider injection", "Consider surgical referral", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [
+          { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const generalElbowData = {
+  id: "general-elbow",
+  name: "General Elbow Assessment",
+  region: "elbow",
+  isGeneralAssessment: true,
+  urgentFlags: [
+    { text: "Suspected septic arthritis or septic bursitis (hot, swollen, fever or systemic upset)", consider: "Urgent aspiration and inflammatory markers." },
+    { text: "Neurovascular compromise distal to the elbow", consider: "Urgent vascular/neurological assessment." },
+    { text: "Acute injury with deformity, instability or inability to extend against gravity", consider: "Urgent radiographs to exclude fracture or dislocation." },
+    { text: "Rapidly progressive neurological deficit", consider: "Urgent neurological assessment." },
+  ],
+  redFlags: [
+    { text: "Pain does not localise to a discrete structure", consider: "Consider referred pain from the cervical spine or shoulder." },
+    { text: "Numbness or weakness in a nerve distribution", consider: "Assess for cubital tunnel, radial tunnel or a proximal compressive lesion." },
+    { text: "True mechanical locking or blocking", consider: "Consider loose body, osteochondral lesion or osteoarthritis." },
+    { text: "Symptoms unchanged despite structured rehabilitation", consider: "Reassess the diagnosis rather than repeating the same treatment." },
+    { text: "Constitutional symptoms, fever or raised inflammatory markers", consider: "Exclude infection or inflammatory arthropathy." },
+  ],
+  pathway: {
+    start: "assess",
+    nodes: {
+      assess: { type: "info", title: "Initial assessment", text: "Focused history \u2192 Regional examination \u2192 Proximal screen \u2192 Red flag review", next: "redFlagQ" },
+      redFlagQ: {
+        type: "question",
+        title: "Red flags (Decision Point 1)",
+        text: "Pathway suggests confirming whether anything requires escalation before continuing.",
+        options: [
+          { label: "Yes", next: "urgentTerminal" },
+          { label: "No", next: "traumaQ" },
+        ],
+      },
+      urgentTerminal: { type: "terminal", tone: "red", title: "Escalate", text: "Pathway suggests urgent investigation and escalation appropriate to the flag identified, before pursuing a musculoskeletal working diagnosis." },
+      traumaQ: {
+        type: "question",
+        title: "Acute traumatic presentation? (Decision Point 2)",
+        text: "Pathway suggests separating acute injury from atraumatic or gradual-onset presentations, as initial imaging differs.",
+        options: [
+          { label: "Yes", next: "traumaImaging" },
+          { label: "No", next: "patternQ" },
+        ],
+      },
+      traumaImaging: { type: "info", title: "Injury imaging", text: "Radiographs (AP, lateral) \u2192 Exclude fracture, dislocation and loose body", next: "patternQ" },
+      patternQ: {
+        type: "question",
+        title: "Does the pattern fit a specific diagnosis? (Decision Point 3)",
+        text: "Pathway suggests reviewing whether history and examination now point to a defined condition.",
+        options: [
+          { label: "Yes", next: "specificTerminal" },
+          { label: "No", next: "empiricTerminal" },
+        ],
+      },
+      specificTerminal: { type: "terminal", tone: "teal", title: "Move to the specific template", text: "Pathway suggests continuing in the condition-specific template for the working diagnosis, where the full structured assessment and management pathway are available." },
+      empiricTerminal: { type: "terminal", tone: "amber", title: "Initial non-operative management", text: "Pathway suggests education \u2192 Activity modification \u2192 Analgesia / NSAIDs \u2192 Structured physiotherapy \u2192 Review in 6\u20138 weeks, reassessing the diagnosis if symptoms do not settle." },
+    },
+  },
+  sections: [
+    {
+      id: "typical", index: 1, title: "Presenting Complaint", subtitle: "Symptoms + risk factors",
+      fields: [
+        { type: "select", key: "age", label: "Age", options: ["Under 20", "20\u201339", "40\u201359", "60\u201374", "75+"], columns: 3 },
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "side", label: "Side affected", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Lateral elbow pain", "Medial elbow pain", "Posterior elbow pain", "Anterior elbow pain", "Stiffness or loss of extension", "Locking or catching", "Swelling", "Instability", "Numbness or tingling in the hand", "Weakness of grip", "Other"] },
+        { type: "conditional", when: (s) => (s.typicalPresentation || []).includes("Other"), fields: [
+          { type: "text", key: "typicalPresentationOther", label: "Specify other presenting symptom" },
+        ] },
+        { type: "checkbox", key: "riskFactors", label: "Relevant risk factors", options: ["Repetitive gripping or manual work", "Racquet or throwing sport", "Heavy weightlifting", "Diabetes", "Smoking", "Inflammatory arthritis", "Previous elbow injury", "Previous elbow surgery", "Anabolic steroid use", "None"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset, pattern, impact",
+      fields: [
+        { type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },
+        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },
+        { type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },
+        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
+        { type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },
+        { type: "vas", key: "vas", label: "Pain severity (VAS)" },
+        { type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse with gripping", "Worse with lifting", "Worse at night", "Worse at rest", "Constant", "Intermittent"] },
+        { type: "checkbox", key: "mechanicalSymptoms", label: "Mechanical symptoms", options: ["None", "Locking", "Catching", "Giving way", "Clicking"] },
+        { type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["None", "Numbness in ring/little finger", "Numbness in thumb/index", "Tingling", "Weakness of grip", "Night symptoms"] },
+        { type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Lifting", "Carrying", "Gripping", "Reaching", "Work tasks", "Sport", "None"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Splint/brace", "Injection", "Surgery"] },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Malignancy", "None"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport / hobbies" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Regional screening examination",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["No deformity", "Swelling", "Olecranon swelling", "Carrying angle abnormality", "Muscle wasting", "Scars", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "checkbox", key: "palpation", label: "Palpation", options: ["No tenderness", "Lateral epicondyle", "Medial epicondyle", "Radiocapitellar joint", "Olecranon", "Distal biceps insertion", "Cubital tunnel", "Triceps insertion"] },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination"] },
+        { type: "strength", key: "strength", label: "Strength", muscles: [
+          { key: "elbowFlexion", label: "Elbow flexion" },
+          { key: "elbowExtension", label: "Elbow extension" },
+          { key: "grip", label: "Grip" },
+          { key: "wristExtension", label: "Wrist extension" },
+        ] },
+        { type: "testGrid", key: "stTendinopathy", label: "Special tests \u2014 Tendinopathy", options: ["Cozen", "Mill", "Resisted middle finger extension", "Resisted wrist flexion (medial)"] },
+        { type: "testGrid", key: "stNerve", label: "Special tests \u2014 Nerve", options: ["Tinel at cubital tunnel", "Elbow flexion test", "Froment sign", "Wartenberg sign"] },
+        { type: "select", key: "stabilityValgus", label: "Valgus stress", options: ["Stable", "Lax", "Painful"], columns: 3 },
+        { type: "select", key: "stabilityVarus", label: "Varus stress", options: ["Stable", "Lax", "Painful"], columns: 3 },
+        { type: "select", key: "mechanicalBlockExam", label: "Mechanical block", options: ["Absent", "Present"], columns: 2 },
+        { type: "select", key: "neurovascular", label: "Neurovascular assessment", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.neurovascular === "Abnormal", fields: [
+          { type: "text", key: "neurovascularDetail", label: "Neurovascular abnormality \u2014 notable finding" },
+        ] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging", subtitle: "If obtained",
+      fields: [
+        { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["AP", "Lateral", "Oblique", "Not performed"] },
+        { type: "text", key: "radiographsFinding", label: "Radiograph findings" },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound findings" },
+        { type: "text", key: "mriFinding", label: "MRI findings" },
+        { type: "text", key: "electrodiagnosticFinding", label: "Nerve conduction studies / EMG findings" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
+      fields: [
+        { type: "info", title: "Using this section", items: ["Tick the conditions still under consideration.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
+        { type: "checkbox", key: "differentialConsidered", label: "Under consideration", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Olecranon fracture", "Olecranon bursitis", "Cubital tunnel syndrome", "Radial tunnel syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
+        { type: "text", key: "workingDiagnosis", label: "Working diagnosis (if one has emerged)" },
+      ],
+    },
+    { id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review", fields: [] },
+    { id: "pathway", index: 7, title: "Management Pathway", subtitle: "Initial decision making", fields: [] },
+    {
+      id: "followup", index: 8, title: "Standard Follow-up", subtitle: "Review plan",
+      fields: [
+        { type: "table", title: "Suggested review points", rows: [
+          { left: "6\u20138 weeks", right: "response to initial management, and whether the diagnosis is now clearer" },
+          { left: "3 months", right: "functional progress and the need for further imaging or referral" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Review interval", options: ["6\u20138 weeks", "3 months", "Other", "Discharge"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [
+          { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        ] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Reassess diagnosis", "Review response to physiotherapy", "Review imaging", "Consider injection", "Consider surgical referral", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [
+          { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const generalWristData = {
+  id: "general-wrist",
+  name: "General Wrist Assessment",
+  region: "wrist",
+  isGeneralAssessment: true,
+  urgentFlags: [
+    { text: "Suspected septic arthritis (hot, swollen wrist with fever or systemic upset)", consider: "Urgent aspiration and inflammatory markers." },
+    { text: "Neurovascular compromise of the hand", consider: "Urgent vascular/neurological assessment." },
+    { text: "Acute injury with deformity or suspected perilunate injury", consider: "Urgent radiographs and orthopaedic review." },
+    { text: "Suspected acute compartment syndrome", consider: "Urgent surgical assessment." },
+  ],
+  redFlags: [
+    { text: "Anatomical snuffbox tenderness after a fall, with normal initial radiographs", consider: "Treat as a suspected scaphoid fracture and re-image or obtain advanced imaging." },
+    { text: "Progressive deformity or collapse pattern", consider: "Consider carpal instability or advanced arthritis." },
+    { text: "Night pain with numbness in a median distribution", consider: "Assess for carpal tunnel syndrome and consider nerve conduction studies." },
+    { text: "Symptoms unchanged despite splinting and activity modification", consider: "Reassess the diagnosis rather than repeating the same treatment." },
+    { text: "Constitutional symptoms, fever or raised inflammatory markers", consider: "Exclude infection or inflammatory arthropathy." },
+  ],
+  pathway: {
+    start: "assess",
+    nodes: {
+      assess: { type: "info", title: "Initial assessment", text: "Focused history \u2192 Regional examination \u2192 Proximal screen \u2192 Red flag review", next: "redFlagQ" },
+      redFlagQ: {
+        type: "question",
+        title: "Red flags (Decision Point 1)",
+        text: "Pathway suggests confirming whether anything requires escalation before continuing.",
+        options: [
+          { label: "Yes", next: "urgentTerminal" },
+          { label: "No", next: "traumaQ" },
+        ],
+      },
+      urgentTerminal: { type: "terminal", tone: "red", title: "Escalate", text: "Pathway suggests urgent investigation and escalation appropriate to the flag identified, before pursuing a musculoskeletal working diagnosis." },
+      traumaQ: {
+        type: "question",
+        title: "Acute traumatic presentation? (Decision Point 2)",
+        text: "Pathway suggests separating acute injury from atraumatic or gradual-onset presentations, as initial imaging differs.",
+        options: [
+          { label: "Yes", next: "traumaImaging" },
+          { label: "No", next: "patternQ" },
+        ],
+      },
+      traumaImaging: { type: "info", title: "Injury imaging", text: "Radiographs (PA, lateral, scaphoid views if indicated) \u2192 Exclude fracture, dislocation and carpal instability", next: "patternQ" },
+      patternQ: {
+        type: "question",
+        title: "Does the pattern fit a specific diagnosis? (Decision Point 3)",
+        text: "Pathway suggests reviewing whether history and examination now point to a defined condition.",
+        options: [
+          { label: "Yes", next: "specificTerminal" },
+          { label: "No", next: "empiricTerminal" },
+        ],
+      },
+      specificTerminal: { type: "terminal", tone: "teal", title: "Move to the specific template", text: "Pathway suggests continuing in the condition-specific template for the working diagnosis, where the full structured assessment and management pathway are available." },
+      empiricTerminal: { type: "terminal", tone: "amber", title: "Initial non-operative management", text: "Pathway suggests education \u2192 Activity modification \u2192 Analgesia / NSAIDs \u2192 Structured physiotherapy \u2192 Review in 6\u20138 weeks, reassessing the diagnosis if symptoms do not settle." },
+    },
+  },
+  sections: [
+    {
+      id: "typical", index: 1, title: "Presenting Complaint", subtitle: "Symptoms + risk factors",
+      fields: [
+        { type: "select", key: "age", label: "Age", options: ["Under 20", "20\u201339", "40\u201359", "60\u201374", "75+"], columns: 3 },
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "side", label: "Side affected", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Radial-sided wrist pain", "Ulnar-sided wrist pain", "Dorsal wrist pain", "Volar wrist pain", "Diffuse wrist pain", "Swelling or lump", "Stiffness", "Clicking or clunking", "Weakness of grip", "Numbness or tingling in the hand", "Other"] },
+        { type: "conditional", when: (s) => (s.typicalPresentation || []).includes("Other"), fields: [
+          { type: "text", key: "typicalPresentationOther", label: "Specify other presenting symptom" },
+        ] },
+        { type: "checkbox", key: "riskFactors", label: "Relevant risk factors", options: ["Repetitive wrist use", "Manual occupation", "Recent fall onto an outstretched hand", "Diabetes", "Smoking", "Inflammatory arthritis", "Pregnancy or recent childbirth", "Previous wrist injury", "Previous wrist surgery", "None"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset, pattern, impact",
+      fields: [
+        { type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },
+        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },
+        { type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },
+        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
+        { type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },
+        { type: "vas", key: "vas", label: "Pain severity (VAS)" },
+        { type: "checkbox", key: "painLocation", label: "Pain localisation", options: ["Radial side", "Ulnar side", "Dorsal", "Volar", "Diffuse"] },
+        { type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse with gripping", "Worse with rotation", "Worse with weight-bearing through the wrist", "Worse at night", "Constant", "Intermittent"] },
+        { type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["None", "Numbness in thumb/index/middle", "Numbness in ring/little finger", "Tingling", "Night waking", "Weakness of grip"] },
+        { type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Gripping", "Lifting", "Twisting or opening jars", "Weight-bearing through the wrist", "Work tasks", "Sport", "None"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Splint/brace", "Injection", "Surgery"] },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Malignancy", "None"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport / hobbies" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Regional screening examination",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["No deformity", "Swelling", "Ganglion or lump", "Deformity", "Muscle wasting", "Scars", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "checkbox", key: "palpation", label: "Palpation", options: ["No tenderness", "Anatomical snuffbox", "Scapholunate interval", "Radial styloid / first extensor compartment", "Distal radioulnar joint", "Ulnar fovea", "Extensor carpi ulnaris groove", "Lunate", "Hook of hamate", "Thumb carpometacarpal joint"] },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination", "Radial deviation", "Ulnar deviation"] },
+        { type: "strength", key: "strength", label: "Strength", muscles: [
+          { key: "grip", label: "Grip" },
+          { key: "pinch", label: "Pinch" },
+          { key: "wristExtension", label: "Wrist extension" },
+          { key: "wristFlexion", label: "Wrist flexion" },
+        ] },
+        { type: "testGrid", key: "stRadial", label: "Special tests \u2014 Radial-sided", options: ["Finkelstein", "Grind test (thumb CMC)", "Watson scaphoid shift"] },
+        { type: "testGrid", key: "stUlnar", label: "Special tests \u2014 Ulnar-sided", options: ["Ulnar fovea sign", "TFCC compression", "Piano key sign", "ECU synergy test"] },
+        { type: "testGrid", key: "stNerve", label: "Special tests \u2014 Nerve", options: ["Phalen", "Durkan compression", "Tinel at carpal tunnel"] },
+        { type: "select", key: "drujStability", label: "Distal radioulnar joint stability", options: ["Stable", "Unstable"], columns: 2 },
+        { type: "select", key: "neurovascular", label: "Neurovascular assessment", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.neurovascular === "Abnormal", fields: [
+          { type: "text", key: "neurovascularDetail", label: "Neurovascular abnormality \u2014 notable finding" },
+        ] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging", subtitle: "If obtained",
+      fields: [
+        { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["PA", "Lateral", "Oblique", "Scaphoid views", "Clenched fist PA", "Not performed"] },
+        { type: "text", key: "radiographsFinding", label: "Radiograph findings" },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound findings" },
+        { type: "text", key: "mriFinding", label: "MRI findings" },
+        { type: "text", key: "ctFinding", label: "CT findings" },
+        { type: "text", key: "electrodiagnosticFinding", label: "Nerve conduction studies / EMG findings" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
+      fields: [
+        { type: "info", title: "Using this section", items: ["Tick the conditions still under consideration.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
+        { type: "checkbox", key: "differentialConsidered", label: "Under consideration", options: ["De Quervain's tenosynovitis", "Intersection syndrome", "Thumb CMC osteoarthritis", "Wrist osteoarthritis", "Scaphoid fracture", "Distal radius fracture", "Scapholunate injury", "TFCC injury", "DRUJ instability", "Ulnar impaction", "ECU tendinopathy", "Kienbock disease", "Ganglion", "Carpal tunnel syndrome", "Guyon's canal syndrome", "Perilunate injury", "Hook of hamate fracture"] },
+        { type: "text", key: "workingDiagnosis", label: "Working diagnosis (if one has emerged)" },
+      ],
+    },
+    { id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review", fields: [] },
+    { id: "pathway", index: 7, title: "Management Pathway", subtitle: "Initial decision making", fields: [] },
+    {
+      id: "followup", index: 8, title: "Standard Follow-up", subtitle: "Review plan",
+      fields: [
+        { type: "table", title: "Suggested review points", rows: [
+          { left: "6\u20138 weeks", right: "response to initial management, and whether the diagnosis is now clearer" },
+          { left: "3 months", right: "functional progress and the need for further imaging or referral" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Review interval", options: ["6\u20138 weeks", "3 months", "Other", "Discharge"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [
+          { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        ] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Reassess diagnosis", "Review response to physiotherapy", "Review imaging", "Consider injection", "Consider surgical referral", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [
+          { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+        ] },
+      ],
+    },
+  ],
+};
+
+const generalHandData = {
+  id: "general-hand",
+  name: "General Hand Assessment",
+  region: "hand",
+  isGeneralAssessment: true,
+  urgentFlags: [
+    { text: "Suspected flexor sheath infection (Kanavel's signs)", consider: "Urgent surgical assessment for washout." },
+    { text: "Neurovascular compromise of a digit", consider: "Urgent vascular/neurological assessment." },
+    { text: "Open injury, deep laceration or suspected tendon division", consider: "Urgent exploration and repair." },
+    { text: "High-pressure injection injury", consider: "Urgent surgical assessment regardless of external appearance." },
+    { text: "Suspected necrotising infection or systemic sepsis", consider: "Emergency surgical and medical management." },
+  ],
+  redFlags: [
+    { text: "A jammed finger with a persistent extensor lag at the PIP joint", consider: "Consider central slip injury before the boutonniere deformity becomes fixed." },
+    { text: "Inability to actively flex a single digit at the DIP joint after a forceful grip", consider: "Consider flexor tendon avulsion (jersey finger) \u2014 time-critical." },
+    { text: "Progressive fixed flexion deformity", consider: "Consider Dupuytren's disease or post-traumatic contracture." },
+    { text: "Numbness in a specific digital nerve distribution", consider: "Assess for digital nerve injury or compressive neuropathy." },
+    { text: "Constitutional symptoms, fever or raised inflammatory markers", consider: "Exclude infection or inflammatory arthropathy." },
+  ],
+  pathway: {
+    start: "assess",
+    nodes: {
+      assess: { type: "info", title: "Initial assessment", text: "Focused history \u2192 Regional examination \u2192 Proximal screen \u2192 Red flag review", next: "redFlagQ" },
+      redFlagQ: {
+        type: "question",
+        title: "Red flags (Decision Point 1)",
+        text: "Pathway suggests confirming whether anything requires escalation before continuing.",
+        options: [
+          { label: "Yes", next: "urgentTerminal" },
+          { label: "No", next: "traumaQ" },
+        ],
+      },
+      urgentTerminal: { type: "terminal", tone: "red", title: "Escalate", text: "Pathway suggests urgent investigation and escalation appropriate to the flag identified, before pursuing a musculoskeletal working diagnosis." },
+      traumaQ: {
+        type: "question",
+        title: "Acute traumatic presentation? (Decision Point 2)",
+        text: "Pathway suggests separating acute injury from atraumatic or gradual-onset presentations, as initial imaging differs.",
+        options: [
+          { label: "Yes", next: "traumaImaging" },
+          { label: "No", next: "patternQ" },
+        ],
+      },
+      traumaImaging: { type: "info", title: "Injury imaging", text: "Radiographs of the affected digit or hand \u2192 Exclude fracture, dislocation and retained foreign body", next: "patternQ" },
+      patternQ: {
+        type: "question",
+        title: "Does the pattern fit a specific diagnosis? (Decision Point 3)",
+        text: "Pathway suggests reviewing whether history and examination now point to a defined condition.",
+        options: [
+          { label: "Yes", next: "specificTerminal" },
+          { label: "No", next: "empiricTerminal" },
+        ],
+      },
+      specificTerminal: { type: "terminal", tone: "teal", title: "Move to the specific template", text: "Pathway suggests continuing in the condition-specific template for the working diagnosis, where the full structured assessment and management pathway are available." },
+      empiricTerminal: { type: "terminal", tone: "amber", title: "Initial non-operative management", text: "Pathway suggests education \u2192 Activity modification \u2192 Analgesia / NSAIDs \u2192 Structured physiotherapy \u2192 Review in 6\u20138 weeks, reassessing the diagnosis if symptoms do not settle." },
+    },
+  },
+  sections: [
+    {
+      id: "typical", index: 1, title: "Presenting Complaint", subtitle: "Symptoms + risk factors",
+      fields: [
+        { type: "select", key: "age", label: "Age", options: ["Under 20", "20\u201339", "40\u201359", "60\u201374", "75+"], columns: 3 },
+        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
+        { type: "select", key: "side", label: "Side affected", options: ["Right", "Left", "Bilateral"], columns: 3 },
+        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
+        { type: "checkbox", key: "affectedDigits", label: "Digit(s) affected", options: ["Thumb", "Index", "Middle", "Ring", "Little", "Whole hand"] },
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Pain", "Swelling", "Stiffness", "Deformity", "Triggering or locking", "Nodule or lump", "Inability to straighten a finger", "Inability to bend a finger", "Numbness or tingling", "Weakness of grip", "Wound or laceration", "Other"] },
+        { type: "conditional", when: (s) => (s.typicalPresentation || []).includes("Other"), fields: [
+          { type: "text", key: "typicalPresentationOther", label: "Specify other presenting symptom" },
+        ] },
+        { type: "checkbox", key: "riskFactors", label: "Relevant risk factors", options: ["Manual occupation", "Repetitive gripping", "Diabetes", "Smoking", "Inflammatory arthritis", "Family history of Dupuytren's", "Previous hand injury", "Previous hand surgery", "None"] },
+      ],
+    },
+    {
+      id: "history", index: 2, title: "Focused History", subtitle: "Onset, pattern, impact",
+      fields: [
+        { type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },
+        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },
+        { type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },
+        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },
+        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
+        { type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },
+        { type: "vas", key: "vas", label: "Pain severity (VAS)" },
+        { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury (if traumatic)", options: ["Jammed finger", "Forceful grip", "Fall", "Crush", "Laceration", "Bite", "High-pressure injection", "Not applicable"] },
+        { type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse with gripping", "Worse with movement", "Worse at night", "Constant", "Intermittent"] },
+        { type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["None", "Numbness", "Tingling", "Night waking", "Weakness of grip"] },
+        { type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Gripping", "Pinching", "Fine motor tasks", "Buttons and fastenings", "Writing or typing", "Work tasks", "Sport", "None"] },
+        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Splint/brace", "Injection", "Surgery"] },
+        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Malignancy", "None"] },
+        { type: "text", key: "occupation", label: "Occupation" },
+        { type: "text", key: "sport", label: "Sport / hobbies" },
+      ],
+    },
+    {
+      id: "exam", index: 3, title: "Focused Examination", subtitle: "Regional screening examination",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["No deformity", "Swelling", "Nodule", "Cord", "Fixed flexion deformity", "Swan neck deformity", "Boutonniere deformity", "Mallet deformity", "Wound", "Muscle wasting", "Scars", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "checkbox", key: "palpation", label: "Palpation", options: ["No tenderness", "A1 pulley", "PIP joint", "DIP joint", "MCP joint", "Palmar nodule or cord", "Flexor sheath", "Thumb ulnar collateral ligament"] },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["MCP flexion", "Flexion", "Extension"] },
+        { type: "strength", key: "strength", label: "Strength", muscles: [
+          { key: "grip", label: "Grip" },
+          { key: "pinch", label: "Pinch" },
+          { key: "intrinsics", label: "Intrinsics" },
+        ] },
+        { type: "testGrid", key: "stTendon", label: "Special tests \u2014 Tendon", options: ["FDP integrity", "FDS integrity", "Elson test (central slip)", "Extensor lag at DIP", "Triggering reproduced"] },
+        { type: "testGrid", key: "stInfection", label: "Special tests \u2014 Kanavel's signs", options: ["Fusiform swelling", "Finger held in flexion", "Tenderness along the flexor sheath", "Pain on passive extension"] },
+        { type: "testGrid", key: "stNerve", label: "Special tests \u2014 Nerve", options: ["Phalen", "Tinel at carpal tunnel", "Two-point discrimination reduced"] },
+        { type: "select", key: "neurovascular", label: "Neurovascular assessment", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.neurovascular === "Abnormal", fields: [
+          { type: "text", key: "neurovascularDetail", label: "Neurovascular abnormality \u2014 notable finding" },
+        ] },
+      ],
+    },
+    {
+      id: "imaging", index: 4, title: "Imaging", subtitle: "If obtained",
+      fields: [
+        { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["PA", "Lateral", "Oblique", "Dedicated digit views", "Not performed"] },
+        { type: "text", key: "radiographsFinding", label: "Radiograph findings" },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound findings" },
+        { type: "text", key: "mriFinding", label: "MRI findings" },
+      ],
+    },
+    {
+      id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
+      fields: [
+        { type: "info", title: "Using this section", items: ["Tick the conditions still under consideration.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
+        { type: "checkbox", key: "differentialConsidered", label: "Under consideration", options: ["Trigger finger", "Dupuytren's disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
+        { type: "text", key: "workingDiagnosis", label: "Working diagnosis (if one has emerged)" },
+      ],
+    },
+    { id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review", fields: [] },
+    { id: "pathway", index: 7, title: "Management Pathway", subtitle: "Initial decision making", fields: [] },
+    {
+      id: "followup", index: 8, title: "Standard Follow-up", subtitle: "Review plan",
+      fields: [
+        { type: "table", title: "Suggested review points", rows: [
+          { left: "6\u20138 weeks", right: "response to initial management, and whether the diagnosis is now clearer" },
+          { left: "3 months", right: "functional progress and the need for further imaging or referral" },
+        ] },
+        { type: "select", key: "followUpInterval", label: "Review interval", options: ["6\u20138 weeks", "3 months", "Other", "Discharge"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [
+          { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        ] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Reassess diagnosis", "Review response to physiotherapy", "Review imaging", "Consider injection", "Consider surgical referral", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [
+          { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+        ] },
+      ],
+    },
+  ],
+};
+
 const REGIONS = {
   shoulder: { label: "Shoulder", conditions: [rotatorCuffData, sapsData, adhesiveCapsulitisData, instabilityData, bicepsData, acJointData, gleroarthritisData, avnData, calcificTendinitisData, proximalHumerusFxData, scapularDyskinesisData, slapData, pecMajorRuptureData, clavicleFxData, parsonageTurnerData] },
   elbow: { label: "Elbow", conditions: [lateralEpicondylopathyData, medialEpicondylopathyData, distalBicepsRuptureData, elbowOAData, distalTricepsRuptureData, radialHeadFxData, coronoidTerribleTriadData, elbowInstabilityData, elbowStiffnessData, athleticElbowData, olecranonFxData, olecranonBursitisData] },
@@ -12838,6 +13477,13 @@ function getRegionConditions(region) {
 // strip on each template. Ids that don't yet have a built template (e.g.
 // future Elbow/Wrist/Hand conditions) simply won't resolve and are skipped.
 const RELATED_CONDITIONS = {
+  // General (undifferentiated) assessments link out to the likely specific
+  // templates for that region, so once the picture clarifies the clinician
+  // moves straight into the detailed template without re-navigating.
+  "general-shoulder": ["rotator-cuff", "saps", "adhesive-capsulitis", "ac-joint", "gh-osteoarthritis", "long-head-biceps"],
+  "general-elbow": ["lateral-epicondylopathy", "medial-epicondylopathy", "elbow-osteoarthritis", "cubital-tunnel-syndrome", "olecranon-bursitis", "distal-biceps-rupture"],
+  "general-wrist": ["de-quervain", "thumb-cmc-oa", "wrist-oa", "tfcc-injury", "scaphoid-fracture", "carpal-tunnel-syndrome"],
+  "general-hand": ["trigger-finger", "dupuytren-disease", "hand-osteoarthritis", "mallet-finger", "pip-dislocation-volar-plate", "boutonniere-deformity"],
   "clavicle-fracture": ["ac-joint", "proximal-humerus-fracture"],
   "parsonage-turner-syndrome": ["suprascapular-neuropathy", "rotator-cuff", "scapular-dyskinesis"],
   "suprascapular-neuropathy": ["parsonage-turner-syndrome", "rotator-cuff", "scapular-dyskinesis", "slap-lesion"],
@@ -12920,12 +13566,25 @@ const SHARED_FIELD_KEYS = ["side", "occupation", "sport", "competitionLevel"];
 // a different field key \u2014 aliased here so either one auto-fills the other.
 const DOMINANT_SIDE_ALIASES = ["dominantArm", "dominantHand"];
 
+// General assessments are deliberately NOT in REGIONS: they shouldn't appear
+// in a region's condition list alongside the specific diagnoses. They're
+// reached from the body map or the "not sure of the diagnosis" card. But
+// they still need to resolve by id, since once opened they behave like any
+// other condition in the session.
+const GENERAL_ASSESSMENTS = {
+  shoulder: generalShoulderData,
+  elbow: generalElbowData,
+  wrist: generalWristData,
+  hand: generalHandData,
+};
+
 function findConditionById(id) {
   for (const region of Object.values(REGIONS)) {
     const found = getRegionConditions(region).find((c) => c.id === id);
     if (found) return found;
   }
-  return null;
+  const general = Object.values(GENERAL_ASSESSMENTS).find((c) => c.id === id);
+  return general || null;
 }
 
 function deriveSharedDefaults(session) {
@@ -13015,6 +13674,68 @@ function SubLabel({ children }) {
 // option. Handled here in the shared component so every checkbox field in
 // the app gets it without needing per-field wiring.
 const EXCLUSIVE_OPTION_RE = /^(none|none noted|none palpable|none identified|normal|no deformity|not applicable|n\/a)$/i;
+
+// Values that unambiguously mean "normal finding" for a select field.
+//
+// Deliberately conservative. Options like "Yes", "No", "Present", "Absent",
+// "Positive", "Complete", or "Mild" are excluded because whether they mean
+// normal depends entirely on the question - "pulses: present" is normal but
+// "mechanical block: present" is not, and "absent" flips the same way. Any
+// field whose options aren't in this list is simply left untouched for the
+// clinician to answer, which is the safe failure mode: an unfilled field is
+// obvious, whereas a wrongly-filled "normal" could reach the patient record.
+const NORMAL_SELECT_VALUE_RE = /^(normal|normal cascade|stable|intact|intact, non-tented|preserved|maintained|full|negative|smooth|symptoms absent|none|none palpable|no deformity)$/i;
+
+// Builds a state patch setting every safely-inferable exam field to its
+// normal value. Returns both the patch and the count, so the UI can tell
+// the clinician exactly how many fields were filled rather than silently
+// changing the form under them.
+function computeNormalExamPatch(fields, state) {
+  const patch = {};
+  let count = 0;
+  resolveFields(fields, state).forEach((f) => {
+    if (!f.key) return;
+    switch (f.type) {
+      case "checkbox": {
+        const normalOpt = (f.options || []).find((o) => EXCLUSIVE_OPTION_RE.test(o));
+        if (normalOpt) { patch[f.key] = [normalOpt]; count++; }
+        break;
+      }
+      case "select": {
+        const normalOpt = (f.options || []).find((o) => NORMAL_SELECT_VALUE_RE.test(o));
+        if (normalOpt) { patch[f.key] = normalOpt; count++; }
+        break;
+      }
+      case "testGrid": {
+        // A negative special test is by definition the normal finding.
+        const grid = {};
+        (f.options || []).forEach((t) => { grid[t] = "negative"; });
+        if (Object.keys(grid).length) { patch[f.key] = grid; count++; }
+        break;
+      }
+      case "strength": {
+        const grades = {};
+        (f.muscles || []).forEach((m) => { grades[m.key] = "5"; });
+        if (Object.keys(grades).length) { patch[f.key] = grades; count++; }
+        break;
+      }
+      case "rom": {
+        // Uses the existing Full/Not full toggle rather than writing out
+        // every motion's maximum, which is both simpler and what the note
+        // generator already renders as "range of motion was full".
+        patch[`${f.key}Full`] = "Full";
+        count++;
+        break;
+      }
+      // vas, number, text, date and numberGroup are intentionally skipped:
+      // there is no generic "normal" value for a free-text finding, a
+      // measured circumference, or a pain score.
+      default:
+        break;
+    }
+  });
+  return { patch, count };
+}
 
 function CheckboxGroup({ options, selected, onChange }) {
   const toggle = (opt) => {
@@ -13801,6 +14522,12 @@ function fieldClause(field, state) {
       const rawItems = (state[key] || []).map((item) => (item === "Other" && otherText && otherText.trim() ? otherText.trim() : item));
       const list = humanizeList(rawItems, { preserveCase: isNamedTestList });
       if (!list) return null;
+      // A lone "None"/"Normal" answer reads badly through the "included"
+      // phrasings below ("symptoms included none"), so it's handled up
+      // front for every checkbox rather than only in the generic fallback.
+      if (label && rawItems.length === 1 && EXCLUSIVE_OPTION_RE.test(rawItems[0]) && !/^typicalPresentation/i.test(key) && !/inspection|palpation/i.test(key)) {
+        return `${lowerLabel}: ${lowerListItem(rawItems[0])}`;
+      }
       if (/^typicalPresentation/i.test(key)) return `the presentation was consistent with ${list}`;
       if (/affectedDigit/i.test(key)) return `this affects the ${list} digit${(state[key] || []).length === 1 ? "" : "s"}`;
       if (/symptom/i.test(key)) return `symptoms included ${list}`;
@@ -13825,6 +14552,12 @@ function fieldClause(field, state) {
           // abbreviations like "AC" are still protected by lowerListItem.
           const lowered = qualifier.split(" ").map(lowerListItem).join(" ");
           return `${lowered} tests included ${list}`;
+        }
+        // "radial pulse included normal" reads oddly - "included" implies a
+        // list of findings, but a lone normal/none result is a single
+        // state, so it reads better as a plain label-and-value.
+        if (rawItems.length === 1 && EXCLUSIVE_OPTION_RE.test(rawItems[0])) {
+          return `${lowerLabel}: ${lowerListItem(rawItems[0])}`;
         }
         return `${lowerLabel} included ${list}`;
       }
@@ -13873,6 +14606,12 @@ function fieldClause(field, state) {
       if (label && Array.isArray(field.options) && field.options.length === 2 && field.options.includes("Yes") && field.options.includes("No")) {
         const cleanLabel = lowerLabel.replace(/\?$/, "");
         return v === "No" ? `no ${cleanLabel}` : `${cleanLabel} present`;
+      }
+      // Values that are themselves phrases ("Symptoms absent", "Lacertus
+      // symptoms absent") don't fit the "X was Y" frame - "cervical spine
+      // was symptoms absent" is ungrammatical - so they use colon form.
+      if (label && /\s/.test(v) && /(absent|present)$/i.test(v)) {
+        return `${lowerLabel}: ${lowerFirst(v)}`;
       }
       if (label) return `${lowerLabel} was ${lowerListItem(v)}`;
       return v;
@@ -14201,11 +14940,23 @@ function examinationTextFor(exam, state) {
     else groups.other.push(c);
   });
 
+  // Clauses reaching the motion/special buckets come from several field
+  // types: rom, strength and testGrid already emit their own "  • " sub
+  // bullet lines, but select and checkbox fields routed here (neurovascular
+  // status, stability gradings) return plain prose. Without this, those
+  // appeared unbulleted and unindented, dangling under the heading.
+  const asSubBullet = (clause) => {
+    if (clause.startsWith("  \u2022 ")) return clause;
+    return `  \u2022 ${clause.charAt(0).toUpperCase()}${clause.slice(1)}`;
+  };
+  const subBulletBlock = (clauses) =>
+    clauses.flatMap((c) => c.split("\n")).map(asSubBullet).join("\n");
+
   const bullets = [];
   if (groups.inspection.length) bullets.push(`\u2022 Inspection: ${joinClausesLower(groups.inspection)}`);
   if (groups.palpation.length) bullets.push(`\u2022 Palpation: ${joinClausesLower(groups.palpation)}`);
-  if (groups.motion.length) bullets.push(`\u2022 Range of motion and strength:\n${groups.motion.join("\n")}`);
-  if (groups.special.length) bullets.push(`\u2022 Special tests:\n${groups.special.join("\n")}`);
+  if (groups.motion.length) bullets.push(`\u2022 Range of motion and strength:\n${subBulletBlock(groups.motion)}`);
+  if (groups.special.length) bullets.push(`\u2022 Special tests:\n${subBulletBlock(groups.special)}`);
   if (groups.other.length) bullets.push(`\u2022 Other findings: ${joinClausesLower(groups.other)}`);
 
   return bullets.length ? bullets.join("\n") : null;
@@ -14358,8 +15109,25 @@ function buildDifferential(condition, state) {
   const diff = condition.sections.find((s) => s.id === "differential");
   if (!diff) return null;
   const field = resolveFields(diff.fields, state).find((f) => f.type === "checkbox");
-  if (!field) return null;
-  const list = state[field.key] || [];
+  const list = field ? state[field.key] || [] : [];
+
+  // In a general (undifferentiated) assessment the ticked list is what is
+  // still actively under consideration, which is the opposite of the
+  // diagnosis-specific templates where it records alternatives that have
+  // been weighed and set aside. Using the same sentence for both would
+  // invert the clinical meaning of the note.
+  if (condition.isGeneralAssessment) {
+    const parts = [];
+    if (list.length) {
+      parts.push(`The differential considered at this stage includes: ${humanizeList(list, { preserveCase: true })}.`);
+    }
+    const working = state.workingDiagnosis;
+    if (working && working.trim()) {
+      parts.push(`The working diagnosis is ${lowerFirst(working.trim())}.`);
+    }
+    return parts.length ? parts.join(" ") : null;
+  }
+
   if (!list.length) return null;
   return `The following alternative diagnoses were considered and felt to be less likely: ${humanizeList(list, { preserveCase: true })}.`;
 }
@@ -14943,6 +15711,128 @@ function buildReviewPlan(condition, state) {
 // Assembles the fixed nine-part note structure for one condition, returning
 // only the parts that have data. Shared by both the single-condition note
 // and the combined multi-condition note below.
+// Goals a physiotherapy referral commonly asks for. Deliberately generic
+// rather than per-condition: these apply across upper limb pathology, and
+// the clinician selects what's relevant plus adds free text, rather than
+// the app presuming the rehab aims for 69 different diagnoses.
+const PHYSIO_GOALS = [
+  "Pain management and symptom control",
+  "Restore range of motion",
+  "Progressive strengthening",
+  "Scapular stabilisation and postural control",
+  "Nerve gliding / neural mobilisation",
+  "Activity and ergonomic modification advice",
+  "Return to work rehabilitation",
+  "Return to sport rehabilitation",
+  "Prehabilitation prior to surgery",
+  "Post-operative rehabilitation protocol",
+];
+
+const PHYSIO_PRECAUTIONS = [
+  "No heavy lifting",
+  "Avoid overhead activity",
+  "Avoid end-range stretching",
+  "Avoid resisted strengthening at this stage",
+  "Splint/brace to be worn as directed",
+  "Respect pain limits",
+  "Avoid provocative repetitive activity",
+];
+
+// Assembles a physiotherapy referral letter from data already documented in
+// the consultation, so it can't drift from the clinic note. Precautions
+// that are safety-relevant (pending surgery, urgent red flags) are derived
+// automatically rather than depending on the clinician remembering to tick
+// them, since those are exactly the things that matter most to a therapist
+// starting treatment.
+function buildPhysioReferral(condition, state) {
+  const ref = state.physioReferral || {};
+  const lines = ["PHYSIOTHERAPY REFERRAL", ""];
+
+  const presentUrgent = getPresentUrgentFlags(condition, state);
+  if (presentUrgent.length) {
+    lines.push(`\u26a0 URGENT \u2014 REQUIRES IMMEDIATE ATTENTION: ${presentUrgent.map((f) => f.text).join("; ")}.`);
+    lines.push("");
+  }
+
+  const demographics = buildDemographics(condition, state);
+  if (demographics) {
+    lines.push("PATIENT");
+    lines.push(demographics);
+    lines.push("");
+  }
+
+  lines.push("DIAGNOSIS");
+  const impression = buildImpression(condition, state);
+  lines.push(impression || condition.name);
+  lines.push("");
+
+  const history = buildHistory(condition, state);
+  if (history) {
+    lines.push("CLINICAL SUMMARY");
+    lines.push(history);
+    lines.push("");
+  }
+
+  const examination = buildExamination(condition, state);
+  if (examination) {
+    lines.push("EXAMINATION FINDINGS AT REFERRAL");
+    lines.push(examination);
+    lines.push("");
+  }
+
+  const imaging = buildImaging(condition, state);
+  if (imaging) {
+    lines.push("IMAGING");
+    lines.push(imaging);
+    lines.push("");
+  }
+
+  const goals = [...(ref.goals || [])];
+  if (ref.goalsOther && ref.goalsOther.trim()) goals.push(ref.goalsOther.trim());
+  lines.push("REASON FOR REFERRAL");
+  if (goals.length) {
+    goals.forEach((g) => lines.push(`\u2022 ${g}`));
+  } else {
+    lines.push("Assessment and management as clinically indicated.");
+  }
+  lines.push("");
+
+  // Derived precautions come first because they're the ones a therapist
+  // must not miss, and they're inferred from documented decisions rather
+  // than from a checkbox someone might forget.
+  const precautions = [];
+  if (patientScheduledForSurgery(state)) {
+    precautions.push("Patient is listed for surgery \u2014 please liaise regarding timing and prehabilitation aims.");
+  }
+  presentUrgent.forEach((f) => precautions.push(`Outstanding red flag: ${f.text}.`));
+  (ref.precautions || []).forEach((p) => precautions.push(p));
+  if (ref.precautionsOther && ref.precautionsOther.trim()) precautions.push(ref.precautionsOther.trim());
+  if (precautions.length) {
+    lines.push("PRECAUTIONS");
+    precautions.forEach((p) => lines.push(`\u2022 ${p}`));
+    lines.push("");
+  }
+
+  if (ref.notes && ref.notes.trim()) {
+    lines.push("ADDITIONAL INFORMATION");
+    lines.push(ref.notes.trim());
+    lines.push("");
+  }
+
+  const review = buildReviewPlan(condition, state);
+  if (review) {
+    lines.push("ONWARD PLAN");
+    lines.push(review);
+    lines.push("");
+  }
+
+  lines.push("Please do not hesitate to contact me if the clinical picture changes or if you have any concerns.");
+  lines.push("");
+  lines.push("---");
+  lines.push("Generated with UpperTrack. For clinician review; not a diagnostic or treatment recommendation.");
+  return lines.join("\n");
+}
+
 function buildProseNote(condition, state) {
   const parts = [];
   const push = (heading, text) => {
@@ -15530,11 +16420,124 @@ function RelatedConditionsBar({ conditionId, sessionOrder, onOpen }) {
   );
 }
 
+// One-tap "everything normal" for an examination section, so the clinician
+// only has to change what's actually abnormal. Deliberately guarded: if any
+// of the fields it would write to already hold a value, it asks first,
+// because silently overwriting findings someone just documented would be
+// far worse than an extra tap.
+function NormalExamButton({ fields, state, onApply }) {
+  const [confirming, setConfirming] = useState(false);
+  const [justApplied, setJustApplied] = useState(false);
+
+  const { patch, count } = useMemo(() => computeNormalExamPatch(fields, state), [fields, state]);
+  if (!count) return null;
+
+  const wouldOverwrite = Object.keys(patch).some((k) => {
+    const cur = state[k];
+    if (cur == null) return false;
+    if (Array.isArray(cur)) return cur.length > 0;
+    if (typeof cur === "object") return Object.keys(cur).length > 0;
+    return String(cur).trim() !== "";
+  });
+
+  const apply = () => {
+    onApply(patch);
+    setConfirming(false);
+    setJustApplied(true);
+    setTimeout(() => setJustApplied(false), 2500);
+  };
+
+  if (confirming) {
+    return (
+      <div className="rounded-xl p-3 mb-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+        <div className="text-[13px] font-semibold mb-1" style={{ color: T.amber }}>Overwrite existing findings?</div>
+        <div className="text-[12.5px] mb-2.5" style={{ color: T.inkSoft }}>Some examination fields already have values. Marking everything normal will replace them.</div>
+        <div className="flex gap-2">
+          <button onClick={apply} className="rounded-lg px-3 py-2 font-semibold text-[13px] active:scale-95" style={{ background: T.amber, color: "#fff" }}>Yes, mark all normal</button>
+          <button onClick={() => setConfirming(false)} className="rounded-lg px-3 py-2 font-semibold text-[13px] active:scale-95" style={{ background: T.surface, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => (wouldOverwrite ? setConfirming(true) : apply())}
+      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 mb-3 font-semibold text-[13.5px] active:scale-95 transition"
+      style={{ background: justApplied ? T.greenTint : T.slateChip, border: `1px solid ${justApplied ? T.green : T.border}`, color: justApplied ? T.green : T.ink }}
+    >
+      {justApplied ? <Check size={16} /> : <CheckCircle2 size={16} />}
+      {justApplied ? `${count} field${count === 1 ? "" : "s"} set to normal` : "Mark examination normal"}
+    </button>
+  );
+}
+
+// Referral-specific fields, shown inline above the generated letter rather
+// than as another section in the main template - they're only relevant when
+// actually producing a referral, and editing them here means the letter
+// updates live as you tick.
+function PhysioReferralInputs({ value, onChange }) {
+  return (
+    <div className="mb-4 rounded-xl p-3" style={{ background: T.slateChip, border: `1px solid ${T.border}` }}>
+      <div className="text-[13px] font-bold mb-2" style={{ color: T.ink }}>Referral details</div>
+
+      <SubLabel>Reason for referral</SubLabel>
+      <CheckboxGroup
+        options={PHYSIO_GOALS}
+        selected={value.goals || []}
+        onChange={(v) => onChange({ goals: v })}
+      />
+      <input
+        type="text"
+        value={value.goalsOther || ""}
+        onChange={(e) => onChange({ goalsOther: e.target.value })}
+        placeholder="Other aim (optional)"
+        className="w-full rounded-lg px-3 py-2 text-[14px] mt-2"
+        style={{ border: `1px solid ${T.border}`, background: T.surface, minHeight: 44 }}
+      />
+
+      <div className="mt-3">
+        <SubLabel>Precautions</SubLabel>
+        <CheckboxGroup
+          options={PHYSIO_PRECAUTIONS}
+          selected={value.precautions || []}
+          onChange={(v) => onChange({ precautions: v })}
+        />
+        <input
+          type="text"
+          value={value.precautionsOther || ""}
+          onChange={(e) => onChange({ precautionsOther: e.target.value })}
+          placeholder="Other precaution (optional)"
+          className="w-full rounded-lg px-3 py-2 text-[14px] mt-2"
+          style={{ border: `1px solid ${T.border}`, background: T.surface, minHeight: 44 }}
+        />
+      </div>
+
+      <div className="mt-3">
+        <SubLabel>Additional information</SubLabel>
+        <textarea
+          value={value.notes || ""}
+          onChange={(e) => onChange({ notes: e.target.value })}
+          placeholder="Anything else the therapist should know (optional)"
+          rows={2}
+          className="w-full rounded-lg px-3 py-2 text-[14px]"
+          style={{ border: `1px solid ${T.border}`, background: T.surface }}
+        />
+      </div>
+
+      <div className="text-[11.5px] mt-2.5" style={{ color: T.inkSoft }}>
+        Pending surgery and any outstanding red flags are added to the letter's precautions automatically.
+      </div>
+    </div>
+  );
+}
+
 function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome }) {
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteScope, setNoteScope] = useState("this"); // "this" | "session"
+  const [noteType, setNoteType] = useState("note"); // "note" | "physio"
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -15653,8 +16656,11 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   );
 
   const note = useMemo(
-    () => (noteScope === "session" && hasMultipleActive ? buildCombinedNote(session) : buildNote(condition, state)),
-    [condition, state, noteScope, hasMultipleActive, session]
+    () => {
+      if (noteType === "physio") return buildPhysioReferral(condition, state);
+      return noteScope === "session" && hasMultipleActive ? buildCombinedNote(session) : buildNote(condition, state);
+    },
+    [condition, state, noteScope, noteType, hasMultipleActive, session]
   );
 
   const copyNote = async () => {
@@ -15948,14 +16954,19 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                   <>
                     {sharedFields.map((f, i) => <Field key={`s-${i}`} field={f} state={state} setField={setField} region={condition.region} />)}
                     <LimbHeader limb="right" />
+                    {section.id === "exam" && <NormalExamButton fields={limbFields} state={rightLimbState} onApply={(patch) => Object.entries(patch).forEach(([k, v]) => setRightField(k, v))} />}
                     {limbFields.map((f, i) => <Field key={`r-${i}`} field={f} state={rightLimbState} setField={setRightField} region={condition.region} />)}
                     <LimbHeader limb="left" />
+                    {section.id === "exam" && <NormalExamButton fields={limbFields} state={leftLimbState} onApply={(patch) => Object.entries(patch).forEach(([k, v]) => setLeftField(k, v))} />}
                     {limbFields.map((f, i) => <Field key={`l-${i}`} field={f} state={leftLimbState} setField={setLeftField} region={condition.region} />)}
                   </>
                 );
               })()
             ) : (
-              dedupeFields(section.fields).map((f, i) => <Field key={i} field={f} state={state} setField={setField} region={condition.region} />)
+              <>
+                {section.id === "exam" && <NormalExamButton fields={section.fields} state={state} onApply={(patch) => onFieldChange(patch)} />}
+                {dedupeFields(section.fields).map((f, i) => <Field key={i} field={f} state={state} setField={setField} region={condition.region} />)}
+              </>
             )}
           </CollapsibleSection>
           </div>
@@ -15984,10 +16995,18 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
-              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Clinic note</span>
+              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : "Clinic note"}</span>
             </div>
-            {hasMultipleActive && (
-              <div className="flex gap-2 px-4 pt-3">
+            <div className="flex gap-2 px-4 pt-3">
+              <button onClick={() => setNoteType("note")} className="flex-1 rounded-lg py-2 text-[13px] font-semibold" style={{ background: noteType === "note" ? T.teal : T.slateChip, color: noteType === "note" ? "#fff" : T.ink }}>
+                Clinic note
+              </button>
+              <button onClick={() => setNoteType("physio")} className="flex-1 rounded-lg py-2 text-[13px] font-semibold" style={{ background: noteType === "physio" ? T.teal : T.slateChip, color: noteType === "physio" ? "#fff" : T.ink }}>
+                Physio referral
+              </button>
+            </div>
+            {noteType === "note" && hasMultipleActive && (
+              <div className="flex gap-2 px-4 pt-2">
                 <button onClick={() => setNoteScope("this")} className="flex-1 rounded-lg py-2 text-[13px] font-semibold" style={{ background: noteScope === "this" ? T.teal : T.slateChip, color: noteScope === "this" ? "#fff" : T.ink }}>
                   This condition
                 </button>
@@ -15997,6 +17016,12 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               </div>
             )}
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+              {noteType === "physio" && (
+                <PhysioReferralInputs
+                  value={state.physioReferral || {}}
+                  onChange={(patch) => onFieldChange({ physioReferral: { ...(state.physioReferral || {}), ...patch } })}
+                />
+              )}
               <pre className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ color: T.ink, fontFamily: "ui-monospace, monospace", overflow: "visible", margin: 0 }}>{note}</pre>
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
@@ -16009,7 +17034,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               </button>
               {copyError && (
                 <div className="text-[12.5px] text-center" style={{ color: T.red }}>
-                  Couldn't copy automatically \u2014 tap and hold the note above to select and copy it manually.
+                  Couldn't copy automatically — tap and hold the note above to select and copy it manually.
                 </div>
               )}
               <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
@@ -16177,6 +17202,40 @@ function VisitTypeGate({ onSelect }) {
   );
 }
 
+// Tappable upper-limb map for choosing a region. Deliberately schematic
+// rather than an anatomical illustration: the job is unambiguous region
+// selection under time pressure on a touchscreen, so large well-separated
+// tap targets matter more than anatomical realism. Every zone is also
+// reachable from the labelled list beneath, which keeps the screen usable
+// for anyone who finds the diagram fiddly and keeps it accessible.
+function BodyMap({ onSelect, activeRegion }) {
+  const zones = [
+    { key: "shoulder", label: "Shoulder", cx: 96, cy: 62, r: 34 },
+    { key: "elbow", label: "Elbow", cx: 128, cy: 158, r: 28 },
+    { key: "wrist", label: "Wrist", cx: 150, cy: 242, r: 24 },
+    { key: "hand", label: "Hand", cx: 160, cy: 300, r: 26 },
+  ];
+  return (
+    <svg viewBox="0 0 240 340" width="100%" style={{ maxHeight: 300 }} role="img" aria-label="Upper limb region selector">
+      {/* Schematic torso edge and arm, purely as orientation for the zones */}
+      <path d="M 40 40 L 40 330" stroke={T.border} strokeWidth="2" fill="none" />
+      <path d="M 62 44 Q 96 30 122 62 L 132 130 Q 140 180 150 224 L 158 278" stroke={T.borderStrong} strokeWidth="22" fill="none" strokeLinecap="round" opacity="0.35" />
+      <circle cx="166" cy="304" r="20" fill={T.borderStrong} opacity="0.35" />
+      {zones.map((z) => {
+        const active = activeRegion === z.key;
+        return (
+          <g key={z.key} onClick={() => onSelect(z.key)} style={{ cursor: "pointer" }} role="button" aria-label={z.label}>
+            <circle cx={z.cx} cy={z.cy} r={z.r} fill={active ? T.tealDark : T.tealTint} stroke={active ? T.tealDark : T.teal} strokeWidth="2" />
+            <text x={z.cx} y={z.cy + 4} textAnchor="middle" fontSize="12" fontWeight="600" fill={active ? "#fff" : T.tealDark}>
+              {z.label}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 function RegionPicker({ onSelect, onBack }) {
   const regionMeta = {
     shoulder: { mono: "SH", tag: "Cuff \u00b7 SAPS \u00b7 Instability" },
@@ -16193,7 +17252,10 @@ function RegionPicker({ onSelect, onBack }) {
         </button>
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
         <h1 className="text-[26px] font-bold mb-1" style={{ color: T.ink }}>UpperTrack</h1>
-        <p className="text-[14px] mb-6" style={{ color: T.inkSoft }}>Choose a body region to open a structured consultation template.</p>
+        <p className="text-[14px] mb-3" style={{ color: T.inkSoft }}>Tap the affected area, or choose a region below.</p>
+        <div className="rounded-2xl mb-5 px-3 py-2 flex justify-center" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowCard }}>
+          <BodyMap onSelect={onSelect} />
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {Object.entries(REGIONS).map(([key, r]) => (
             <button key={key} onClick={() => onSelect(key)} className="rounded-2xl p-4 text-left active:scale-95 transition" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 120, boxShadow: T.shadowElevated }}>
@@ -16240,6 +17302,25 @@ function ConditionList({ regionKey, session, onSelect, onBack }) {
           <ArrowLeft size={18} /><span className="text-[14px] font-medium">All regions</span>
         </button>
         <h1 className="text-[22px] font-bold mb-4" style={{ color: T.ink }}>{region.label}</h1>
+
+        {GENERAL_ASSESSMENTS[regionKey] && (
+          <button
+            onClick={() => onSelect(GENERAL_ASSESSMENTS[regionKey])}
+            className="w-full rounded-2xl p-4 mb-5 text-left active:scale-95 transition flex items-start gap-3"
+            style={{ background: T.tealTint, border: `1px solid ${T.teal}`, boxShadow: T.shadowCard }}
+          >
+            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 40, height: 40, background: T.gradientTeal }}>
+              <Search size={19} color="#fff" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-[15px]" style={{ color: T.tealDark }}>Diagnosis not yet clear?</div>
+              <div className="text-[12.5px] mt-0.5" style={{ color: T.inkSoft }}>
+                Start a general {region.label.toLowerCase()} assessment — a structured screen to narrow the differential, with links straight into the specific template once it does.
+              </div>
+            </div>
+            <ChevronRight size={18} color={T.tealDark} />
+          </button>
+        )}
 
         {hasSubsections ? (
           <div className="flex flex-col gap-6">
@@ -16457,7 +17538,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
               </button>
               {copyError && (
                 <div className="text-[12.5px] text-center" style={{ color: T.red }}>
-                  Couldn't copy automatically \u2014 tap and hold the note above to select and copy it manually.
+                  Couldn't copy automatically — tap and hold the note above to select and copy it manually.
                 </div>
               )}
             </div>
@@ -16643,7 +17724,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
               </button>
               {copyError && (
                 <div className="text-[12.5px] text-center" style={{ color: T.red }}>
-                  Couldn't copy automatically \u2014 tap and hold the note above to select and copy it manually.
+                  Couldn't copy automatically — tap and hold the note above to select and copy it manually.
                 </div>
               )}
             </div>
@@ -17096,7 +18177,7 @@ export default function App() {
               </button>
               {combinedCopyError && (
                 <div className="text-[12.5px] text-center mt-2" style={{ color: T.red }}>
-                  Couldn't copy automatically \u2014 tap and hold the note above to select and copy it manually.
+                  Couldn't copy automatically — tap and hold the note above to select and copy it manually.
                 </div>
               )}
             </div>
