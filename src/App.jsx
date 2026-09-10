@@ -16438,7 +16438,7 @@ function VisitTypeGate({ onSelect }) {
 // match their band, and the median/ulnar/radial nerves are traced down the
 // whole limb - which is also why Peripheral Nerve gets its own band rather
 // than a point on the arm, since it spans every region.
-function BodyMap({ onSelect, counts, activeRegion, fillHeight }) {
+function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
   // Contiguous horizontal hit zones, so there are no dead gaps between
   // regions - a tap anywhere in a band's vertical slice selects it, which
   // is far more forgiving than requiring a hit on the muscle itself.
@@ -16463,25 +16463,25 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight }) {
       aria-label="Upper limb region picker"
     >
       <defs>
-        <linearGradient id="ut-d1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#8FCDEC"/><stop offset="100%" stopColor="#3B87BD"/></linearGradient>
-        <linearGradient id="ut-d2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#6FB9E0"/><stop offset="100%" stopColor="#276F9F"/></linearGradient>
-        <linearGradient id="ut-d3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#A5D8F0"/><stop offset="100%" stopColor="#4E96C6"/></linearGradient>
-        <linearGradient id="ut-bi" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#C2DE94"/><stop offset="100%" stopColor="#6FA43F"/></linearGradient>
-        <linearGradient id="ut-brl" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#B2D283"/><stop offset="100%" stopColor="#5C8D30"/></linearGradient>
-        <linearGradient id="ut-tri" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#9CC46E"/><stop offset="100%" stopColor="#4E7B27"/></linearGradient>
-        <linearGradient id="ut-fx" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F7D089"/><stop offset="100%" stopColor="#DE9234"/></linearGradient>
-        <linearGradient id="ut-ex" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F3C070"/><stop offset="100%" stopColor="#C97C20"/></linearGradient>
-        <linearGradient id="ut-brd" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#EFCE96"/><stop offset="100%" stopColor="#C78A3E"/></linearGradient>
-        <linearGradient id="ut-th" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F2A79E"/><stop offset="100%" stopColor="#D25E51"/></linearGradient>
-        <linearGradient id="ut-hy" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#EE968F"/><stop offset="100%" stopColor="#BE4A40"/></linearGradient>
-        <linearGradient id="ut-pec" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#EDC4C4"/><stop offset="100%" stopColor="#BE7E86"/></linearGradient>
-        <pattern id="ut-gr" width="14" height="14" patternUnits="userSpaceOnUse">
+        <linearGradient id={`${uid}-d1`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#8FCDEC"/><stop offset="100%" stopColor="#3B87BD"/></linearGradient>
+        <linearGradient id={`${uid}-d2`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#6FB9E0"/><stop offset="100%" stopColor="#276F9F"/></linearGradient>
+        <linearGradient id={`${uid}-d3`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#A5D8F0"/><stop offset="100%" stopColor="#4E96C6"/></linearGradient>
+        <linearGradient id={`${uid}-bi`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#C2DE94"/><stop offset="100%" stopColor="#6FA43F"/></linearGradient>
+        <linearGradient id={`${uid}-brl`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#B2D283"/><stop offset="100%" stopColor="#5C8D30"/></linearGradient>
+        <linearGradient id={`${uid}-tri`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#9CC46E"/><stop offset="100%" stopColor="#4E7B27"/></linearGradient>
+        <linearGradient id={`${uid}-fx`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F7D089"/><stop offset="100%" stopColor="#DE9234"/></linearGradient>
+        <linearGradient id={`${uid}-ex`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F3C070"/><stop offset="100%" stopColor="#C97C20"/></linearGradient>
+        <linearGradient id={`${uid}-brd`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#EFCE96"/><stop offset="100%" stopColor="#C78A3E"/></linearGradient>
+        <linearGradient id={`${uid}-th`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F2A79E"/><stop offset="100%" stopColor="#D25E51"/></linearGradient>
+        <linearGradient id={`${uid}-hy`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#EE968F"/><stop offset="100%" stopColor="#BE4A40"/></linearGradient>
+        <linearGradient id={`${uid}-pec`} x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#EDC4C4"/><stop offset="100%" stopColor="#BE7E86"/></linearGradient>
+        <pattern id={`${uid}-gr`} width="14" height="14" patternUnits="userSpaceOnUse">
           <path d="M14 0 L0 0 0 14" fill="none" stroke="#C9C7BE" strokeWidth="0.4" opacity="0.45"/>
         </pattern>
       </defs>
 
       <rect width="348" height="610" fill="#FBF9F3"/>
-      <rect width="348" height="610" fill="url(#ut-gr)"/>
+      <rect width="348" height="610" fill={`url(#${uid}-gr)`}/>
 
       <rect x="118" y="52" width="230" height="112" rx="7" fill="#BEDDF0" opacity="0.7"/>
       <rect x="0" y="238" width="228" height="88" rx="7" fill="#F5DE96" opacity="0.7"/>
@@ -16498,8 +16498,8 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight }) {
       <path d="M148 116 q12 46 26 82 q10 26 18 44" stroke="#8A7B5F" strokeWidth="0.8" fill="none" opacity="0.65"/>
       <path d="M110 88 q22 -14 42 2 q14 12 8 30 q-24 12 -46 -2 q-10 -16 -4 -30 z" fill="#E8E0CE" stroke="#8A7B5F" strokeWidth="0.9"/>
 
-      <path d="M22 48 q14 -3 26 1 q60 18 100 55 q9 8 5 16 q-7 8 -19 5 q-48 -12 -86 -28 q-24 -11 -28 -30 q-4 -20 2 -19 z" fill="url(#ut-pec)" opacity="0.9"/>
-      <path d="M22 92 q14 -2 26 3 q54 20 88 46 q8 6 4 13 q-7 7 -18 4 q-44 -13 -76 -28 q-20 -10 -24 -26 q-3 -13 0 -12 z" fill="url(#ut-pec)" opacity="0.82"/>
+      <path d="M22 48 q14 -3 26 1 q60 18 100 55 q9 8 5 16 q-7 8 -19 5 q-48 -12 -86 -28 q-24 -11 -28 -30 q-4 -20 2 -19 z" fill={`url(#${uid}-pec)`} opacity="0.9"/>
+      <path d="M22 92 q14 -2 26 3 q54 20 88 46 q8 6 4 13 q-7 7 -18 4 q-44 -13 -76 -28 q-20 -10 -24 -26 q-3 -13 0 -12 z" fill={`url(#${uid}-pec)`} opacity="0.82"/>
       <path d="M24 70 q56 14 116 54" stroke="#9F6A73" strokeWidth="0.9" fill="none" opacity="0.7"/>
       <g stroke="#9F6A73" strokeWidth="0.6" fill="none" opacity="0.5">
         <path d="M26 56 q58 14 116 52"/><path d="M24 84 q56 16 112 50"/><path d="M24 100 q52 18 106 48"/><path d="M26 116 q48 18 98 46"/><path d="M28 132 q42 18 88 42"/>
@@ -16509,16 +16509,16 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight }) {
       <path d="M26 44 q48 6 100 26" stroke="#8A7B5F" strokeWidth="1.1" fill="none"/>
       <path d="M124 62 q16 2 22 12 q4 8 -2 14" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
 
-      <path d="M120 64 q24 -12 44 6 q14 14 14 34 q-18 14 -38 6 q-16 -16 -22 -28 q-2 -12 2 -18 z" fill="url(#ut-d1)" stroke="#1F5A85" strokeWidth="0.9"/>
-      <path d="M148 58 q30 2 44 28 q12 24 4 52 q-6 14 -16 20 q-16 -4 -24 -18 q-10 -34 -12 -56 q0 -18 4 -26 z" fill="url(#ut-d2)" stroke="#1F5A85" strokeWidth="0.9"/>
-      <path d="M186 74 q20 14 20 42 q0 26 -14 42 q-12 0 -16 -14 q2 -34 6 -54 q2 -12 4 -16 z" fill="url(#ut-d3)" stroke="#1F5A85" strokeWidth="0.9"/>
+      <path d="M120 64 q24 -12 44 6 q14 14 14 34 q-18 14 -38 6 q-16 -16 -22 -28 q-2 -12 2 -18 z" fill={`url(#${uid}-d1)`} stroke="#1F5A85" strokeWidth="0.9"/>
+      <path d="M148 58 q30 2 44 28 q12 24 4 52 q-6 14 -16 20 q-16 -4 -24 -18 q-10 -34 -12 -56 q0 -18 4 -26 z" fill={`url(#${uid}-d2)`} stroke="#1F5A85" strokeWidth="0.9"/>
+      <path d="M186 74 q20 14 20 42 q0 26 -14 42 q-12 0 -16 -14 q2 -34 6 -54 q2 -12 4 -16 z" fill={`url(#${uid}-d3)`} stroke="#1F5A85" strokeWidth="0.9"/>
       <g stroke="#1F5A85" strokeWidth="0.65" fill="none" opacity="0.5">
         <path d="M128 74 q14 40 26 72"/><path d="M150 66 q12 46 22 78"/><path d="M170 68 q8 46 12 76"/><path d="M190 82 q2 40 -2 64"/>
       </g>
 
-      <path d="M184 140 q22 6 30 22 q10 30 16 54 q6 22 8 44 q-16 12 -32 4 q-8 -34 -14 -60 q-6 -32 -8 -64 z" fill="url(#ut-tri)" stroke="#3E661F" strokeWidth="0.9"/>
-      <path d="M144 132 q34 18 66 4 q6 32 12 58 q6 26 10 48 q6 22 8 34 q-28 16 -56 2 q-8 -34 -16 -66 q-10 -40 -16 -62 q-6 -12 -8 -18 z" fill="url(#ut-bi)" stroke="#3E661F" strokeWidth="1"/>
-      <path d="M158 196 q32 14 56 -2 q8 30 14 52 q6 20 8 32 q-26 14 -50 0 q-10 -30 -18 -52 q-6 -18 -10 -30 z" fill="url(#ut-brl)" stroke="#3E661F" strokeWidth="0.85" opacity="0.9"/>
+      <path d="M184 140 q22 6 30 22 q10 30 16 54 q6 22 8 44 q-16 12 -32 4 q-8 -34 -14 -60 q-6 -32 -8 -64 z" fill={`url(#${uid}-tri)`} stroke="#3E661F" strokeWidth="0.9"/>
+      <path d="M144 132 q34 18 66 4 q6 32 12 58 q6 26 10 48 q6 22 8 34 q-28 16 -56 2 q-8 -34 -16 -66 q-10 -40 -16 -62 q-6 -12 -8 -18 z" fill={`url(#${uid}-bi)`} stroke="#3E661F" strokeWidth="1"/>
+      <path d="M158 196 q32 14 56 -2 q8 30 14 52 q6 20 8 32 q-26 14 -50 0 q-10 -30 -18 -52 q-6 -18 -10 -30 z" fill={`url(#${uid}-brl)`} stroke="#3E661F" strokeWidth="0.85" opacity="0.9"/>
       <g stroke="#3E661F" strokeWidth="0.7" fill="none" opacity="0.5">
         <path d="M154 144 q14 56 30 104"/><path d="M174 146 q12 56 26 102"/><path d="M194 140 q10 54 22 98"/>
       </g>
@@ -16532,9 +16532,9 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight }) {
         <path d="M200 300 q12 34 22 58 q8 18 14 30"/><path d="M214 296 q12 34 22 58 q8 18 14 30"/>
       </g>
 
-      <path d="M183 266 q22 14 42 0 q10 28 18 52 q9 26 14 46 q4 16 6 26 q-11 6 -23 2 q-4 -18 -9 -36 q-9 -30 -19 -52 q-12 -26 -23 -34 q-4 -2 -6 -4 z" fill="url(#ut-fx)" stroke="#9A5C17" strokeWidth="0.95"/>
-      <path d="M225 264 q14 8 21 -2 q8 24 14 46 q6 22 9 38 q3 14 4 23 q-9 6 -18 1 q-2 -14 -5 -28 q-7 -28 -14 -48 q-7 -22 -11 -30 z" fill="url(#ut-ex)" stroke="#9A5C17" strokeWidth="0.9"/>
-      <path d="M176 270 q-5 24 3 48 q8 24 18 43 q6 12 10 19 q9 -2 8 -12 q-6 -13 -13 -28 q-12 -28 -18 -48 q-6 -20 -8 -30 z" fill="url(#ut-brd)" stroke="#9A5C17" strokeWidth="0.9"/>
+      <path d="M183 266 q22 14 42 0 q10 28 18 52 q9 26 14 46 q4 16 6 26 q-11 6 -23 2 q-4 -18 -9 -36 q-9 -30 -19 -52 q-12 -26 -23 -34 q-4 -2 -6 -4 z" fill={`url(#${uid}-fx)`} stroke="#9A5C17" strokeWidth="0.95"/>
+      <path d="M225 264 q14 8 21 -2 q8 24 14 46 q6 22 9 38 q3 14 4 23 q-9 6 -18 1 q-2 -14 -5 -28 q-7 -28 -14 -48 q-7 -22 -11 -30 z" fill={`url(#${uid}-ex)`} stroke="#9A5C17" strokeWidth="0.9"/>
+      <path d="M176 270 q-5 24 3 48 q8 24 18 43 q6 12 10 19 q9 -2 8 -12 q-6 -13 -13 -28 q-12 -28 -18 -48 q-6 -20 -8 -30 z" fill={`url(#${uid}-brd)`} stroke="#9A5C17" strokeWidth="0.9"/>
       <g stroke="#9A5C17" strokeWidth="0.6" fill="none" opacity="0.5">
         <path d="M194 280 q14 42 25 78"/><path d="M209 277 q12 42 21 76"/><path d="M226 273 q10 38 17 68"/>
       </g>
@@ -16574,10 +16574,10 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight }) {
       <path d="M325 460 q6 6 10 11" stroke="#E8E0CE" strokeWidth="4.2" fill="none" strokeLinecap="round"/>
       <path d="M325 460 q6 6 10 11" stroke="#8A7B5F" strokeWidth="0.5" fill="none" opacity="0.55"/>
 
-      <path d="M284 418 q13 9 16 26 q3 17 -3 27 q-8 5 -13 -3 q6 -14 5 -26 q-2 -14 -8 -22 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.9"/>
-      <path d="M290 428 q10 5 17 15 q3 5 1 9 q-6 4 -10 -1 q-3 -8 -9 -14 q-3 -4 -1 -8 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.8"/>
-      <path d="M250 418 q-13 7 -16 23 q-3 16 3 26 q8 4 12 -5 q-4 -14 -2 -25 q2 -12 3 -19 z" fill="url(#ut-hy)" stroke="#9C3C31" strokeWidth="0.9"/>
-      <path d="M244 424 q26 11 46 -4 q7 17 5 32 q-27 13 -54 2 q-2 -17 3 -30 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.85" opacity="0.9"/>
+      <path d="M284 418 q13 9 16 26 q3 17 -3 27 q-8 5 -13 -3 q6 -14 5 -26 q-2 -14 -8 -22 z" fill={`url(#${uid}-th)`} stroke="#9C3C31" strokeWidth="0.9"/>
+      <path d="M290 428 q10 5 17 15 q3 5 1 9 q-6 4 -10 -1 q-3 -8 -9 -14 q-3 -4 -1 -8 z" fill={`url(#${uid}-th)`} stroke="#9C3C31" strokeWidth="0.8"/>
+      <path d="M250 418 q-13 7 -16 23 q-3 16 3 26 q8 4 12 -5 q-4 -14 -2 -25 q2 -12 3 -19 z" fill={`url(#${uid}-hy)`} stroke="#9C3C31" strokeWidth="0.9"/>
+      <path d="M244 424 q26 11 46 -4 q7 17 5 32 q-27 13 -54 2 q-2 -17 3 -30 z" fill={`url(#${uid}-th)`} stroke="#9C3C31" strokeWidth="0.85" opacity="0.9"/>
       <g stroke="#9C3C31" strokeWidth="0.6" fill="none" opacity="0.55">
         <path d="M256 436 l-2 20"/><path d="M268 436 l0 22"/><path d="M280 434 l4 22"/>
       </g>
@@ -16663,10 +16663,10 @@ function RegionPicker({ onSelect, onBack }) {
         </div>
         <div className="mx-auto w-full max-w-[400px] md:max-w-[560px] lg:max-w-none lg:mx-0 lg:flex-1 lg:flex lg:justify-center">
           <div className="rounded-2xl overflow-hidden w-full lg:hidden" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
-            <BodyMap onSelect={onSelect} counts={counts} />
+            <BodyMap onSelect={onSelect} counts={counts} uid="rpm" />
           </div>
           <div className="rounded-2xl overflow-hidden hidden lg:block" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
-            <BodyMap onSelect={onSelect} counts={counts} fillHeight />
+            <BodyMap onSelect={onSelect} counts={counts} fillHeight uid="rpd" />
           </div>
         </div>
       </div>
@@ -17403,7 +17403,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
   );
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col" style={{ background: T.bg }}>
+    <div className="fixed left-0 right-0 bottom-0 z-30 flex flex-col" style={{ top: 56, background: T.bg }}>{/* top offset clears SessionBar (sticky, ~48-52px tall) - fixed positioning otherwise ignores it entirely and starts at the true viewport top, letting SessionBar's higher z-index paint over this screen's own header */}
       <div className="flex items-center gap-2 px-3 lg:px-6 py-3 lg:py-4 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button
           onClick={() => (regionKey ? setRegionKey(null) : onBack())}
@@ -17455,7 +17455,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
         <div className="max-w-2xl mx-auto">
           {showRegionPicker ? (
             <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[400px] md:max-w-[560px]" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
-              <BodyMap onSelect={setRegionKey} counts={counts} />
+              <BodyMap onSelect={setRegionKey} counts={counts} uid="fpm" />
             </div>
           ) : resultsList}
         </div>
@@ -17468,7 +17468,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
       <div className="hidden lg:flex gap-8 px-6 pt-5 pb-8" style={{ flex: "1 1 0%", minHeight: 0 }}>
         <div className="w-[400px] xl:w-[440px] shrink-0" style={{ overflowY: "auto" }}>
           <div className="rounded-2xl overflow-hidden" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
-            <BodyMap onSelect={setRegionKey} counts={counts} activeRegion={regionKey} />
+            <BodyMap onSelect={setRegionKey} counts={counts} activeRegion={regionKey} uid="fpd" />
           </div>
         </div>
         <div className="flex-1 min-w-0" style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
