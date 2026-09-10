@@ -136,34 +136,14 @@ const rotatorCuffData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, pain, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Anterior shoulder", "Posterior shoulder", "Night pain", "Pain at rest", "Pain overhead", "Pain reaching behind back", "Pain lifting objects"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Combing hair", "Dressing", "Reaching shelves", "Fastening bra", "Carrying groceries", "Throwing", "Sleeping affected side"] },
-        { type: "select", key: "weakness", label: "Weakness", options: ["None", "Mild", "Moderate", "Severe", "Pseudoparalysis"], columns: 3 },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection"] },
-        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workStatus", label: "Work status", options: ["Working", "Modified duties", "Off work"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Anterior shoulder", "Posterior shoulder", "Night pain", "Pain at rest", "Pain overhead", "Pain reaching behind back", "Pain lifting objects"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Combing hair", "Dressing", "Reaching shelves", "Fastening bra", "Carrying groceries", "Throwing", "Sleeping affected side"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "weakness", label: "Weakness", options: ["None", "Mild", "Moderate", "Severe", "Pseudoparalysis"], columns: 3 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).includes("Injection"),
           fields: [
             { type: "number", key: "injectionCount", label: "Number of injections", noteLabel: "Injections" },
             { type: "select", key: "injectionResponse", label: "Injection response", options: ["Good", "Temporary", "None"], columns: 3, noteLabel: "Injection response" },
           ],
-        },
-        { type: "text", key: "prevSurgery", label: "Previous surgery (if any)", placeholder: "Free text — procedure & date" },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Smoking", "Rheumatoid arthritis", "Thyroid disease", "Hypercholesterolaemia"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workStatus", label: "Work status", options: ["Working", "Modified duties", "Off work"], columns: 3 },
-      ],
+        },{ type: "text", key: "prevSurgery", label: "Previous surgery (if any)", placeholder: "Free text — procedure & date" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Smoking", "Rheumatoid arthritis", "Thyroid disease", "Hypercholesterolaemia"] },{ type: "text", key: "sport", label: "Sport" },],
     },
     {
       id: "exam",
@@ -324,28 +304,11 @@ const sapsData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, pain, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 weeks" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Repetitive overuse", "Minor trauma"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Anterior shoulder", "Painful arc", "Night pain", "Overhead activities", "Reaching behind back", "Throwing", "Lifting"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Dressing", "Combing hair", "Reaching shelves", "Sports", "Work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "NSAIDs", "Physiotherapy", "Injection"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Repetitive overuse", "Minor trauma"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Anterior shoulder", "Painful arc", "Night pain", "Overhead activities", "Reaching behind back", "Throwing", "Lifting"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Dressing", "Combing hair", "Reaching shelves", "Sports", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "NSAIDs", "Physiotherapy", "Injection"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).includes("Injection"),
           fields: [{ type: "select", key: "injectionResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Injection response" }],
-        },
-        { type: "text", key: "prevSurgery", label: "Previous surgery (if any)", placeholder: "Free text — procedure & date" },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Smoking", "Cervical spine disease"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-      ],
+        },{ type: "text", key: "prevSurgery", label: "Previous surgery (if any)", placeholder: "Free text — procedure & date" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Smoking", "Cervical spine disease"] },{ type: "text", key: "sport", label: "Sport" },],
     },
     {
       id: "exam",
@@ -492,26 +455,11 @@ const adhesiveCapsulitisData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, onset, pain, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },
-        { type: "select", key: "onset", label: "Onset", options: ["Gradual", "Following trauma", "Following surgery"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Night pain", "Progressive stiffness", "Difficulty combing hair", "Difficulty dressing", "Difficulty reaching overhead", "Difficulty reaching back pocket", "Unable to sleep on affected side"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Personal hygiene", "Work", "Sports", "Driving"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Steroid injection", "Hydrodilatation", "Surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Following trauma", "Following surgery"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Night pain", "Progressive stiffness", "Difficulty combing hair", "Difficulty dressing", "Difficulty reaching overhead", "Difficulty reaching back pocket", "Unable to sleep on affected side"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Personal hygiene", "Work", "Sports", "Driving"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Steroid injection", "Hydrodilatation", "Surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" }],
-        },
-        { type: "checkbox", key: "medHistory", label: "Medical history", options: ["Diabetes", "Thyroid disease", "Parkinson disease", "Previous adhesive capsulitis"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-      ],
+        },{ type: "checkbox", key: "medHistory", label: "Medical history", options: ["Diabetes", "Thyroid disease", "Parkinson disease", "Previous adhesive capsulitis"] },],
     },
     {
       id: "exam",
@@ -682,25 +630,7 @@ const instabilityData = {
       index: 2,
       title: "Focused History",
       subtitle: "Instability pattern, episodes, treatment",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "level", label: "Level", options: ["Recreational", "Competitive", "Professional"], columns: 3 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Traumatic", "Atraumatic"], columns: 2 },
-        { type: "select", key: "direction", label: "Direction", options: ["Anterior", "Posterior", "Multidirectional"], columns: 3 },
-        { type: "number", key: "episodeCount", label: "Number of episodes" },
-        { type: "select", key: "firstEpisode", label: "First episode?", options: ["Yes", "No"], columns: 2 },
-        { type: "select", key: "reduction", label: "Reduction", options: ["Self-reduced", "Emergency Department", "Operating Theatre"], columns: 3, noteLabel: "Reduction method" },
-        { type: "select", key: "associatedFracture", label: "Associated fracture?", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Apprehension", "Pain", "Recurrent subluxation", "Recurrent dislocation", "Clicking", "Weakness", "Dead arm episode", "Night pain"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "Physiotherapy", "Surgery", "Injection"] },
-        { type: "checkbox", key: "medHistory", label: "Medical history", options: ["Generalised hypermobility", "Connective tissue disorder", "Seizures"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "level", label: "Level", options: ["Recreational", "Competitive", "Professional"], columns: 3 },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Traumatic", "Atraumatic"], columns: 2 },{ type: "select", key: "direction", label: "Direction", options: ["Anterior", "Posterior", "Multidirectional"], columns: 3 },{ type: "number", key: "episodeCount", label: "Number of episodes" },{ type: "select", key: "firstEpisode", label: "First episode?", options: ["Yes", "No"], columns: 2 },{ type: "select", key: "reduction", label: "Reduction", options: ["Self-reduced", "Emergency Department", "Operating Theatre"], columns: 3, noteLabel: "Reduction method" },{ type: "select", key: "associatedFracture", label: "Associated fracture?", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Apprehension", "Pain", "Recurrent subluxation", "Recurrent dislocation", "Clicking", "Weakness", "Dead arm episode", "Night pain"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "Physiotherapy", "Surgery", "Injection"] },{ type: "checkbox", key: "medHistory", label: "Medical history", options: ["Generalised hypermobility", "Connective tissue disorder", "Seizures"] },],
     },
     {
       id: "exam",
@@ -860,27 +790,11 @@ const bicepsData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, pain, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Overuse", "Acute injury"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Anterior shoulder", "Bicipital groove", "Radiates down anterior arm", "Pain lifting", "Overhead pain", "Throwing pain", "Night pain", "Mechanical symptoms"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Lifting", "Carrying", "Throwing", "Gym activities", "Work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "NSAIDs", "Physiotherapy", "Injection", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Overuse", "Acute injury"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Anterior shoulder", "Bicipital groove", "Radiates down anterior arm", "Pain lifting", "Overhead pain", "Throwing pain", "Night pain", "Mechanical symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Lifting", "Carrying", "Throwing", "Gym activities", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "NSAIDs", "Physiotherapy", "Injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous shoulder instability", "Rotator cuff disease", "SLAP lesion", "Diabetes"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-      ],
+        },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous shoulder instability", "Rotator cuff disease", "SLAP lesion", "Diabetes"] },{ type: "text", key: "sport", label: "Sport" },],
     },
     {
       id: "exam",
@@ -1092,35 +1006,18 @@ const acJointData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, pain, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 weeks" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Degenerative", "Trauma", "Repetitive overload"], columns: 3 },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Degenerative", "Trauma", "Repetitive overload"], columns: 3 },{
           type: "conditional",
           when: (s) => s.mechanism === "Trauma",
           fields: [
             { type: "checkbox", key: "acuteMechanismDetail", label: "Acute injury \u2014 mechanism detail", options: ["Fall onto point of shoulder", "Fall onto outstretched hand", "Direct blow / collision", "Sporting injury", "Motorcycle/bicycle accident"] },
             { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
           ],
-        },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Superior shoulder", "Localized over AC joint", "Cross-body pain", "Bench press pain", "Push-up pain", "Sleeping on shoulder", "Carrying heavy objects", "End-range elevation"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Work", "Gym", "Throwing", "Contact sports", "Activities of daily living"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Previous AC surgery"] },
-        {
+        },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Superior shoulder", "Localized over AC joint", "Cross-body pain", "Bench press pain", "Push-up pain", "Sleeping on shoulder", "Carrying heavy objects", "End-range elevation"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Work", "Gym", "Throwing", "Contact sports", "Activities of daily living"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Previous AC surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous AC separation", "Rotator cuff disease", "Rheumatoid arthritis"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-      ],
+        },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous AC separation", "Rotator cuff disease", "Rheumatoid arthritis"] },{ type: "text", key: "sport", label: "Sport" },],
     },
     {
       id: "exam",
@@ -1337,27 +1234,11 @@ const gleroarthritisData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, expectations",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Deep shoulder pain", "Night pain", "Pain at rest", "Mechanical pain", "Crepitus", "Progressive stiffness"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Grooming", "Dressing", "Reaching overhead", "Driving", "Sleeping", "Work", "Recreation"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Deep shoulder pain", "Night pain", "Pain at rest", "Mechanical pain", "Crepitus", "Progressive stiffness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Grooming", "Dressing", "Reaching overhead", "Driving", "Sleeping", "Work", "Recreation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-        { type: "checkbox", key: "medHistory", label: "Medical history", options: ["Rheumatoid arthritis", "Rotator cuff disease", "Diabetes", "Osteoporosis"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "select", key: "activityLevel", label: "Activity level", options: ["Low", "Moderate", "High"], columns: 3 },
-        { type: "text", key: "patientExpectations", label: "Patient expectations" },
-      ],
+        },{ type: "checkbox", key: "medHistory", label: "Medical history", options: ["Rheumatoid arthritis", "Rotator cuff disease", "Diabetes", "Osteoporosis"] },{ type: "select", key: "activityLevel", label: "Activity level", options: ["Low", "Moderate", "High"], columns: 3 },{ type: "text", key: "patientExpectations", label: "Patient expectations" },],
     },
     {
       id: "exam",
@@ -1528,22 +1409,7 @@ const avnData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, baseline function, priorities",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep shoulder pain", "Night pain", "Rest pain", "Progressive stiffness", "Mechanical symptoms", "Loss of function"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "premorbidActivity", label: "Pre-morbid activity level", options: ["Low", "Moderate", "High"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve native joint", "Return to work", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Previous shoulder surgery"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep shoulder pain", "Night pain", "Rest pain", "Progressive stiffness", "Mechanical symptoms", "Loss of function"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "premorbidActivity", label: "Pre-morbid activity level", options: ["Low", "Moderate", "High"], columns: 3 },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve native joint", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Previous shoulder surgery"] },],
     },
     {
       id: "exam",
@@ -1703,26 +1569,11 @@ const calcificTendinitisData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, onset, pain, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 weeks" },
-        { type: "select", key: "onset", label: "Onset", options: ["Acute", "Gradual"], columns: 2 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Severe night pain", "Pain overhead", "Rest pain", "Unable to sleep", "Sudden severe attack"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Dressing", "Grooming", "Driving", "Work", "Sports"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Ultrasound-guided lavage", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 weeks" },{ type: "select", key: "onset", label: "Onset", options: ["Acute", "Gradual"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Severe night pain", "Pain overhead", "Rest pain", "Unable to sleep", "Sudden severe attack"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Dressing", "Grooming", "Driving", "Work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Ultrasound-guided lavage", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-        { type: "checkbox", key: "medHistory", label: "Medical history", options: ["Diabetes", "Thyroid disease"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-      ],
+        },{ type: "checkbox", key: "medHistory", label: "Medical history", options: ["Diabetes", "Thyroid disease"] },],
     },
     {
       id: "exam",
@@ -1883,23 +1734,7 @@ const proximalHumerusFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, pre-injury status",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "date", key: "injuryDate", label: "Injury date" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Fall", "MVC", "Sports", "Seizure", "Other"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Bruising", "Loss of function", "Numbness", "Tingling"] },
-        { type: "select", key: "functionalStatusBefore", label: "Functional status before injury", options: ["Independent", "Walking aid", "Nursing home"], columns: 3 },
-        { type: "text", key: "occupation", label: "Occupation" },
-        // "Activity level" is a blank line with no options given (unlike the
-        // Low/Moderate/High scale used elsewhere) — left as free text.
-        { type: "text", key: "activityLevel", label: "Activity level" },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Diabetes", "Smoking", "Anticoagulation", "Previous shoulder surgery"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Injury date" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall", "MVC", "Sports", "Seizure", "Other"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Bruising", "Loss of function", "Numbness", "Tingling"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "functionalStatusBefore", label: "Functional status before injury", options: ["Independent", "Walking aid", "Nursing home"], columns: 3 },{ type: "text", key: "activityLevel", label: "Activity level" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Diabetes", "Smoking", "Anticoagulation", "Previous shoulder surgery"] },],
     },
     {
       id: "exam",
@@ -2056,27 +1891,11 @@ const scapularDyskinesisData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Overuse", "Following injury", "Gradual"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Periscapular pain", "Shoulder fatigue", "Weakness", "Loss of endurance", "Clicking", "Loss of throwing velocity", "Difficulty overhead", "Poor posture"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Swimming", "Weight lifting", "Work", "Activities of daily living"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Previous surgery", "Injection"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Overuse", "Following injury", "Gradual"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Periscapular pain", "Shoulder fatigue", "Weakness", "Loss of endurance", "Clicking", "Loss of throwing velocity", "Difficulty overhead", "Poor posture"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Swimming", "Weight lifting", "Work", "Activities of daily living"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Previous surgery", "Injection"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous instability", "Rotator cuff disease", "Cervical pathology", "Previous clavicle fracture", "Rib injury"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-      ],
+        },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous instability", "Rotator cuff disease", "Cervical pathology", "Previous clavicle fracture", "Rib injury"] },{ type: "text", key: "sport", label: "Sport" },],
     },
     {
       id: "exam",
@@ -2239,29 +2058,11 @@ const slapData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Throwing", "FOOSH", "Traction injury", "Repetitive overuse"], columns: 2 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep shoulder pain", "Clicking", "Catching", "Locking", "Throwing pain", "Loss of velocity", "Fatigue", "Instability"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Serving", "Swimming", "Gym", "Work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "Physiotherapy", "NSAIDs", "Injection", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Throwing", "FOOSH", "Traction injury", "Repetitive overuse"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep shoulder pain", "Clicking", "Catching", "Locking", "Throwing pain", "Loss of velocity", "Fatigue", "Instability"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Serving", "Swimming", "Gym", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "Physiotherapy", "NSAIDs", "Injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous instability", "Rotator cuff disease", "Biceps symptoms"] },
-        { type: "text", key: "sport", label: "Sport" },
-        // "Competition level" is a blank line with no options given — left as
-        // free text.
-        { type: "text", key: "competitionLevel", label: "Competition level" },
-      ],
+        },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous instability", "Rotator cuff disease", "Biceps symptoms"] },{ type: "text", key: "sport", label: "Sport" },{ type: "text", key: "competitionLevel", label: "Competition level" },],
     },
     {
       id: "exam",
@@ -2420,23 +2221,7 @@ const pecMajorRuptureData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Bench press", "Contact sport", "Fall", "Other"], columns: 2 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Immediate pain", "Swelling", "Bruising", "Weakness", "Cosmetic deformity", "Loss of strength"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Lifting", "Pushing", "Pulling", "Gym", "Work", "Sports"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "Analgesia", "Physiotherapy"] },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous shoulder injury", "Previous pectoralis injury", "Anabolic steroid use", "Smoking"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "text", key: "competitionLevel", label: "Competition level" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Bench press", "Contact sport", "Fall", "Other"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Immediate pain", "Swelling", "Bruising", "Weakness", "Cosmetic deformity", "Loss of strength"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Lifting", "Pushing", "Pulling", "Gym", "Work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "Analgesia", "Physiotherapy"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous shoulder injury", "Previous pectoralis injury", "Anabolic steroid use", "Smoking"] },{ type: "text", key: "sport", label: "Sport" },{ type: "text", key: "competitionLevel", label: "Competition level" },],
     },
     {
       id: "exam",
@@ -2606,29 +2391,11 @@ const lateralEpicondylopathyData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 10 weeks" },
-        { type: "vas", key: "vas" },
-        { type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overload"], columns: 2 },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lateral elbow pain", "Pain gripping", "Weak grip", "Lifting pain", "Morning stiffness", "Pain after activity", "Pain at rest", "Night pain"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to sport", "Strength recovery"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Brace", "Physiotherapy", "Injection", "Shockwave therapy", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 10 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overload"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lateral elbow pain", "Pain gripping", "Weak grip", "Lifting pain", "Morning stiffness", "Pain after activity", "Pain at rest", "Night pain"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to sport", "Strength recovery"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Brace", "Physiotherapy", "Injection", "Shockwave therapy", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Cervical symptoms", "Radial tunnel syndrome", "Rheumatologic disease", "Diabetes"] },
-      ],
+        },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Cervical symptoms", "Radial tunnel syndrome", "Rheumatologic disease", "Diabetes"] },],
     },
     {
       id: "exam",
@@ -2816,29 +2583,11 @@ const medialEpicondylopathyData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },
-        { type: "vas", key: "vas" },
-        { type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overload"], columns: 2 },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Medial elbow pain", "Pain gripping", "Pain lifting", "Pain throwing", "Morning stiffness", "Weak grip", "Pain after activity", "Night pain", "Numbness or tingling in ring/small fingers"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to sport", "Strength recovery"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Brace", "Physiotherapy", "Injection", "Shockwave therapy", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overload"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Medial elbow pain", "Pain gripping", "Pain lifting", "Pain throwing", "Morning stiffness", "Weak grip", "Pain after activity", "Night pain", "Numbness or tingling in ring/small fingers"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to sport", "Strength recovery"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Brace", "Physiotherapy", "Injection", "Shockwave therapy", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Cervical symptoms", "Ulnar neuritis", "Previous UCL injury", "Diabetes", "Rheumatologic disease"] },
-      ],
+        },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Cervical symptoms", "Ulnar neuritis", "Previous UCL injury", "Diabetes", "Rheumatologic disease"] },],
     },
     {
       id: "exam",
@@ -3015,24 +2764,7 @@ const distalBicepsRuptureData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Heavy lifting", "Sports", "Fall", "Other"], columns: 2 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Bruising", "Swelling", "Loss of supination strength", "Difficulty lifting", "Weak grip", "Cosmetic deformity"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore strength"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "NSAIDs", "Physiotherapy"] },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous tendon rupture", "Smoking", "Anabolic steroid use"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Heavy lifting", "Sports", "Fall", "Other"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Bruising", "Swelling", "Loss of supination strength", "Difficulty lifting", "Weak grip", "Cosmetic deformity"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore strength"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "NSAIDs", "Physiotherapy"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous tendon rupture", "Smoking", "Anabolic steroid use"] },],
     },
     {
       id: "exam",
@@ -3197,28 +2929,11 @@ const elbowOAData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Terminal pain", "Stiffness", "Mechanical locking", "Catching", "Clicking", "Swelling", "Night pain", "Progressive loss of motion"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Feeding", "Personal hygiene", "Grooming", "Dressing", "Driving", "Work", "Sports"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Improve motion", "Return to work", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Arthroscopy", "Previous trauma surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Terminal pain", "Stiffness", "Mechanical locking", "Catching", "Clicking", "Swelling", "Night pain", "Progressive loss of motion"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Feeding", "Personal hygiene", "Grooming", "Dressing", "Driving", "Work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Improve motion", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Arthroscopy", "Previous trauma surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous fracture", "Previous instability", "Rheumatoid arthritis", "Gout"] },
-      ],
+        },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous fracture", "Previous instability", "Rheumatoid arthritis", "Gout"] },],
     },
     {
       id: "exam",
@@ -3396,27 +3111,7 @@ const distalTricepsRuptureData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        // "Time from injury" is a separate blank field from the injury date
-        // in your original \u2014 kept as its own free-text entry.
-        { type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 10 days" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Fall", "Bench press", "Direct trauma", "Sporting injury", "Other"], columns: 2 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Posterior elbow pain", "Swelling", "Bruising", "Weakness pushing", "Difficulty rising from chair", "Difficulty performing push-ups", "Loss of extension strength"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore strength"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "NSAIDs", "Physiotherapy"] },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous triceps pain", "Chronic renal disease", "Rheumatologic disease", "Steroid exposure"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 10 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall", "Bench press", "Direct trauma", "Sporting injury", "Other"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Posterior elbow pain", "Swelling", "Bruising", "Weakness pushing", "Difficulty rising from chair", "Difficulty performing push-ups", "Loss of extension strength"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore strength"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "NSAIDs", "Physiotherapy"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous triceps pain", "Chronic renal disease", "Rheumatologic disease", "Steroid exposure"] },],
     },
     {
       id: "exam",
@@ -3605,24 +3300,7 @@ const radialHeadFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 5 days" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Fall from height"], columns: 2 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lateral elbow pain", "Swelling", "Stiffness", "Pain with rotation", "Locking", "Clicking", "Instability", "Numbness"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore motion"] },
-        { type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous instability", "Osteoporosis", "Polytrauma"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 5 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Fall from height"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lateral elbow pain", "Swelling", "Stiffness", "Pain with rotation", "Locking", "Clicking", "Instability", "Numbness"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore motion"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous instability", "Osteoporosis", "Polytrauma"] },],
     },
     {
       id: "exam",
@@ -3813,23 +3491,7 @@ const coronoidTerribleTriadData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Injury date" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Fall from height"], columns: 2 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain", "Swelling", "Instability", "Locking", "Deformity", "Reduced in ED", "Numbness"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Stability", "Motion", "Return to work", "Return to sport"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Injury date" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Fall from height"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain", "Swelling", "Instability", "Locking", "Deformity", "Reduced in ED", "Numbness"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Stability", "Motion", "Return to work", "Return to sport"] },],
     },
     {
       id: "exam",
@@ -3997,26 +3659,7 @@ const elbowInstabilityData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, reduction, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Injury date" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 1 week" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Other"], columns: 2 },
-        { type: "select", key: "reduced", label: "Reduced?", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "reducedWhere", label: "Where reduced", placeholder: "e.g. Emergency Department" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain", "Instability", "Clicking", "Locking", "Recurrent giving way", "Apprehension", "Stiffness", "Numbness"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Return to work", "Return to sport", "Stability", "Motion"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Reduction", "Splint", "Physiotherapy", "Surgery"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Injury date" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 1 week" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Other"], columns: 2 },{ type: "select", key: "reduced", label: "Reduced?", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "reducedWhere", label: "Where reduced", placeholder: "e.g. Emergency Department" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain", "Instability", "Clicking", "Locking", "Recurrent giving way", "Apprehension", "Stiffness", "Numbness"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Return to work", "Return to sport", "Stability", "Motion"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Reduction", "Splint", "Physiotherapy", "Surgery"] },],
     },
     {
       id: "exam",
@@ -4188,29 +3831,11 @@ const elbowStiffnessData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
-        { type: "text", key: "timeSinceInjurySurgery", label: "Time since injury/surgery", placeholder: "e.g. 3 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Motion loss", "Pain", "Mechanical block", "Instability", "Weakness", "Locking", "Numbness"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Feeding", "Grooming", "Hygiene", "Dressing", "Driving", "Computer work", "Sports"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },
-        { type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Motion", "Function", "Pain relief", "Return to work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Static splint", "Dynamic splint", "Surgery", "Manipulation"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "text", key: "timeSinceInjurySurgery", label: "Time since injury/surgery", placeholder: "e.g. 3 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Motion loss", "Pain", "Mechanical block", "Instability", "Weakness", "Locking", "Numbness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Feeding", "Grooming", "Hygiene", "Dressing", "Driving", "Computer work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Motion", "Function", "Pain relief", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Static splint", "Dynamic splint", "Surgery", "Manipulation"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -4383,24 +4008,7 @@ const athleticElbowData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, athletic profile, symptoms, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },
-        { type: "vas", key: "vas" },
-        { type: "text", key: "primarySport", label: "Primary sport" },
-        { type: "text", key: "position", label: "Position" },
-        { type: "select", key: "competitiveLevel", label: "Competitive level", options: ["Recreational", "Competitive", "Elite"], columns: 3 },
-        { type: "text", key: "trainingFrequency", label: "Training frequency", placeholder: "e.g. 5 sessions/week" },
-        { type: "text", key: "weeklyThrowingVolume", label: "Weekly throwing volume", placeholder: "e.g. 150 throws/week" },
-        { type: "select", key: "season", label: "Season", options: ["Pre-season", "In-season", "Off-season"], columns: 3 },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Medial pain", "Lateral pain", "Posterior pain", "Terminal extension pain", "Locking", "Clicking", "Loss of velocity", "Loss of accuracy", "Mechanical symptoms", "Instability"] },
-        { type: "checkbox", key: "functionalGoals", label: "Functional goals", options: ["Return to training", "Return to competition", "Scholarship", "Professional career"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "Physiotherapy", "Injection", "Surgery"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "text", key: "primarySport", label: "Primary sport" },{ type: "text", key: "position", label: "Position" },{ type: "select", key: "competitiveLevel", label: "Competitive level", options: ["Recreational", "Competitive", "Elite"], columns: 3 },{ type: "text", key: "trainingFrequency", label: "Training frequency", placeholder: "e.g. 5 sessions/week" },{ type: "text", key: "weeklyThrowingVolume", label: "Weekly throwing volume", placeholder: "e.g. 150 throws/week" },{ type: "select", key: "season", label: "Season", options: ["Pre-season", "In-season", "Off-season"], columns: 3 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Medial pain", "Lateral pain", "Posterior pain", "Terminal extension pain", "Locking", "Clicking", "Loss of velocity", "Loss of accuracy", "Mechanical symptoms", "Instability"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "functionalGoals", label: "Functional goals", options: ["Return to training", "Return to competition", "Scholarship", "Professional career"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "Physiotherapy", "Injection", "Surgery"] },],
     },
     {
       id: "exam",
@@ -4563,31 +4171,11 @@ const deQuervainData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        // Uses its own "dominantHand" key (Wrist/Hand templates), aliased to
-        // "dominantArm" (Shoulder/Elbow templates) in the session auto-fill
-        // logic so the value still carries over automatically either way.
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },
-        { type: "vas", key: "vas" },
-        { type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overuse"], columns: 2 },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Radial wrist pain", "Thumb pain", "Swelling", "Clicking", "Pain gripping", "Pain lifting", "Weak grip", "Difficulty caring for infant"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Cooking", "Lifting child", "Sports", "Work"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "hobbies", label: "Hobbies" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to childcare", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Thumb spica splint", "Physiotherapy", "Corticosteroid injection", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overuse"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Radial wrist pain", "Thumb pain", "Swelling", "Clicking", "Pain gripping", "Pain lifting", "Weak grip", "Difficulty caring for infant"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Cooking", "Lifting child", "Sports", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to childcare", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Thumb spica splint", "Physiotherapy", "Corticosteroid injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -4752,27 +4340,11 @@ const thumbCMCOAData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, priorities",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Thumb base pain", "Pinch weakness", "Grip weakness", "Pain opening jars", "Pain turning keys", "Difficulty writing", "Difficulty buttoning clothes", "Loss of endurance", "Morning stiffness"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Cooking", "Writing", "Computer work", "Childcare", "Occupation", "Sports"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "hobbies", label: "Hobbies" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Improve pinch", "Improve grip", "Return to work", "Preserve independence"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Splint", "Hand therapy", "Corticosteroid injection", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Thumb base pain", "Pinch weakness", "Grip weakness", "Pain opening jars", "Pain turning keys", "Difficulty writing", "Difficulty buttoning clothes", "Loss of endurance", "Morning stiffness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Cooking", "Writing", "Computer work", "Childcare", "Occupation", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Improve pinch", "Improve grip", "Return to work", "Preserve independence"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Splint", "Hand therapy", "Corticosteroid injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -4954,27 +4526,11 @@ const wristOAData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, priorities",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Radial wrist pain", "Grip weakness", "Stiffness", "Swelling", "Mechanical clicking", "Reduced endurance", "Difficulty weight-bearing through the hand"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Opening jars", "Carrying groceries", "Push-ups", "Rising from a chair", "Driving", "Computer work", "Manual labour", "Sports"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "hobbies", label: "Hobbies" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Improve grip", "Return to work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "NSAIDs", "Hand therapy", "Corticosteroid injection", "Previous wrist surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Radial wrist pain", "Grip weakness", "Stiffness", "Swelling", "Mechanical clicking", "Reduced endurance", "Difficulty weight-bearing through the hand"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Opening jars", "Carrying groceries", "Push-ups", "Rising from a chair", "Driving", "Computer work", "Manual labour", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Improve grip", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "NSAIDs", "Hand therapy", "Corticosteroid injection", "Previous wrist surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -5157,28 +4713,11 @@ const tfccInjuryData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },
-        { type: "vas", key: "vas" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Trauma", "Repetitive loading", "Degenerative", "Unknown"], columns: 2 },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar wrist pain", "Clicking", "Catching", "Weak grip", "Pain rotating doorknobs", "Pain opening jars", "Pain lifting", "Loss of confidence using the wrist"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Computer work", "Writing", "Driving", "Sports", "Weight training", "Manual labour"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Restore grip", "Return to work", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Injection", "Previous wrist surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Trauma", "Repetitive loading", "Degenerative", "Unknown"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar wrist pain", "Clicking", "Catching", "Weak grip", "Pain rotating doorknobs", "Pain opening jars", "Pain lifting", "Loss of confidence using the wrist"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Computer work", "Writing", "Driving", "Sports", "Weight training", "Manual labour"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Restore grip", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Injection", "Previous wrist surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -5340,28 +4879,11 @@ const scapholunateInjuryData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 3 weeks" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Clicking", "Weak grip", "Loss of confidence", "Pain pushing up", "Pain lifting", "Mechanical instability", "Decreased sporting performance"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Computer work", "Driving", "Gym", "Manual work", "Racquet sports", "Weight lifting"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Restore strength", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "NSAIDs", "Hand therapy", "Injection", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 3 weeks" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Clicking", "Weak grip", "Loss of confidence", "Pain pushing up", "Pain lifting", "Mechanical instability", "Decreased sporting performance"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Computer work", "Driving", "Gym", "Manual work", "Racquet sports", "Weight lifting"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Restore strength", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "NSAIDs", "Hand therapy", "Injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -5545,28 +5067,11 @@ const kienbockDiseaseData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, onset, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },
-        { type: "vas", key: "vas" },
-        { type: "select", key: "onset", label: "Onset", options: ["Gradual", "Following trauma"], columns: 2 },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Weak grip", "Reduced endurance", "Stiffness", "Mechanical symptoms", "Loss of function"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Manual work", "Lifting", "Weight-bearing", "Sports", "Writing", "Computer work"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Maintain work capacity", "Avoid progression"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Following trauma"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Weak grip", "Reduced endurance", "Stiffness", "Mechanical symptoms", "Loss of function"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Manual work", "Lifting", "Weight-bearing", "Sports", "Writing", "Computer work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Maintain work capacity", "Avoid progression"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -5747,28 +5252,11 @@ const ulnarImpactionData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, onset, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 months" },
-        { type: "vas", key: "vas" },
-        { type: "select", key: "onset", label: "Onset", options: ["Gradual", "Post-traumatic"], columns: 2 },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar wrist pain", "Grip weakness", "Pain lifting", "Pain with pronation", "Pain with ulnar deviation", "Clicking", "Reduced endurance", "Difficulty weight-bearing"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Manual work", "Computer work", "Gym", "Racquet sports", "Driving", "Household activities"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve grip", "Return to work", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Injection", "Previous wrist surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 months" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Post-traumatic"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar wrist pain", "Grip weakness", "Pain lifting", "Pain with pronation", "Pain with ulnar deviation", "Clicking", "Reduced endurance", "Difficulty weight-bearing"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Manual work", "Computer work", "Gym", "Racquet sports", "Driving", "Household activities"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve grip", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Injection", "Previous wrist surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -5945,28 +5433,11 @@ const wristGanglionData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, concerns, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "primaryConcern", label: "Primary concern", options: ["Pain", "Cosmetic appearance", "Fear of cancer", "Weakness", "Mechanical symptoms", "Recurrence", "Occupational interference"] },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lump fluctuates", "Pain with extension", "Pain gripping", "Clicking", "Stiffness", "Numbness", "Tingling"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Driving", "Weight training", "Manual work", "Sport"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Reassurance", "Pain relief", "Cosmetic improvement", "Return to work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "Aspiration", "Injection", "Previous excision"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "primaryConcern", label: "Primary concern", options: ["Pain", "Cosmetic appearance", "Fear of cancer", "Weakness", "Mechanical symptoms", "Recurrence", "Occupational interference"] },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lump fluctuates", "Pain with extension", "Pain gripping", "Clicking", "Stiffness", "Numbness", "Tingling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Driving", "Weight training", "Manual work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Reassurance", "Pain relief", "Cosmetic improvement", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "Aspiration", "Injection", "Previous excision"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "Recurrence"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -6140,28 +5611,11 @@ const triggerFingerData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit(s), side, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "checkbox", key: "affectedDigits", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain over A1 pulley", "Clicking", "Triggering", "Locking", "Morning stiffness", "Finger stuck in flexion", "Finger stuck in extension", "Swelling"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Gripping tools", "Carrying objects", "Buttoning clothes", "Childcare", "Sports"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "hobbies", label: "Hobbies" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Eliminate locking", "Improve dexterity", "Return to work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "NSAIDs", "Splint", "Corticosteroid injection", "Previous release"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "checkbox", key: "affectedDigits", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain over A1 pulley", "Clicking", "Triggering", "Locking", "Morning stiffness", "Finger stuck in flexion", "Finger stuck in extension", "Swelling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Gripping tools", "Carrying objects", "Buttoning clothes", "Childcare", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Eliminate locking", "Improve dexterity", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "NSAIDs", "Splint", "Corticosteroid injection", "Previous release"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -6331,33 +5785,15 @@ const dupuytrenDiseaseData = {
       index: 2,
       title: "Focused History",
       subtitle: "Hand, progression, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Affected hand", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },
-        { type: "select", key: "progression", label: "Progression", options: ["Stable", "Slowly progressive", "Rapidly progressive"], columns: 3 },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Palmar nodule", "Cord", "Finger contracture", "Difficulty placing hand flat", "Difficulty gripping large objects", "Difficulty wearing gloves", "Difficulty washing face", "Difficulty putting hand in pocket"] },
-        { type: "select", key: "painLevel", label: "Pain", options: ["None", "Mild", "Moderate"], columns: 3 },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Affected hand", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "select", key: "progression", label: "Progression", options: ["Stable", "Slowly progressive", "Rapidly progressive"], columns: 3 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Palmar nodule", "Cord", "Finger contracture", "Difficulty placing hand flat", "Difficulty gripping large objects", "Difficulty wearing gloves", "Difficulty washing face", "Difficulty putting hand in pocket"] },{ type: "select", key: "painLevel", label: "Pain", options: ["None", "Mild", "Moderate"], columns: 3 },{
           type: "conditional",
           when: (s) => s.painLevel && s.painLevel !== "None",
           fields: [{ type: "vas", key: "vas" }],
-        },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Handshake", "Hygiene", "Dressing", "Driving", "Keyboard", "Tools", "Sports"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "hobbies", label: "Hobbies" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Straighten finger", "Improve function", "Prevent progression", "Return to work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "Needle fasciotomy", "Collagenase injection (where available)", "Fasciectomy", "Dermofasciectomy"] },
-        {
+        },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Handshake", "Hygiene", "Dressing", "Driving", "Keyboard", "Tools", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Straighten finger", "Improve function", "Prevent progression", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "Needle fasciotomy", "Collagenase injection (where available)", "Fasciectomy", "Dermofasciectomy"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "recurrence", label: "Recurrence?", options: ["Yes", "No"], columns: 2 }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -6512,23 +5948,7 @@ const malletFingerData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit, injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Ball strike", "Crush", "Hyperflexion", "Laceration", "Other"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Drooping fingertip", "Inability to straighten", "Swelling", "Pain", "Weak pinch", "Difficulty typing", "Difficulty writing"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Fine motor tasks", "Manual work", "Sports"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Straight finger", "Return to work", "Return to sport", "Improve dexterity"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Buddy tape", "Previous surgery"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Ball strike", "Crush", "Hyperflexion", "Laceration", "Other"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Drooping fingertip", "Inability to straighten", "Swelling", "Pain", "Weak pinch", "Difficulty typing", "Difficulty writing"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Fine motor tasks", "Manual work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Straight finger", "Return to work", "Return to sport", "Improve dexterity"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Buddy tape", "Previous surgery"] },],
     },
     {
       id: "exam",
@@ -6708,25 +6128,7 @@ const jerseyFingerData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit, injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },
-        { type: "info", title: null, items: ["Ring finger is most commonly affected."] },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Finger caught in clothing", "Sporting tackle", "Forced extension", "Crush", "Other"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of fingertip flexion", "Weak grip", "Pain", "Swelling", "Finger feels weak", "Difficulty grasping"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Holding tools", "Carrying objects", "Keyboard", "Writing", "Sports", "Fine motor tasks"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore strength", "Return to work", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Analgesia", "Previous surgery"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },{ type: "info", title: null, items: ["Ring finger is most commonly affected."] },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Finger caught in clothing", "Sporting tackle", "Forced extension", "Crush", "Other"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of fingertip flexion", "Weak grip", "Pain", "Swelling", "Finger feels weak", "Difficulty grasping"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Holding tools", "Carrying objects", "Keyboard", "Writing", "Sports", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore strength", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Analgesia", "Previous surgery"] },],
     },
     {
       id: "exam",
@@ -6900,24 +6302,7 @@ const sagittalBandInjuryData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit, injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "affectedDigit", label: "Affected digit", options: ["Index", "Middle", "Ring", "Little"], columns: 4 },
-        { type: "info", title: null, items: ["Middle finger is most commonly involved."] },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Direct trauma", "Punching injury", "Twisting injury", "Atraumatic"], columns: 2 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["MCP pain", "Snapping", "Tendon slipping", "Difficulty extending", "Weak grip", "Swelling", "Mechanical instability"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Manual work", "Grip", "Sport", "Fine motor tasks"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Stable finger", "Return to work", "Return to sport", "Eliminate snapping"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Hand therapy", "Previous surgery"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Index", "Middle", "Ring", "Little"], columns: 4 },{ type: "info", title: null, items: ["Middle finger is most commonly involved."] },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Direct trauma", "Punching injury", "Twisting injury", "Atraumatic"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["MCP pain", "Snapping", "Tendon slipping", "Difficulty extending", "Weak grip", "Swelling", "Mechanical instability"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Manual work", "Grip", "Sport", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Stable finger", "Return to work", "Return to sport", "Eliminate snapping"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Hand therapy", "Previous surgery"] },],
     },
     {
       id: "exam",
@@ -7080,22 +6465,7 @@ const extensorTendonInjuriesData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit, injury details, symptoms, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Sharp laceration", "Crush", "Bite", "Machinery", "Open fracture"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of extension", "Weak extension", "Pain", "Swelling", "Open wound", "Functional loss"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Grip", "Pinch", "Work", "Sport"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Finger straightening", "Return to work", "Strength", "Dexterity"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Manual", "Heavy manual"], columns: 3 },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Sharp laceration", "Crush", "Bite", "Machinery", "Open fracture"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of extension", "Weak extension", "Pain", "Swelling", "Open wound", "Functional loss"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Grip", "Pinch", "Work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Finger straightening", "Return to work", "Strength", "Dexterity"] },],
     },
     {
       id: "exam",
@@ -7275,28 +6645,11 @@ const carpalTunnelSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, distribution, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Nocturnal numbness", "Daytime numbness", "Tingling", "Burning pain", "Hand clumsiness", "Dropping objects", "Weak pinch", "Weak grip", "Thenar weakness"] },
-        { type: "checkbox", key: "symptomDistribution", label: "Symptom distribution", options: ["Thumb", "Index", "Middle", "Radial ring finger", "Entire hand", "Forearm symptoms", "Neck symptoms"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Driving", "Mobile phone use", "Buttoning clothes", "Cooking", "Childcare", "Manual work", "Sports"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "text", key: "hobbies", label: "Hobbies" },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Sleep improvement", "Numbness relief", "Restore dexterity", "Improve strength", "Return to work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "NSAIDs", "Corticosteroid injection", "Physiotherapy", "Previous carpal tunnel release"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Nocturnal numbness", "Daytime numbness", "Tingling", "Burning pain", "Hand clumsiness", "Dropping objects", "Weak pinch", "Weak grip", "Thenar weakness"] },{ type: "checkbox", key: "symptomDistribution", label: "Symptom distribution", options: ["Thumb", "Index", "Middle", "Radial ring finger", "Entire hand", "Forearm symptoms", "Neck symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Driving", "Mobile phone use", "Buttoning clothes", "Cooking", "Childcare", "Manual work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Sleep improvement", "Numbness relief", "Restore dexterity", "Improve strength", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "NSAIDs", "Corticosteroid injection", "Physiotherapy", "Previous carpal tunnel release"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -7479,28 +6832,11 @@ const cubitalTunnelData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, modifiers, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Little finger numbness", "Ring finger numbness", "Night symptoms", "Hand weakness", "Loss of dexterity", "Finger clumsiness", "Weak grip", "Weak pinch", "Muscle wasting noticed"] },
-        { type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Worse with prolonged elbow flexion", "Worse while using phone", "Worse while sleeping", "Worse while driving", "Relieved by elbow extension"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Tools", "Opening jars", "Carrying objects", "Playing musical instruments", "Sport", "Fine motor tasks"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore sensation", "Restore strength", "Improve dexterity", "Return to work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Night elbow splint", "Activity modification", "Physiotherapy", "Previous cubital tunnel surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Little finger numbness", "Ring finger numbness", "Night symptoms", "Hand weakness", "Loss of dexterity", "Finger clumsiness", "Weak grip", "Weak pinch", "Muscle wasting noticed"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Worse with prolonged elbow flexion", "Worse while using phone", "Worse while sleeping", "Worse while driving", "Relieved by elbow extension"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Tools", "Opening jars", "Carrying objects", "Playing musical instruments", "Sport", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore sensation", "Restore strength", "Improve dexterity", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Night elbow splint", "Activity modification", "Physiotherapy", "Previous cubital tunnel surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -7666,27 +7002,11 @@ const lacertusSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Forearm fatigue", "Grip weakness", "Pinch weakness", "Hand clumsiness", "Difficulty lifting objects", "Difficulty turning keys", "Difficulty opening bottles", "Median nerve paresthesia", "Nocturnal symptoms", "Neck symptoms"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Carrying shopping bags", "Holding tools", "Keyboard", "Writing", "Driving", "Weight training", "Sport"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore strength", "Improve endurance", "Return to work", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "Physiotherapy", "Previous CTS surgery", "Injection"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Forearm fatigue", "Grip weakness", "Pinch weakness", "Hand clumsiness", "Difficulty lifting objects", "Difficulty turning keys", "Difficulty opening bottles", "Median nerve paresthesia", "Nocturnal symptoms", "Neck symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Carrying shopping bags", "Holding tools", "Keyboard", "Writing", "Driving", "Weight training", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore strength", "Improve endurance", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "Physiotherapy", "Previous CTS surgery", "Injection"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -7863,28 +7183,11 @@ const guyonsCanalSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, modifiers, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Little finger numbness", "Ring finger numbness", "Intrinsic weakness", "Weak key pinch", "Weak grip", "Hand fatigue", "Hypothenar pain", "Clumsiness"] },
-        { type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Cycling", "Prolonged gripping", "Vibrating tools", "Weightlifting", "Repetitive wrist loading", "Rest improves symptoms"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Opening jars", "Using tools", "Fine motor work", "Musical instruments", "Sport", "Heavy lifting"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sportHobby", label: "Sport/Hobby" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Improve sensation", "Restore strength", "Improve dexterity", "Return to work"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Activity modification", "Physiotherapy", "Previous wrist surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Little finger numbness", "Ring finger numbness", "Intrinsic weakness", "Weak key pinch", "Weak grip", "Hand fatigue", "Hypothenar pain", "Clumsiness"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Cycling", "Prolonged gripping", "Vibrating tools", "Weightlifting", "Repetitive wrist loading", "Rest improves symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Opening jars", "Using tools", "Fine motor work", "Musical instruments", "Sport", "Heavy lifting"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Improve sensation", "Restore strength", "Improve dexterity", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Activity modification", "Physiotherapy", "Previous wrist surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -8067,28 +7370,11 @@ const radialTunnelSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, modifiers, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep forearm pain", "Lateral elbow pain", "Pain with lifting", "Pain with gripping", "Pain during forearm rotation", "Fatigue", "Weakness due to pain", "Minimal numbness"] },
-        { type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Worse with repetitive pronation-supination", "Worse with lifting", "Worse with resisted extension", "Improved with rest"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Carrying objects", "Opening jars", "Using tools", "Keyboard work", "Racquet sports", "Throwing", "Gym activities"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Return to work", "Return to sport", "Improve endurance"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Bracing", "Injection", "Previous lateral epicondyle surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep forearm pain", "Lateral elbow pain", "Pain with lifting", "Pain with gripping", "Pain during forearm rotation", "Fatigue", "Weakness due to pain", "Minimal numbness"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Worse with repetitive pronation-supination", "Worse with lifting", "Worse with resisted extension", "Improved with rest"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Carrying objects", "Opening jars", "Using tools", "Keyboard work", "Racquet sports", "Throwing", "Gym activities"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Return to work", "Return to sport", "Improve endurance"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Bracing", "Injection", "Previous lateral epicondyle surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -8272,27 +7558,11 @@ const pinSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Finger drop", "Thumb extension weakness", "Weak grip due to poor finger positioning", "Difficulty releasing objects", "Difficulty typing", "Difficulty using tools", "Minimal pain", "No numbness"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Carrying objects", "Releasing objects", "Sport", "Manual work", "Fine motor tasks"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore finger extension", "Return to work", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Splint", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Finger drop", "Thumb extension weakness", "Weak grip due to poor finger positioning", "Difficulty releasing objects", "Difficulty typing", "Difficulty using tools", "Minimal pain", "No numbness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Carrying objects", "Releasing objects", "Sport", "Manual work", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore finger extension", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Splint", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -8477,27 +7747,11 @@ const ainSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Weak pinch", "Difficulty making an \u201cOK\u201d sign", "Difficulty buttoning clothes", "Difficulty picking up coins", "Difficulty turning keys", "Difficulty writing", "Forearm fatigue", "No numbness"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Precision pinch", "Keyboard", "Writing", "Surgical instruments", "Musical instruments", "Fine motor work", "Sport"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sportHobby", label: "Sport/Hobby" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore pinch", "Return to work", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Splint", "Previous surgery"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Weak pinch", "Difficulty making an \u201cOK\u201d sign", "Difficulty buttoning clothes", "Difficulty picking up coins", "Difficulty turning keys", "Difficulty writing", "Forearm fatigue", "No numbness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Precision pinch", "Keyboard", "Writing", "Surgical instruments", "Musical instruments", "Fine motor work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore pinch", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Splint", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -8697,27 +7951,11 @@ const wartenbergSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, modifiers, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 months" },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Burning pain", "Tingling", "Numbness", "Hypersensitivity", "Electric shock sensation", "Dysesthesia", "No weakness"] },
-        { type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Tight watch or bracelet", "Handcuffs", "Wrist splint", "Forearm rotation", "Thumb movement", "Relieved after removing compression"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Wearing a watch", "Writing", "Keyboard", "Gripping", "Driving", "Fine motor work"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sportHobby", label: "Sport/Hobby" },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Sensory improvement", "Return to work", "Return to sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Splint", "Physiotherapy", "Injection"] },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Burning pain", "Tingling", "Numbness", "Hypersensitivity", "Electric shock sensation", "Dysesthesia", "No weakness"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Tight watch or bracelet", "Handcuffs", "Wrist splint", "Forearm rotation", "Thumb movement", "Relieved after removing compression"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Wearing a watch", "Writing", "Keyboard", "Gripping", "Driving", "Fine motor work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Sensory improvement", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Splint", "Physiotherapy", "Injection"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },
-      ],
+        },],
     },
     {
       id: "exam",
@@ -8901,25 +8139,11 @@ const doubleCrushSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Primary symptom, distribution, function",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "primarySymptom", label: "Primary symptom", options: ["Pain", "Numbness", "Weakness", "Dexterity loss", "Fatigue"], columns: 3 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },
-        { type: "select", key: "previousNerveSurgery", label: "Previous nerve surgery", options: ["Yes", "No"], columns: 2 },
-        {
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "select", key: "primarySymptom", label: "Primary symptom", options: ["Pain", "Numbness", "Weakness", "Dexterity loss", "Fatigue"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "select", key: "previousNerveSurgery", label: "Previous nerve surgery", options: ["Yes", "No"], columns: 2 },{
           type: "conditional",
           when: (s) => s.previousNerveSurgery === "Yes",
           fields: [{ type: "select", key: "surgeryResponse", label: "Response", options: ["Complete", "Partial", "None"], columns: 3, noteLabel: "Previous nerve surgery response" }],
-        },
-        { type: "checkbox", key: "symptomDistribution", label: "Symptom distribution", options: ["Neck", "Shoulder", "Arm", "Elbow", "Forearm", "Wrist", "Hand", "Fingers"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Sleep disturbance", "Grip", "Pinch", "Fine motor tasks", "Keyboard", "Driving", "Manual work", "Sport"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Strength", "Dexterity", "Return to work"] },
-      ],
+        },{ type: "checkbox", key: "symptomDistribution", label: "Symptom distribution", options: ["Neck", "Shoulder", "Arm", "Elbow", "Forearm", "Wrist", "Hand", "Fingers"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Sleep disturbance", "Grip", "Pinch", "Fine motor tasks", "Keyboard", "Driving", "Manual work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Strength", "Dexterity", "Return to work"] },],
     },
     {
       id: "exam",
@@ -9102,24 +8326,7 @@ const distalRadiusFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Wrist deformity", "Swelling", "Finger stiffness", "Numbness", "Tingling", "Weak grip", "Loss of function"] },
-        // "Occupation" appears again here under "Functional Status Before
-        // Injury" in your original, distinct from the Patient Factors
-        // occupation field in section 1 \u2014 kept as a separate field to match,
-        // though the duplication is likely intentional (baseline recall) or
-        // a template artifact. Flagged for your review.
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain-free wrist", "Return to work", "Return to sport", "Restore motion"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Wrist deformity", "Swelling", "Finger stiffness", "Numbness", "Tingling", "Weak grip", "Loss of function"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain-free wrist", "Return to work", "Return to sport", "Restore motion"] },],
     },
     {
       id: "exam",
@@ -9327,18 +8534,7 @@ const scaphoidFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Radial wrist pain", "Anatomical snuffbox tenderness", "Pain with gripping", "Pain with push-up", "Pain lifting from a chair", "Decreased wrist motion"] },
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Preserve wrist motion"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Radial wrist pain", "Anatomical snuffbox tenderness", "Pain with gripping", "Pain with push-up", "Pain lifting from a chair", "Decreased wrist motion"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Preserve wrist motion"] },],
     },
     {
       id: "exam",
@@ -9530,18 +8726,7 @@ const thumbUCLInjuryData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar thumb pain", "Swelling", "Weak pinch", "Difficulty opening jars", "Difficulty turning keys", "Thumb instability", "Loss of grip"] },
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain-free thumb", "Restore pinch", "Return to work", "Return to sport"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar thumb pain", "Swelling", "Weak pinch", "Difficulty opening jars", "Difficulty turning keys", "Thumb instability", "Loss of grip"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain-free thumb", "Restore pinch", "Return to work", "Return to sport"] },],
     },
     {
       id: "exam",
@@ -9743,18 +8928,7 @@ const metacarpalFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Deformity", "Loss of grip", "Finger overlap", "Difficulty making a fist", "Rotational deformity noticed"] },
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Restore grip", "Return to sport", "Cosmetic alignment"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Deformity", "Loss of grip", "Finger overlap", "Difficulty making a fist", "Rotational deformity noticed"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Restore grip", "Return to sport", "Cosmetic alignment"] },],
     },
     {
       id: "exam",
@@ -9954,18 +9128,7 @@ const phalangealFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Deformity", "Loss of motion", "Rotational deformity noticed", "Difficulty making a fist", "Numbness", "Nail bed injury"] },
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Restore motion", "Return to sport", "Cosmetic alignment"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Deformity", "Loss of motion", "Rotational deformity noticed", "Difficulty making a fist", "Numbness", "Nail bed injury"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Restore motion", "Return to sport", "Cosmetic alignment"] },],
     },
     {
       id: "exam",
@@ -10161,18 +9324,7 @@ const bennettRolandoFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Base of thumb pain", "Swelling", "Weak pinch", "Difficulty gripping", "Difficulty turning keys", "Thumb instability", "Reduced opposition"] },
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "text", key: "sportHobby", label: "Sport/Hobby" },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Restore pinch", "Return to work", "Return to sport", "Preserve thumb motion"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Base of thumb pain", "Swelling", "Weak pinch", "Difficulty gripping", "Difficulty turning keys", "Thumb instability", "Reduced opposition"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Restore pinch", "Return to work", "Return to sport", "Preserve thumb motion"] },],
     },
     {
       id: "exam",
@@ -10374,18 +9526,7 @@ const perilunateInjuryData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Severe wrist pain", "Swelling", "Loss of motion", "Weak grip", "Median nerve symptoms", "Wrist deformity", "Inability to bear weight"] },
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain-free wrist", "Restore motion", "Return to work", "Return to sport"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Severe wrist pain", "Swelling", "Loss of motion", "Weak grip", "Median nerve symptoms", "Wrist deformity", "Inability to bear weight"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain-free wrist", "Restore motion", "Return to work", "Return to sport"] },],
     },
     {
       id: "exam",
@@ -10583,18 +9724,7 @@ const hookOfHamateFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Pain with gripping", "Pain swinging bat/club/racket", "Weak grip", "Ring/little finger numbness", "Clicking", "Loss of sporting performance"] },
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to sport", "Restore grip", "Pain-free function"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Pain with gripping", "Pain swinging bat/club/racket", "Weak grip", "Ring/little finger numbness", "Clicking", "Loss of sporting performance"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to sport", "Restore grip", "Pain-free function"] },],
     },
     {
       id: "exam",
@@ -10784,18 +9914,7 @@ const fingertipInjuryData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Bleeding", "Nail deformity", "Numbness", "Cold sensitivity", "Tissue loss", "Functional limitation"] },
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "select", key: "fineMotorDemands", label: "Fine motor demands", options: ["High", "Moderate", "Low"], columns: 3 },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Preserve sensation", "Nail appearance", "Pain-free use", "Return to work", "Return to sport"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Bleeding", "Nail deformity", "Numbness", "Cold sensitivity", "Tissue loss", "Functional limitation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "fineMotorDemands", label: "Fine motor demands", options: ["High", "Moderate", "Low"], columns: 3 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Preserve sensation", "Nail appearance", "Pain-free use", "Return to work", "Return to sport"] },],
     },
     {
       id: "exam",
@@ -10981,18 +10100,7 @@ const tendonLacerationData = {
       index: 2,
       title: "Focused History",
       subtitle: "Pain, symptoms, baseline function, goals",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "vas", key: "vas" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of finger flexion", "Loss of finger extension", "Weak grip", "Weak pinch", "Open wound", "Numbness", "Inability to actively move a digit"] },
-        { type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },
-        { type: "select", key: "fineMotorDemands", label: "Fine motor demands", options: ["High", "Moderate", "Low"], columns: 3 },
-        { type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Restore motion", "Restore strength", "Return to work", "Return to sport"] },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupationBeforeInjury", label: "Functional status before injury \u2014 Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 days" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of finger flexion", "Loss of finger extension", "Weak grip", "Weak pinch", "Open wound", "Numbness", "Inability to actively move a digit"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "fineMotorDemands", label: "Fine motor demands", options: ["High", "Moderate", "Low"], columns: 3 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Restore motion", "Restore strength", "Return to work", "Return to sport"] },],
     },
     {
       id: "exam",
@@ -11146,22 +10254,7 @@ const clavicleFxData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, duration, functional impact",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto shoulder", "Fall onto outstretched hand", "Direct blow", "Road traffic collision", "Sporting collision"], columns: 2 },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Deformity", "Bruising", "Swelling", "Numbness/tingling in the arm or hand", "Shortness of breath", "Chest pain"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty dressing", "Difficulty sleeping", "Unable to work/drive"] },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Smoking", "Diabetes", "Bleeding disorder / anticoagulation"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport (if applicable)" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto shoulder", "Fall onto outstretched hand", "Direct blow", "Road traffic collision", "Sporting collision"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Deformity", "Bruising", "Swelling", "Numbness/tingling in the arm or hand", "Shortness of breath", "Chest pain"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty dressing", "Difficulty sleeping", "Unable to work/drive"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Smoking", "Diabetes", "Bleeding disorder / anticoagulation"] },{ type: "text", key: "sport", label: "Sport (if applicable)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Inspection, palpation, neurovascular status",
@@ -11288,22 +10381,7 @@ const parsonageTurnerData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset pattern, pain-to-weakness sequence",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },
-        { type: "vas", key: "vas", label: "Peak pain severity (VAS)" },
-        { type: "select", key: "painWeaknessPattern", label: "Pattern", options: ["Severe pain then resolving as weakness emerged", "Pain and weakness concurrent", "Weakness without significant pain"], noteLabel: "Pain-weakness pattern" },
-        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Scapular winging", "Numbness/tingling", "Muscle wasting", "Difficulty raising the arm overhead", "Night pain at onset"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty with overhead activities", "Difficulty dressing", "Reduced grip/manipulation"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Oral corticosteroids"] },
-        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Recent viral illness", "Recent vaccination", "Recent surgery", "Autoimmune disease", "Diabetes"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },{ type: "vas", key: "vas", label: "Peak pain severity (VAS)" },{ type: "select", key: "painWeaknessPattern", label: "Pattern", options: ["Severe pain then resolving as weakness emerged", "Pain and weakness concurrent", "Weakness without significant pain"], noteLabel: "Pain-weakness pattern" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Scapular winging", "Numbness/tingling", "Muscle wasting", "Difficulty raising the arm overhead", "Night pain at onset"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty with overhead activities", "Difficulty dressing", "Reduced grip/manipulation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Oral corticosteroids"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Recent viral illness", "Recent vaccination", "Recent surgery", "Autoimmune disease", "Diabetes"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Pattern of weakness, scapular assessment",
@@ -11416,21 +10494,7 @@ const suprascapularNeuropathyData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, activity pattern, associated pathology",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep posterior/lateral shoulder ache", "Weakness with overhead activity", "Visible wasting noticed by patient/others", "Painless weakness only"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Reduced overhead throwing/serving power", "Difficulty with overhead lifting", "Reaching behind the back"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection"] },
-        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport (especially volleyball/overhead throwing)" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep posterior/lateral shoulder ache", "Weakness with overhead activity", "Visible wasting noticed by patient/others", "Painless weakness only"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Reduced overhead throwing/serving power", "Difficulty with overhead lifting", "Reaching behind the back"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "sport", label: "Sport (especially volleyball/overhead throwing)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Inspection, strength, provocative tests",
@@ -11545,21 +10609,7 @@ const olecranonFxData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, duration, functional impact",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 1 day" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto point of elbow", "Direct blow", "Fall onto outstretched hand with elbow flexed", "Road traffic collision"], columns: 2 },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Inability to extend the elbow", "Deformity", "Numbness/tingling in the ring/little finger", "Swelling"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the elbow", "Unable to bear weight through the arm", "Difficulty with self-care"] },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Diabetes", "Smoking", "Bleeding disorder / anticoagulation"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 1 day" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto point of elbow", "Direct blow", "Fall onto outstretched hand with elbow flexed", "Road traffic collision"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Inability to extend the elbow", "Deformity", "Numbness/tingling in the ring/little finger", "Swelling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the elbow", "Unable to bear weight through the arm", "Difficulty with self-care"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Diabetes", "Smoking", "Bleeding disorder / anticoagulation"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Extensor mechanism, palpation, neurovascular status",
@@ -11677,21 +10727,7 @@ const olecranonBursitisData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, systemic symptoms, risk factors",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 days" },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Warmth", "Fever/systemic upset", "Recent skin break/penetrating injury near the elbow"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Discomfort leaning on the elbow", "Cosmetic concern", "Restricted clothing/sleeve fit"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Compression/elbow pad", "NSAIDs", "Aspiration", "Antibiotics"] },
-        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Gout", "Rheumatoid arthritis", "Diabetes", "Immunosuppression"] },
-        { type: "text", key: "occupation", label: "Occupation (especially roles involving leaning on elbows)" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation (especially roles involving leaning on elbows)" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 days" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Warmth", "Fever/systemic upset", "Recent skin break/penetrating injury near the elbow"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Discomfort leaning on the elbow", "Cosmetic concern", "Restricted clothing/sleeve fit"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Compression/elbow pad", "NSAIDs", "Aspiration", "Antibiotics"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Gout", "Rheumatoid arthritis", "Diabetes", "Immunosuppression"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Inspection, palpation, signs of infection",
@@ -11798,21 +10834,7 @@ const intersectionSyndromeData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, activity pattern, functional impact",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal forearm swelling/pain proximal to the wrist", "Crepitus with movement", "Pain worse with resisted extension"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty gripping", "Pain with repetitive wrist movement", "Difficulty with sport-specific activity"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Rest/activity modification", "Splinting", "NSAIDs", "Injection"] },
-        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport (rowing/weightlifting/racquet sports/skiing)" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal forearm swelling/pain proximal to the wrist", "Crepitus with movement", "Pain worse with resisted extension"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty gripping", "Pain with repetitive wrist movement", "Difficulty with sport-specific activity"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Rest/activity modification", "Splinting", "NSAIDs", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "sport", label: "Sport (rowing/weightlifting/racquet sports/skiing)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Location relative to De Quervain's, provocative tests",
@@ -11931,21 +10953,7 @@ const ecuTendinopathyData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, subluxation symptoms, functional impact",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 months" },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Painful snapping/clicking", "Sensation of instability", "Weakness gripping"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with racquet sports/golf", "Difficulty gripping", "Pain with forearm rotation"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },
-        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport (racquet sports/golf/rowing)" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Painful snapping/clicking", "Sensation of instability", "Weakness gripping"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with racquet sports/golf", "Difficulty gripping", "Pain with forearm rotation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "sport", label: "Sport (racquet sports/golf/rowing)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Palpation, subluxation testing, resisted movement",
@@ -12057,22 +11065,7 @@ const drujInstabilityData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, mechanism, functional impact",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Clicking/clunking", "Instability/giving way", "Reduced forearm rotation"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with push-up/weight-bearing through the wrist", "Difficulty gripping/twisting", "Difficulty with sport"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },
-        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
-        { type: "text", key: "prevSurgery", label: "Previous surgery (if any)", placeholder: "Free text \u2014 procedure & date" },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport (gymnastics/racquet sports)" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Clicking/clunking", "Instability/giving way", "Reduced forearm rotation"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with push-up/weight-bearing through the wrist", "Difficulty gripping/twisting", "Difficulty with sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "prevSurgery", label: "Previous surgery (if any)", placeholder: "Free text \u2014 procedure & date" },{ type: "text", key: "sport", label: "Sport (gymnastics/racquet sports)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "DRUJ stability, rotation, provocative tests",
@@ -12185,23 +11178,7 @@ const boutonniereDeformityData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, timing, functional impact",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 5 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Forced flexion of an extended PIP joint (jammed finger)", "Direct blow to the dorsum of the finger", "Laceration over the dorsal PIP joint", "Volar PIP dislocation", "Chronic/attritional (e.g. rheumatoid arthritis)"], columns: 2 },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling over the dorsal PIP joint", "Inability to fully extend the PIP joint", "Fixed flexion deformity of the PIP joint", "DIP joint hyperextension"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine grip", "Difficulty fully extending the finger", "Catching on objects/gloves"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Buddy taping", "Splinting", "Analgesics"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport (if applicable)" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 5 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Forced flexion of an extended PIP joint (jammed finger)", "Direct blow to the dorsum of the finger", "Laceration over the dorsal PIP joint", "Volar PIP dislocation", "Chronic/attritional (e.g. rheumatoid arthritis)"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling over the dorsal PIP joint", "Inability to fully extend the PIP joint", "Fixed flexion deformity of the PIP joint", "DIP joint hyperextension"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine grip", "Difficulty fully extending the finger", "Catching on objects/gloves"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Buddy taping", "Splinting", "Analgesics"] },{ type: "text", key: "sport", label: "Sport (if applicable)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Deformity assessment, Elson's test",
@@ -12318,24 +11295,7 @@ const pipDislocationData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, reduction history, functional impact",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Axial load/hyperextension (ball to fingertip)", "Direct blow", "Twisting injury"], columns: 2 },
-        { type: "select", key: "dislocationDirection", label: "Direction of dislocation (if witnessed/known)", options: ["Dorsal", "Volar", "Lateral", "Unknown/already reduced"], noteLabel: "Direction of dislocation" },
-        { type: "select", key: "priorReduction", label: "Already reduced prior to this assessment?", options: ["Yes, reduced on-field/by patient", "Yes, reduced by another clinician", "No, still dislocated"], noteLabel: "Prior reduction" },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling", "Bruising", "Sensation of instability", "Numbness/tingling in the digit"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to fully extend the finger", "Difficulty gripping", "Unable to continue sport"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Axial load/hyperextension (ball to fingertip)", "Direct blow", "Twisting injury"], columns: 2 },{ type: "select", key: "dislocationDirection", label: "Direction of dislocation (if witnessed/known)", options: ["Dorsal", "Volar", "Lateral", "Unknown/already reduced"], noteLabel: "Direction of dislocation" },{ type: "select", key: "priorReduction", label: "Already reduced prior to this assessment?", options: ["Yes, reduced on-field/by patient", "Yes, reduced by another clinician", "No, still dislocated"], noteLabel: "Prior reduction" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling", "Bruising", "Sensation of instability", "Numbness/tingling in the digit"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to fully extend the finger", "Difficulty gripping", "Unable to continue sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Stability, active motion, neurovascular status",
@@ -12450,22 +11410,7 @@ const handOAData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Pattern, functional impact, comorbidities",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Joint pain", "Bony swelling", "Stiffness (especially morning)", "Reduced grip strength", "Intermittent locking/catching", "Mucous cyst at the DIP joint"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine motor tasks", "Difficulty opening jars/gripping", "Cosmetic concern regarding nodal swelling", "Difficulty with occupational tasks"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs (oral or topical)", "Splinting", "Injection"] },
-        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Family history of hand OA", "Rheumatoid arthritis", "Psoriatic arthritis", "Gout/pseudogout"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Joint pain", "Bony swelling", "Stiffness (especially morning)", "Reduced grip strength", "Intermittent locking/catching", "Mucous cyst at the DIP joint"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine motor tasks", "Difficulty opening jars/gripping", "Cosmetic concern regarding nodal swelling", "Difficulty with occupational tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs (oral or topical)", "Splinting", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Family history of hand OA", "Rheumatoid arthritis", "Psoriatic arthritis", "Gout/pseudogout"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Joint-by-joint assessment, deformity, grip",
@@ -12574,22 +11519,7 @@ const flexorTenosynovitisData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, timeline, systemic symptoms",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "date", key: "injuryDate", label: "Date of injury/onset" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury/onset", placeholder: "e.g. 2 days" },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Rapidly worsening"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Penetrating injury/laceration", "Human bite", "Animal bite", "Splinter/foreign body", "No identifiable injury (haematogenous spread)"], columns: 2 },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Fever/chills", "Malaise", "Rapidly spreading redness up the hand/forearm"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the finger", "Unable to use the hand", "Difficulty with any grip"] },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Immunosuppression", "IV drug use", "Peripheral vascular disease"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury/onset" },{ type: "text", key: "timeSinceInjury", label: "Time since injury/onset", placeholder: "e.g. 2 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Penetrating injury/laceration", "Human bite", "Animal bite", "Splinter/foreign body", "No identifiable injury (haematogenous spread)"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Fever/chills", "Malaise", "Rapidly spreading redness up the hand/forearm"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the finger", "Unable to use the hand", "Difficulty with any grip"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Rapidly worsening"], columns: 2 },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Immunosuppression", "IV drug use", "Peripheral vascular disease"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Kanavel's signs, spread of infection",
@@ -12706,22 +11636,7 @@ const thoracicOutletSyndromeData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Symptom pattern, subtype clues, functional impact",
-      fields: [
-        { type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },
-        { type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },
-        { type: "text", key: "age", label: "Age" },
-        { type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },
-        { type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 months" },
-        { type: "vas", key: "vas", label: "Pain (VAS)" },
-        { type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Diffuse arm/hand pain", "Paraesthesia (often ulnar distribution)", "Weakness/heaviness of the arm with use", "Symptoms provoked by overhead activity", "Swelling/discolouration of the arm", "Diminished pulse/coolness of the hand", "Neck/shoulder girdle pain"] },
-        { type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to sustain overhead activity", "Difficulty carrying bags/backpacks", "Difficulty sleeping with arm elevated", "Reduced work tolerance (especially overhead tasks)"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Physiotherapy", "Postural/nerve gliding exercises", "Analgesics", "Injection (scalene block)"] },
-        { type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Cervical rib (known)", "Previous clavicle fracture", "Previous neck/whiplash injury", "Hypermobility"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport (overhead/throwing/swimming)" },
-      ],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Diffuse arm/hand pain", "Paraesthesia (often ulnar distribution)", "Weakness/heaviness of the arm with use", "Symptoms provoked by overhead activity", "Swelling/discolouration of the arm", "Diminished pulse/coolness of the hand", "Neck/shoulder girdle pain"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to sustain overhead activity", "Difficulty carrying bags/backpacks", "Difficulty sleeping with arm elevated", "Reduced work tolerance (especially overhead tasks)"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Physiotherapy", "Postural/nerve gliding exercises", "Analgesics", "Injection (scalene block)"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Cervical rib (known)", "Previous clavicle fracture", "Previous neck/whiplash injury", "Hypermobility"] },{ type: "text", key: "sport", label: "Sport (overhead/throwing/swimming)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Provocative tests, vascular assessment, posture",
@@ -12876,22 +11791,7 @@ const generalShoulderData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, pattern, impact",
-      fields: [
-        { type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },
-        { type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
-        { type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },
-        { type: "vas", key: "vas", label: "Pain severity (VAS)" },
-        { type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse at night", "Worse with activity", "Worse at rest", "Constant", "Intermittent", "Wakes from sleep"] },
-        { type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Reaching overhead", "Reaching behind back", "Dressing", "Sleeping on the affected side", "Carrying", "Driving", "Work tasks", "Sport", "None"] },
-        { type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["Numbness", "Tingling", "Weakness", "Neck pain", "Radiation below the elbow", "None"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Surgery"] },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Cardiac/respiratory disease", "Malignancy", "None"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport / hobbies" },
-      ],
+      fields: [{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas", label: "Pain severity (VAS)" },{ type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse at night", "Worse with activity", "Worse at rest", "Constant", "Intermittent", "Wakes from sleep"] },{ type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Reaching overhead", "Reaching behind back", "Dressing", "Sleeping on the affected side", "Carrying", "Driving", "Work tasks", "Sport", "None"] },{ type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["Numbness", "Tingling", "Weakness", "Neck pain", "Radiation below the elbow", "None"] },{ type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Surgery"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Cardiac/respiratory disease", "Malignancy", "None"] },{ type: "text", key: "sport", label: "Sport / hobbies" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Regional screening examination",
@@ -13038,23 +11938,7 @@ const generalElbowData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, pattern, impact",
-      fields: [
-        { type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },
-        { type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
-        { type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },
-        { type: "vas", key: "vas", label: "Pain severity (VAS)" },
-        { type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse with gripping", "Worse with lifting", "Worse at night", "Worse at rest", "Constant", "Intermittent"] },
-        { type: "checkbox", key: "mechanicalSymptoms", label: "Mechanical symptoms", options: ["None", "Locking", "Catching", "Giving way", "Clicking"] },
-        { type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["None", "Numbness in ring/little finger", "Numbness in thumb/index", "Tingling", "Weakness of grip", "Night symptoms"] },
-        { type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Lifting", "Carrying", "Gripping", "Reaching", "Work tasks", "Sport", "None"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Splint/brace", "Injection", "Surgery"] },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Malignancy", "None"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport / hobbies" },
-      ],
+      fields: [{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas", label: "Pain severity (VAS)" },{ type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse with gripping", "Worse with lifting", "Worse at night", "Worse at rest", "Constant", "Intermittent"] },{ type: "checkbox", key: "mechanicalSymptoms", label: "Mechanical symptoms", options: ["None", "Locking", "Catching", "Giving way", "Clicking"] },{ type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["None", "Numbness in ring/little finger", "Numbness in thumb/index", "Tingling", "Weakness of grip", "Night symptoms"] },{ type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Lifting", "Carrying", "Gripping", "Reaching", "Work tasks", "Sport", "None"] },{ type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Splint/brace", "Injection", "Surgery"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Malignancy", "None"] },{ type: "text", key: "sport", label: "Sport / hobbies" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Regional screening examination",
@@ -13194,23 +12078,7 @@ const generalWristData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, pattern, impact",
-      fields: [
-        { type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },
-        { type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
-        { type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },
-        { type: "vas", key: "vas", label: "Pain severity (VAS)" },
-        { type: "checkbox", key: "painLocation", label: "Pain localisation", options: ["Radial side", "Ulnar side", "Dorsal", "Volar", "Diffuse"] },
-        { type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse with gripping", "Worse with rotation", "Worse with weight-bearing through the wrist", "Worse at night", "Constant", "Intermittent"] },
-        { type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["None", "Numbness in thumb/index/middle", "Numbness in ring/little finger", "Tingling", "Night waking", "Weakness of grip"] },
-        { type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Gripping", "Lifting", "Twisting or opening jars", "Weight-bearing through the wrist", "Work tasks", "Sport", "None"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Splint/brace", "Injection", "Surgery"] },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Malignancy", "None"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport / hobbies" },
-      ],
+      fields: [{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas", label: "Pain severity (VAS)" },{ type: "checkbox", key: "painLocation", label: "Pain localisation", options: ["Radial side", "Ulnar side", "Dorsal", "Volar", "Diffuse"] },{ type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse with gripping", "Worse with rotation", "Worse with weight-bearing through the wrist", "Worse at night", "Constant", "Intermittent"] },{ type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["None", "Numbness in thumb/index/middle", "Numbness in ring/little finger", "Tingling", "Night waking", "Weakness of grip"] },{ type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Gripping", "Lifting", "Twisting or opening jars", "Weight-bearing through the wrist", "Work tasks", "Sport", "None"] },{ type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Splint/brace", "Injection", "Surgery"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Malignancy", "None"] },{ type: "text", key: "sport", label: "Sport / hobbies" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Regional screening examination",
@@ -13352,23 +12220,7 @@ const generalHandData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, pattern, impact",
-      fields: [
-        { type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },
-        { type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },
-        { type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },
-        { type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },
-        { type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },
-        { type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },
-        { type: "vas", key: "vas", label: "Pain severity (VAS)" },
-        { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury (if traumatic)", options: ["Jammed finger", "Forceful grip", "Fall", "Crush", "Laceration", "Bite", "High-pressure injection", "Not applicable"] },
-        { type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse with gripping", "Worse with movement", "Worse at night", "Constant", "Intermittent"] },
-        { type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["None", "Numbness", "Tingling", "Night waking", "Weakness of grip"] },
-        { type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Gripping", "Pinching", "Fine motor tasks", "Buttons and fastenings", "Writing or typing", "Work tasks", "Sport", "None"] },
-        { type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Splint/brace", "Injection", "Surgery"] },
-        { type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Malignancy", "None"] },
-        { type: "text", key: "occupation", label: "Occupation" },
-        { type: "text", key: "sport", label: "Sport / hobbies" },
-      ],
+      fields: [{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "onset", label: "Onset", options: ["Sudden", "Gradual"], columns: 2 },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury (if traumatic)" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 3 weeks" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas", label: "Pain severity (VAS)" },{ type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury (if traumatic)", options: ["Jammed finger", "Forceful grip", "Fall", "Crush", "Laceration", "Bite", "High-pressure injection", "Not applicable"] },{ type: "checkbox", key: "painPattern", label: "Pain pattern", options: ["Worse with gripping", "Worse with movement", "Worse at night", "Constant", "Intermittent"] },{ type: "checkbox", key: "neuroSymptoms", label: "Neurological symptoms", options: ["None", "Numbness", "Tingling", "Night waking", "Weakness of grip"] },{ type: "checkbox", key: "functionalLimitation", label: "Functional limitation", options: ["Gripping", "Pinching", "Fine motor tasks", "Buttons and fastenings", "Writing or typing", "Work tasks", "Sport", "None"] },{ type: "select", key: "symptomProgression", label: "Symptom progression", options: ["Improving", "Static", "Worsening"], columns: 3 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Splint/brace", "Injection", "Surgery"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Thyroid disease", "Inflammatory arthritis", "Malignancy", "None"] },{ type: "text", key: "sport", label: "Sport / hobbies" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Regional screening examination",
@@ -14185,6 +13037,46 @@ function RedFlagChecklist({ items, checked, onToggle }) {
   );
 }
 
+// The "no red flags present" confirmation. Deliberately styled to contrast
+// with the flag rows above it: those are things you are flagging AS present,
+// this asserts the opposite, so it sits below a divider in green with a
+// filled badge rather than the same red checklist circle. Shared by the
+// popup panel and the inline section so the two cannot drift apart.
+function RedFlagsClearedButton({ reviewed, onToggle }) {
+  return (
+    <>
+      <div className="flex items-center gap-2 mt-5 mb-3">
+        <div style={{ height: 1, background: T.border, flex: 1 }} />
+        <span className="text-[10.5px] font-bold uppercase tracking-wide" style={{ color: T.inkSoft }}>or confirm</span>
+        <div style={{ height: 1, background: T.border, flex: 1 }} />
+      </div>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-3 rounded-xl px-4 py-4 text-left active:scale-95 transition"
+        style={{
+          background: reviewed ? T.greenTint : T.surface,
+          border: `2px solid ${reviewed ? T.green : T.borderStrong}`,
+        }}
+      >
+        <span
+          className="shrink-0 flex items-center justify-center rounded-full"
+          style={{ width: 26, height: 26, background: reviewed ? T.green : "transparent", border: reviewed ? "none" : `2px solid ${T.borderStrong}` }}
+        >
+          {reviewed && <Check size={16} color="#fff" />}
+        </span>
+        <span>
+          <div className="text-[14px] font-bold" style={{ color: reviewed ? T.green : T.ink }}>
+            None of these are present
+          </div>
+          <div className="text-[12.5px] mt-0.5" style={{ color: T.inkSoft }}>
+            Records that red flags were reviewed and found clear
+          </div>
+        </span>
+      </button>
+    </>
+  );
+}
+
 function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked, onToggleUrgent, open, onClose, reviewed, onToggleReviewed, onPreviewNote }) {
   if (!open) return null;
   const hasUrgent = urgentFlags && urgentFlags.length > 0;
@@ -14207,14 +13099,7 @@ function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked,
           )}
           <RedFlagChecklist items={redFlags} checked={checked} onToggle={onToggle} />
           {noFlagsChecked && onToggleReviewed && (
-            <button
-              onClick={onToggleReviewed}
-              className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3.5 mt-4 text-left active:scale-95 transition"
-              style={{ background: reviewed ? T.greenTint : T.slateChip, border: `1px solid ${reviewed ? T.green : T.border}` }}
-            >
-              {reviewed ? <CheckCircle2 size={20} color={T.green} /> : <Circle size={20} color={T.borderStrong} />}
-              <span className="text-[14px] font-semibold" style={{ color: reviewed ? T.green : T.ink }}>Red flags reviewed — none present</span>
-            </button>
+            <RedFlagsClearedButton reviewed={reviewed} onToggle={onToggleReviewed} />
           )}
           {onPreviewNote && (reviewed || !noFlagsChecked) && (
             <button
@@ -14719,7 +13604,7 @@ function fieldClause(field, state) {
   }
 }
 
-const DEMOGRAPHIC_KEY_RE = /^(age|side|gender|dominantArm|dominantHand|dominantHandSide|occupation|occupationBeforeInjury|activityLevel|workDemand|medHistory|relevantHistory|prevSurgery)$/i;
+const DEMOGRAPHIC_KEY_RE = /^(age|side|gender|dominantArm|dominantHand|dominantHandSide|occupation|occupationBeforeInjury|activityLevel|workDemand|workStatus|medHistory|relevantHistory|prevSurgery)$/i;
 
 // Resolves absolute hand dominance (Right/Left) for the "patient is X hand
 // dominant" statement. Most templates only ask "is the affected side
@@ -14751,6 +13636,7 @@ function buildDemographics(condition, state) {
   const occ = val(/^occupation$/i) || val(/^occupationBeforeInjury$/i);
   const activity = val(/^activityLevel$/i);
   const work = val(/^workDemand$/i);
+  const status = val(/^workStatus$/i);
   const medHistoryItems = val(/^medHistory$/i) || val(/^relevantHistory$/i);
   const prevSurgery = val(/^prevSurgery$/i);
 
@@ -14778,9 +13664,12 @@ function buildDemographics(condition, state) {
     const pronoun = gender === "Male" ? "He" : gender === "Female" ? "She" : "The patient";
     let workSentence = `${pronoun} works as ${/^[aeiou]/i.test(occ.trim()) ? "an" : "a"} ${occ.trim()}`;
     if (work) workSentence += ` with a ${String(work).toLowerCase()} workload`;
+    if (status) workSentence += `, currently ${status === "Working" ? "working full duties" : String(status).toLowerCase()}`;
     sentences.push(`${workSentence}.`);
   } else if (work) {
     sentences.push(`Work demand is ${String(work).toLowerCase()}.`);
+  } else if (status) {
+    sentences.push(`The patient is currently ${status === "Working" ? "working full duties" : String(status).toLowerCase()}.`);
   }
 
   // Sentence 3: hand dominance, stated directly rather than "dominant side
@@ -14823,8 +13712,17 @@ function historyGroupsFor(fields, state) {
     if (/^typicalPresentation/i.test(key)) return; // handled as its own leading sentence in buildHistory
     const c = fieldClause(f, state);
     if (!c) return;
-    if (/mechanismOfInjury/i.test(key) || /injuryFactors/i.test(key) || /^mechanism$/i.test(key) || /^onset$/i.test(key) || /duration/i.test(key) || /^(timeSinceInjury|timeFromInjury|timeSinceInjurySurgery)$/i.test(key) || /symptomProgression/i.test(key) || /affectedDigit/i.test(key) || f.type === "vas" || f.type === "date") {
+    if (/mechanismOfInjury/i.test(key) || /injuryFactors/i.test(key) || /^mechanism$/i.test(key) || /^onset$/i.test(key) || /duration/i.test(key) || /^(timeSinceInjury|timeFromInjury|timeSinceInjurySurgery)$/i.test(key) || /affectedDigit/i.test(key) || f.type === "vas" || f.type === "date") {
       groups.presenting.push(c);
+    } else if (/symptomProgression/i.test(key)) {
+      // Grouped with the symptom descriptors rather than the presenting
+      // complaint, so progression reads as a continuation of describing
+      // symptoms ("...night pain; symptoms have been worsening") instead of
+      // sitting in an earlier, separate paragraph. Relies on symptom
+      // descriptor fields being ordered ahead of symptomProgression in each
+      // condition's field array, so this clause lands last within the
+      // bucket rather than before the descriptors it is meant to follow.
+      groups.symptoms.push(c);
     } else if (/symptom/i.test(key) || /painChar/i.test(key)) {
       groups.symptoms.push(c);
     } else if (/functionalLimit/i.test(key) || /(patientGoals|patientPriorities)/i.test(key)) {
@@ -17208,14 +16106,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 )}
                 <RedFlagChecklist items={condition.redFlags} checked={redFlagsChecked} onToggle={toggleRedFlag} />
                 {noFlagsChecked && (
-                  <button
-                    onClick={toggleRedFlagsReviewed}
-                    className="w-full flex items-center gap-2.5 rounded-xl px-4 py-3.5 mt-4 text-left active:scale-95 transition"
-                    style={{ background: state.redFlagsReviewed ? T.greenTint : T.slateChip, border: `1px solid ${state.redFlagsReviewed ? T.green : T.border}` }}
-                  >
-                    {state.redFlagsReviewed ? <CheckCircle2 size={20} color={T.green} /> : <Circle size={20} color={T.borderStrong} />}
-                    <span className="text-[14px] font-semibold" style={{ color: state.redFlagsReviewed ? T.green : T.ink }}>Red flags reviewed — none present</span>
-                  </button>
+                  <RedFlagsClearedButton reviewed={state.redFlagsReviewed} onToggle={toggleRedFlagsReviewed} />
                 )}
               </>
             ) : isBilateral && (section.id === "history" || section.id === "exam" || section.id === "imaging" || section.id === "diagnosis") ? (
@@ -17755,7 +16646,7 @@ function RegionPicker({ onSelect, onBack }) {
 
 function ConditionButton({ condition, active, onSelect }) {
   return (
-    <button onClick={() => onSelect(condition)} className="rounded-2xl px-4 py-4 flex items-center justify-between active:scale-95 transition" style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 60 }}>
+    <button onClick={() => onSelect(condition)} className="rounded-2xl px-4 py-4 flex items-center justify-between text-left active:scale-95 transition" style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 60 }}>
       <span className="flex items-center gap-2 font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>
         {active && <CheckCircle2 size={17} color={T.teal} />}
         {condition.name}
@@ -18220,8 +17111,9 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 /* Persistent strip shown above every screen once a patient session has one
    or more active conditions: quick-switch tabs, one-tap access to the
    combined note across all active diagnoses, and ending the session. */
-function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, onGoHome }) {
+function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, onGoHome, onRemoveCondition }) {
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(null);
   const items = session.order.map((id) => findConditionById(id)).filter(Boolean);
   return (
     <div className="sticky top-0 z-40 flex items-center gap-2 px-3 py-2 overflow-x-auto" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
@@ -18238,14 +17130,28 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
           {items.map((c) => {
             const active = c.id === activeConditionId;
             return (
-              <button
+              <span
                 key={c.id}
-                onClick={() => onSwitch(c)}
-                className="shrink-0 rounded-full px-3 py-1.5 text-[12.5px] font-medium active:scale-95 transition"
-                style={{ background: active ? "#fff" : "rgba(255,255,255,0.16)", color: active ? T.tealDark : "#fff" }}
+                className="shrink-0 flex items-center rounded-full pl-3 pr-1 py-1 transition"
+                style={{ background: active ? "#fff" : "rgba(255,255,255,0.16)" }}
               >
-                {c.name.length > 24 ? c.name.slice(0, 22) + "\u2026" : c.name}
-              </button>
+                <button
+                  onClick={() => onSwitch(c)}
+                  className="text-[12.5px] font-medium active:scale-95 py-0.5"
+                  style={{ color: active ? T.tealDark : "#fff" }}
+                >
+                  {c.name.length > 24 ? c.name.slice(0, 22) + "\u2026" : c.name}
+                </button>
+                {onRemoveCondition && (
+                  <button
+                    onClick={() => setConfirmRemove(c)}
+                    className="ml-1 p-1 rounded-full active:scale-90"
+                    aria-label={`Remove ${c.name} from this session`}
+                  >
+                    <X size={13} color={active ? T.inkSoft : "rgba(255,255,255,0.75)"} />
+                  </button>
+                )}
+              </span>
             );
           })}
           <button onClick={onViewCombinedNote} className="shrink-0 ml-1 rounded-full px-3 py-1.5 text-[12.5px] font-semibold active:scale-95 transition" style={{ background: "#fff", color: T.tealDark }}>
@@ -18255,6 +17161,27 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
             <X size={14} color="#fff" />
           </button>
         </>
+      )}
+
+      {confirmRemove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
+            <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Remove this diagnosis?</div>
+            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>
+              {confirmRemove.name} will be removed from this session, along with anything entered for it. Other diagnoses are kept.
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmRemove(null)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
+              <button
+                onClick={() => { onRemoveCondition(confirmRemove.id); setConfirmRemove(null); }}
+                className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]"
+                style={{ background: T.red, color: "#fff" }}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {confirmEnd && (
@@ -18675,6 +17602,21 @@ export default function App() {
     setSession((s) => ({ ...s, statesByConditionId: { ...s.statesByConditionId, [conditionId]: {} } }));
   }, []);
 
+  const removeCondition = useCallback((conditionId) => {
+    setSession((s) => {
+      const order = s.order.filter((id) => id !== conditionId);
+      const statesByConditionId = { ...s.statesByConditionId };
+      delete statesByConditionId[conditionId];
+      return { order, statesByConditionId };
+    });
+    setScreen((cur) => {
+      if (cur.view !== "template" || cur.condition.id !== conditionId) return cur;
+      const remaining = session.order.filter((id) => id !== conditionId);
+      const next = remaining.length ? findConditionById(remaining[remaining.length - 1]) : null;
+      return next ? { view: "template", condition: next, regionKey: next.region } : { view: "visitType" };
+    });
+  }, [session.order]);
+
   const endSession = useCallback(() => {
     setSession({ order: [], statesByConditionId: {} });
     setCombinedNoteOpen(false);
@@ -18734,6 +17676,7 @@ export default function App() {
         onEndSession={endSession}
         onOpenSearch={() => setSearchOpen(true)}
         onGoHome={goHome}
+        onRemoveCondition={removeCondition}
       />
 
       {screen.view === "visitType" && (
