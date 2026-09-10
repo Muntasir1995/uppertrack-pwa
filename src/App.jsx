@@ -16438,7 +16438,7 @@ function VisitTypeGate({ onSelect }) {
 // match their band, and the median/ulnar/radial nerves are traced down the
 // whole limb - which is also why Peripheral Nerve gets its own band rather
 // than a point on the arm, since it spans every region.
-function BodyMap({ onSelect, counts }) {
+function BodyMap({ onSelect, counts, activeRegion, fillHeight }) {
   // Contiguous horizontal hit zones, so there are no dead gaps between
   // regions - a tap anywhere in a band's vertical slice selects it, which
   // is far more forgiving than requiring a hit on the muscle itself.
@@ -16451,7 +16451,17 @@ function BodyMap({ onSelect, counts }) {
   ];
   const n = (k) => (counts && counts[k] != null ? counts[k] : 0);
   return (
-    <svg viewBox="0 0 348 610" width="100%" preserveAspectRatio="xMidYMid meet" style={{ display: "block", width: "100%", height: "auto", maxHeight: "min(78vh, 900px)" }} role="group" aria-label="Upper limb region picker">
+    <svg
+      viewBox="0 0 348 610"
+      preserveAspectRatio="xMidYMid meet"
+      style={
+        fillHeight
+          ? { display: "block", height: "min(80vh, 980px)", width: "auto", maxWidth: "100%" }
+          : { display: "block", width: "100%", height: "auto", maxHeight: "min(78vh, 900px)" }
+      }
+      role="group"
+      aria-label="Upper limb region picker"
+    >
       <defs>
         <linearGradient id="ut-d1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#8FCDEC"/><stop offset="100%" stopColor="#3B87BD"/></linearGradient>
         <linearGradient id="ut-d2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#6FB9E0"/><stop offset="100%" stopColor="#276F9F"/></linearGradient>
@@ -16606,6 +16616,19 @@ function BodyMap({ onSelect, counts }) {
       <text x="286" y="584" fontSize="9" fill="#5A4B80">ulnar</text>
       <text x="286" y="598" fontSize="9" fill="#5A4B80">radial</text>
 
+      {activeRegion && zones.find((z) => z.key === activeRegion) && (
+        <rect
+          x="3"
+          y={zones.find((z) => z.key === activeRegion).y + 3}
+          width="342"
+          height={zones.find((z) => z.key === activeRegion).h - 6}
+          fill="none"
+          stroke={T.teal}
+          strokeWidth="2.5"
+          rx="9"
+        />
+      )}
+
       {zones.map((z) => (
         <rect
           key={z.key}
@@ -16628,16 +16651,23 @@ function RegionPicker({ onSelect, onBack }) {
   const counts = {};
   Object.entries(REGIONS).forEach(([key, r]) => { counts[key] = getRegionConditions(r).length; });
   return (
-    <div className="min-h-screen px-4 lg:px-8 pt-4 lg:pt-8 pb-8" style={{ background: T.bg }}>
-      <div className="max-w-2xl lg:max-w-5xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-1.5 mb-4 lg:mb-6 active:opacity-60" style={{ color: T.inkSoft }}>
-          <ArrowLeft size={18} className="lg:hidden" /><ArrowLeft size={22} className="hidden lg:block" /><span className="text-[14px] lg:text-[17px] font-medium">Home</span>
-        </button>
-        <div className="text-[12px] lg:text-[14px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
-        <h1 className="text-[26px] lg:text-[40px] font-bold mb-1" style={{ color: T.ink }}>UpperTrack</h1>
-        <p className="text-[14px] lg:text-[17px] mb-3 lg:mb-5" style={{ color: T.inkSoft }}>Tap the affected region.</p>
-        <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[560px] xl:max-w-[640px]" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
-          <BodyMap onSelect={onSelect} counts={counts} />
+    <div className="min-h-screen px-4 lg:px-10 pt-4 lg:pt-10 pb-8" style={{ background: T.bg }}>
+      <div className="max-w-2xl lg:max-w-none mx-auto lg:mx-0 lg:flex lg:items-start lg:gap-10 xl:gap-14">
+        <div className="lg:w-[360px] xl:w-[420px] lg:shrink-0">
+          <button onClick={onBack} className="flex items-center gap-1.5 mb-4 lg:mb-8 active:opacity-60" style={{ color: T.inkSoft }}>
+            <ArrowLeft size={18} className="lg:hidden" /><ArrowLeft size={22} className="hidden lg:block" /><span className="text-[14px] lg:text-[17px] font-medium">Home</span>
+          </button>
+          <div className="text-[12px] lg:text-[15px] font-semibold uppercase tracking-widest mb-1 lg:mb-2" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
+          <h1 className="text-[26px] lg:text-[48px] xl:text-[56px] font-bold mb-1 lg:mb-3 leading-none" style={{ color: T.ink }}>UpperTrack</h1>
+          <p className="text-[14px] lg:text-[19px] mb-3 lg:mb-0" style={{ color: T.inkSoft }}>Tap the affected region.</p>
+        </div>
+        <div className="mx-auto w-full max-w-[400px] md:max-w-[560px] lg:max-w-none lg:mx-0 lg:flex-1 lg:flex lg:justify-center">
+          <div className="rounded-2xl overflow-hidden w-full lg:hidden" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+            <BodyMap onSelect={onSelect} counts={counts} />
+          </div>
+          <div className="rounded-2xl overflow-hidden hidden lg:block" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+            <BodyMap onSelect={onSelect} counts={counts} fillHeight />
+          </div>
         </div>
       </div>
     </div>
@@ -17212,8 +17242,9 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
 /* Full-screen template search, reachable from anywhere via the top bar.
    Searches every condition across every region/subsection by name, and jumps
    straight into the template (adding it to the session) on selection. */
-function TemplateSearch({ onSelect, onClose }) {
+function TemplateSearch({ onSelect, onClose, selectedIds }) {
   const [query, setQuery] = useState("");
+  const toggleMode = !!selectedIds;
 
   // Grouped by region (Hand further by subsection), in REGIONS' own natural
   // order, so results read as "Shoulder" header then its conditions, then
@@ -17247,7 +17278,7 @@ function TemplateSearch({ onSelect, onClose }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search templates by name…"
+            placeholder={toggleMode ? "Search all diagnoses\u2026" : "Search templates by name\u2026"}
             className="flex-1 bg-transparent py-2.5 text-[15px] outline-none"
             style={{ color: T.ink }}
           />
@@ -17256,6 +17287,13 @@ function TemplateSearch({ onSelect, onClose }) {
           )}
         </div>
       </div>
+      {toggleMode && (
+        <div className="px-3 pt-3">
+          <div className="max-w-2xl lg:max-w-4xl mx-auto rounded-xl px-3 py-2.5 text-[12.5px]" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}` }}>
+            Tap to add or remove from this visit — {selectedIds.length ? `${selectedIds.length} selected so far.` : "nothing selected yet."} Close this search to continue.
+          </div>
+        </div>
+      )}
       <div className="px-3 pt-3 pb-8" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div className="max-w-2xl lg:max-w-4xl mx-auto">
           {groupedResults.length === 0 ? (
@@ -17268,16 +17306,20 @@ function TemplateSearch({ onSelect, onClose }) {
                 <div key={group.header}>
                   <div className="text-[12px] font-bold uppercase tracking-wide mb-2 px-1" style={{ color: T.teal }}>{group.header}</div>
                   <div className="flex flex-col gap-2.5">
-                    {group.items.map((condition) => (
-                      <button
-                        key={condition.id}
-                        onClick={() => onSelect(condition)}
-                        className="rounded-2xl px-4 py-3.5 text-left active:scale-95 transition"
-                        style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 52 }}
-                      >
-                        <span className="font-semibold text-[15px]" style={{ color: T.ink }}>{condition.name}</span>
-                      </button>
-                    ))}
+                    {group.items.map((condition) => {
+                      const active = toggleMode && selectedIds.includes(condition.id);
+                      return (
+                        <button
+                          key={condition.id}
+                          onClick={() => onSelect(condition)}
+                          className="rounded-2xl px-4 py-3.5 flex items-center justify-between text-left active:scale-95 transition"
+                          style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 52 }}
+                        >
+                          <span className="font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>{condition.name}</span>
+                          {toggleMode && (active ? <CheckCircle2 size={20} color={T.teal} /> : <Circle size={20} color={T.borderStrong} />)}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -17304,7 +17346,6 @@ function TemplateSearch({ onSelect, onClose }) {
 // for problems in two regions can be assembled without losing the first
 // set - which is why the count lives in the footer rather than the list.
 function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, title }) {
-  const [query, setQuery] = useState("");
   const [regionKey, setRegionKey] = useState(null);
 
   const counts = useMemo(() => {
@@ -17313,54 +17354,81 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
     return c;
   }, []);
 
-  const searching = query.trim().length > 0;
-
+  // The top session bar already has a global template search (jumps
+  // straight into a fresh condition), so this screen does not duplicate a
+  // search input - region selection is the only way in here, and it stays
+  // within the follow-up selection flow rather than navigating away from it.
   const groupedResults = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    if (!regionKey) return [];
     const groups = [];
-    const regionEntries = searching
-      ? Object.entries(REGIONS)
-      : Object.entries(REGIONS).filter(([key]) => key === regionKey);
-    for (const [, region] of regionEntries) {
-      if (region.subsections) {
-        for (const sub of region.subsections) {
-          const items = sub.conditions.filter((c) => !q || c.name.toLowerCase().includes(q));
-          if (items.length) groups.push({ header: `${region.label} \u2014 ${sub.label}`, items });
-        }
-      } else {
-        const items = region.conditions.filter((c) => !q || c.name.toLowerCase().includes(q));
-        if (items.length) groups.push({ header: region.label, items });
+    const region = REGIONS[regionKey];
+    if (region.subsections) {
+      for (const sub of region.subsections) {
+        if (sub.conditions.length) groups.push({ header: `${region.label} \u2014 ${sub.label}`, items: sub.conditions });
       }
+    } else if (region.conditions.length) {
+      groups.push({ header: region.label, items: region.conditions });
     }
     return groups;
-  }, [query, regionKey, searching]);
+  }, [regionKey]);
 
-  const showRegionPicker = !searching && !regionKey;
+  const showRegionPicker = !regionKey;
+
+  // Shared list rendering, used by both the mobile single-column flow and
+  // the desktop right-hand pane, so the two can never drift out of sync.
+  const resultsList = (
+    <div className="flex flex-col gap-5">
+      {groupedResults.map((group) => (
+        <div key={group.header}>
+          <div className="text-[12px] lg:text-[13px] font-bold uppercase tracking-wide mb-2 px-1" style={{ color: T.teal }}>{group.header}</div>
+          <div className="flex flex-col gap-2.5">
+            {group.items.map((condition) => {
+              const active = selectedIds.includes(condition.id);
+              return (
+                <button
+                  key={condition.id}
+                  onClick={() => onToggle(condition.id)}
+                  className="rounded-2xl px-4 py-3.5 flex items-center justify-between text-left active:scale-95 transition"
+                  style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 52, boxShadow: T.shadowCard }}
+                >
+                  <span className="font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>{condition.name}</span>
+                  {active ? <CheckCircle2 size={20} color={T.teal} /> : <Circle size={20} color={T.borderStrong} />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 z-30 flex flex-col" style={{ background: T.bg }}>
-      <div className="flex items-center gap-2 px-3 py-3 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
+      <div className="flex items-center gap-2 px-3 lg:px-6 py-3 lg:py-4 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button
-          onClick={() => (regionKey && !searching ? setRegionKey(null) : onBack())}
-          className="p-2 -ml-1 active:opacity-60"
+          onClick={() => (regionKey ? setRegionKey(null) : onBack())}
+          className="p-2 -ml-1 active:opacity-60 lg:hidden"
           aria-label="Back"
         >
           <ArrowLeft size={22} color={T.ink} />
         </button>
+        {/* On desktop the map is always visible alongside the list, so there
+            is no separate "diagnosis view" to step back out of - back
+            always exits to Home. */}
+        <button onClick={onBack} className="p-2 -ml-1 active:opacity-60 hidden lg:block" aria-label="Back">
+          <ArrowLeft size={24} color={T.ink} />
+        </button>
         <div className="flex-1 min-w-0">
-          <div className="font-bold text-[15px]" style={{ color: T.ink }}>{title || "Follow-up Visit"}</div>
-          <div className="text-[12px] truncate" style={{ color: T.inkSoft }}>
-            {showRegionPicker
-              ? "Tap the region being reviewed"
-              : searching
-                ? "Searching all regions"
-                : `${REGIONS[regionKey].label} \u2014 select the diagnosis (or diagnoses)`}
+          <div className="font-bold text-[15px] lg:text-[19px]" style={{ color: T.ink }}>{title || "Follow-up Visit"}</div>
+          <div className="text-[12px] truncate lg:hidden" style={{ color: T.inkSoft }}>
+            {showRegionPicker ? "Tap the region being reviewed" : `${REGIONS[regionKey].label} \u2014 select the diagnosis (or diagnoses)`}
           </div>
+          <div className="text-[13.5px] hidden lg:block" style={{ color: T.inkSoft }}>Tap a region, then select the diagnosis (or diagnoses) being reviewed</div>
         </div>
       </div>
 
-      {regionKey && !searching && (
-        <div className="px-3 pt-3">
+      {regionKey && (
+        <div className="px-3 pt-3 lg:hidden">
           <div className="max-w-2xl lg:max-w-4xl mx-auto">
             <button
               onClick={() => setRegionKey(null)}
@@ -17374,7 +17442,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
                 </span>
                 <span className="block text-[11.5px] truncate" style={{ color: T.inkSoft }}>
                   Showing {REGIONS[regionKey].label}
-                  {selectedIds.length ? ` · ${selectedIds.length} selected so far (kept)` : ""}
+                  {selectedIds.length ? ` \u00b7 ${selectedIds.length} selected so far (kept)` : ""}
                 </span>
               </span>
             </button>
@@ -17382,58 +17450,33 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
         </div>
       )}
 
-      <div className="px-3 pt-3">
-        <div className="max-w-2xl lg:max-w-4xl mx-auto flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
-          <Search size={17} color={T.inkSoft} />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search all diagnoses…"
-            className="flex-1 bg-transparent py-2.5 text-[15px] outline-none"
-            style={{ color: T.ink }}
-          />
-          {query && (
-            <button onClick={() => setQuery("")} className="p-1 active:opacity-60"><X size={16} color={T.inkSoft} /></button>
-          )}
+      {/* MOBILE: single column, sequential region -> diagnosis flow. */}
+      <div className="px-3 pt-3 pb-28 lg:hidden" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div className="max-w-2xl mx-auto">
+          {showRegionPicker ? (
+            <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[400px] md:max-w-[560px]" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+              <BodyMap onSelect={setRegionKey} counts={counts} />
+            </div>
+          ) : resultsList}
         </div>
       </div>
 
-      <div className="px-3 pt-3 pb-28" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div className="max-w-2xl lg:max-w-4xl mx-auto">
+      {/* DESKTOP: persistent two-pane layout - map always visible on the
+          left (tap any region any time), diagnoses for the selected region
+          on the right. Avoids the mobile pattern of navigating away from
+          the map just to browse diagnoses. */}
+      <div className="hidden lg:flex gap-8 px-6 pt-5 pb-8" style={{ flex: "1 1 0%", minHeight: 0 }}>
+        <div className="w-[400px] xl:w-[440px] shrink-0" style={{ overflowY: "auto" }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+            <BodyMap onSelect={setRegionKey} counts={counts} activeRegion={regionKey} />
+          </div>
+        </div>
+        <div className="flex-1 min-w-0" style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
           {showRegionPicker ? (
-            <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[440px]" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
-              <BodyMap onSelect={setRegionKey} counts={counts} />
+            <div className="h-full flex items-center justify-center min-h-[240px]">
+              <div className="text-[14.5px] text-center max-w-xs" style={{ color: T.inkSoft }}>Tap a region on the left to see its diagnoses.</div>
             </div>
-          ) : groupedResults.length === 0 ? (
-            <div className="rounded-2xl p-6 text-center mt-4" style={{ background: T.surface, border: `1px dashed ${T.borderStrong}` }}>
-              <div className="text-[14px] font-medium" style={{ color: T.ink }}>No diagnoses match "{query}"</div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-5">
-              {groupedResults.map((group) => (
-                <div key={group.header}>
-                  <div className="text-[12px] font-bold uppercase tracking-wide mb-2 px-1" style={{ color: T.teal }}>{group.header}</div>
-                  <div className="flex flex-col gap-2.5">
-                    {group.items.map((condition) => {
-                      const active = selectedIds.includes(condition.id);
-                      return (
-                        <button
-                          key={condition.id}
-                          onClick={() => onToggle(condition.id)}
-                          className="rounded-2xl px-4 py-3.5 flex items-center justify-between text-left active:scale-95 transition"
-                          style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 52, boxShadow: T.shadowCard }}
-                        >
-                          <span className="font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>{condition.name}</span>
-                          {active ? <CheckCircle2 size={20} color={T.teal} /> : <Circle size={20} color={T.borderStrong} />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          ) : resultsList}
         </div>
       </div>
 
@@ -17575,17 +17618,40 @@ export default function App() {
   const [combinedCopyError, setCombinedCopyError] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
+  // Follow-up Visit and Post-operative Follow-up share the same diagnosis
+  // picker (FollowupConditionPicker) and selection state; only where
+  // "Continue" routes to afterward differs. Declared here (rather than
+  // further down, where it conceptually belongs) so selectFromSearch below
+  // can reference it - the global search becomes context-aware and needs
+  // this available before it is defined.
+  const [followupSelectedIds, setFollowupSelectedIds] = useState([]);
+  const toggleFollowupSelection = useCallback((conditionId) => {
+    setFollowupSelectedIds((ids) => (ids.includes(conditionId) ? ids.filter((id) => id !== conditionId) : [...ids, conditionId]));
+  }, []);
+
   const openCondition = useCallback((condition) => {
     setSession((s) => addConditionToSession(s, condition));
     setScreen({ view: "template", regionKey: condition.region, condition });
   }, []);
 
+  // Context-aware: from most screens, picking a search result opens that
+  // template directly (the original behaviour). But from inside the
+  // Follow-up / Post-operative diagnosis picker, navigating away would
+  // abandon the diagnoses already selected for this patient - so there,
+  // search instead toggles the result into that same running selection,
+  // exactly as tapping it in the picker's own list would, and leaves the
+  // search open so several diagnoses can be added in one pass.
+  const inFollowupSelection = screen.view === "followupSelect" || screen.view === "postopSelect";
   const selectFromSearch = useCallback(
     (condition) => {
+      if (inFollowupSelection) {
+        toggleFollowupSelection(condition.id);
+        return;
+      }
       openCondition(condition);
       setSearchOpen(false);
     },
-    [openCondition]
+    [openCondition, inFollowupSelection, toggleFollowupSelection]
   );
 
   const updateConditionState = useCallback((conditionId, patch) => {
@@ -17628,10 +17694,6 @@ export default function App() {
   // "Continue" routes to afterward differs. Selected diagnoses are added to
   // the session (same infrastructure as New Visit, so all three flows can
   // coexist and share one combined note).
-  const [followupSelectedIds, setFollowupSelectedIds] = useState([]);
-  const toggleFollowupSelection = useCallback((conditionId) => {
-    setFollowupSelectedIds((ids) => (ids.includes(conditionId) ? ids.filter((id) => id !== conditionId) : [...ids, conditionId]));
-  }, []);
   const addSelectedToSession = useCallback(() => {
     followupSelectedIds.forEach((id) => {
       const condition = findConditionById(id);
@@ -17785,7 +17847,7 @@ export default function App() {
         </div>
       )}
 
-      {searchOpen && <TemplateSearch onSelect={selectFromSearch} onClose={() => setSearchOpen(false)} />}
+      {searchOpen && <TemplateSearch onSelect={selectFromSearch} onClose={() => setSearchOpen(false)} selectedIds={inFollowupSelection ? followupSelectedIds : undefined} />}
     </div>
   );
 }
