@@ -14185,7 +14185,7 @@ function RedFlagChecklist({ items, checked, onToggle }) {
   );
 }
 
-function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked, onToggleUrgent, open, onClose, reviewed, onToggleReviewed }) {
+function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked, onToggleUrgent, open, onClose, reviewed, onToggleReviewed, onPreviewNote }) {
   if (!open) return null;
   const hasUrgent = urgentFlags && urgentFlags.length > 0;
   const noFlagsChecked = (checked || []).length === 0 && (urgentChecked || []).length === 0;
@@ -14214,6 +14214,15 @@ function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked,
             >
               {reviewed ? <CheckCircle2 size={20} color={T.green} /> : <Circle size={20} color={T.borderStrong} />}
               <span className="text-[14px] font-semibold" style={{ color: reviewed ? T.green : T.ink }}>Red flags reviewed — none present</span>
+            </button>
+          )}
+          {onPreviewNote && (reviewed || !noFlagsChecked) && (
+            <button
+              onClick={onPreviewNote}
+              className="w-full rounded-xl px-4 py-3 mt-4 font-semibold text-[15px] active:scale-95 transition"
+              style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
+            >
+              Preview clinic note
             </button>
           )}
         </div>
@@ -15491,7 +15500,28 @@ function buildInjectionSentence(detail) {
     const when = detail.scheduledDate && detail.scheduledDate.trim() ? detail.scheduledDate.trim() : "a later date";
     return `The patient agreed to the injection; this will be scheduled for ${when}.`;
   }
-  return "The patient agreed to the injection. Injection was given safely using sterile technique. Risks, benefits and alternatives were discussed with the patient prior to the injection.";
+  // Build the procedural description from whatever was actually recorded.
+  // Each element is optional, so a clinician who only ticks "agreed" still
+  // gets the original sentence and nothing is invented around it.
+  const agent = detail.agent === "Other"
+    ? (detail.agentOther && detail.agentOther.trim() ? detail.agentOther.trim() : null)
+    : detail.agent || null;
+  const bits = [];
+  // "using landmark technique" would collide with "using sterile technique"
+  // in the same sentence, so guidance is phrased with "by"/"under" instead.
+  if (detail.guidance) bits.push(detail.guidance === "Landmark" ? "by landmark technique" : `under ${detail.guidance.toLowerCase().replace("-guided", "")} guidance`);
+  if (detail.approach && detail.approach.trim()) bits.push(`via a ${detail.approach.trim()} approach`);
+  const how = bits.length ? ` ${bits.join(", ")}` : "";
+  // The option labels read as standalone choices ("Local anaesthetic only"),
+  // which becomes clumsy used attributively ("a local anaesthetic only
+  // injection"), so the qualifier is trimmed for the sentence.
+  const agentPhrase = agent ? agent.replace(/\s+only$/i, "") : null;
+  const what = agentPhrase ? ` ${lowerFirst(agentPhrase)}` : "";
+  const dose = detail.dose && detail.dose.trim() ? ` (${detail.dose.trim()})` : "";
+  const given = what || dose || how
+    ? `A${what ? "" : "n"}${what} injection${dose} was given safely using sterile technique${how}.`
+    : "Injection was given safely using sterile technique.";
+  return `The patient agreed to the injection. ${given} Risks, benefits and alternatives were discussed with the patient prior to the injection.`;
 }
 
 // When the reached plan involves surgery, the note no longer assumes
@@ -15846,6 +15876,7 @@ function buildProseNote(condition, state) {
   push("Differential Diagnosis", buildDifferential(condition, state));
   push("Impression", buildImpression(condition, state));
   push("Management Plan", buildManagementPlan(condition, state));
+  push("Outcome Scores", buildOutcomeScores(condition, state));
   push("Review Plan", buildReviewPlan(condition, state));
   return parts;
 }
@@ -16353,6 +16384,24 @@ function InjectionPrompt({ label, detail, onChange }) {
       )}
       <SubLabel>{label ? `${label} \u2014 did the patient agree to the injection?` : "Did the patient agree to the injection?"}</SubLabel>
       <ButtonSelect options={["Agreed", "Not agreed"]} value={d.agreement || null} onChange={(v) => set("agreement", v)} columns={2} />
+      {d.agreement === "Agreed" && d.timing === "Today" && (
+        <>
+          <SubLabel>Injectate (optional)</SubLabel>
+          <ButtonSelect
+            options={["Corticosteroid + local anaesthetic", "Local anaesthetic only", "Corticosteroid only", "Hyaluronic acid", "PRP", "Other"]}
+            value={d.agent || null}
+            onChange={(v) => set("agent", v)}
+            columns={2}
+          />
+          {d.agent === "Other" && (
+            <TextField label="Specify injectate" value={d.agentOther} onChange={(v) => set("agentOther", v)} />
+          )}
+          <TextField label="Dose / volume (optional)" value={d.dose} onChange={(v) => set("dose", v)} placeholder="e.g. 40 mg triamcinolone with 4 mL 1% lidocaine" />
+          <SubLabel>Guidance (optional)</SubLabel>
+          <ButtonSelect options={["Landmark", "Ultrasound-guided", "Fluoroscopic"]} value={d.guidance || null} onChange={(v) => set("guidance", v)} columns={3} />
+          <TextField label="Approach / site (optional)" value={d.approach} onChange={(v) => set("approach", v)} placeholder="e.g. posterior subacromial" />
+        </>
+      )}
     </>
   );
 }
@@ -16532,6 +16581,197 @@ function PhysioReferralInputs({ value, onChange }) {
   );
 }
 
+// Interactive outcome scoring for the Outcome Measures section. Renders the
+// instruments that apply to the region, computes live, and states the
+// direction of every score so a number can't be read backwards later.
+function OutcomeScores({ condition, state, onFieldChange }) {
+  const isShoulder = condition.region === "shoulder";
+  const ases = state.asesScore || {};
+  const setAses = (k, v) => onFieldChange({ asesScore: { ...ases, [k]: v } });
+  const asesResult = scoreASES(state);
+  const saneResult = scoreSANE(state);
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-xl p-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+        <div className="text-[12.5px]" style={{ color: T.inkSoft }}>
+          Scores calculate live and are added to the clinic note. Record them at the same visit intervals each time so they stay comparable.
+        </div>
+      </div>
+
+      <div>
+        <SubLabel>SANE — overall rating of the affected limb (0–100%, higher is better)</SubLabel>
+        <div className="flex items-center gap-3">
+          <input
+            type="range" min={0} max={100} step={5}
+            value={state.saneScore ?? 0}
+            onChange={(e) => onFieldChange({ saneScore: Number(e.target.value) })}
+            className="flex-1" style={{ accentColor: T.teal, height: 32 }}
+          />
+          <input
+            type="number" inputMode="numeric" min={0} max={100}
+            value={state.saneScore ?? ""}
+            onChange={(e) => onFieldChange({ saneScore: e.target.value === "" ? null : Number(e.target.value) })}
+            className="text-right rounded-lg px-2 py-1 text-[14px] font-semibold"
+            style={{ width: 56, border: `1px solid ${T.border}`, color: T.tealDark }}
+          />
+          <span className="text-[13px]" style={{ color: T.inkSoft }}>%</span>
+        </div>
+      </div>
+
+      {isShoulder && (
+        <div>
+          <SubLabel>ASES — pain today (0–10, higher is worse)</SubLabel>
+          <div className="flex items-center gap-3 mb-3">
+            <input
+              type="range" min={0} max={10} step={1}
+              value={ases.pain ?? 0}
+              onChange={(e) => setAses("pain", Number(e.target.value))}
+              className="flex-1" style={{ accentColor: T.teal, height: 32 }}
+            />
+            <input
+              type="number" inputMode="numeric" min={0} max={10}
+              value={ases.pain ?? ""}
+              onChange={(e) => setAses("pain", e.target.value === "" ? null : Number(e.target.value))}
+              className="text-right rounded-lg px-2 py-1 text-[14px] font-semibold"
+              style={{ width: 48, border: `1px solid ${T.border}`, color: T.tealDark }}
+            />
+          </div>
+          <SubLabel>ASES — activities of daily living</SubLabel>
+          <div className="flex flex-col gap-2">
+            {ASES_ADL_ITEMS.map((item) => (
+              <div key={item.key} className="rounded-xl px-3 py-2" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+                <div className="text-[13px] mb-1.5" style={{ color: T.ink }}>{item.label}</div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {ASES_ADL_OPTIONS.map((opt) => {
+                    const active = ases[item.key] === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => setAses(item.key, active ? null : opt.value)}
+                        className="rounded-lg py-1.5 text-[11.5px] font-semibold active:scale-95"
+                        style={{ background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.inkSoft, minHeight: 38 }}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-xl p-3" style={{ background: T.slateChip, border: `1px solid ${T.border}` }}>
+        <div className="text-[12px] font-bold uppercase tracking-wide mb-2" style={{ color: T.teal }}>Calculated</div>
+        {isShoulder && (
+          <div className="flex items-baseline justify-between py-1">
+            <span className="text-[13px]" style={{ color: T.ink }}>ASES</span>
+            {asesResult.value != null ? (
+              <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{asesResult.value} <span className="text-[11px] font-normal" style={{ color: T.inkSoft }}>/100, higher better</span></span>
+            ) : (
+              <span className="text-[11.5px] text-right" style={{ color: T.inkSoft, maxWidth: "62%" }}>{asesResult.reason}</span>
+            )}
+          </div>
+        )}
+        <div className="flex items-baseline justify-between py-1">
+          <span className="text-[13px]" style={{ color: T.ink }}>SANE</span>
+          {saneResult.value != null ? (
+            <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{saneResult.value}% <span className="text-[11px] font-normal" style={{ color: T.inkSoft }}>higher better</span></span>
+          ) : (
+            <span className="text-[11.5px]" style={{ color: T.inkSoft }}>{saneResult.reason}</span>
+          )}
+        </div>
+        {state.vas != null && (
+          <div className="flex items-baseline justify-between py-1">
+            <span className="text-[13px]" style={{ color: T.ink }}>Pain VAS</span>
+            <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{state.vas}/10 <span className="text-[11px] font-normal" style={{ color: T.inkSoft }}>higher worse</span></span>
+          </div>
+        )}
+      </div>
+
+      <div className="text-[11.5px]" style={{ color: T.inkSoft }}>
+        QuickDASH is not included: it is copyright the Institute for Work &amp; Health, must be used unmodified, and requires an Intent to Use submission (and a paid licence if this app is ever sold). The scoring engine is built and can be switched on once that is settled.
+      </div>
+    </div>
+  );
+}
+
+// Copies one limb's recorded findings to the other so only the differences
+// need editing. Bilateral entry previously meant filling every field twice.
+// Guarded because it overwrites: if the destination side already holds
+// answers, it asks before replacing them.
+function CopyLimbButton({ fields, fromState, toState, onApply, fromLabel, toLabel }) {
+  const [confirming, setConfirming] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const keys = useMemo(() => {
+    const out = [];
+    const walk = (fs) => fs.forEach((f) => {
+      if (f.type === "conditional") { walk(f.fields); return; }
+      if (f.key) out.push(f.key);
+    });
+    walk(fields);
+    return out;
+  }, [fields]);
+
+  const filled = keys.filter((k) => {
+    const v = fromState[k];
+    if (v == null) return false;
+    if (Array.isArray(v)) return v.length > 0;
+    if (typeof v === "object") return Object.keys(v).length > 0;
+    return String(v).trim() !== "";
+  });
+  if (!filled.length) return null;
+
+  const wouldOverwrite = keys.some((k) => {
+    const v = toState[k];
+    if (v == null) return false;
+    if (Array.isArray(v)) return v.length > 0;
+    if (typeof v === "object") return Object.keys(v).length > 0;
+    return String(v).trim() !== "";
+  });
+
+  const apply = () => {
+    const patch = {};
+    filled.forEach((k) => {
+      const v = fromState[k];
+      // Deep-copy containers so the two sides never end up sharing a
+      // reference - editing one would otherwise silently change the other.
+      patch[k] = Array.isArray(v) ? [...v] : (typeof v === "object" ? { ...v } : v);
+    });
+    onApply(patch);
+    setConfirming(false);
+    setDone(true);
+    setTimeout(() => setDone(false), 2500);
+  };
+
+  if (confirming) {
+    return (
+      <div className="rounded-xl p-3 mb-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+        <div className="text-[13px] font-semibold mb-1" style={{ color: T.amber }}>Overwrite the {toLabel} side?</div>
+        <div className="text-[12.5px] mb-2.5" style={{ color: T.inkSoft }}>Findings already recorded for this side will be replaced by the {fromLabel} side's.</div>
+        <div className="flex gap-2">
+          <button onClick={apply} className="rounded-lg px-3 py-2 font-semibold text-[13px] active:scale-95" style={{ background: T.amber, color: "#fff" }}>Yes, copy across</button>
+          <button onClick={() => setConfirming(false)} className="rounded-lg px-3 py-2 font-semibold text-[13px] active:scale-95" style={{ background: T.surface, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => (wouldOverwrite ? setConfirming(true) : apply())}
+      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 mb-3 font-semibold text-[13px] active:scale-95 transition"
+      style={{ background: done ? T.greenTint : T.slateChip, border: `1px solid ${done ? T.green : T.border}`, color: done ? T.green : T.ink }}
+    >
+      {done ? <Check size={16} /> : <Copy size={16} />}
+      {done ? `Copied ${filled.length} field${filled.length === 1 ? "" : "s"} from ${fromLabel}` : `Same as ${fromLabel} \u2014 copy across, then edit differences`}
+    </button>
+  );
+}
+
 function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome }) {
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
@@ -16541,6 +16781,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [flagPromptDismissed, setFlagPromptDismissed] = useState(false);
 
   // Scrolls the newly-opened section into view automatically, so tapping
   // "Next" or a different section header lands the user at that section's
@@ -16701,12 +16942,26 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const noFlagsChecked = redFlagsChecked.length === 0 && urgentFlagsChecked.length === 0;
   const toggleRedFlagsReviewed = () => setField("redFlagsReviewed", !state.redFlagsReviewed);
   const totalFlagsChecked = redFlagsChecked.length + urgentFlagsChecked.length;
+  // Red flags count as "settled" either way: some were marked present, or
+  // the clinician explicitly confirmed none are. What we want to catch is
+  // the third state - never looked at - which otherwise produces a note
+  // indistinguishable from a genuinely clear one.
+  const redFlagsSettled = totalFlagsChecked > 0 || !!state.redFlagsReviewed;
+  const [flagPromptOpen, setFlagPromptOpen] = useState(false);
   // Live progress so the clinician can see how much of the template is
   // documented without scrolling the whole section list.
   // Outcome Measures is a static reference table with no fields for the
   // clinician to fill in - counting it meant progress could never reach
   // 100% even once everything actually fillable was documented.
-  const countableSections = condition.sections.filter((s) => s.id !== "outcomes");
+  // Sections that carry a routine review. Deliberately excludes the
+  // reference-heavy ones (typical patient, differential, outcomes) rather
+  // than anything clinically load-bearing.
+  const BRIEF_SECTION_IDS = ["history", "exam", "imaging", "pathway", "followup"];
+  const [briefMode, setBriefMode] = useState(false);
+  const visibleSections = briefMode
+    ? condition.sections.filter((s) => BRIEF_SECTION_IDS.includes(s.id))
+    : condition.sections;
+  const countableSections = visibleSections.filter((s) => s.id !== "outcomes");
   const sectionsDone = countableSections.filter((s) => sectionHasContent(s, state, condition.id)).length;
   const progressPct = countableSections.length ? sectionsDone / countableSections.length : 0;
 
@@ -16734,8 +16989,30 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
       <div className="px-3 pt-3 max-w-2xl lg:max-w-4xl mx-auto">
         <RelatedConditionsBar conditionId={condition.id} sessionOrder={session.order} onOpen={onOpenCondition} />
 
-        {condition.sections.map((section, sectionIdx) => {
-          const nextSection = condition.sections[sectionIdx + 1];
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => setBriefMode(false)}
+            className="flex-1 rounded-lg py-2 text-[13px] font-semibold active:scale-95"
+            style={{ background: briefMode ? T.slateChip : T.teal, color: briefMode ? T.ink : "#fff" }}
+          >
+            Full template
+          </button>
+          <button
+            onClick={() => setBriefMode(true)}
+            className="flex-1 rounded-lg py-2 text-[13px] font-semibold active:scale-95"
+            style={{ background: briefMode ? T.teal : T.slateChip, color: briefMode ? "#fff" : T.ink }}
+          >
+            Brief encounter
+          </button>
+        </div>
+        {briefMode && (
+          <div className="text-[11.5px] mb-3 px-1" style={{ color: T.inkSoft }}>
+            Showing history, examination, imaging, plan and review. Anything already entered elsewhere is kept and still appears in the note. Red flags remain available from the button above.
+          </div>
+        )}
+
+        {visibleSections.map((section, sectionIdx) => {
+          const nextSection = visibleSections[sectionIdx + 1];
           return (
           <div key={section.id} ref={(el) => { sectionRefs.current[section.id] = el; }} style={{ scrollMarginTop: 130 }}>
           <CollapsibleSection
@@ -16957,6 +17234,14 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                     {section.id === "exam" && <NormalExamButton fields={limbFields} state={rightLimbState} onApply={(patch) => Object.entries(patch).forEach(([k, v]) => setRightField(k, v))} />}
                     {limbFields.map((f, i) => <Field key={`r-${i}`} field={f} state={rightLimbState} setField={setRightField} region={condition.region} />)}
                     <LimbHeader limb="left" />
+                    <CopyLimbButton
+                      fields={limbFields}
+                      fromState={rightLimbState}
+                      toState={leftLimbState}
+                      fromLabel="right"
+                      toLabel="left"
+                      onApply={(patch) => Object.entries(patch).forEach(([k, v]) => setLeftField(k, v))}
+                    />
                     {section.id === "exam" && <NormalExamButton fields={limbFields} state={leftLimbState} onApply={(patch) => Object.entries(patch).forEach(([k, v]) => setLeftField(k, v))} />}
                     {limbFields.map((f, i) => <Field key={`l-${i}`} field={f} state={leftLimbState} setField={setLeftField} region={condition.region} />)}
                   </>
@@ -16966,6 +17251,11 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <>
                 {section.id === "exam" && <NormalExamButton fields={section.fields} state={state} onApply={(patch) => onFieldChange(patch)} />}
                 {dedupeFields(section.fields).map((f, i) => <Field key={i} field={f} state={state} setField={setField} region={condition.region} />)}
+                {section.id === "outcomes" && (
+                  <div className="mt-4">
+                    <OutcomeScores condition={condition} state={state} onFieldChange={onFieldChange} />
+                  </div>
+                )}
               </>
             )}
           </CollapsibleSection>
@@ -16983,7 +17273,14 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
             <Home size={19} color={T.ink} />
           </button>
         )}
-        <button onClick={() => { setNoteScope("this"); setNoteOpen(true); }} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+        <button
+          onClick={() => {
+            if (!redFlagsSettled && !flagPromptDismissed) { setFlagPromptOpen(true); return; }
+            setNoteScope("this"); setNoteOpen(true);
+          }}
+          className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95"
+          style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
+        >
           Preview clinic note
         </button>
       </div>
@@ -17045,6 +17342,36 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         </div>
       )}
 
+      {flagPromptOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.45)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle size={20} color={T.amber} />
+              <span className="font-bold text-[16px]" style={{ color: T.ink }}>Red flags not yet reviewed</span>
+            </div>
+            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>
+              This note will not record whether red flags were considered. Review them now, or continue and the section will be left out.
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => { setFlagPromptOpen(false); setFlagsOpen(true); }}
+                className="w-full rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
+                style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
+              >
+                Review red flags
+              </button>
+              <button
+                onClick={() => { setFlagPromptOpen(false); setFlagPromptDismissed(true); setNoteScope("this"); setNoteOpen(true); }}
+                className="w-full rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
+                style={{ background: T.surface, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}
+              >
+                Continue to note anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmReset && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
@@ -17069,6 +17396,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         onClose={() => setFlagsOpen(false)}
         reviewed={state.redFlagsReviewed}
         onToggleReviewed={toggleRedFlagsReviewed}
+        onPreviewNote={() => { setFlagsOpen(false); setNoteScope("this"); setNoteOpen(true); }}
       />
     </div>
   );
@@ -17232,7 +17560,7 @@ function BodyMap({ onSelect, counts }) {
   ];
   const n = (k) => (counts && counts[k] != null ? counts[k] : 0);
   return (
-    <svg viewBox="0 0 348 610" width="100%" style={{ display: "block", maxHeight: "72vh" }} role="group" aria-label="Upper limb region picker">
+    <svg viewBox="0 0 348 610" width="100%" preserveAspectRatio="xMidYMid meet" style={{ display: "block", width: "100%", height: "auto", maxHeight: "min(68vh, 660px)" }} role="group" aria-label="Upper limb region picker">
       <defs>
         <linearGradient id="ut-d1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#8FCDEC"/><stop offset="100%" stopColor="#3B87BD"/></linearGradient>
         <linearGradient id="ut-d2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#6FB9E0"/><stop offset="100%" stopColor="#276F9F"/></linearGradient>
@@ -17265,31 +17593,33 @@ function BodyMap({ onSelect, counts }) {
         <path d="M46 32 q34 8 54 26 M46 50 q40 10 60 30 M46 68 q42 14 60 36 M46 86 q40 16 56 40 M46 104 q34 18 48 40 M46 122 q28 18 40 38"/>
       </g>
 
-      <path d="M52 54 q44 4 74 26" stroke="#E8E0CE" strokeWidth="7" fill="none" strokeLinecap="round"/>
-      <path d="M52 54 q44 4 74 26" stroke="#8A7B5F" strokeWidth="0.9" fill="none"/>
-      <path d="M126 70 q16 2 22 12 q4 8 -2 14" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
-      <path d="M110 96 q22 -14 42 2 q14 12 8 30 q-24 12 -46 -2 q-10 -16 -4 -30 z" fill="#E8E0CE" stroke="#8A7B5F" strokeWidth="0.9"/>
-      <path d="M148 122 q12 46 26 82 q10 26 18 44" stroke="#E8E0CE" strokeWidth="13" fill="none" strokeLinecap="round"/>
-      <path d="M148 122 q12 46 26 82 q10 26 18 44" stroke="#8A7B5F" strokeWidth="0.8" fill="none" opacity="0.65"/>
+      <path d="M148 116 q12 46 26 82 q10 26 18 44" stroke="#E8E0CE" strokeWidth="13" fill="none" strokeLinecap="round"/>
+      <path d="M148 116 q12 46 26 82 q10 26 18 44" stroke="#8A7B5F" strokeWidth="0.8" fill="none" opacity="0.65"/>
+      <path d="M110 88 q22 -14 42 2 q14 12 8 30 q-24 12 -46 -2 q-10 -16 -4 -30 z" fill="#E8E0CE" stroke="#8A7B5F" strokeWidth="0.9"/>
 
-      <path d="M20 52 q34 -4 62 6 q30 10 50 30 q14 14 6 34 q-14 16 -42 14 q-34 -2 -60 -12 q-22 -10 -26 -32 q-2 -24 10 -40 z" fill="url(#ut-pec)" opacity="0.9"/>
-      <path d="M22 96 q30 6 56 20 q24 12 40 24 q-8 14 -32 14 q-32 -2 -56 -12 q-14 -8 -12 -26 q0 -14 4 -20 z" fill="url(#ut-pec)" opacity="0.75"/>
-      <g stroke="#9F6A73" strokeWidth="0.65" fill="none" opacity="0.55">
-        <path d="M24 62 q46 6 78 34"/><path d="M22 78 q48 8 76 38"/><path d="M22 94 q46 12 72 40"/><path d="M24 110 q42 14 64 38"/><path d="M28 126 q36 14 54 34"/>
+      <path d="M22 48 q14 -3 26 1 q60 18 100 55 q9 8 5 16 q-7 8 -19 5 q-48 -12 -86 -28 q-24 -11 -28 -30 q-4 -20 2 -19 z" fill="url(#ut-pec)" opacity="0.9"/>
+      <path d="M22 92 q14 -2 26 3 q54 20 88 46 q8 6 4 13 q-7 7 -18 4 q-44 -13 -76 -28 q-20 -10 -24 -26 q-3 -13 0 -12 z" fill="url(#ut-pec)" opacity="0.82"/>
+      <path d="M24 70 q56 14 116 54" stroke="#9F6A73" strokeWidth="0.9" fill="none" opacity="0.7"/>
+      <g stroke="#9F6A73" strokeWidth="0.6" fill="none" opacity="0.5">
+        <path d="M26 56 q58 14 116 52"/><path d="M24 84 q56 16 112 50"/><path d="M24 100 q52 18 106 48"/><path d="M26 116 q48 18 98 46"/><path d="M28 132 q42 18 88 42"/>
       </g>
 
-      <path d="M122 74 q24 -12 44 6 q14 14 14 34 q-18 14 -38 6 q-16 -16 -22 -28 q-2 -12 2 -18 z" fill="url(#ut-d1)" stroke="#1F5A85" strokeWidth="0.9"/>
-      <path d="M150 68 q30 2 44 28 q12 24 4 52 q-6 14 -16 20 q-16 -4 -24 -18 q-10 -34 -12 -56 q0 -18 4 -26 z" fill="url(#ut-d2)" stroke="#1F5A85" strokeWidth="0.9"/>
-      <path d="M188 84 q20 14 20 42 q0 26 -14 42 q-12 0 -16 -14 q2 -34 6 -54 q2 -12 4 -16 z" fill="url(#ut-d3)" stroke="#1F5A85" strokeWidth="0.9"/>
+      <path d="M26 44 q48 6 100 26" stroke="#EFE6D6" strokeWidth="9" fill="none" strokeLinecap="round"/>
+      <path d="M26 44 q48 6 100 26" stroke="#8A7B5F" strokeWidth="1.1" fill="none"/>
+      <path d="M124 62 q16 2 22 12 q4 8 -2 14" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
+
+      <path d="M120 64 q24 -12 44 6 q14 14 14 34 q-18 14 -38 6 q-16 -16 -22 -28 q-2 -12 2 -18 z" fill="url(#ut-d1)" stroke="#1F5A85" strokeWidth="0.9"/>
+      <path d="M148 58 q30 2 44 28 q12 24 4 52 q-6 14 -16 20 q-16 -4 -24 -18 q-10 -34 -12 -56 q0 -18 4 -26 z" fill="url(#ut-d2)" stroke="#1F5A85" strokeWidth="0.9"/>
+      <path d="M186 74 q20 14 20 42 q0 26 -14 42 q-12 0 -16 -14 q2 -34 6 -54 q2 -12 4 -16 z" fill="url(#ut-d3)" stroke="#1F5A85" strokeWidth="0.9"/>
       <g stroke="#1F5A85" strokeWidth="0.65" fill="none" opacity="0.5">
-        <path d="M130 84 q14 40 26 72"/><path d="M152 76 q12 46 22 78"/><path d="M172 78 q8 46 12 76"/><path d="M192 92 q2 40 -2 64"/>
+        <path d="M128 74 q14 40 26 72"/><path d="M150 66 q12 46 22 78"/><path d="M170 68 q8 46 12 76"/><path d="M190 82 q2 40 -2 64"/>
       </g>
 
-      <path d="M184 148 q22 6 30 22 q10 30 16 54 q6 22 8 40 q-16 12 -32 4 q-8 -34 -14 -58 q-6 -30 -8 -62 z" fill="url(#ut-tri)" stroke="#3E661F" strokeWidth="0.9"/>
-      <path d="M146 140 q34 18 66 4 q6 30 12 56 q6 26 10 46 q6 22 8 34 q-28 16 -56 2 q-8 -34 -16 -64 q-10 -40 -16 -60 q-6 -12 -8 -18 z" fill="url(#ut-bi)" stroke="#3E661F" strokeWidth="1"/>
+      <path d="M184 140 q22 6 30 22 q10 30 16 54 q6 22 8 44 q-16 12 -32 4 q-8 -34 -14 -60 q-6 -32 -8 -64 z" fill="url(#ut-tri)" stroke="#3E661F" strokeWidth="0.9"/>
+      <path d="M144 132 q34 18 66 4 q6 32 12 58 q6 26 10 48 q6 22 8 34 q-28 16 -56 2 q-8 -34 -16 -66 q-10 -40 -16 -62 q-6 -12 -8 -18 z" fill="url(#ut-bi)" stroke="#3E661F" strokeWidth="1"/>
       <path d="M158 196 q32 14 56 -2 q8 30 14 52 q6 20 8 32 q-26 14 -50 0 q-10 -30 -18 -52 q-6 -18 -10 -30 z" fill="url(#ut-brl)" stroke="#3E661F" strokeWidth="0.85" opacity="0.9"/>
       <g stroke="#3E661F" strokeWidth="0.7" fill="none" opacity="0.5">
-        <path d="M156 152 q14 54 30 100"/><path d="M176 154 q12 54 26 98"/><path d="M196 148 q10 52 22 94"/>
+        <path d="M154 144 q14 56 30 104"/><path d="M174 146 q12 56 26 102"/><path d="M194 140 q10 54 22 98"/>
       </g>
 
       <path d="M172 262 q20 -6 28 4 q6 8 2 16 q-18 8 -32 -2 q-4 -10 2 -18 z" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
@@ -17301,9 +17631,9 @@ function BodyMap({ onSelect, counts }) {
         <path d="M200 300 q12 34 22 58 q8 18 14 30"/><path d="M214 296 q12 34 22 58 q8 18 14 30"/>
       </g>
 
-      <path d="M182 268 q20 12 38 2 q8 22 14 42 q6 20 11 38 q4 16 7 28 q3 10 4 16 q-8 5 -16 2 q-3 -14 -7 -28 q-7 -26 -14 -46 q-8 -24 -17 -38 q-10 -10 -20 -16 z" fill="url(#ut-fx)" stroke="#9A5C17" strokeWidth="0.95"/>
-      <path d="M224 264 q12 7 19 0 q7 19 12 38 q5 18 8 32 q3 14 5 24 q2 8 3 13 q-7 5 -14 1 q-3 -14 -6 -27 q-6 -26 -12 -45 q-6 -22 -12 -30 q-2 -4 -3 -6 z" fill="url(#ut-ex)" stroke="#9A5C17" strokeWidth="0.9"/>
-      <path d="M177 272 q-6 22 1 44 q6 20 15 37 q6 12 10 20 q3 6 5 10 q7 -2 6 -11 q-6 -14 -13 -30 q-10 -24 -16 -44 q-5 -17 -7 -27 q-1 -3 -1 1 z" fill="url(#ut-brd)" stroke="#9A5C17" strokeWidth="0.9"/>
+      <path d="M183 266 q22 14 42 0 q10 28 18 52 q9 26 14 46 q4 16 6 26 q-11 6 -23 2 q-4 -18 -9 -36 q-9 -30 -19 -52 q-12 -26 -23 -34 q-4 -2 -6 -4 z" fill="url(#ut-fx)" stroke="#9A5C17" strokeWidth="0.95"/>
+      <path d="M225 264 q14 8 21 -2 q8 24 14 46 q6 22 9 38 q3 14 4 23 q-9 6 -18 1 q-2 -14 -5 -28 q-7 -28 -14 -48 q-7 -22 -11 -30 z" fill="url(#ut-ex)" stroke="#9A5C17" strokeWidth="0.9"/>
+      <path d="M176 270 q-5 24 3 48 q8 24 18 43 q6 12 10 19 q9 -2 8 -12 q-6 -13 -13 -28 q-12 -28 -18 -48 q-6 -20 -8 -30 z" fill="url(#ut-brd)" stroke="#9A5C17" strokeWidth="0.9"/>
       <g stroke="#9A5C17" strokeWidth="0.6" fill="none" opacity="0.5">
         <path d="M194 280 q14 42 25 78"/><path d="M209 277 q12 42 21 76"/><path d="M226 273 q10 38 17 68"/>
       </g>
@@ -17317,40 +17647,49 @@ function BodyMap({ onSelect, counts }) {
         <path d="M260 424 q9 -4 15 2 q4 6 -2 9 q-9 4 -15 -2 q-2 -5 2 -9 z"/>
       </g>
 
+      <g stroke="#F0C9BE" strokeWidth="9" fill="none" strokeLinecap="round" opacity="0.85">
+        <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
+      </g>
       <g stroke="#E8E0CE" strokeWidth="4" fill="none" strokeLinecap="round">
         <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
       </g>
       <g stroke="#8A7B5F" strokeWidth="0.6" fill="none" opacity="0.55">
         <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
       </g>
+      <g stroke="#F0C9BE" strokeWidth="7.5" fill="none" strokeLinecap="round" opacity="0.8">
+        <path d="M248 478 l-4 28"/><path d="M264 482 l0 32"/><path d="M282 478 l6 30"/><path d="M300 468 l10 24"/>
+      </g>
       <g stroke="#E8E0CE" strokeWidth="3.4" fill="none" strokeLinecap="round">
         <path d="M248 478 l-4 28"/><path d="M264 482 l0 32"/><path d="M282 478 l6 30"/><path d="M300 468 l10 24"/>
       </g>
 
-      <path d="M241 432 q-11 6 -19 16" stroke="#E8E0CE" strokeWidth="6" fill="none" strokeLinecap="round"/>
-      <path d="M241 432 q-11 6 -19 16" stroke="#8A7B5F" strokeWidth="0.6" fill="none" opacity="0.55"/>
-      <path d="M222 448 q-8 7 -14 14" stroke="#E8E0CE" strokeWidth="5" fill="none" strokeLinecap="round"/>
-      <path d="M222 448 q-8 7 -14 14" stroke="#8A7B5F" strokeWidth="0.55" fill="none" opacity="0.55"/>
-      <path d="M208 462 q-6 6 -10 11" stroke="#E8E0CE" strokeWidth="4.2" fill="none" strokeLinecap="round"/>
-      <path d="M208 462 q-6 6 -10 11" stroke="#8A7B5F" strokeWidth="0.5" fill="none" opacity="0.55"/>
+      <path d="M292 430 q11 6 19 16" stroke="#F0C9BE" strokeWidth="12" fill="none" strokeLinecap="round" opacity="0.85"/>
+      <path d="M292 430 q11 6 19 16" stroke="#E8E0CE" strokeWidth="6" fill="none" strokeLinecap="round"/>
+      <path d="M292 430 q11 6 19 16" stroke="#8A7B5F" strokeWidth="0.6" fill="none" opacity="0.55"/>
+      <path d="M311 446 q8 7 14 14" stroke="#F0C9BE" strokeWidth="10" fill="none" strokeLinecap="round" opacity="0.82"/>
+      <path d="M311 446 q8 7 14 14" stroke="#E8E0CE" strokeWidth="5" fill="none" strokeLinecap="round"/>
+      <path d="M311 446 q8 7 14 14" stroke="#8A7B5F" strokeWidth="0.55" fill="none" opacity="0.55"/>
+      <path d="M325 460 q6 6 10 11" stroke="#F0C9BE" strokeWidth="8.4" fill="none" strokeLinecap="round" opacity="0.8"/>
+      <path d="M325 460 q6 6 10 11" stroke="#E8E0CE" strokeWidth="4.2" fill="none" strokeLinecap="round"/>
+      <path d="M325 460 q6 6 10 11" stroke="#8A7B5F" strokeWidth="0.5" fill="none" opacity="0.55"/>
 
-      <path d="M244 418 q-16 10 -20 30 q-4 20 4 32 q10 6 16 -4 q-8 -16 -6 -30 q2 -16 10 -26 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.9"/>
-      <path d="M240 430 q-10 5 -17 15 q-3 5 -1 9 q6 4 10 -1 q3 -8 9 -14 q3 -4 1 -8 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.8"/>
-      <path d="M282 418 q16 8 20 26 q4 18 -4 30 q-10 4 -14 -6 q4 -16 2 -28 q-2 -14 -4 -22 z" fill="url(#ut-hy)" stroke="#9C3C31" strokeWidth="0.9"/>
-      <path d="M244 426 q24 10 42 -4 q6 16 4 30 q-25 12 -50 2 q-2 -16 4 -28 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.85" opacity="0.9"/>
+      <path d="M284 418 q13 9 16 26 q3 17 -3 27 q-8 5 -13 -3 q6 -14 5 -26 q-2 -14 -8 -22 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.9"/>
+      <path d="M290 428 q10 5 17 15 q3 5 1 9 q-6 4 -10 -1 q-3 -8 -9 -14 q-3 -4 -1 -8 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.8"/>
+      <path d="M250 418 q-13 7 -16 23 q-3 16 3 26 q8 4 12 -5 q-4 -14 -2 -25 q2 -12 3 -19 z" fill="url(#ut-hy)" stroke="#9C3C31" strokeWidth="0.9"/>
+      <path d="M244 424 q26 11 46 -4 q7 17 5 32 q-27 13 -54 2 q-2 -17 3 -30 z" fill="url(#ut-th)" stroke="#9C3C31" strokeWidth="0.85" opacity="0.9"/>
       <g stroke="#9C3C31" strokeWidth="0.6" fill="none" opacity="0.55">
-        <path d="M254 436 l-2 20"/><path d="M266 436 l0 22"/><path d="M278 434 l4 22"/>
+        <path d="M256 436 l-2 20"/><path d="M268 436 l0 22"/><path d="M280 434 l4 22"/>
       </g>
 
       <g fill="none" strokeLinecap="round">
         <path d="M48 24 q22 14 34 28 M48 40 q24 12 34 26 M48 56 q24 10 32 24 M48 72 q22 10 30 22" stroke="#F0C64A" strokeWidth="2" opacity="0.85"/>
-        <path d="M82 54 q18 10 26 24 q12 20 16 40" stroke="#F0C64A" strokeWidth="3.6" opacity="0.92"/>
+        <path d="M82 48 q18 10 26 24 q12 20 16 40" stroke="#F0C64A" strokeWidth="3.6" opacity="0.92"/>
         <path d="M132 122 q16 42 30 82 q14 36 26 66 q11 26 20 44" stroke="#F0C64A" strokeWidth="3" opacity="0.9"/>
         <path d="M192 320 q11 32 20 56 q6 14 11 22" stroke="#F0C64A" strokeWidth="2.4" opacity="0.85"/>
-        <path d="M232 404 q7 14 12 24" stroke="#F0C64A" strokeWidth="2" opacity="0.8"/>
+        <path d="M232 404 q14 12 28 18 q16 6 28 6" stroke="#F0C64A" strokeWidth="2" opacity="0.8"/>
         <path d="M128 118 q20 36 28 70 q8 28 6 48" stroke="#7FD4DC" strokeWidth="2.8" opacity="0.88"/>
         <path d="M162 240 q14 36 23 64 q6 20 8 36" stroke="#7FD4DC" strokeWidth="2.4" opacity="0.82"/>
-        <path d="M200 346 q11 30 19 52" stroke="#7FD4DC" strokeWidth="2" opacity="0.78"/>
+        <path d="M200 346 q11 30 19 52 q6 14 20 18" stroke="#7FD4DC" strokeWidth="2" opacity="0.78"/>
         <path d="M140 116 q24 30 32 64 q6 26 2 44" stroke="#C58ED8" strokeWidth="2.4" opacity="0.75"/>
         <path d="M176 232 q15 32 22 60" stroke="#C58ED8" strokeWidth="2" opacity="0.7"/>
       </g>
@@ -17406,7 +17745,7 @@ function RegionPicker({ onSelect, onBack }) {
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
         <h1 className="text-[26px] font-bold mb-1" style={{ color: T.ink }}>UpperTrack</h1>
         <p className="text-[14px] mb-3" style={{ color: T.inkSoft }}>Tap the affected region.</p>
-        <div className="rounded-2xl overflow-hidden" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+        <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[440px]" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
           <BodyMap onSelect={onSelect} counts={counts} />
         </div>
       </div>
@@ -18027,17 +18366,35 @@ function TemplateSearch({ onSelect, onClose }) {
 // this visit, reusing the same flat searchable listing as TemplateSearch but
 // with multi-select (tap to toggle) instead of navigate-on-tap, since a
 // follow-up visit commonly covers more than one coexisting diagnosis.
-function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) {
+// Shared by the Follow-up and Post-operative flows. Presenting all 69
+// diagnoses at once made these screens a wall of text, so selection now
+// goes through the same anatomical region picker as a New Visit: pick a
+// region, then pick within it. Search still spans every region and skips
+// the region step, because when you already know the diagnosis name that
+// is the fastest route.
+//
+// Selections persist across region changes, so a patient being reviewed
+// for problems in two regions can be assembled without losing the first
+// set - which is why the count lives in the footer rather than the list.
+function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, title }) {
   const [query, setQuery] = useState("");
+  const [regionKey, setRegionKey] = useState(null);
 
-  // Grouped by region (Hand further by subsection), in REGIONS' own natural
-  // order - same grouping approach as TemplateSearch, and shared by both the
-  // Follow-up Visit and Post-operative Follow-up flows since they both use
-  // this picker.
+  const counts = useMemo(() => {
+    const c = {};
+    Object.entries(REGIONS).forEach(([key, r]) => { c[key] = getRegionConditions(r).length; });
+    return c;
+  }, []);
+
+  const searching = query.trim().length > 0;
+
   const groupedResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     const groups = [];
-    for (const region of Object.values(REGIONS)) {
+    const regionEntries = searching
+      ? Object.entries(REGIONS)
+      : Object.entries(REGIONS).filter(([key]) => key === regionKey);
+    for (const [, region] of regionEntries) {
       if (region.subsections) {
         for (const sub of region.subsections) {
           const items = sub.conditions.filter((c) => !q || c.name.toLowerCase().includes(q));
@@ -18049,17 +18406,55 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) 
       }
     }
     return groups;
-  }, [query]);
+  }, [query, regionKey, searching]);
+
+  const showRegionPicker = !searching && !regionKey;
 
   return (
     <div className="fixed inset-0 z-30 flex flex-col" style={{ background: T.bg }}>
       <div className="flex items-center gap-2 px-3 py-3 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
-        <button onClick={onBack} className="p-2 -ml-1 active:opacity-60"><ArrowLeft size={22} color={T.ink} /></button>
-        <div className="flex-1">
-          <div className="font-bold text-[15px]" style={{ color: T.ink }}>Follow-up Visit</div>
-          <div className="text-[12px]" style={{ color: T.inkSoft }}>Select the diagnosis (or diagnoses) being reviewed</div>
+        <button
+          onClick={() => (regionKey && !searching ? setRegionKey(null) : onBack())}
+          className="p-2 -ml-1 active:opacity-60"
+          aria-label="Back"
+        >
+          <ArrowLeft size={22} color={T.ink} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-[15px]" style={{ color: T.ink }}>{title || "Follow-up Visit"}</div>
+          <div className="text-[12px] truncate" style={{ color: T.inkSoft }}>
+            {showRegionPicker
+              ? "Tap the region being reviewed"
+              : searching
+                ? "Searching all regions"
+                : `${REGIONS[regionKey].label} \u2014 select the diagnosis (or diagnoses)`}
+          </div>
         </div>
       </div>
+
+      {regionKey && !searching && (
+        <div className="px-3 pt-3">
+          <div className="max-w-2xl lg:max-w-4xl mx-auto">
+            <button
+              onClick={() => setRegionKey(null)}
+              className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 active:scale-95 transition"
+              style={{ background: T.tealTint, border: `1px solid ${T.teal}`, minHeight: 48 }}
+            >
+              <ArrowLeft size={17} color={T.tealDark} />
+              <span className="flex-1 text-left min-w-0">
+                <span className="block text-[13.5px] font-bold truncate" style={{ color: T.tealDark }}>
+                  Choose a different region
+                </span>
+                <span className="block text-[11.5px] truncate" style={{ color: T.inkSoft }}>
+                  Showing {REGIONS[regionKey].label}
+                  {selectedIds.length ? ` · ${selectedIds.length} selected so far (kept)` : ""}
+                </span>
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="px-3 pt-3">
         <div className="max-w-2xl lg:max-w-4xl mx-auto flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
           <Search size={17} color={T.inkSoft} />
@@ -18067,7 +18462,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) 
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search diagnoses…"
+            placeholder="Search all diagnoses…"
             className="flex-1 bg-transparent py-2.5 text-[15px] outline-none"
             style={{ color: T.ink }}
           />
@@ -18076,9 +18471,14 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) 
           )}
         </div>
       </div>
+
       <div className="px-3 pt-3 pb-28" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div className="max-w-2xl lg:max-w-4xl mx-auto">
-          {groupedResults.length === 0 ? (
+          {showRegionPicker ? (
+            <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[440px]" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+              <BodyMap onSelect={setRegionKey} counts={counts} />
+            </div>
+          ) : groupedResults.length === 0 ? (
             <div className="rounded-2xl p-6 text-center mt-4" style={{ background: T.surface, border: `1px dashed ${T.borderStrong}` }}>
               <div className="text-[14px] font-medium" style={{ color: T.ink }}>No diagnoses match "{query}"</div>
             </div>
@@ -18095,7 +18495,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) 
                           key={condition.id}
                           onClick={() => onToggle(condition.id)}
                           className="rounded-2xl px-4 py-3.5 flex items-center justify-between text-left active:scale-95 transition"
-                          style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 52 }}
+                          style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 52, boxShadow: T.shadowCard }}
                         >
                           <span className="font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>{condition.name}</span>
                           {active ? <CheckCircle2 size={20} color={T.teal} /> : <Circle size={20} color={T.borderStrong} />}
@@ -18109,13 +18509,14 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) 
           )}
         </div>
       </div>
+
       <div className="fixed bottom-0 left-0 right-0 px-3 py-3" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
         <div className="max-w-2xl lg:max-w-4xl mx-auto">
           <button
             onClick={onContinue}
             disabled={!selectedIds.length}
             className="w-full rounded-xl px-4 py-3.5 font-semibold text-[15px] active:scale-95 transition"
-            style={{ background: selectedIds.length ? T.teal : T.slateChip, color: selectedIds.length ? "#fff" : T.inkSoft, minHeight: 50 }}
+            style={{ background: selectedIds.length ? T.gradientTeal : T.slateChip, color: selectedIds.length ? "#fff" : T.inkSoft, minHeight: 50 }}
           >
             {selectedIds.length ? `Continue with ${selectedIds.length} diagnos${selectedIds.length === 1 ? "is" : "es"}` : "Select at least one diagnosis"}
           </button>
@@ -18123,6 +18524,117 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack }) 
       </div>
     </div>
   );
+}
+
+/* ============================================================================
+   OUTCOME SCORE CALCULATORS
+
+   Formulas below were verified against published sources rather than written
+   from memory, because a miscalculated score entering a patient record is a
+   real clinical risk. Two things are easy to get wrong and worth stating
+   plainly in code:
+
+     - The instruments run in OPPOSITE directions. On ASES and SANE a HIGHER
+       number is a better shoulder. On QuickDASH and VAS a HIGHER number is
+       worse. Every score therefore carries its own direction label, which is
+       printed in the note so the number can never be read the wrong way.
+     - Missing-item rules differ per instrument and are not interchangeable.
+
+   LICENSING NOTE: QuickDASH is copyright the Institute for Work & Health.
+   It is free to use only where it is not sold or bundled into a product that
+   is sold, must be used unmodified, and requires an Intent to Use form to be
+   submitted to IWH. It is therefore NOT shipped with item wording here; the
+   scoring engine exists and can be enabled once licensing is settled. ASES,
+   SANE and VAS are implemented in full.
+============================================================================ */
+
+// ASES (American Shoulder and Elbow Surgeons) shoulder score.
+// Verified formula: [(10 - VAS pain) x 5] + [(5/3) x cumulative ADL],
+// where pain VAS is 0-10 and each of 10 ADL items scores 0-3.
+// Range 0-100, higher = better.
+const ASES_ADL_ITEMS = [
+  { key: "coat", label: "Put on a coat" },
+  { key: "sleep", label: "Sleep on the painful or affected side" },
+  { key: "washBack", label: "Wash back / do up bra" },
+  { key: "toilet", label: "Manage toileting" },
+  { key: "comb", label: "Comb hair" },
+  { key: "shelf", label: "Reach a high shelf" },
+  { key: "lift", label: "Lift 10 lb above shoulder" },
+  { key: "throw", label: "Throw a ball overhand" },
+  { key: "work", label: "Do usual work" },
+  { key: "sport", label: "Do usual sport" },
+];
+const ASES_ADL_OPTIONS = [
+  { value: 0, label: "Unable to do" },
+  { value: 1, label: "Very difficult" },
+  { value: 2, label: "Somewhat difficult" },
+  { value: 3, label: "Not difficult" },
+];
+
+function scoreASES(state) {
+  const s = state.asesScore || {};
+  const pain = s.pain;
+  if (pain == null) return { value: null, reason: "Pain rating is required (it carries 50 of the 100 points)." };
+  const answered = ASES_ADL_ITEMS.filter((i) => s[i.key] != null);
+  // Published handling: the pain item is mandatory; up to 4 missing ADL
+  // items are tolerated by imputing the mean of those answered.
+  if (answered.length < 6) {
+    return { value: null, reason: `Needs at least 6 of 10 activity items (${answered.length} answered).` };
+  }
+  const sum = answered.reduce((t, i) => t + Number(s[i.key]), 0);
+  const cumulative = answered.length === 10 ? sum : (sum / answered.length) * 10;
+  const value = (10 - Number(pain)) * 5 + (5 / 3) * cumulative;
+  return {
+    value: Math.round(value * 10) / 10,
+    imputed: answered.length < 10 ? 10 - answered.length : 0,
+  };
+}
+
+// SANE (Single Assessment Numeric Evaluation): one question, 0-100%,
+// higher = better. No licence restriction.
+function scoreSANE(state) {
+  const v = state.saneScore;
+  if (v == null || v === "") return { value: null, reason: "Not recorded." };
+  return { value: Number(v) };
+}
+
+// QuickDASH. Verified formula: [(sum of n responses / n) - 1] x 25 with
+// each item scored 1-5, requiring at least 10 of 11 items. Range 0-100,
+// higher = MORE disability. Engine only - see licensing note above.
+// Note on rounding: some published worked examples round the item mean
+// before transforming, which shifts the result by ~0.1. This computes the
+// transform on the unrounded mean and rounds only at the end, which is the
+// mathematically correct order.
+function scoreQuickDASH(responses) {
+  const vals = (responses || []).filter((v) => v != null).map(Number);
+  if (vals.length < 10) {
+    return { value: null, reason: `Needs at least 10 of 11 items (${vals.length} answered).` };
+  }
+  const sum = vals.reduce((t, v) => t + v, 0);
+  return { value: Math.round(((sum / vals.length - 1) * 25) * 10) / 10 };
+}
+
+// Direction matters more than the number: printed alongside every score so
+// it cannot be read backwards by whoever reads the note later.
+const SCORE_DIRECTION = {
+  ases: "higher is better (0-100)",
+  sane: "higher is better (0-100%)",
+  vas: "higher is worse (0-10)",
+  quickdash: "higher is worse (0-100)",
+};
+
+function buildOutcomeScores(condition, state) {
+  const lines = [];
+  if (condition.region === "shoulder") {
+    const ases = scoreASES(state);
+    if (ases.value != null) {
+      lines.push(`\u2022 ASES: ${ases.value} \u2014 ${SCORE_DIRECTION.ases}${ases.imputed ? ` (${ases.imputed} activity item${ases.imputed === 1 ? "" : "s"} not answered; remaining items averaged)` : ""}`);
+    }
+  }
+  const sane = scoreSANE(state);
+  if (sane.value != null) lines.push(`\u2022 SANE: ${sane.value}% \u2014 ${SCORE_DIRECTION.sane}`);
+  if (state.vas != null) lines.push(`\u2022 Pain VAS: ${state.vas}/10 \u2014 ${SCORE_DIRECTION.vas}`);
+  return lines.length ? lines.join("\n") : null;
 }
 
 /* ============================================================================
@@ -18238,6 +18750,7 @@ export default function App() {
 
       {screen.view === "followupSelect" && (
         <FollowupConditionPicker
+          title="Follow-up Visit"
           selectedIds={followupSelectedIds}
           onToggle={toggleFollowupSelection}
           onContinue={continueToFollowupVisit}
@@ -18247,6 +18760,7 @@ export default function App() {
 
       {screen.view === "postopSelect" && (
         <FollowupConditionPicker
+          title="Post-operative Follow-up"
           selectedIds={followupSelectedIds}
           onToggle={toggleFollowupSelection}
           onContinue={continueToPostopVisit}
