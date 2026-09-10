@@ -17403,7 +17403,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
   );
 
   return (
-    <div className="fixed left-0 right-0 bottom-0 z-30 flex flex-col" style={{ top: 56, background: T.bg }}>{/* top offset clears SessionBar (sticky, ~48-52px tall) - fixed positioning otherwise ignores it entirely and starts at the true viewport top, letting SessionBar's higher z-index paint over this screen's own header */}
+    <div className="flex flex-col" style={{ height: "calc(100vh - 56px)", background: T.bg }}>
       <div className="flex items-center gap-2 px-3 lg:px-6 py-3 lg:py-4 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button
           onClick={() => (regionKey ? setRegionKey(null) : onBack())}
@@ -17471,17 +17471,33 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
             <BodyMap onSelect={setRegionKey} counts={counts} activeRegion={regionKey} uid="fpd" />
           </div>
         </div>
-        <div className="flex-1 min-w-0" style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-          {showRegionPicker ? (
-            <div className="h-full flex items-center justify-center min-h-[240px]">
-              <div className="text-[14.5px] text-center max-w-xs" style={{ color: T.inkSoft }}>Tap a region on the left to see its diagnoses.</div>
-            </div>
-          ) : resultsList}
+        <div className="flex-1 min-w-0 flex flex-col" style={{ minHeight: 0 }}>
+          <div className="flex-1 min-h-0" style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+            {showRegionPicker ? (
+              <div className="h-full flex items-center justify-center min-h-[240px]">
+                <div className="text-[14.5px] text-center max-w-xs" style={{ color: T.inkSoft }}>Tap a region on the left to see its diagnoses.</div>
+              </div>
+            ) : resultsList}
+          </div>
+          <div className="pt-4 shrink-0">
+            <button
+              onClick={onContinue}
+              disabled={!selectedIds.length}
+              className="w-full rounded-xl px-4 py-3.5 font-semibold text-[15px] active:scale-95 transition"
+              style={{ background: selectedIds.length ? T.gradientTeal : T.slateChip, color: selectedIds.length ? "#fff" : T.inkSoft, minHeight: 50 }}
+            >
+              {selectedIds.length ? `Continue with ${selectedIds.length} diagnos${selectedIds.length === 1 ? "is" : "es"}` : "Select at least one diagnosis"}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 px-3 py-3" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
-        <div className="max-w-2xl lg:max-w-4xl mx-auto">
+      {/* MOBILE ONLY footer - the desktop two-pane layout above has its own
+          Continue button scoped to the right column, so it never covers
+          the map's Peripheral Nerve band the way a viewport-wide fixed
+          footer would. */}
+      <div className="fixed bottom-0 left-0 right-0 px-3 py-3 lg:hidden" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
+        <div className="max-w-2xl mx-auto">
           <button
             onClick={onContinue}
             disabled={!selectedIds.length}
