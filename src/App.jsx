@@ -16451,7 +16451,7 @@ function BodyMap({ onSelect, counts }) {
   ];
   const n = (k) => (counts && counts[k] != null ? counts[k] : 0);
   return (
-    <svg viewBox="0 0 348 610" width="100%" preserveAspectRatio="xMidYMid meet" style={{ display: "block", width: "100%", height: "auto", maxHeight: "min(68vh, 660px)" }} role="group" aria-label="Upper limb region picker">
+    <svg viewBox="0 0 348 610" width="100%" preserveAspectRatio="xMidYMid meet" style={{ display: "block", width: "100%", height: "auto", maxHeight: "min(78vh, 900px)" }} role="group" aria-label="Upper limb region picker">
       <defs>
         <linearGradient id="ut-d1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#8FCDEC"/><stop offset="100%" stopColor="#3B87BD"/></linearGradient>
         <linearGradient id="ut-d2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#6FB9E0"/><stop offset="100%" stopColor="#276F9F"/></linearGradient>
@@ -16628,15 +16628,15 @@ function RegionPicker({ onSelect, onBack }) {
   const counts = {};
   Object.entries(REGIONS).forEach(([key, r]) => { counts[key] = getRegionConditions(r).length; });
   return (
-    <div className="min-h-screen px-4 pt-4 pb-8" style={{ background: T.bg }}>
-      <div className="max-w-2xl lg:max-w-4xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-1.5 mb-4 active:opacity-60" style={{ color: T.inkSoft }}>
-          <ArrowLeft size={18} /><span className="text-[14px] font-medium">Home</span>
+    <div className="min-h-screen px-4 lg:px-8 pt-4 lg:pt-8 pb-8" style={{ background: T.bg }}>
+      <div className="max-w-2xl lg:max-w-5xl mx-auto">
+        <button onClick={onBack} className="flex items-center gap-1.5 mb-4 lg:mb-6 active:opacity-60" style={{ color: T.inkSoft }}>
+          <ArrowLeft size={18} className="lg:hidden" /><ArrowLeft size={22} className="hidden lg:block" /><span className="text-[14px] lg:text-[17px] font-medium">Home</span>
         </button>
-        <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
-        <h1 className="text-[26px] font-bold mb-1" style={{ color: T.ink }}>UpperTrack</h1>
-        <p className="text-[14px] mb-3" style={{ color: T.inkSoft }}>Tap the affected region.</p>
-        <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[440px]" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+        <div className="text-[12px] lg:text-[14px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
+        <h1 className="text-[26px] lg:text-[40px] font-bold mb-1" style={{ color: T.ink }}>UpperTrack</h1>
+        <p className="text-[14px] lg:text-[17px] mb-3 lg:mb-5" style={{ color: T.inkSoft }}>Tap the affected region.</p>
+        <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[560px] xl:max-w-[640px]" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
           <BodyMap onSelect={onSelect} counts={counts} />
         </div>
       </div>
