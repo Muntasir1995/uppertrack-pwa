@@ -13417,16 +13417,22 @@ function fieldClause(field, state) {
       const list = humanizeList(rawItems, { preserveCase: isNamedTestList });
       if (!list) return null;
       // A lone "None"/"Normal" answer reads badly through the "included"
-      // phrasings below ("symptoms included none"), so it's handled up
-      // front for every checkbox rather than only in the generic fallback.
-      if (label && rawItems.length === 1 && EXCLUSIVE_OPTION_RE.test(rawItems[0]) && !/^typicalPresentation/i.test(key) && !/inspection|palpation/i.test(key)) {
-        return `${lowerLabel}: ${lowerListItem(rawItems[0])}`;
+      // phrasings below ("symptoms included none"). Phrased with "was"
+      // rather than a colon, because these clauses sit inside a bullet that
+      // already opens with its own heading and colon - a colon here would
+      // nest a second one ("Other findings: neurovascular: normal").
+      // Keys whose clauses are a bare list are excluded so they aren't
+      // intercepted here and given back the label they just shed.
+      if (label && rawItems.length === 1 && EXCLUSIVE_OPTION_RE.test(rawItems[0])
+          && !/^typicalPresentation/i.test(key) && !/inspection|palpation/i.test(key)
+          && !/symptom/i.test(key) && !/prevTreatment/i.test(key) && !/functionalLimit/i.test(key)) {
+        return `${lowerLabel} was ${lowerListItem(rawItems[0])}`;
       }
       if (/^typicalPresentation/i.test(key)) return `the presentation was consistent with ${list}`;
       if (/affectedDigit/i.test(key)) return `this affects the ${list} digit${(state[key] || []).length === 1 ? "" : "s"}`;
-      if (/symptom/i.test(key)) return `symptoms included ${list}`;
-      if (/functionalLimit/i.test(key)) return `functional limitation was reported with ${list}`;
-      if (/prevTreatment/i.test(key)) return `previous treatment included ${list}`;
+      if (/symptom/i.test(key)) return list;
+      if (/functionalLimit/i.test(key)) return `difficulty with ${list}`;
+      if (/prevTreatment/i.test(key)) return list;
       if (/(medHistory|relevantHistory)/i.test(key)) return `relevant medical history included ${list}`;
       if (/riskFactor/i.test(key)) return `relevant risk factors included ${list}`;
       if (/mechanismOfInjury/i.test(key)) return `the mechanism of injury was ${list}`;
@@ -13488,7 +13494,7 @@ function fieldClause(field, state) {
       if (/^onset$/i.test(key)) return `onset was ${lowerFirst(v)}`;
       if (/^affectedDigit$/i.test(key)) return `this affects the ${lowerFirst(v)} digit`;
       if (/^treatmentResponse$/i.test(key)) return `the response to treatment was ${lowerListItem(v)}`;
-      if (/symptomProgression/i.test(key)) return `symptoms have been ${v.toLowerCase()} since onset`;
+      if (/symptomProgression/i.test(key)) return `these have been ${v.toLowerCase()} since onset`;
       if (/^mechanism$/i.test(key)) return `the mechanism was ${lowerFirst(v)}`;
       if (/workDemand/i.test(key)) return `work demand is ${lowerFirst(v)}`;
       if (/activityLevel/i.test(key)) return `activity level is ${lowerFirst(v)}`;
@@ -13507,6 +13513,10 @@ function fieldClause(field, state) {
       if (label && /\s/.test(v) && /(absent|present)$/i.test(v)) {
         return `${lowerLabel}: ${lowerFirst(v)}`;
       }
+      // "weakness was none" / "pain was none" reads as a form field rather
+      // than prose; a clinician writes "no weakness". Handled generically
+      // so it covers every select whose value is None/Nil/Absent.
+      if (label && /^(none|nil|absent)$/i.test(String(v).trim())) return `no ${lowerLabel}`;
       if (label) return `${lowerLabel} was ${lowerListItem(v)}`;
       return v;
     }
@@ -13531,7 +13541,7 @@ function fieldClause(field, state) {
       if (/^occupation/i.test(key)) return `works as a ${v}`;
       if (/^(sport|hobby|hobbies|sportHobby)$/i.test(key)) return `participates in ${v}`;
       if (/notable finding$/i.test(label)) return v;
-      if (label) return `${lowerLabel}: ${v}`;
+      if (label) return `${lowerLabel} was ${v}`;
       return v;
     }
     case "date": {
@@ -14589,6 +14599,28 @@ function patientScheduledForSurgery(state) {
   return false;
 }
 
+// Follow-up intervals are a mix of true durations ("6 weeks", "3-6 months")
+// and non-duration milestones ("Annual", "Discharge", "Return to play").
+// A single "reviewed at X" frame produced "reviewed at Annual", so each
+// shape gets phrasing that actually reads as English. Discharge is not a
+// review at all, so it returns a different sentence entirely.
+function reviewPlanSentence(interval, assessText) {
+  const v = String(interval).trim();
+  if (/^discharge$/i.test(v)) return "The patient will be discharged from follow-up.";
+  let phrase;
+  if (/^annual/i.test(v)) phrase = "annually";
+  else if (/^final$/i.test(v)) phrase = "at the final review";
+  else if (/^return to play$/i.test(v)) phrase = "at return to play";
+  else if (/^injury day$/i.test(v)) phrase = "on the day of injury";
+  // Anything starting with a digit is a duration ("6 weeks", "3-6 months",
+  // "3-7 days (if repaired)"), which reads naturally after "in".
+  else if (/^\d/.test(v)) phrase = `in ${v}`;
+  else phrase = `at ${lowerFirst(v)}`;
+  return assessText
+    ? `The patient will be reviewed ${phrase}, when ${lowerFirst(assessText)} will be assessed.`
+    : `The patient will be reviewed ${phrase}.`;
+}
+
 function buildReviewPlan(condition, state) {
   const followup = condition.sections.find((s) => s.id === "followup");
   let reviewSentence = null;
@@ -14599,9 +14631,7 @@ function buildReviewPlan(condition, state) {
     const selectedInterval = state.followUpInterval === "Other" ? state.followUpIntervalOther : state.followUpInterval;
     if (selectedInterval && selectedInterval.trim()) {
       const matchedRow = tableField && tableField.rows && tableField.rows.find((r) => r.left === selectedInterval);
-      reviewSentence = matchedRow
-        ? `The patient will be reviewed at ${selectedInterval}, when ${lowerFirst(matchedRow.right)} will be assessed.`
-        : `The patient will be reviewed at ${selectedInterval}.`;
+      reviewSentence = reviewPlanSentence(selectedInterval, matchedRow ? matchedRow.right : null);
     }
     // Deliberately no fallback here. Previously this defaulted to the
     // condition's first standard-follow-up row when no interval had been
@@ -14613,8 +14643,21 @@ function buildReviewPlan(condition, state) {
 
     const followUpReasons = (state.followUpReason || []).filter((r) => r !== "Other");
     if ((state.followUpReason || []).includes("Other") && state.followUpReasonOther && state.followUpReasonOther.trim()) followUpReasons.push(state.followUpReasonOther.trim());
-    if (followUpReasons.length && reviewSentence) {
-      reviewSentence += ` The reason for follow-up is ${lowerFirst(humanizeList(followUpReasons))}.`;
+    // If the patient is being discharged there is no follow-up, so stating
+    // a reason for one contradicts the sentence immediately before it.
+    const beingDischarged = /^discharge$/i.test(String(selectedInterval || "").trim());
+    if (followUpReasons.length && reviewSentence && !beingDischarged) {
+      // Reason options mix verb phrases ("Monitor for progression",
+      // "Reassess symptoms and function") with noun phrases ("Pre-operative
+      // planning", "Routine review of treatment progress"). "The reason is
+      // monitor for progression" is ungrammatical, so verb-initial reasons
+      // take an infinitive "to" and noun-initial ones are left as they are.
+      const VERB_INITIAL = /^(monitor|reassess|review|assess|check|confirm|exclude|consider|discuss|repeat|plan)\b/i;
+      const phrased = followUpReasons.map((r) => {
+        const t = String(r).trim();
+        return VERB_INITIAL.test(t) ? `to ${lowerFirst(t)}` : lowerFirst(t);
+      });
+      reviewSentence += ` Follow-up is ${humanizeList(phrased)}.`;
     }
   }
   // Any genuinely entered follow-up/healing-dashboard data (as opposed to
@@ -16267,7 +16310,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
-            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>This clears every entry for {condition.name} \u2014 history, examination, pathway progress, and red flags \u2014 so it's ready for the next patient. The template itself stays selected. Other conditions in this session are unaffected. This cannot be undone.</div>
+            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with its history, examination, pathway progress and red flags — and returns to the home screen ready for the next patient. This cannot be undone.</div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmReset(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
               <button onClick={doReset} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.red, color: "#fff" }}>Start new patient</button>
@@ -17822,7 +17865,7 @@ export default function App() {
           onFieldChange={(patch) => updateConditionState(screen.condition.id, patch)}
           session={session}
           onOpenCondition={openCondition}
-          onResetCondition={() => resetCondition(screen.condition.id)}
+          onResetCondition={endSession}
           onBack={() => setScreen({ view: "conditions", regionKey: screen.regionKey })}
           onGoHome={goHome}
         />
