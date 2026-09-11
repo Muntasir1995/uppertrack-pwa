@@ -16383,38 +16383,33 @@ function VisitTypeGate({ onSelect }) {
   return (
     <div className="min-h-screen px-4 pt-10 pb-8 flex items-center" style={{ background: T.bg }}>
       <div className="max-w-md md:max-w-xl mx-auto w-full">
-        <div className="text-[12px] font-semibold uppercase tracking-widest mb-1 text-center" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
-        <h1 className="text-[26px] font-bold mb-1 text-center" style={{ color: T.ink }}>UpperTrack</h1>
-        <p className="text-[14px] mb-7 text-center" style={{ color: T.inkSoft }}>What kind of visit is this?</p>
+        <div className="text-[14px] font-semibold uppercase tracking-widest mb-2 text-center" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
+        <h1 className="text-[36px] font-bold mb-2 text-center" style={{ color: T.ink }}>UpperTrack</h1>
+        <p className="text-[17px] mb-7 text-center" style={{ color: T.inkSoft }}>What kind of visit is this?</p>
         <InstallPrompt />
         <div className="flex flex-col gap-3">
-          <button onClick={() => onSelect("new")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-start gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
-            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 44, height: 44, background: T.gradientTeal }}>
-              <FilePlus size={21} color="#fff" />
+          <button onClick={() => onSelect("new")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
+            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.gradientTeal }}>
+              <FilePlus size={30} color="#fff" />
             </div>
-            <div>
-              <div className="font-bold text-[17px]" style={{ color: T.ink }}>New Visit</div>
-              <div className="text-[13px] mt-1" style={{ color: T.inkSoft }}>First presentation for this problem. Choose a body region and work through the full structured template.</div>
-            </div>
+            <div className="font-bold text-[21px]" style={{ color: T.ink }}>New Visit</div>
           </button>
-          <button onClick={() => onSelect("followup")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-start gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
-            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 44, height: 44, background: T.tealTint }}>
-              <CalendarClock size={21} color={T.tealDark} />
+          <button onClick={() => onSelect("followup")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
+            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.tealTint }}>
+              <CalendarClock size={30} color={T.tealDark} />
             </div>
-            <div>
-              <div className="font-bold text-[17px]" style={{ color: T.ink }}>Follow-up Visit</div>
-              <div className="text-[13px] mt-1" style={{ color: T.inkSoft }}>Reviewing an existing diagnosis. Pick the diagnosis (or diagnoses), then record the reason for review, treatment given, outcome, and the new plan.</div>
-            </div>
+            <div className="font-bold text-[21px]" style={{ color: T.ink }}>Follow-up Visit</div>
           </button>
-          <button onClick={() => onSelect("postop")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-start gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
-            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 44, height: 44, background: T.tealTint }}>
-              <Stethoscope size={21} color={T.tealDark} />
+          <button onClick={() => onSelect("postop")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
+            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.tealTint }}>
+              <Stethoscope size={30} color={T.tealDark} />
             </div>
-            <div>
-              <div className="font-bold text-[17px]" style={{ color: T.ink }}>Post-operative Follow-up</div>
-              <div className="text-[13px] mt-1" style={{ color: T.inkSoft }}>Reviewing a patient after surgery. Record the procedure and surgery date, reason for review, current status, complications, and the follow-up plan.</div>
-            </div>
+            <div className="font-bold text-[21px]" style={{ color: T.ink }}>Post-operative Follow-up</div>
           </button>
+        </div>
+        <div className="text-center mt-8">
+          <div className="text-[12.5px] font-medium" style={{ color: T.inkSoft }}>Created by Dr. Muntasir Al-Naamani</div>
+          <div className="text-[12.5px]" style={{ color: T.inkSoft }}>Suggestions: namanimuntasir@gmail.com</div>
         </div>
       </div>
     </div>
