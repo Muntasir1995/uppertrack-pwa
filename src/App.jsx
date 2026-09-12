@@ -13796,7 +13796,12 @@ function fieldClause(field, state) {
       // this remains the only place the duration is recorded.
       if (/^(timeSinceInjury|timeFromInjury|timeSinceInjurySurgery)$/i.test(key) && state.injuryDate && state.injuryDate.trim()) return null;
       if (/^occupation/i.test(key)) return `works as a ${v}`;
-      if (/^(sport|hobby|hobbies|sportHobby)$/i.test(key)) return `participates in ${v}`;
+      if (/^(sport|hobby|hobbies|sportHobby)$/i.test(key)) {
+        // "None" means no sport - reporting "participates in None" is wrong,
+        // and the absence is not worth a clause of its own.
+        if (/^(none|nil|n\/a)$/i.test(String(v).trim())) return null;
+        return `participates in ${v}`;
+      }
       if (/(notable finding|additional detail)$/i.test(label)) return v;
       if (label) return `${lowerLabel} was ${v}`;
       return v;
@@ -13936,7 +13941,15 @@ function buildDemographics(condition, state) {
   // isn't documented, rather than guessing).
   if (occ && typeof occ === "string" && occ.trim()) {
     const pronoun = gender === "Male" ? "He" : gender === "Female" ? "She" : "The patient";
-    let workSentence = `${pronoun} works as ${/^[aeiou]/i.test(occ.trim()) ? "an" : "a"} ${occ.trim()}`;
+    // "Retired" / "Student" / "Homemaker" describe employment status, not a
+    // job title, so they don't fit the "works as a ..." frame.
+    const occText = occ.trim();
+    const NON_JOB = /^(retired|unemployed|student|homemaker|not working|none)$/i;
+    let workSentence;
+    if (/^retired$/i.test(occText)) workSentence = `${pronoun} is retired`;
+    else if (/^(unemployed|not working)$/i.test(occText)) workSentence = `${pronoun} is not currently working`;
+    else if (NON_JOB.test(occText)) workSentence = `${pronoun} is ${/^[aeiou]/i.test(occText) ? "an" : "a"} ${occText.toLowerCase()}`;
+    else workSentence = `${pronoun} works as ${/^[aeiou]/i.test(occText) ? "an" : "a"} ${occText}`;
     if (work) workSentence += ` with a ${String(work).toLowerCase()} workload`;
     if (status) workSentence += `, currently ${status === "Working" ? "working full duties" : String(status).toLowerCase()}`;
     sentences.push(`${workSentence}.`);
@@ -14055,6 +14068,55 @@ function typicalPresentationSentence(typical, state, region) {
   return `The patient presented with ${regionLabel ? `${sidePrefix}${regionLabel} symptoms: ` : ""}${humanizeList(items)}.`;
 }
 
+// The opening sentence lists the Typical Patient checklist, and the Symptoms
+// bullet lists the recorded pain characteristics. These overlap heavily by
+// design - "night pain" appears in both, "lateral deltoid pain" and "lateral
+// shoulder" say the same thing - so the note repeated itself.
+//
+// Rather than edit the finished text (fragile), redundant entries are removed
+// from the state before clauses are built. An item is dropped only when ALL
+// of its meaningful words already appear in the opening sentence, so anything
+// carrying new information survives: "pain lifting objects" is kept against
+// "weakness lifting away from the body" because "objects" is new.
+const SYMPTOM_STOPWORDS = new Set([
+  "the", "and", "with", "on", "of", "in", "to", "at", "for",
+  "was", "been", "especially", "lying", "side", "affected", "when",
+  "during", "after", "from", "away", "body",
+]);
+function meaningfulWords(text) {
+  return String(text).toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 2 && !SYMPTOM_STOPWORDS.has(w));
+}
+
+function dedupeSymptomsAgainstTypical(typical, state) {
+  if (!typical) return state;
+  const tf = resolveFields(typical.fields, state).find((f) => f.key && /^typicalPresentation/i.test(f.key));
+  const typicalItems = tf ? state[tf.key] : null;
+  if (!typicalItems || !typicalItems.length) return state;
+
+  const covered = new Set();
+  typicalItems.forEach((item) => meaningfulWords(item).forEach((w) => covered.add(w)));
+
+  const next = { ...state };
+  let changed = false;
+  Object.keys(state).forEach((key) => {
+    // Only the fields that render in the Symptoms bullet.
+    if (!/symptom/i.test(key) && !/painChar/i.test(key)) return;
+    if (/symptomProgression/i.test(key)) return;
+    const items = state[key];
+    if (!Array.isArray(items) || !items.length) return;
+    const kept = items.filter((item) => {
+      const words = meaningfulWords(item);
+      if (!words.length) return true;
+      return !words.every((w) => covered.has(w));
+    });
+    if (kept.length !== items.length) {
+      next[key] = kept;
+      changed = true;
+    }
+  });
+  return changed ? next : state;
+}
+
 function buildHistory(condition, state) {
   const typical = condition.sections.find((s) => s.id === "typical");
   const history = condition.sections.find((s) => s.id === "history");
@@ -14068,8 +14130,8 @@ function buildHistory(condition, state) {
   // "presenting complaint" content from either section reads as a single
   // bullet rather than two.
   if (state.side === "Bilateral" && history) {
-    const rightState = { ...state, ...(state.limbData?.right || {}) };
-    const leftState = { ...state, ...(state.limbData?.left || {}) };
+    const rightState = dedupeSymptomsAgainstTypical(typical, { ...state, ...(state.limbData?.right || {}) });
+    const leftState = dedupeSymptomsAgainstTypical(typical, { ...state, ...(state.limbData?.left || {}) });
     const rightGroups = historyGroupsFor(history.fields, rightState);
     const leftGroups = historyGroupsFor(history.fields, leftState);
     const parts = [];
@@ -14083,7 +14145,8 @@ function buildHistory(condition, state) {
     return parts.length ? parts.join("\n\n") : null;
   }
 
-  const historyGroups = history ? historyGroupsFor(history.fields, state) : null;
+  const dedupedState = dedupeSymptomsAgainstTypical(typical, state);
+  const historyGroups = history ? historyGroupsFor(history.fields, dedupedState) : null;
   const mergedText = historyGroupsToText(mergeHistoryGroups(typicalGroups, historyGroups));
   // The opening sentence now already states which side is affected, so
   // there's no separate laterality statement to add here anymore.
