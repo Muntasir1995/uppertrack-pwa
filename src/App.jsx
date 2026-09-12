@@ -16014,6 +16014,67 @@ function CopyLimbButton({ fields, fromState, toState, onApply, fromLabel, toLabe
   );
 }
 
+// Progressive disclosure: each section leads with the fields filled in most
+// consultations and tucks the rest behind one tap. Nothing is removed - a
+// collapsed field still reaches the note if it holds a value, and the group
+// opens automatically when it does, so carried-forward or partly-completed
+// data is never hidden from the clinician.
+//
+// The split is deliberately conservative: it lists what to COLLAPSE rather
+// than what to show, so anything unrecognised stays visible by default.
+// Hiding a field the clinician needs costs a tap every time; showing an
+// extra one costs only scroll, so the asymmetry favours showing.
+const DETAIL_FIELD_RE = new RegExp([
+  // Background/social context - usually recorded once, often carried over
+  "^(dominantArm|dominantHand|dominantHandSide)$",
+  "^(occupation|occupationBeforeInjury|workStatus|workDemand|activityLevel)$",
+  "^(sport|hobbies|competitionLevel)$",
+  // Prior care - relevant but rarely the focus of the current encounter
+  "^(prevTreatment|treatmentResponse|injectionCount|injectionResponse|prevSurgery|previousSurgery)$",
+  "^(medHistory|relevantHistory|riskFactors)$",
+  // Free-text companions: "specify other ..." and imaging "additional detail"
+  "Other$",
+  "Finding$",
+].join("|"));
+
+function isDetailField(field) {
+  return !!(field && field.key && DETAIL_FIELD_RE.test(field.key));
+}
+
+function FieldGroup({ fields, state, setField, region, keyPrefix, dedupeFields }) {
+  const resolved = dedupeFields(fields);
+  const essential = resolved.filter((f) => !isDetailField(f));
+  const detail = resolved.filter((f) => isDetailField(f));
+
+  // Opens itself when anything inside already has a value, so returning to a
+  // partly-filled template never appears to have lost data.
+  const detailHasContent = detail.some((f) => {
+    try { return isFilled(f, state); } catch (e) { return false; }
+  });
+  const [open, setOpen] = useState(false);
+  const showDetail = open || detailHasContent;
+
+  return (
+    <>
+      {essential.map((f, i) => <Field key={`${keyPrefix || "e"}-${i}`} field={f} state={state} setField={setField} region={region} />)}
+      {detail.length > 0 && !showDetail && (
+        <button
+          onClick={() => setOpen(true)}
+          className="w-full flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 mb-3 font-semibold text-[13px] active:scale-95 transition"
+          style={{ background: T.slateChip, border: `1px dashed ${T.borderStrong}`, color: T.inkSoft, minHeight: 44 }}
+        >
+          <ChevronDown size={16} /> More detail ({detail.length})
+        </button>
+      )}
+      {detail.length > 0 && showDetail && (
+        <>
+          {detail.map((f, i) => <Field key={`${keyPrefix || "d"}-detail-${i}`} field={f} state={state} setField={setField} region={region} />)}
+        </>
+      )}
+    </>
+  );
+}
+
 function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome }) {
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
@@ -16138,13 +16199,38 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
     [presentationPool]
   );
 
-  const note = useMemo(
+  const generatedNote = useMemo(
     () => {
       if (noteType === "physio") return buildPhysioReferral(condition, state);
       return noteScope === "session" && hasMultipleActive ? buildCombinedNote(session) : buildNote(condition, state);
     },
     [condition, state, noteScope, noteType, hasMultipleActive, session]
   );
+
+  // Lets the clinician correct or add to the note here rather than pasting
+  // it out and editing it in the record system. Overrides are held per
+  // note variant (clinic note vs physio referral, this condition vs whole
+  // session), because they are different documents - an edit to one must
+  // not silently appear in another.
+  const [noteEdits, setNoteEdits] = useState({});
+  const [editingNote, setEditingNote] = useState(false);
+  const noteVariantKey = `${noteType}:${noteType === "physio" ? "this" : noteScope}`;
+  const override = noteEdits[noteVariantKey];
+  const isEdited = typeof override === "string";
+  const note = isEdited ? override : generatedNote;
+
+  // An edited note is a snapshot - it deliberately stops tracking the form,
+  // otherwise regenerating would silently discard the clinician's wording.
+  // The UI says so explicitly rather than letting them discover it.
+  const setOverride = (text) => setNoteEdits((m) => ({ ...m, [noteVariantKey]: text }));
+  const revertNote = () => {
+    setNoteEdits((m) => {
+      const next = { ...m };
+      delete next[noteVariantKey];
+      return next;
+    });
+    setEditingNote(false);
+  };
 
   const copyNote = async () => {
     const ok = await copyTextRobust(note);
@@ -16467,7 +16553,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                     {sharedFields.map((f, i) => <Field key={`s-${i}`} field={f} state={state} setField={setField} region={condition.region} />)}
                     <LimbHeader limb="right" />
                     {section.id === "exam" && <NormalExamButton fields={limbFields} state={rightLimbState} onApply={(patch) => Object.entries(patch).forEach(([k, v]) => setRightField(k, v))} />}
-                    {limbFields.map((f, i) => <Field key={`r-${i}`} field={f} state={rightLimbState} setField={setRightField} region={condition.region} />)}
+                    <FieldGroup fields={limbFields} state={rightLimbState} setField={setRightField} region={condition.region} keyPrefix={`${section.id}-r`} dedupeFields={dedupeFields} />
                     <LimbHeader limb="left" />
                     <CopyLimbButton
                       fields={limbFields}
@@ -16478,14 +16564,14 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                       onApply={(patch) => Object.entries(patch).forEach(([k, v]) => setLeftField(k, v))}
                     />
                     {section.id === "exam" && <NormalExamButton fields={limbFields} state={leftLimbState} onApply={(patch) => Object.entries(patch).forEach(([k, v]) => setLeftField(k, v))} />}
-                    {limbFields.map((f, i) => <Field key={`l-${i}`} field={f} state={leftLimbState} setField={setLeftField} region={condition.region} />)}
+                    <FieldGroup fields={limbFields} state={leftLimbState} setField={setLeftField} region={condition.region} keyPrefix={`${section.id}-l`} dedupeFields={dedupeFields} />
                   </>
                 );
               })()
             ) : (
               <>
                 {section.id === "exam" && <NormalExamButton fields={section.fields} state={state} onApply={(patch) => onFieldChange(patch)} />}
-                {dedupeFields(section.fields).map((f, i) => <Field key={i} field={f} state={state} setField={setField} region={condition.region} />)}
+                <FieldGroup fields={section.fields} state={state} setField={setField} region={condition.region} keyPrefix={section.id} dedupeFields={dedupeFields} />
                 {section.id === "outcomes" && (
                   <div className="mt-4">
                     <OutcomeScores condition={condition} state={state} onFieldChange={onFieldChange} />
@@ -16554,10 +16640,40 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                   onChange={(patch) => onFieldChange({ physioReferral: { ...(state.physioReferral || {}), ...patch } })}
                 />
               )}
-              <pre className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ color: T.ink, fontFamily: "ui-monospace, monospace", overflow: "visible", margin: 0 }}>{note}</pre>
+              {isEdited && (
+                <div className="rounded-xl px-3 py-2.5 mb-3 flex items-start gap-2" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+                  <AlertTriangle size={15} color={T.amber} style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12.5px] font-semibold" style={{ color: T.amber }}>Manually edited</div>
+                    <div className="text-[11.5px]" style={{ color: T.inkSoft }}>
+                      This note no longer updates from the form. Revert to pick up any later changes.
+                    </div>
+                  </div>
+                  <button onClick={revertNote} className="shrink-0 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold active:scale-95" style={{ background: T.surface, color: T.ink, border: `1px solid ${T.border}` }}>
+                    Revert
+                  </button>
+                </div>
+              )}
+              {editingNote ? (
+                <textarea
+                  value={note}
+                  onChange={(e) => setOverride(e.target.value)}
+                  className="w-full text-[13px] leading-relaxed rounded-xl px-3 py-3"
+                  style={{ color: T.ink, fontFamily: "ui-monospace, monospace", border: `1px solid ${T.teal}`, background: T.surface, minHeight: 320, resize: "vertical" }}
+                />
+              ) : (
+                <pre className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ color: T.ink, fontFamily: "ui-monospace, monospace", overflow: "visible", margin: 0 }}>{note}</pre>
+              )}
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
+              <button
+                onClick={() => { if (!editingNote && !isEdited) setOverride(generatedNote); setEditingNote((v) => !v); }}
+                className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
+                style={{ background: editingNote ? T.tealTint : T.slateChip, color: editingNote ? T.tealDark : T.ink, border: `1px solid ${editingNote ? T.teal : T.border}`, minHeight: 48 }}
+              >
+                {editingNote ? <><Check size={17} /> Done editing</> : <>Edit note before copying</>}
+              </button>
+              <button onClick={() => { setEditingNote(false); setNoteOpen(false); }} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Back to editing
               </button>
               <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
