@@ -14,7 +14,7 @@ import {
   Home,
   FilePlus,
   CalendarClock,
-  Stethoscope,
+  Slice,
 } from "lucide-react";
 
 /* ============================================================================
@@ -16445,7 +16445,7 @@ function VisitTypeGate({ onSelect }) {
           </button>
           <button onClick={() => onSelect("postop")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
             <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.tealTint }}>
-              <Stethoscope size={30} color={T.tealDark} />
+              <Slice size={30} color={T.tealDark} />
             </div>
             <div className="font-bold text-[21px]" style={{ color: T.ink }}>Post-operative Follow-up</div>
           </button>
@@ -17661,11 +17661,62 @@ function buildOutcomeScores(condition, state) {
   return lines.length ? lines.join("\n") : null;
 }
 
+// Screens are pushed onto the browser's History API so the device/browser
+// back button steps back through the app's own navigation instead of
+// exiting straight out of it - a PWA with no history entries beyond the
+// initial load has nothing for "back" to do but leave. condition objects
+// carry functions (conditional field "when" checks) and are not
+// structured-cloneable, so history state stores the id and this resolves
+// it back to the live object on restore.
+function screenToHistoryState(screen) {
+  if (screen.view === "template") {
+    return { view: "template", regionKey: screen.regionKey, conditionId: screen.condition.id };
+  }
+  return screen;
+}
+function historyStateToScreen(histState) {
+  if (!histState) return { view: "visitType" };
+  if (histState.view === "template") {
+    const condition = findConditionById(histState.conditionId);
+    return condition ? { view: "template", regionKey: histState.regionKey, condition } : { view: "visitType" };
+  }
+  return histState;
+}
+
 /* ============================================================================
    ROOT APP
 ============================================================================ */
 export default function App() {
-  const [screen, setScreen] = useState({ view: "visitType" });
+  const [screen, setScreenRaw] = useState({ view: "visitType" });
+  // Wraps every screen change with a matching history entry. `replace: true`
+  // updates the current entry in place instead of adding a new one - used
+  // for the very first screen and for popstate-driven restores, where a new
+  // entry would either be redundant or would corrupt the back-stack the
+  // browser is already managing.
+  const setScreen = useCallback((next, opts) => {
+    setScreenRaw((cur) => {
+      const resolved = typeof next === "function" ? next(cur) : next;
+      const state = screenToHistoryState(resolved);
+      if (opts && opts.replace) {
+        window.history.replaceState(state, "");
+      } else {
+        window.history.pushState(state, "");
+      }
+      return resolved;
+    });
+  }, []);
+
+  // Establishes the initial history entry on mount, and syncs screen state
+  // to whatever the browser navigates to on back/forward. This listener is
+  // the only path that must NOT itself push a new entry - it is reacting to
+  // a navigation the browser already performed.
+  useEffect(() => {
+    window.history.replaceState(screenToHistoryState({ view: "visitType" }), "");
+    const onPopState = (e) => setScreenRaw(historyStateToScreen(e.state));
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
   const [session, setSession] = useState({ order: [], statesByConditionId: {} });
   const [combinedNoteOpen, setCombinedNoteOpen] = useState(false);
   const [combinedCopied, setCombinedCopied] = useState(false);
@@ -17740,7 +17791,7 @@ export default function App() {
   const endSession = useCallback(() => {
     setSession({ order: [], statesByConditionId: {} });
     setCombinedNoteOpen(false);
-    setScreen({ view: "visitType" });
+    setScreen({ view: "visitType" }, { replace: true });
   }, []);
 
   // Follow-up Visit and Post-operative Follow-up share the same diagnosis
@@ -17832,7 +17883,7 @@ export default function App() {
           conditionIds={screen.conditionIds}
           session={session}
           onFieldChange={updateConditionState}
-          onBack={() => setScreen({ view: "followupSelect" })}
+          onBack={() => window.history.back()}
           onGoHome={goHome}
         />
       )}
@@ -17842,7 +17893,7 @@ export default function App() {
           conditionIds={screen.conditionIds}
           session={session}
           onFieldChange={updateConditionState}
-          onBack={() => setScreen({ view: "postopSelect" })}
+          onBack={() => window.history.back()}
           onGoHome={goHome}
         />
       )}
@@ -17854,7 +17905,7 @@ export default function App() {
           regionKey={screen.regionKey}
           session={session}
           onSelect={openCondition}
-          onBack={() => setScreen({ view: "regions" })}
+          onBack={() => window.history.back()}
         />
       )}
 
@@ -17866,7 +17917,7 @@ export default function App() {
           session={session}
           onOpenCondition={openCondition}
           onResetCondition={endSession}
-          onBack={() => setScreen({ view: "conditions", regionKey: screen.regionKey })}
+          onBack={() => window.history.back()}
           onGoHome={goHome}
         />
       )}
