@@ -136,7 +136,7 @@ const rotatorCuffData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, pain, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workStatus", label: "Work status", options: ["Working", "Modified duties", "Off work"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Anterior shoulder", "Posterior shoulder", "Night pain", "Pain at rest", "Pain overhead", "Pain reaching behind back", "Pain lifting objects"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Combing hair", "Dressing", "Reaching shelves", "Fastening bra", "Carrying groceries", "Throwing", "Sleeping affected side"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "weakness", label: "Weakness", options: ["None", "Mild", "Moderate", "Severe", "Pseudoparalysis"], columns: 3 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workStatus", label: "Work status", options: ["Working", "Modified duties", "Off work"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Acute trauma", "Repetitive overuse"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Anterior shoulder", "Posterior shoulder", "Night pain", "Pain at rest", "Pain overhead", "Pain reaching behind back", "Pain lifting objects"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Combing hair", "Dressing", "Reaching shelves", "Fastening bra", "Carrying groceries", "Throwing", "Sleeping on the affected side"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "weakness", label: "Weakness", options: ["None", "Mild", "Moderate", "Severe", "Pseudoparalysis"], columns: 3 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).includes("Injection"),
           fields: [
@@ -179,10 +179,14 @@ const rotatorCuffData = {
         { type: "info", title: "Ultrasound findings", items: ["Tendinopathy", "Partial tear", "Full tear"] },
         { type: "info", title: "MRI — document", items: ["Tendon involved", "Tear size", "Retraction (Patte)", "Fatty infiltration (Goutallier)", "Muscle atrophy (Warner)", "Biceps pathology", "Labrum", "Cartilage"] },
         { type: "info", title: "CT (rare)", items: ["Glenoid morphology", "Arthropathy"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -304,7 +308,7 @@ const sapsData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, pain, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Repetitive overuse", "Minor trauma"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Anterior shoulder", "Painful arc", "Night pain", "Overhead activities", "Reaching behind back", "Throwing", "Lifting"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Dressing", "Combing hair", "Reaching shelves", "Sports", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "NSAIDs", "Physiotherapy", "Injection"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Repetitive overuse", "Minor trauma"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Anterior shoulder", "Painful arc", "Night pain", "Overhead activities", "Reaching behind back", "Throwing", "Lifting"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Dressing", "Combing hair", "Reaching shelves", "Sports", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "NSAIDs", "Physiotherapy", "Injection"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).includes("Injection"),
           fields: [{ type: "select", key: "injectionResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Injection response" }],
@@ -338,9 +342,12 @@ const sapsData = {
         { type: "info", title: "Ultrasound findings", items: ["Bursitis", "Tendinopathy", "Partial tear", "Full tear"] },
         { type: "info", title: "MRI (selective) — indications", items: ["Persistent symptoms", "Weakness", "Failed rehabilitation", "Surgical planning"] },
         { type: "info", title: "MRI — review", items: ["Rotator cuff", "Bursa", "Biceps", "Labrum"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -455,7 +462,7 @@ const adhesiveCapsulitisData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, onset, pain, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Following trauma", "Following surgery"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Night pain", "Progressive stiffness", "Difficulty combing hair", "Difficulty dressing", "Difficulty reaching overhead", "Difficulty reaching back pocket", "Unable to sleep on affected side"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Personal hygiene", "Work", "Sports", "Driving"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Steroid injection", "Hydrodilatation", "Surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Following trauma", "Following surgery"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Night pain", "Progressive stiffness", "Difficulty combing hair", "Difficulty dressing", "Difficulty reaching overhead", "Difficulty reaching back pocket", "Unable to sleep on affected side"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Personal hygiene", "Work", "Sports", "Driving"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Steroid injection", "Hydrodilatation", "Surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" }],
@@ -492,9 +499,12 @@ const adhesiveCapsulitisData = {
         { type: "info", title: "MRI indications (if performed)", items: ["Atypical presentation", "Suspected cuff tear", "Failure of treatment"] },
         { type: "info", title: "MRI — possible findings", items: ["Capsular thickening", "Coracohumeral ligament thickening", "Rotator interval inflammation"] },
         { type: "info", title: "Ultrasound", items: ["May assist in excluding cuff pathology"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -630,7 +640,7 @@ const instabilityData = {
       index: 2,
       title: "Focused History",
       subtitle: "Instability pattern, episodes, treatment",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "level", label: "Level", options: ["Recreational", "Competitive", "Professional"], columns: 3 },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Traumatic", "Atraumatic"], columns: 2 },{ type: "select", key: "direction", label: "Direction", options: ["Anterior", "Posterior", "Multidirectional"], columns: 3 },{ type: "number", key: "episodeCount", label: "Number of episodes" },{ type: "select", key: "firstEpisode", label: "First episode?", options: ["Yes", "No"], columns: 2 },{ type: "select", key: "reduction", label: "Reduction", options: ["Self-reduced", "Emergency Department", "Operating Theatre"], columns: 3, noteLabel: "Reduction method" },{ type: "select", key: "associatedFracture", label: "Associated fracture?", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Apprehension", "Pain", "Recurrent subluxation", "Recurrent dislocation", "Clicking", "Weakness", "Dead arm episode", "Night pain"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "Physiotherapy", "Surgery", "Injection"] },{ type: "checkbox", key: "medHistory", label: "Medical history", options: ["Generalised hypermobility", "Connective tissue disorder", "Seizures"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "level", label: "Level", options: ["Recreational", "Competitive", "Professional"], columns: 3 },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Traumatic", "Atraumatic"], columns: 2 },{ type: "select", key: "direction", label: "Direction", options: ["Anterior", "Posterior", "Multidirectional"], columns: 3 },{ type: "number", key: "episodeCount", label: "Number of episodes" },{ type: "select", key: "firstEpisode", label: "First episode?", options: ["Yes", "No"], columns: 2 },{ type: "select", key: "reduction", label: "Reduction", options: ["Self-reduced", "Emergency Department", "Operating Theatre"], columns: 3, noteLabel: "Reduction method" },{ type: "select", key: "associatedFracture", label: "Associated fracture?", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Apprehension", "Pain", "Recurrent subluxation", "Recurrent dislocation", "Clicking", "Weakness", "Dead arm episode", "Night pain"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "Physiotherapy", "Surgery", "Injection"] },{ type: "checkbox", key: "medHistory", label: "Medical history", options: ["Generalised hypermobility", "Connective tissue disorder", "Seizures"] },],
     },
     {
       id: "exam",
@@ -672,9 +682,12 @@ const instabilityData = {
         { type: "info", title: "MRI / MR Arthrogram — evaluate", items: ["Labrum", "Capsule", "Rotator cuff", "HAGL lesion", "ALPSA lesion", "GLAD lesion"] },
         { type: "info", title: "CT Scan — indications", items: ["Recurrent instability", "Suspected glenoid bone loss", "Preoperative planning"] },
         { type: "info", title: "CT Scan — assess", items: ["Glenoid bone loss (%)", "Hill-Sachs size", "On-track / Off-track lesion"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -790,7 +803,7 @@ const bicepsData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, pain, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Overuse", "Acute injury"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Anterior shoulder", "Bicipital groove", "Radiates down anterior arm", "Pain lifting", "Overhead pain", "Throwing pain", "Night pain", "Mechanical symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Lifting", "Carrying", "Throwing", "Gym activities", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "NSAIDs", "Physiotherapy", "Injection", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Overuse", "Acute injury"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Anterior shoulder", "Bicipital groove", "Radiates down anterior arm", "Pain lifting", "Overhead pain", "Throwing pain", "Night pain", "Mechanical symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Lifting", "Carrying", "Throwing", "Gym activities", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "NSAIDs", "Physiotherapy", "Injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -828,9 +841,12 @@ const bicepsData = {
         { type: "info", title: "Review", items: ["OA", "AC joint", "Calcific tendinitis"] },
         { type: "info", title: "Ultrasound — useful for", items: ["Tendinopathy", "Tenosynovitis", "Instability", "Rupture"] },
         { type: "info", title: "MRI — review", items: ["Biceps anchor", "SLAP lesion", "Pulley lesion", "Rotator cuff", "Subscapularis", "Bicipital groove"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -1006,7 +1022,7 @@ const acJointData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, pain, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Degenerative", "Trauma", "Repetitive overload"], columns: 3 },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 weeks" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Degenerative", "Trauma", "Repetitive overload"], columns: 3 },{
           type: "conditional",
           when: (s) => s.mechanism === "Trauma",
           fields: [
@@ -1068,9 +1084,12 @@ const acJointData = {
         { type: "info", title: "Ultrasound — useful for", items: ["Synovitis", "Injection guidance"] },
         { type: "info", title: "MRI — indications", items: ["Suspected associated cuff tear", "Persistent symptoms", "Surgical planning"] },
         { type: "info", title: "MRI — review", items: ["Rotator cuff", "AC edema", "Distal clavicle"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -1234,7 +1253,7 @@ const gleroarthritisData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, expectations",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Deep shoulder pain", "Night pain", "Pain at rest", "Mechanical pain", "Crepitus", "Progressive stiffness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Grooming", "Dressing", "Reaching overhead", "Driving", "Sleeping", "Work", "Recreation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Deep shoulder pain", "Night pain", "Pain at rest", "Mechanical pain", "Crepitus", "Progressive stiffness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Grooming", "Dressing", "Reaching overhead", "Driving", "Sleeping", "Work", "Recreation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -1274,9 +1293,12 @@ const gleroarthritisData = {
         // working diagnosis.
         { type: "info", title: "Humeral Head Avascular Necrosis \u2014 Cruess Classification (reference)", items: ["Stage I \u2013 Normal radiographs; MRI positive", "Stage II \u2013 Sclerosis and cysts without collapse", "Stage III \u2013 Subchondral collapse (crescent sign)", "Stage IV \u2013 Flattening of the humeral head", "Stage V \u2013 Secondary glenohumeral arthritis"] },
         { type: "pathway", key: "avnPathwayAnswers", title: "AVN staging \u2014 stage-based management", introText: "Select the Cruess stage to see pathway-suggested, stage-based management.", schema: avnPathway },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
-        { type: "text", key: "ctFinding", label: "CT \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -1409,7 +1431,7 @@ const avnData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, baseline function, priorities",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep shoulder pain", "Night pain", "Rest pain", "Progressive stiffness", "Mechanical symptoms", "Loss of function"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "premorbidActivity", label: "Pre-morbid activity level", options: ["Low", "Moderate", "High"], columns: 3 },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve native joint", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Previous shoulder surgery"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep shoulder pain", "Night pain", "Rest pain", "Progressive stiffness", "Mechanical symptoms", "Loss of function"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "premorbidActivity", label: "Pre-morbid activity level", options: ["Low", "Moderate", "High"], columns: 3 },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve native joint", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Analgesics", "NSAIDs", "Physiotherapy", "Injection", "Previous shoulder surgery"] },],
     },
     {
       id: "exam",
@@ -1438,9 +1460,12 @@ const avnData = {
         { type: "info", title: "MRI", items: ["Gold standard for early disease."] },
         { type: "info", title: "MRI — review", items: ["Extent of necrosis", "Bone marrow oedema", "Subchondral collapse", "Cartilage", "Rotator cuff"] },
         { type: "info", title: "CT — indications", items: ["Surgical planning", "Degree of collapse", "Arthroplasty planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -1569,7 +1594,7 @@ const calcificTendinitisData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, onset, pain, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 weeks" },{ type: "select", key: "onset", label: "Onset", options: ["Acute", "Gradual"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Severe night pain", "Pain overhead", "Rest pain", "Unable to sleep", "Sudden severe attack"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Dressing", "Grooming", "Driving", "Work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Ultrasound-guided lavage", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 weeks" },{ type: "select", key: "onset", label: "Onset", options: ["Acute", "Gradual"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "painChar", label: "Pain characteristics", options: ["Lateral shoulder", "Severe night pain", "Pain overhead", "Rest pain", "Unable to sleep", "Sudden severe attack"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Dressing", "Grooming", "Driving", "Work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Ultrasound-guided lavage", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -1604,9 +1629,12 @@ const calcificTendinitisData = {
         { type: "info", title: "Ultrasound — useful for", items: ["Deposit localisation", "Consistency", "Dynamic assessment", "Barbotage planning"] },
         { type: "info", title: "MRI", items: ["Not routinely required."] },
         { type: "info", title: "MRI — indications", items: ["Persistent symptoms", "Suspected cuff tear", "Surgical planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -1734,7 +1762,7 @@ const proximalHumerusFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, pre-injury status",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Injury date" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall", "MVC", "Sports", "Seizure", "Other"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Bruising", "Loss of function", "Numbness", "Tingling"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "functionalStatusBefore", label: "Functional status before injury", options: ["Independent", "Walking aid", "Nursing home"], columns: 3 },{ type: "text", key: "activityLevel", label: "Activity level" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Diabetes", "Smoking", "Anticoagulation", "Previous shoulder surgery"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Injury date" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall", "MVC", "Sports", "Seizure", "Other"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Bruising", "Loss of function", "Numbness", "Tingling"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "functionalStatusBefore", label: "Functional status before injury", options: ["Independent", "Walking aid", "Nursing home"], columns: 3 },{ type: "text", key: "activityLevel", label: "Activity level" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Diabetes", "Smoking", "Anticoagulation", "Previous shoulder surgery"] },],
     },
     {
       id: "exam",
@@ -1768,9 +1796,12 @@ const proximalHumerusFxData = {
         { type: "info", title: "CT — indications", items: ["Complex fracture", "Head split", "Dislocation", "Surgical planning"] },
         { type: "info", title: "CT — review", items: ["Fragment position", "Articular involvement", "Bone loss", "Glenoid"] },
         { type: "info", title: "MRI", items: ["Rarely indicated acutely."] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -1891,7 +1922,7 @@ const scapularDyskinesisData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Overuse", "Following injury", "Gradual"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Periscapular pain", "Shoulder fatigue", "Weakness", "Loss of endurance", "Clicking", "Loss of throwing velocity", "Difficulty overhead", "Poor posture"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Swimming", "Weight lifting", "Work", "Activities of daily living"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Previous surgery", "Injection"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Overuse", "Following injury", "Gradual"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Periscapular pain", "Shoulder fatigue", "Weakness", "Loss of endurance", "Clicking", "Loss of throwing velocity", "Difficulty overhead", "Poor posture"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Swimming", "Weight lifting", "Work", "Activities of daily living"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Previous surgery", "Injection"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -1934,9 +1965,12 @@ const scapularDyskinesisData = {
         { type: "info", title: "Assess", items: ["Previous fracture", "AC joint", "Glenohumeral joint"] },
         { type: "info", title: "MRI", items: ["Not routinely required.", "Obtain only if associated pathology suspected."] },
         { type: "info", title: "EMG / NCS — indications", items: ["Suspected nerve injury", "Persistent winging", "Unexplained weakness"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -2058,7 +2092,7 @@ const slapData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Throwing", "FOOSH", "Traction injury", "Repetitive overuse"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep shoulder pain", "Clicking", "Catching", "Locking", "Throwing pain", "Loss of velocity", "Fatigue", "Instability"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Serving", "Swimming", "Gym", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "Physiotherapy", "NSAIDs", "Injection", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Throwing", "FOOSH", "Traction injury", "Repetitive overuse"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep shoulder pain", "Clicking", "Catching", "Locking", "Throwing pain", "Loss of velocity", "Fatigue", "Instability"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Serving", "Swimming", "Gym", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "Physiotherapy", "NSAIDs", "Injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -2097,9 +2131,12 @@ const slapData = {
         { type: "info", title: "Purpose — exclude", items: ["OA", "Fracture", "Calcific tendinitis"] },
         { type: "info", title: "MRI / MR Arthrogram — review", items: ["SLAP lesion", "Biceps anchor", "Rotator cuff", "Paralabral cyst", "Glenoid cartilage"] },
         { type: "info", title: "CT", items: ["Rarely indicated."] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -2221,7 +2258,7 @@ const pecMajorRuptureData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Bench press", "Contact sport", "Fall", "Other"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Immediate pain", "Swelling", "Bruising", "Weakness", "Cosmetic deformity", "Loss of strength"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Lifting", "Pushing", "Pulling", "Gym", "Work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "Analgesia", "Physiotherapy"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous shoulder injury", "Previous pectoralis injury", "Anabolic steroid use", "Smoking"] },{ type: "text", key: "sport", label: "Sport" },{ type: "text", key: "competitionLevel", label: "Competition level" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Bench press", "Contact sport", "Fall", "Other"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Immediate pain", "Swelling", "Bruising", "Weakness", "Cosmetic deformity", "Loss of strength"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Lifting", "Pushing", "Pulling", "Gym", "Work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "Analgesia", "Physiotherapy"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous shoulder injury", "Previous pectoralis injury", "Anabolic steroid use", "Smoking"] },{ type: "text", key: "sport", label: "Sport" },{ type: "text", key: "competitionLevel", label: "Competition level" },],
     },
     {
       id: "exam",
@@ -2251,9 +2288,12 @@ const pecMajorRuptureData = {
         { type: "info", title: "Ultrasound — useful for", items: ["Acute rupture", "Tendon location"] },
         { type: "info", title: "MRI", items: ["Gold standard."] },
         { type: "info", title: "MRI — review", items: ["Tendon location", "Tendon retraction", "Muscle involvement", "Partial vs complete tear", "Chronicity"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -2391,7 +2431,7 @@ const lateralEpicondylopathyData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, goals",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 10 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overload"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lateral elbow pain", "Pain gripping", "Weak grip", "Lifting pain", "Morning stiffness", "Pain after activity", "Pain at rest", "Night pain"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to sport", "Strength recovery"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Brace", "Physiotherapy", "Injection", "Shockwave therapy", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 10 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overload"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lateral elbow pain", "Pain gripping", "Weak grip", "Lifting pain", "Morning stiffness", "Pain after activity", "Pain at rest", "Night pain"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to sport", "Strength recovery"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Brace", "Physiotherapy", "Injection", "Shockwave therapy", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -2432,9 +2472,12 @@ const lateralEpicondylopathyData = {
         { type: "info", title: "Ultrasound — useful for", items: ["Tendinosis", "Partial tear", "Neovascularization"] },
         { type: "info", title: "MRI — reserved for", items: ["Failed treatment", "Surgical planning", "Alternative diagnosis"] },
         { type: "info", title: "MRI — review", items: ["ECRB degeneration", "Partial tear", "LUCL"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -2583,7 +2626,7 @@ const medialEpicondylopathyData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, goals",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overload"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Medial elbow pain", "Pain gripping", "Pain lifting", "Pain throwing", "Morning stiffness", "Weak grip", "Pain after activity", "Night pain", "Numbness or tingling in ring/small fingers"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to sport", "Strength recovery"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Brace", "Physiotherapy", "Injection", "Shockwave therapy", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overload"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Medial elbow pain", "Pain gripping", "Pain lifting", "Pain throwing", "Morning stiffness", "Weak grip", "Pain after activity", "Night pain", "Numbness or tingling in ring/small fingers"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to sport", "Strength recovery"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Brace", "Physiotherapy", "Injection", "Shockwave therapy", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -2624,9 +2667,12 @@ const medialEpicondylopathyData = {
         { type: "info", title: "Ultrasound — useful for", items: ["Tendinosis", "Partial tear", "Dynamic UCL assessment"] },
         { type: "info", title: "MRI — reserved for", items: ["Failed treatment", "Suspected UCL injury", "Surgical planning"] },
         { type: "info", title: "MRI — assess", items: ["Flexor-pronator origin", "UCL", "Ulnar nerve"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -2764,7 +2810,7 @@ const distalBicepsRuptureData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Heavy lifting", "Sports", "Fall", "Other"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Bruising", "Swelling", "Loss of supination strength", "Difficulty lifting", "Weak grip", "Cosmetic deformity"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore strength"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "NSAIDs", "Physiotherapy"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous tendon rupture", "Smoking", "Anabolic steroid use"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Heavy lifting", "Sports", "Fall", "Other"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Bruising", "Swelling", "Loss of supination strength", "Difficulty lifting", "Weak grip", "Cosmetic deformity"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore strength"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "NSAIDs", "Physiotherapy"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous tendon rupture", "Smoking", "Anabolic steroid use"] },],
     },
     {
       id: "exam",
@@ -2797,9 +2843,12 @@ const distalBicepsRuptureData = {
         { type: "info", title: "Ultrasound — useful for", items: ["Complete rupture", "Partial tear", "Tendon retraction"] },
         { type: "info", title: "MRI", items: ["Preferred when diagnosis is uncertain or for surgical planning."] },
         { type: "info", title: "MRI — assess", items: ["Complete vs partial tear", "Tendon retraction", "Lacertus fibrosus integrity", "Chronicity"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -2929,7 +2978,7 @@ const elbowOAData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Terminal pain", "Stiffness", "Mechanical locking", "Catching", "Clicking", "Swelling", "Night pain", "Progressive loss of motion"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Feeding", "Personal hygiene", "Grooming", "Dressing", "Driving", "Work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Improve motion", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Arthroscopy", "Previous trauma surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Terminal pain", "Stiffness", "Mechanical locking", "Catching", "Clicking", "Swelling", "Night pain", "Progressive loss of motion"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Feeding", "Personal hygiene", "Grooming", "Dressing", "Driving", "Work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Improve motion", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Physiotherapy", "Injection", "Arthroscopy", "Previous trauma surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -2970,9 +3019,12 @@ const elbowOAData = {
         { type: "info", title: "CT — indications", items: ["Mechanical block", "Osteophyte mapping", "Surgical planning"] },
         { type: "info", title: "MRI", items: ["Rarely required."] },
         { type: "info", title: "MRI — reserved for", items: ["Alternative diagnosis", "Osteochondral lesion"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -3111,7 +3163,7 @@ const distalTricepsRuptureData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 10 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall", "Bench press", "Direct trauma", "Sporting injury", "Other"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Posterior elbow pain", "Swelling", "Bruising", "Weakness pushing", "Difficulty rising from chair", "Difficulty performing push-ups", "Loss of extension strength"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore strength"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "NSAIDs", "Physiotherapy"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous triceps pain", "Chronic renal disease", "Rheumatologic disease", "Steroid exposure"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 10 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall", "Bench press", "Direct trauma", "Sporting injury", "Other"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Audible pop", "Posterior elbow pain", "Swelling", "Bruising", "Weakness pushing", "Difficulty rising from chair", "Difficulty performing push-ups", "Loss of extension strength"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore strength"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Sling", "NSAIDs", "Physiotherapy"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous triceps pain", "Chronic renal disease", "Rheumatologic disease", "Steroid exposure"] },],
     },
     {
       id: "exam",
@@ -3145,9 +3197,12 @@ const distalTricepsRuptureData = {
         { type: "info", title: "Ultrasound — useful for", items: ["Partial tear", "Tendon continuity", "Dynamic assessment"] },
         { type: "info", title: "MRI — preferred for", items: ["Partial tears", "Surgical planning"] },
         { type: "info", title: "MRI — assess", items: ["Partial vs complete rupture", "Tendon retraction", "Tendon quality", "Associated injuries"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -3300,7 +3355,7 @@ const radialHeadFxData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 5 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Fall from height"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lateral elbow pain", "Swelling", "Stiffness", "Pain with rotation", "Locking", "Clicking", "Instability", "Numbness"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore motion"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous instability", "Osteoporosis", "Polytrauma"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 5 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Fall from height"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lateral elbow pain", "Swelling", "Stiffness", "Pain with rotation", "Locking", "Clicking", "Instability", "Numbness"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Return to work", "Return to sport", "Restore motion"] },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous elbow injury", "Previous instability", "Osteoporosis", "Polytrauma"] },],
     },
     {
       id: "exam",
@@ -3336,8 +3391,10 @@ const radialHeadFxData = {
         { type: "checkbox", key: "imgEssential", label: "Radiographs obtained", options: ["AP", "Lateral", "Oblique (if available)"] },
         { type: "info", title: "Review", items: ["Fat pad sign", "Displacement", "Depression", "Comminution", "Elbow congruity"] },
         { type: "info", title: "CT — indications", items: ["Mason II with uncertain displacement", "Mason III", "Mechanical block", "Surgical planning", "Associated injuries"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -3491,7 +3548,7 @@ const coronoidTerribleTriadData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Injury date" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Fall from height"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain", "Swelling", "Instability", "Locking", "Deformity", "Reduced in ED", "Numbness"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Stability", "Motion", "Return to work", "Return to sport"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Injury date" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Fall from height"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain", "Swelling", "Instability", "Locking", "Deformity", "Reduced in ED", "Numbness"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Stability", "Motion", "Return to work", "Return to sport"] },],
     },
     {
       id: "exam",
@@ -3531,9 +3588,12 @@ const coronoidTerribleTriadData = {
         { type: "info", title: "CT — assess", items: ["Coronoid fragment size", "Radial head reconstructability", "Intra-articular fragments", "Joint congruity"] },
         { type: "info", title: "MRI", items: ["Rarely required acutely."] },
         { type: "info", title: "MRI — reserved for", items: ["Chronic instability", "Persistent pain"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -3659,7 +3719,7 @@ const elbowInstabilityData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, reduction, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Injury date" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 1 week" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Other"], columns: 2 },{ type: "select", key: "reduced", label: "Reduced?", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "reducedWhere", label: "Where reduced", placeholder: "e.g. Emergency Department" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain", "Instability", "Clicking", "Locking", "Recurrent giving way", "Apprehension", "Stiffness", "Numbness"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Return to work", "Return to sport", "Stability", "Motion"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Reduction", "Splint", "Physiotherapy", "Surgery"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Injury date" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 1 week" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["FOOSH", "Sports", "MVC", "Other"], columns: 2 },{ type: "select", key: "reduced", label: "Reduced?", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "reducedWhere", label: "Where reduced", placeholder: "e.g. Emergency Department" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain", "Instability", "Clicking", "Locking", "Recurrent giving way", "Apprehension", "Stiffness", "Numbness"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Return to work", "Return to sport", "Stability", "Motion"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Reduction", "Splint", "Physiotherapy", "Surgery"] },],
     },
     {
       id: "exam",
@@ -3699,9 +3759,12 @@ const elbowInstabilityData = {
         { type: "info", title: "CT — indications", items: ["Suspected fracture", "Persistent subluxation", "Surgical planning"] },
         { type: "info", title: "MRI — indications", items: ["Chronic instability", "Ligament injury", "Surgical planning"] },
         { type: "info", title: "MRI — review", items: ["LCL", "MCL", "Cartilage"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -3831,7 +3894,7 @@ const elbowStiffnessData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "text", key: "timeSinceInjurySurgery", label: "Time since injury/surgery", placeholder: "e.g. 3 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Motion loss", "Pain", "Mechanical block", "Instability", "Weakness", "Locking", "Numbness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Feeding", "Grooming", "Hygiene", "Dressing", "Driving", "Computer work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Motion", "Function", "Pain relief", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Static splint", "Dynamic splint", "Surgery", "Manipulation"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Sedentary", "Manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "text", key: "timeSinceInjurySurgery", label: "Time since injury/surgery", placeholder: "e.g. 3 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Motion loss", "Pain", "Mechanical block", "Instability", "Weakness", "Locking", "Numbness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Feeding", "Grooming", "Hygiene", "Dressing", "Driving", "Computer work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "select", key: "independentADLs", label: "Independent ADLs", options: ["Yes", "No"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Motion", "Function", "Pain relief", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Static splint", "Dynamic splint", "Surgery", "Manipulation"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -3869,9 +3932,12 @@ const elbowStiffnessData = {
         { type: "info", title: "CT — indications", items: ["Mechanical block", "HO", "Surgical planning"] },
         { type: "info", title: "MRI", items: ["Rarely required."] },
         { type: "info", title: "MRI — reserved for", items: ["Soft tissue pathology"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -4008,7 +4074,7 @@ const athleticElbowData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, athletic profile, symptoms, goals",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "text", key: "primarySport", label: "Primary sport" },{ type: "text", key: "position", label: "Position" },{ type: "select", key: "competitiveLevel", label: "Competitive level", options: ["Recreational", "Competitive", "Elite"], columns: 3 },{ type: "text", key: "trainingFrequency", label: "Training frequency", placeholder: "e.g. 5 sessions/week" },{ type: "text", key: "weeklyThrowingVolume", label: "Weekly throwing volume", placeholder: "e.g. 150 throws/week" },{ type: "select", key: "season", label: "Season", options: ["Pre-season", "In-season", "Off-season"], columns: 3 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Medial pain", "Lateral pain", "Posterior pain", "Terminal extension pain", "Locking", "Clicking", "Loss of velocity", "Loss of accuracy", "Mechanical symptoms", "Instability"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "functionalGoals", label: "Functional goals", options: ["Return to training", "Return to competition", "Scholarship", "Professional career"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "Physiotherapy", "Injection", "Surgery"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "text", key: "primarySport", label: "Primary sport" },{ type: "text", key: "position", label: "Position" },{ type: "select", key: "competitiveLevel", label: "Competitive level", options: ["Recreational", "Competitive", "Elite"], columns: 3 },{ type: "text", key: "trainingFrequency", label: "Training frequency", placeholder: "e.g. 5 sessions/week" },{ type: "text", key: "weeklyThrowingVolume", label: "Weekly throwing volume", placeholder: "e.g. 150 throws/week" },{ type: "select", key: "season", label: "Season", options: ["Pre-season", "In-season", "Off-season"], columns: 3 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Medial pain", "Lateral pain", "Posterior pain", "Terminal extension pain", "Locking", "Clicking", "Loss of velocity", "Loss of accuracy", "Mechanical symptoms", "Instability"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "functionalGoals", label: "Functional goals", options: ["Return to training", "Return to competition", "Scholarship", "Professional career"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Rest", "Physiotherapy", "Injection", "Surgery"] },],
     },
     {
       id: "exam",
@@ -4044,9 +4110,12 @@ const athleticElbowData = {
         { type: "info", title: "MRI — assess", items: ["OCD stability", "Cartilage", "Bone marrow oedema", "UCL"] },
         { type: "info", title: "CT", items: ["When indicated."] },
         { type: "info", title: "CT — assess", items: ["Loose bodies", "Surgical planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -4171,7 +4240,7 @@ const deQuervainData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, goals",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overuse"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Radial wrist pain", "Thumb pain", "Swelling", "Clicking", "Pain gripping", "Pain lifting", "Weak grip", "Difficulty caring for infant"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Cooking", "Lifting child", "Sports", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to childcare", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Thumb spica splint", "Physiotherapy", "Corticosteroid injection", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Acute overuse"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Radial wrist pain", "Thumb pain", "Swelling", "Clicking", "Pain gripping", "Pain lifting", "Weak grip", "Difficulty caring for infant"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Cooking", "Lifting child", "Sports", "Work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientGoals", label: "Patient goals", options: ["Pain relief", "Return to work", "Return to childcare", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Thumb spica splint", "Physiotherapy", "Corticosteroid injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -4212,9 +4281,12 @@ const deQuervainData = {
         { type: "info", title: "Ultrasound — useful for", items: ["Thickened retinaculum", "Septated first compartment", "Tendon gliding", "Injection guidance"] },
         { type: "info", title: "MRI", items: ["Rarely required."] },
         { type: "info", title: "MRI — reserved for", items: ["Uncertain diagnosis", "Failed treatment"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -4340,7 +4412,7 @@ const thumbCMCOAData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, priorities",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Thumb base pain", "Pinch weakness", "Grip weakness", "Pain opening jars", "Pain turning keys", "Difficulty writing", "Difficulty buttoning clothes", "Loss of endurance", "Morning stiffness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Cooking", "Writing", "Computer work", "Childcare", "Occupation", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Improve pinch", "Improve grip", "Return to work", "Preserve independence"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Splint", "Hand therapy", "Corticosteroid injection", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Thumb base pain", "Pinch weakness", "Grip weakness", "Pain opening jars", "Pain turning keys", "Difficulty writing", "Difficulty buttoning clothes", "Loss of endurance", "Morning stiffness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Cooking", "Writing", "Computer work", "Childcare", "Occupation", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Improve pinch", "Improve grip", "Return to work", "Preserve independence"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Splint", "Hand therapy", "Corticosteroid injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -4379,8 +4451,10 @@ const thumbCMCOAData = {
         { type: "info", title: "Radiographs — review", items: ["Joint-space narrowing", "Osteophytes", "Subluxation", "STT arthritis"] },
         { type: "info", title: "CT", items: ["Rarely required."] },
         { type: "info", title: "CT — reserved for", items: ["Revision surgery", "Complex deformity"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -4526,7 +4600,7 @@ const wristOAData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, pain, function, priorities",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Radial wrist pain", "Grip weakness", "Stiffness", "Swelling", "Mechanical clicking", "Reduced endurance", "Difficulty weight-bearing through the hand"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Opening jars", "Carrying groceries", "Push-ups", "Rising from a chair", "Driving", "Computer work", "Manual labour", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Improve grip", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "NSAIDs", "Hand therapy", "Corticosteroid injection", "Previous wrist surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Radial wrist pain", "Grip weakness", "Stiffness", "Swelling", "Mechanical clicking", "Reduced endurance", "Difficulty weight-bearing through the hand"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Opening jars", "Carrying groceries", "Push-ups", "Rising from a chair", "Driving", "Computer work", "Manual labour", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Improve grip", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "NSAIDs", "Hand therapy", "Corticosteroid injection", "Previous wrist surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -4564,9 +4638,12 @@ const wristOAData = {
         { type: "info", title: "Radiographs — review", items: ["Joint-space narrowing", "Scapholunate gap", "DISI deformity", "Radioscaphoid arthritis", "Capitolunate arthritis", "Midcarpal degeneration", "DRUJ arthritis"] },
         { type: "info", title: "CT — indications", items: ["Surgical planning", "Advanced arthritis", "Previous fracture"] },
         { type: "info", title: "MRI — reserved for", items: ["Early disease", "Alternative diagnosis", "Ligament assessment"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -4713,7 +4790,7 @@ const tfccInjuryData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Trauma", "Repetitive loading", "Degenerative", "Unknown"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar wrist pain", "Clicking", "Catching", "Weak grip", "Pain rotating doorknobs", "Pain opening jars", "Pain lifting", "Loss of confidence using the wrist"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Computer work", "Writing", "Driving", "Sports", "Weight training", "Manual labour"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Restore grip", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Injection", "Previous wrist surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 weeks" },{ type: "vas", key: "vas" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Trauma", "Repetitive loading", "Degenerative", "Unknown"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar wrist pain", "Clicking", "Catching", "Weak grip", "Pain rotating doorknobs", "Pain opening jars", "Pain lifting", "Loss of confidence using the wrist"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Computer work", "Writing", "Driving", "Sports", "Weight training", "Manual labour"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Restore grip", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Injection", "Previous wrist surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -4754,8 +4831,10 @@ const tfccInjuryData = {
         { type: "info", title: "MRI", items: ["Preferred advanced imaging."] },
         { type: "info", title: "MRI — assess", items: ["TFCC tear", "Peripheral attachment", "Foveal injury", "Cartilage", "Associated ligament injury"] },
         { type: "info", title: "Wrist arthroscopy", items: ["Gold standard when diagnosis remains uncertain or intervention is planned."] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
         { type: "text", key: "arthroscopyFinding", label: "Arthroscopy — notable finding" },
       ],
     },
@@ -4879,7 +4958,7 @@ const scapholunateInjuryData = {
       index: 2,
       title: "Focused History",
       subtitle: "Injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 3 weeks" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Clicking", "Weak grip", "Loss of confidence", "Pain pushing up", "Pain lifting", "Mechanical instability", "Decreased sporting performance"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Computer work", "Driving", "Gym", "Manual work", "Racquet sports", "Weight lifting"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Restore strength", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "NSAIDs", "Hand therapy", "Injection", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeFromInjury", label: "Time from injury", placeholder: "e.g. 3 weeks" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Clicking", "Weak grip", "Loss of confidence", "Pain pushing up", "Pain lifting", "Mechanical instability", "Decreased sporting performance"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Computer work", "Driving", "Gym", "Manual work", "Racquet sports", "Weight lifting"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Restore strength", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "NSAIDs", "Hand therapy", "Injection", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -4919,9 +4998,12 @@ const scapholunateInjuryData = {
         { type: "info", title: "MRI — useful for", items: ["Ligament integrity", "Associated injuries"] },
         { type: "info", title: "Wrist arthroscopy", items: ["Gold standard for confirming ligament injury and grading instability."] },
         { type: "info", title: "CT — reserved for", items: ["Chronic deformity", "Surgical planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
         { type: "text", key: "arthroscopyFinding", label: "Arthroscopy — notable finding" },
       ],
     },
@@ -5067,7 +5149,7 @@ const kienbockDiseaseData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, onset, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Following trauma"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Weak grip", "Reduced endurance", "Stiffness", "Mechanical symptoms", "Loss of function"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Manual work", "Lifting", "Weight-bearing", "Sports", "Writing", "Computer work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Maintain work capacity", "Avoid progression"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Following trauma"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal wrist pain", "Weak grip", "Reduced endurance", "Stiffness", "Mechanical symptoms", "Loss of function"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Manual work", "Lifting", "Weight-bearing", "Sports", "Writing", "Computer work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve motion", "Maintain work capacity", "Avoid progression"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -5107,9 +5189,12 @@ const kienbockDiseaseData = {
         { type: "info", title: "MRI", items: ["Essential for early disease."] },
         { type: "info", title: "MRI — assess", items: ["Lunate viability", "Bone marrow oedema", "Fragmentation", "Cartilage"] },
         { type: "info", title: "CT — useful for", items: ["Collapse", "Fragmentation", "Surgical planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -5252,7 +5337,7 @@ const ulnarImpactionData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, onset, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 months" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Post-traumatic"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar wrist pain", "Grip weakness", "Pain lifting", "Pain with pronation", "Pain with ulnar deviation", "Clicking", "Reduced endurance", "Difficulty weight-bearing"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Manual work", "Computer work", "Gym", "Racquet sports", "Driving", "Household activities"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve grip", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Injection", "Previous wrist surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 months" },{ type: "vas", key: "vas" },{ type: "select", key: "onset", label: "Onset", options: ["Gradual", "Post-traumatic"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar wrist pain", "Grip weakness", "Pain lifting", "Pain with pronation", "Pain with ulnar deviation", "Clicking", "Reduced endurance", "Difficulty weight-bearing"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Manual work", "Computer work", "Gym", "Racquet sports", "Driving", "Household activities"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Preserve grip", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Brace", "NSAIDs", "Hand therapy", "Injection", "Previous wrist surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -5295,9 +5380,12 @@ const ulnarImpactionData = {
         { type: "info", title: "Radiographs — review", items: ["Ulnar variance", "Distal radius alignment", "Cystic changes in lunate/triquetrum", "DRUJ arthritis"] },
         { type: "info", title: "MRI — assess", items: ["TFCC degeneration", "Chondromalacia", "Bone marrow oedema", "Associated ligament injury"] },
         { type: "info", title: "CT — reserved for", items: ["Surgical planning", "Previous fracture"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -5433,7 +5521,7 @@ const wristGanglionData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, concerns, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "primaryConcern", label: "Primary concern", options: ["Pain", "Cosmetic appearance", "Fear of cancer", "Weakness", "Mechanical symptoms", "Recurrence", "Occupational interference"] },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lump fluctuates", "Pain with extension", "Pain gripping", "Clicking", "Stiffness", "Numbness", "Tingling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Driving", "Weight training", "Manual work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Reassurance", "Pain relief", "Cosmetic improvement", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "Aspiration", "Injection", "Previous excision"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "primaryConcern", label: "Primary concern", options: ["Pain", "Cosmetic appearance", "Fear of cancer", "Weakness", "Mechanical symptoms", "Recurrence", "Occupational interference"] },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Lump fluctuates", "Pain with extension", "Pain gripping", "Clicking", "Stiffness", "Numbness", "Tingling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Driving", "Weight training", "Manual work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Reassurance", "Pain relief", "Cosmetic improvement", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "Aspiration", "Injection", "Previous excision"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "Recurrence"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -5474,9 +5562,12 @@ const wristGanglionData = {
         { type: "info", title: "Radiographs — indications", items: ["Persistent pain", "Previous trauma", "Suspicion of arthritis", "Suspected occult pathology"] },
         { type: "info", title: "Ultrasound — useful for", items: ["Confirming cystic lesion", "Guiding aspiration", "Differentiating solid mass"] },
         { type: "info", title: "MRI — reserved for", items: ["Diagnostic uncertainty", "Occult ganglion", "Surgical planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -5611,7 +5702,7 @@ const triggerFingerData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit(s), side, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "checkbox", key: "affectedDigits", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain over A1 pulley", "Clicking", "Triggering", "Locking", "Morning stiffness", "Finger stuck in flexion", "Finger stuck in extension", "Swelling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Gripping tools", "Carrying objects", "Buttoning clothes", "Childcare", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Eliminate locking", "Improve dexterity", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "NSAIDs", "Splint", "Corticosteroid injection", "Previous release"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "checkbox", key: "affectedDigits", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain over A1 pulley", "Clicking", "Triggering", "Locking", "Morning stiffness", "Finger stuck in flexion", "Finger stuck in extension", "Swelling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Gripping tools", "Carrying objects", "Buttoning clothes", "Childcare", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Eliminate locking", "Improve dexterity", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Observation", "NSAIDs", "Splint", "Corticosteroid injection", "Previous release"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -5654,8 +5745,10 @@ const triggerFingerData = {
         { type: "info", title: "Ultrasound", items: ["Optional in atypical cases to demonstrate:"] },
         { type: "info", title: "Ultrasound — demonstrate", items: ["Flexor tendon thickening", "A1 pulley thickening", "Dynamic triggering"] },
         { type: "info", title: "Radiographs", items: ["Only if alternative pathology is suspected."] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
       ],
     },
     {
@@ -5785,7 +5878,7 @@ const dupuytrenDiseaseData = {
       index: 2,
       title: "Focused History",
       subtitle: "Hand, progression, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Affected hand", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "select", key: "progression", label: "Progression", options: ["Stable", "Slowly progressive", "Rapidly progressive"], columns: 3 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Palmar nodule", "Cord", "Finger contracture", "Difficulty placing hand flat", "Difficulty gripping large objects", "Difficulty wearing gloves", "Difficulty washing face", "Difficulty putting hand in pocket"] },{ type: "select", key: "painLevel", label: "Pain", options: ["None", "Mild", "Moderate"], columns: 3 },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Affected hand", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "select", key: "progression", label: "Progression", options: ["Stable", "Slowly progressive", "Rapidly progressive"], columns: 3 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Palmar nodule", "Cord", "Finger contracture", "Difficulty placing hand flat", "Difficulty gripping large objects", "Difficulty wearing gloves", "Difficulty washing face", "Difficulty putting hand in pocket"] },{ type: "select", key: "painLevel", label: "Pain", options: ["None", "Mild", "Moderate"], columns: 3 },{
           type: "conditional",
           when: (s) => s.painLevel && s.painLevel !== "None",
           fields: [{ type: "vas", key: "vas" }],
@@ -5820,7 +5913,8 @@ const dupuytrenDiseaseData = {
       fields: [
         { type: "info", title: "Essential", items: ["Imaging is not routinely required."] },
         { type: "info", title: "Radiographs — only when", items: ["Significant arthritis suspected", "Previous fracture", "Diagnostic uncertainty"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
       ],
     },
     {
@@ -5948,7 +6042,7 @@ const malletFingerData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit, injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Ball strike", "Crush", "Hyperflexion", "Laceration", "Other"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Drooping fingertip", "Inability to straighten", "Swelling", "Pain", "Weak pinch", "Difficulty typing", "Difficulty writing"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Fine motor tasks", "Manual work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Straight finger", "Return to work", "Return to sport", "Improve dexterity"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Buddy tape", "Previous surgery"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Ball strike", "Crush", "Hyperflexion", "Laceration", "Other"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Drooping fingertip", "Inability to straighten", "Swelling", "Pain", "Weak pinch", "Difficulty typing", "Difficulty writing"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Fine motor tasks", "Manual work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Straight finger", "Return to work", "Return to sport", "Improve dexterity"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Buddy tape", "Previous surgery"] },],
     },
     {
       id: "exam",
@@ -5986,8 +6080,10 @@ const malletFingerData = {
         { type: "checkbox", key: "imgViews", label: "Radiographs (routine) — views", options: ["AP", "Lateral", "Oblique"] },
         { type: "info", title: "Radiographs — assess", items: ["Bony avulsion", "Articular involvement", "DIP congruity", "Volar subluxation"] },
         { type: "info", title: "Ultrasound", items: ["Optional for tendon continuity if diagnosis is uncertain."] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
       ],
     },
     {
@@ -6128,7 +6224,7 @@ const jerseyFingerData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit, injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },{ type: "info", title: null, items: ["Ring finger is most commonly affected."] },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Finger caught in clothing", "Sporting tackle", "Forced extension", "Crush", "Other"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of fingertip flexion", "Weak grip", "Pain", "Swelling", "Finger feels weak", "Difficulty grasping"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Holding tools", "Carrying objects", "Keyboard", "Writing", "Sports", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore strength", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Analgesia", "Previous surgery"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },{ type: "info", title: null, items: ["Ring finger is most commonly affected."] },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Finger caught in clothing", "Sporting tackle", "Forced extension", "Crush", "Other"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of fingertip flexion", "Weak grip", "Pain", "Swelling", "Finger feels weak", "Difficulty grasping"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Holding tools", "Carrying objects", "Keyboard", "Writing", "Sports", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore strength", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Analgesia", "Previous surgery"] },],
     },
     {
       id: "exam",
@@ -6162,9 +6258,12 @@ const jerseyFingerData = {
         { type: "info", title: "Radiographs — assess", items: ["Bony avulsion", "DIP alignment", "Fracture"] },
         { type: "info", title: "Ultrasound", items: ["May assist in identifying tendon continuity or retraction when expertise is available."] },
         { type: "info", title: "MRI", items: ["Reserved for delayed presentation or uncertainty regarding tendon level and associated injuries."] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -6302,7 +6401,7 @@ const sagittalBandInjuryData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit, injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Index", "Middle", "Ring", "Little"], columns: 4 },{ type: "info", title: null, items: ["Middle finger is most commonly involved."] },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Direct trauma", "Punching injury", "Twisting injury", "Atraumatic"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["MCP pain", "Snapping", "Tendon slipping", "Difficulty extending", "Weak grip", "Swelling", "Mechanical instability"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Manual work", "Grip", "Sport", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Stable finger", "Return to work", "Return to sport", "Eliminate snapping"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Hand therapy", "Previous surgery"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Index", "Middle", "Ring", "Little"], columns: 4 },{ type: "info", title: null, items: ["Middle finger is most commonly involved."] },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Direct trauma", "Punching injury", "Twisting injury", "Atraumatic"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["MCP pain", "Snapping", "Tendon slipping", "Difficulty extending", "Weak grip", "Swelling", "Mechanical instability"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Manual work", "Grip", "Sport", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Stable finger", "Return to work", "Return to sport", "Eliminate snapping"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Hand therapy", "Previous surgery"] },],
     },
     {
       id: "exam",
@@ -6337,9 +6436,12 @@ const sagittalBandInjuryData = {
         { type: "info", title: "Ultrasound", items: ["Highly useful dynamic investigation."] },
         { type: "info", title: "Ultrasound — assess", items: ["Tendon subluxation", "Sagittal band disruption", "Dynamic tracking"] },
         { type: "info", title: "MRI — reserved for", items: ["Chronic injury", "Surgical planning", "Diagnostic uncertainty"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -6465,7 +6567,7 @@ const extensorTendonInjuriesData = {
       index: 2,
       title: "Focused History",
       subtitle: "Digit, injury details, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Manual", "Heavy manual"], columns: 3 },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Sharp laceration", "Crush", "Bite", "Machinery", "Open fracture"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of extension", "Weak extension", "Pain", "Swelling", "Open wound", "Functional loss"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Grip", "Pinch", "Work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Finger straightening", "Return to work", "Strength", "Dexterity"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Manual", "Heavy manual"], columns: 3 },{ type: "select", key: "affectedDigit", label: "Affected digit", options: ["Thumb", "Index", "Middle", "Ring", "Little"], columns: 5 },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Sharp laceration", "Crush", "Bite", "Machinery", "Open fracture"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Loss of extension", "Weak extension", "Pain", "Swelling", "Open wound", "Functional loss"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Grip", "Pinch", "Work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Finger straightening", "Return to work", "Strength", "Dexterity"] },],
     },
     {
       id: "exam",
@@ -6499,8 +6601,10 @@ const extensorTendonInjuriesData = {
         { type: "info", title: "Radiographs — assess", items: ["Fracture", "Foreign body", "Joint injury"] },
         { type: "info", title: "Ultrasound", items: ["Optional."] },
         { type: "info", title: "Ultrasound — assess", items: ["Tendon continuity"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
       ],
     },
     {
@@ -6645,7 +6749,7 @@ const carpalTunnelSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, distribution, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Nocturnal numbness", "Daytime numbness", "Tingling", "Burning pain", "Hand clumsiness", "Dropping objects", "Weak pinch", "Weak grip", "Thenar weakness"] },{ type: "checkbox", key: "symptomDistribution", label: "Symptom distribution", options: ["Thumb", "Index", "Middle", "Radial ring finger", "Entire hand", "Forearm symptoms", "Neck symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Driving", "Mobile phone use", "Buttoning clothes", "Cooking", "Childcare", "Manual work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Sleep improvement", "Numbness relief", "Restore dexterity", "Improve strength", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "NSAIDs", "Corticosteroid injection", "Physiotherapy", "Previous carpal tunnel release"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Nocturnal numbness", "Daytime numbness", "Tingling", "Burning pain", "Hand clumsiness", "Dropping objects", "Weak pinch", "Weak grip", "Thenar weakness"] },{ type: "checkbox", key: "symptomDistribution", label: "Symptom distribution", options: ["Thumb", "Index", "Middle", "Radial ring finger", "Entire hand", "Forearm symptoms", "Neck symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard use", "Driving", "Mobile phone use", "Buttoning clothes", "Cooking", "Childcare", "Manual work", "Sports"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "hobbies", label: "Hobbies" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Sleep improvement", "Numbness relief", "Restore dexterity", "Improve strength", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "NSAIDs", "Corticosteroid injection", "Physiotherapy", "Previous carpal tunnel release"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -6688,9 +6792,12 @@ const carpalTunnelSyndromeData = {
         { type: "select", key: "electrodiagnosticReview", label: "Electrodiagnostic — review", options: ["Mild", "Moderate", "Severe", "Denervation"], columns: 4 },
         { type: "info", title: "Ultrasound — assess", items: ["Median nerve cross-sectional area", "Flattening", "Bifid median nerve", "Space-occupying lesion"] },
         { type: "info", title: "Radiographs", items: ["Only when alternative pathology is suspected."] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -6832,7 +6939,7 @@ const cubitalTunnelData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, modifiers, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Little finger numbness", "Ring finger numbness", "Night symptoms", "Hand weakness", "Loss of dexterity", "Finger clumsiness", "Weak grip", "Weak pinch", "Muscle wasting noticed"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Worse with prolonged elbow flexion", "Worse while using phone", "Worse while sleeping", "Worse while driving", "Relieved by elbow extension"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Tools", "Opening jars", "Carrying objects", "Playing musical instruments", "Sport", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore sensation", "Restore strength", "Improve dexterity", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Night elbow splint", "Activity modification", "Physiotherapy", "Previous cubital tunnel surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 4 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Little finger numbness", "Ring finger numbness", "Night symptoms", "Hand weakness", "Loss of dexterity", "Finger clumsiness", "Weak grip", "Weak pinch", "Muscle wasting noticed"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Worse with prolonged elbow flexion", "Worse while using phone", "Worse while sleeping", "Worse while driving", "Relieved by elbow extension"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Tools", "Opening jars", "Carrying objects", "Playing musical instruments", "Sport", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore sensation", "Restore strength", "Improve dexterity", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Night elbow splint", "Activity modification", "Physiotherapy", "Previous cubital tunnel surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -6882,9 +6989,12 @@ const cubitalTunnelData = {
         { type: "select", key: "electrodiagnosticSeverity", label: "Electrodiagnostic — severity", options: ["Mild", "Moderate", "Severe", "Denervation"], columns: 4 },
         { type: "info", title: "Ultrasound — assess", items: ["Cross-sectional area", "Dynamic subluxation", "Nerve enlargement", "Structural abnormality"] },
         { type: "info", title: "Radiographs — when indicated", items: ["Previous fracture", "Arthritis", "Cubitus valgus", "Osteophytes"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -7002,7 +7112,7 @@ const lacertusSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Forearm fatigue", "Grip weakness", "Pinch weakness", "Hand clumsiness", "Difficulty lifting objects", "Difficulty turning keys", "Difficulty opening bottles", "Median nerve paresthesia", "Nocturnal symptoms", "Neck symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Carrying shopping bags", "Holding tools", "Keyboard", "Writing", "Driving", "Weight training", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore strength", "Improve endurance", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "Physiotherapy", "Previous CTS surgery", "Injection"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Forearm fatigue", "Grip weakness", "Pinch weakness", "Hand clumsiness", "Difficulty lifting objects", "Difficulty turning keys", "Difficulty opening bottles", "Median nerve paresthesia", "Nocturnal symptoms", "Neck symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Carrying shopping bags", "Holding tools", "Keyboard", "Writing", "Driving", "Weight training", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore strength", "Improve endurance", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Wrist splint", "Physiotherapy", "Previous CTS surgery", "Injection"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -7050,9 +7160,12 @@ const lacertusSyndromeData = {
         { type: "info", title: null, items: ["Clinical examination may be more sensitive than electrodiagnostic studies in isolated lacertus syndrome."] },
         { type: "info", title: "Ultrasound — assess", items: ["Median nerve morphology", "Dynamic compression", "Space-occupying lesion"] },
         { type: "info", title: "MRI", items: ["Reserved for atypical cases or when another proximal pathology is suspected."] },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -7183,7 +7296,7 @@ const guyonsCanalSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, modifiers, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Little finger numbness", "Ring finger numbness", "Intrinsic weakness", "Weak key pinch", "Weak grip", "Hand fatigue", "Hypothenar pain", "Clumsiness"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Cycling", "Prolonged gripping", "Vibrating tools", "Weightlifting", "Repetitive wrist loading", "Rest improves symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Opening jars", "Using tools", "Fine motor work", "Musical instruments", "Sport", "Heavy lifting"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Improve sensation", "Restore strength", "Improve dexterity", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Activity modification", "Physiotherapy", "Previous wrist surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Little finger numbness", "Ring finger numbness", "Intrinsic weakness", "Weak key pinch", "Weak grip", "Hand fatigue", "Hypothenar pain", "Clumsiness"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Cycling", "Prolonged gripping", "Vibrating tools", "Weightlifting", "Repetitive wrist loading", "Rest improves symptoms"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Writing", "Keyboard", "Opening jars", "Using tools", "Fine motor work", "Musical instruments", "Sport", "Heavy lifting"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Improve sensation", "Restore strength", "Improve dexterity", "Return to work"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Splint", "Activity modification", "Physiotherapy", "Previous wrist surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -7228,11 +7341,16 @@ const guyonsCanalSyndromeData = {
         { type: "info", title: "Ultrasound — assess", items: ["Ganglion cyst", "Nerve enlargement", "Space-occupying lesion", "Ulnar artery abnormality"] },
         { type: "info", title: "MRI — reserved for", items: ["Suspected ganglion", "Tumour", "Recurrent symptoms", "Diagnostic uncertainty"] },
         { type: "info", title: "Radiographs / CT (when indicated) — assess for", items: ["Hook of hamate fracture", "Pisiform pathology", "Carpal arthritis", "Previous fracture"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -7370,7 +7488,7 @@ const radialTunnelSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, modifiers, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep forearm pain", "Lateral elbow pain", "Pain with lifting", "Pain with gripping", "Pain during forearm rotation", "Fatigue", "Weakness due to pain", "Minimal numbness"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Worse with repetitive pronation-supination", "Worse with lifting", "Worse with resisted extension", "Improved with rest"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Carrying objects", "Opening jars", "Using tools", "Keyboard work", "Racquet sports", "Throwing", "Gym activities"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Return to work", "Return to sport", "Improve endurance"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Bracing", "Injection", "Previous lateral epicondyle surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep forearm pain", "Lateral elbow pain", "Pain with lifting", "Pain with gripping", "Pain during forearm rotation", "Fatigue", "Weakness due to pain", "Minimal numbness"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Worse with repetitive pronation-supination", "Worse with lifting", "Worse with resisted extension", "Improved with rest"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Carrying objects", "Opening jars", "Using tools", "Keyboard work", "Racquet sports", "Throwing", "Gym activities"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Return to work", "Return to sport", "Improve endurance"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Bracing", "Injection", "Previous lateral epicondyle surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -7416,10 +7534,14 @@ const radialTunnelSyndromeData = {
         { type: "info", title: "Ultrasound — assess", items: ["Space-occupying lesion", "Nerve morphology"] },
         { type: "info", title: "MRI — reserved for", items: ["Alternative pathology", "Tumour", "Persistent symptoms"] },
         { type: "info", title: "Radiographs — when indicated", items: ["Arthritis", "Previous fracture", "Osteophytes"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -7558,7 +7680,7 @@ const pinSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Finger drop", "Thumb extension weakness", "Weak grip due to poor finger positioning", "Difficulty releasing objects", "Difficulty typing", "Difficulty using tools", "Minimal pain", "No numbness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Carrying objects", "Releasing objects", "Sport", "Manual work", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore finger extension", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Splint", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Finger drop", "Thumb extension weakness", "Weak grip due to poor finger positioning", "Difficulty releasing objects", "Difficulty typing", "Difficulty using tools", "Minimal pain", "No numbness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Keyboard", "Writing", "Carrying objects", "Releasing objects", "Sport", "Manual work", "Fine motor tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore finger extension", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Splint", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -7614,10 +7736,14 @@ const pinSyndromeData = {
         { type: "info", title: "Ultrasound — assess", items: ["Nerve enlargement", "Ganglion", "Dynamic compression"] },
         { type: "info", title: "MRI — assess", items: ["Muscle denervation", "Space-occupying lesion", "Tumour"] },
         { type: "info", title: "Radiographs — when indicated", items: ["Elbow arthritis", "Previous trauma", "Radial head pathology"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -7747,7 +7873,7 @@ const ainSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, function, priorities",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Weak pinch", "Difficulty making an \u201cOK\u201d sign", "Difficulty buttoning clothes", "Difficulty picking up coins", "Difficulty turning keys", "Difficulty writing", "Forearm fatigue", "No numbness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Precision pinch", "Keyboard", "Writing", "Surgical instruments", "Musical instruments", "Fine motor work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore pinch", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Splint", "Previous surgery"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 weeks" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Weak pinch", "Difficulty making an \u201cOK\u201d sign", "Difficulty buttoning clothes", "Difficulty picking up coins", "Difficulty turning keys", "Difficulty writing", "Forearm fatigue", "No numbness"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Precision pinch", "Keyboard", "Writing", "Surgical instruments", "Musical instruments", "Fine motor work", "Sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Restore pinch", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "Splint", "Previous surgery"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -7800,9 +7926,12 @@ const ainSyndromeData = {
         { type: "select", key: "electrodiagnostic", label: "Electrodiagnostic studies", options: ["AIN denervation", "Normal", "Alternative diagnosis"], columns: 3 },
         { type: "info", title: "MRI — assess", items: ["Muscle denervation", "Compression lesion", "Anomalous muscle"] },
         { type: "info", title: "Ultrasound — assess", items: ["Structural compression", "Nerve morphology"] },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -7951,7 +8080,7 @@ const wartenbergSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, symptoms, modifiers, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Burning pain", "Tingling", "Numbness", "Hypersensitivity", "Electric shock sensation", "Dysesthesia", "No weakness"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Tight watch or bracelet", "Handcuffs", "Wrist splint", "Forearm rotation", "Thumb movement", "Relieved after removing compression"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Wearing a watch", "Writing", "Keyboard", "Gripping", "Driving", "Fine motor work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Sensory improvement", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Splint", "Physiotherapy", "Injection"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 months" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Burning pain", "Tingling", "Numbness", "Hypersensitivity", "Electric shock sensation", "Dysesthesia", "No weakness"] },{ type: "checkbox", key: "symptomModifiers", label: "Symptom modifiers", options: ["Tight watch or bracelet", "Handcuffs", "Wrist splint", "Forearm rotation", "Thumb movement", "Relieved after removing compression"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Wearing a watch", "Writing", "Keyboard", "Gripping", "Driving", "Fine motor work"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sportHobby", label: "Sport/Hobby" },{ type: "checkbox", key: "patientPriorities", label: "Patient priorities", options: ["Pain relief", "Sensory improvement", "Return to work", "Return to sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["NSAIDs", "Splint", "Physiotherapy", "Injection"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
@@ -7999,10 +8128,14 @@ const wartenbergSyndromeData = {
         { type: "info", title: "Ultrasound — assess", items: ["Nerve enlargement", "Scar tissue", "Neuroma", "External compression"] },
         { type: "info", title: "MRI — reserved for", items: ["Persistent symptoms", "Previous surgery", "Tumour"] },
         { type: "info", title: "Radiographs", items: ["Only if alternative wrist pathology is suspected."] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -8139,7 +8272,7 @@ const doubleCrushSyndromeData = {
       index: 2,
       title: "Focused History",
       subtitle: "Primary symptom, distribution, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "select", key: "primarySymptom", label: "Primary symptom", options: ["Pain", "Numbness", "Weakness", "Dexterity loss", "Fatigue"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "select", key: "previousNerveSurgery", label: "Previous nerve surgery", options: ["Yes", "No"], columns: 2 },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "select", key: "workDemand", label: "Work demand", options: ["Office", "Light manual", "Heavy manual"], columns: 3 },{ type: "select", key: "primarySymptom", label: "Primary symptom", options: ["Pain", "Numbness", "Weakness", "Dexterity loss", "Fatigue"], columns: 3 },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 1 year" },{ type: "select", key: "previousNerveSurgery", label: "Previous nerve surgery", options: ["Yes", "No"], columns: 2 },{
           type: "conditional",
           when: (s) => s.previousNerveSurgery === "Yes",
           fields: [{ type: "select", key: "surgeryResponse", label: "Response", options: ["Complete", "Partial", "None"], columns: 3, noteLabel: "Previous nerve surgery response" }],
@@ -8180,9 +8313,12 @@ const doubleCrushSyndromeData = {
         { type: "info", title: "Electrodiagnostic studies — assess", items: ["Single lesion", "Multiple lesions", "Generalized neuropathy"] },
         { type: "info", title: "Ultrasound", items: ["Evaluate each suspected compression site."] },
         { type: "info", title: "MRI — when indicated", items: ["Cervical spine", "Peripheral nerve", "Structural lesion"] },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — notable finding" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -8311,7 +8447,7 @@ const distalRadiusFxData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["Fall onto outstretched hand (FOOSH)", "High-energy trauma", "Sporting injury", "Motor vehicle collision", "Crush injury", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Active", "Manual labour", "Athlete"], columns: 2 },
@@ -8366,8 +8502,10 @@ const distalRadiusFxData = {
         { type: "text", key: "ulnarVariance", label: "Ulnar variance" },
         { type: "select", key: "drujCongruent", label: "DRUJ", options: ["Congruent", "Incongruent"], columns: 2 },
         { type: "info", title: "CT scan — indications", items: ["Intra-articular fracture", "Complex comminution", "Surgical planning", "Suspected carpal injury"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -8521,7 +8659,7 @@ const scaphoidFxData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["Fall onto outstretched hand (FOOSH)", "Sporting injury", "Motorcycle accident", "Cycling accident", "High-energy trauma", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Active", "Heavy manual", "Athlete"], columns: 2 },
@@ -8563,9 +8701,12 @@ const scaphoidFxData = {
         { type: "info", title: "If radiographs negative but suspicion high", items: ["MRI (preferred)", "CT (fracture characterization and surgical planning)", "Repeat radiographs if advanced imaging is unavailable"] },
         { type: "info", title: "CT assessment", items: ["Displacement", "Gap", "Humpback deformity", "Comminution", "Union"] },
         { type: "info", title: "MRI assessment", items: ["Occult fracture", "Bone edema", "Proximal pole vascularity", "Associated ligament injury"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -8714,7 +8855,7 @@ const thumbUCLInjuryData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["Fall while holding an object", "Ski pole injury", "Ball sports", "Hyperabduction injury", "Hyperextension injury", "Direct trauma", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Active", "Manual labour", "Athlete"], columns: 2 },
@@ -8763,9 +8904,12 @@ const thumbUCLInjuryData = {
         { type: "info", title: "Radiographs — assess", items: ["Avulsion fracture", "MCP alignment", "Subluxation"] },
         { type: "info", title: "Ultrasound (when indicated)", items: ["UCL integrity", "Stener lesion", "Dynamic instability"] },
         { type: "info", title: "MRI — reserved for", items: ["Diagnostic uncertainty", "Suspected Stener lesion", "Chronic injuries", "Elite athletes or high-demand patients when imaging will influence management"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -8913,7 +9057,7 @@ const metacarpalFxData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["Direct blow", "Punch injury", "Crush injury", "Fall", "Sporting injury", "Industrial injury", "Motor vehicle collision", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Active", "Heavy manual", "Athlete"], columns: 2 },
@@ -8963,8 +9107,10 @@ const metacarpalFxData = {
         { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["PA", "Lateral", "Oblique"] },
         { type: "info", title: "Assess", items: ["Angulation", "Rotation (clinical correlation)", "Shortening", "Intra-articular extension", "Comminution"] },
         { type: "info", title: "CT — reserved for", items: ["Complex intra-articular fractures", "Multiple metacarpal injuries", "CMC fracture-dislocations", "Surgical planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -9112,7 +9258,7 @@ const phalangealFxData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["Direct blow", "Crush injury", "Sporting injury", "Fall", "Door/machinery injury", "Twisting injury", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Active", "Heavy manual", "Athlete"], columns: 2 },
@@ -9166,8 +9312,10 @@ const phalangealFxData = {
         { type: "checkbox", key: "imgViews", label: "Radiographs — views", options: ["PA", "Lateral", "Oblique"] },
         { type: "info", title: "Radiographs — assess", items: ["Angulation", "Rotation (clinical correlation)", "Intra-articular extension", "Condylar involvement", "Comminution"] },
         { type: "info", title: "CT — reserved for", items: ["Complex intra-articular fractures", "Condylar fractures", "Surgical planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -9312,7 +9460,7 @@ const bennettRolandoFxData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["Axial load through a partially flexed thumb", "Punch injury", "Fall onto the thumb", "Sporting injury", "Motorcycle/bicycle accident", "Crush injury", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Active", "Heavy manual", "Athlete"], columns: 2 },
@@ -9361,8 +9509,10 @@ const bennettRolandoFxData = {
         { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["AP", "Lateral", "Robert view (when available)", "Bett view (when available)"] },
         { type: "info", title: "Assess", items: ["Intra-articular step", "Subluxation", "Fragment size", "Comminution"] },
         { type: "info", title: "CT — indications", items: ["Rolando fracture", "Complex comminution", "Surgical planning", "Uncertain articular anatomy"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -9514,7 +9664,7 @@ const perilunateInjuryData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["High-energy FOOSH", "Motorcycle accident", "Motor vehicle collision", "Fall from height", "Sporting injury", "Crush injury", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Active", "Heavy manual", "Athlete"], columns: 2 },
@@ -9562,9 +9712,12 @@ const perilunateInjuryData = {
         { type: "info", title: "Evaluate", items: ["Gilula arcs", "SL gap", "Capitate-lunate alignment", "Lunate position", "DISI/VISI"] },
         { type: "info", title: "CT — indications", items: ["Associated fractures", "Surgical planning", "Persistent uncertainty"] },
         { type: "info", title: "MRI — reserved for", items: ["Chronic injuries", "Ligament assessment", "Persistent instability"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -9712,7 +9865,7 @@ const hookOfHamateFxData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["Golf", "Baseball/softball", "Cricket", "Racquet sports", "Fall onto outstretched hand", "Direct impact to hypothenar eminence", "Motorcycle/bicycle injury", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Active", "Heavy manual", "Athlete"], columns: 2 },
@@ -9757,9 +9910,12 @@ const hookOfHamateFxData = {
         { type: "info", title: "CT", items: ["Preferred imaging modality."] },
         { type: "info", title: "CT — assess", items: ["Fracture", "Displacement", "Nonunion", "Healing"] },
         { type: "info", title: "MRI — reserved for", items: ["Occult fracture", "Persistent pain", "Tendon pathology", "Ulnar nerve compression"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
-        { type: "text", key: "ctFinding", label: "CT — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -9901,7 +10057,7 @@ const fingertipInjuryData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["Crush injury", "Sharp laceration", "Door crush", "Machinery injury", "Saw injury", "Avulsion", "Bite injury", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Manual labour", "Musician", "Surgeon", "Athlete"], columns: 2 },
@@ -9947,7 +10103,8 @@ const fingertipInjuryData = {
       fields: [
         { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["AP", "Lateral", "Oblique"] },
         { type: "info", title: "Assess", items: ["Tuft fracture", "Shaft fracture", "Intra-articular extension", "Foreign body"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
       ],
     },
     {
@@ -10088,7 +10245,7 @@ const tendonLacerationData = {
       subtitle: "Mechanism, patient factors, injury factors",
       fields: [
         { type: "checkbox", key: "mechanismOfInjury", label: "Mechanism of injury", options: ["Knife", "Glass", "Machinery", "Saw", "Industrial injury", "Crush-laceration", "Bite injury", "Other"] },
-        { type: "text", key: "age", label: "Age" },
+        { type: "number", key: "age", label: "Age", suffix: "years" },
         { type: "select", key: "dominantHandSide", label: "Dominant hand", options: ["Right", "Left"], columns: 2 },
         { type: "text", key: "occupation", label: "Occupation" },
         { type: "select", key: "activityLevel", label: "Activity level", options: ["Sedentary", "Manual labour", "Musician", "Surgeon", "Athlete"], columns: 2 },
@@ -10138,9 +10295,12 @@ const tendonLacerationData = {
         { type: "info", title: "Radiographs — assess", items: ["Foreign body", "Associated fracture", "Avulsion injury"] },
         { type: "info", title: "Ultrasound — when indicated", items: ["Tendon continuity", "Dynamic tendon glide"] },
         { type: "info", title: "MRI — reserved for", items: ["Delayed presentation", "Complex injuries", "Diagnostic uncertainty"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — notable finding" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI — notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -10254,7 +10414,7 @@ const clavicleFxData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, duration, functional impact",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto shoulder", "Fall onto outstretched hand", "Direct blow", "Road traffic collision", "Sporting collision"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Deformity", "Bruising", "Swelling", "Numbness/tingling in the arm or hand", "Shortness of breath", "Chest pain"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty dressing", "Difficulty sleeping", "Unable to work/drive"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Smoking", "Diabetes", "Bleeding disorder / anticoagulation"] },{ type: "text", key: "sport", label: "Sport (if applicable)" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto shoulder", "Fall onto outstretched hand", "Direct blow", "Road traffic collision", "Sporting collision"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Deformity", "Bruising", "Swelling", "Numbness/tingling in the arm or hand", "Shortness of breath", "Chest pain"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty dressing", "Difficulty sleeping", "Unable to work/drive"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Smoking", "Diabetes", "Bleeding disorder / anticoagulation"] },{ type: "text", key: "sport", label: "Sport (if applicable)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Inspection, palpation, neurovascular status",
@@ -10274,8 +10434,10 @@ const clavicleFxData = {
         { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP clavicle", "15\u00b0 cephalic tilt view", "Chest X-ray (assess for pneumothorax)"] },
         { type: "info", title: "Review for", items: ["Fracture location (medial/middle/lateral third)", "Displacement", "Shortening", "Comminution", "Associated rib or scapular fracture"] },
         { type: "info", title: "CT (selected cases)", items: ["Complex or intra-articular medial/lateral third fractures", "Suspected floating shoulder", "Preoperative planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
-        { type: "text", key: "ctFinding", label: "CT \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
         { type: "numberGroup", key: "shorteningMeasurement", label: "Measured shortening", items: ["Shortening (mm)"], suffix: "mm" },
       ],
     },
@@ -10381,7 +10543,7 @@ const parsonageTurnerData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset pattern, pain-to-weakness sequence",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },{ type: "vas", key: "vas", label: "Peak pain severity (VAS)" },{ type: "select", key: "painWeaknessPattern", label: "Pattern", options: ["Severe pain then resolving as weakness emerged", "Pain and weakness concurrent", "Weakness without significant pain"], noteLabel: "Pain-weakness pattern" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Scapular winging", "Numbness/tingling", "Muscle wasting", "Difficulty raising the arm overhead", "Night pain at onset"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty with overhead activities", "Difficulty dressing", "Reduced grip/manipulation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Oral corticosteroids"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Recent viral illness", "Recent vaccination", "Recent surgery", "Autoimmune disease", "Diabetes"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },{ type: "vas", key: "vas", label: "Peak pain severity (VAS)" },{ type: "select", key: "painWeaknessPattern", label: "Pattern", options: ["Severe pain then resolving as weakness emerged", "Pain and weakness concurrent", "Weakness without significant pain"], noteLabel: "Pain-weakness pattern" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Scapular winging", "Numbness/tingling", "Muscle wasting", "Difficulty raising the arm overhead", "Night pain at onset"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to lift the arm", "Difficulty with overhead activities", "Difficulty dressing", "Reduced grip/manipulation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Oral corticosteroids"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Recent viral illness", "Recent vaccination", "Recent surgery", "Autoimmune disease", "Diabetes"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Pattern of weakness, scapular assessment",
@@ -10401,8 +10563,10 @@ const parsonageTurnerData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Imaging/investigations obtained", options: ["Shoulder X-ray (exclude structural cause)", "MRI shoulder and brachial plexus", "EMG/nerve conduction studies", "Inflammatory markers/autoimmune screen"] },
         { type: "info", title: "Review for", items: ["Denervation changes on MRI (muscle oedema, atrophy)", "Exclusion of structural rotator cuff tear", "EMG pattern of patchy multi-nerve involvement"] },
-        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
-        { type: "text", key: "emgFinding", label: "EMG/nerve conduction \u2014 notable finding" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "emgCommon", label: "EMG/nerve conduction — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "emgFinding", label: "EMG/nerve conduction — additional detail" },
       ],
     },
     {
@@ -10494,7 +10658,7 @@ const suprascapularNeuropathyData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, activity pattern, associated pathology",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep posterior/lateral shoulder ache", "Weakness with overhead activity", "Visible wasting noticed by patient/others", "Painless weakness only"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Reduced overhead throwing/serving power", "Difficulty with overhead lifting", "Reaching behind the back"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "sport", label: "Sport (especially volleyball/overhead throwing)" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Deep posterior/lateral shoulder ache", "Weakness with overhead activity", "Visible wasting noticed by patient/others", "Painless weakness only"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Reduced overhead throwing/serving power", "Difficulty with overhead lifting", "Reaching behind the back"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "sport", label: "Sport (especially volleyball/overhead throwing)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Inspection, strength, provocative tests",
@@ -10514,8 +10678,10 @@ const suprascapularNeuropathyData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Imaging obtained", options: ["Shoulder X-ray", "MRI shoulder", "EMG/nerve conduction studies"] },
         { type: "info", title: "Review for", items: ["Paralabral cyst at suprascapular or spinoglenoid notch", "Associated labral tear (SLAP)", "Muscle atrophy/fatty infiltration (supraspinatus/infraspinatus)", "Concomitant rotator cuff tear"] },
-        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
-        { type: "text", key: "emgFinding", label: "EMG/nerve conduction \u2014 notable finding" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "emgCommon", label: "EMG/nerve conduction — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "emgFinding", label: "EMG/nerve conduction — additional detail" },
       ],
     },
     {
@@ -10609,7 +10775,7 @@ const olecranonFxData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, duration, functional impact",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 1 day" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto point of elbow", "Direct blow", "Fall onto outstretched hand with elbow flexed", "Road traffic collision"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Inability to extend the elbow", "Deformity", "Numbness/tingling in the ring/little finger", "Swelling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the elbow", "Unable to bear weight through the arm", "Difficulty with self-care"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Diabetes", "Smoking", "Bleeding disorder / anticoagulation"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 1 day" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall onto point of elbow", "Direct blow", "Fall onto outstretched hand with elbow flexed", "Road traffic collision"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Inability to extend the elbow", "Deformity", "Numbness/tingling in the ring/little finger", "Swelling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the elbow", "Unable to bear weight through the arm", "Difficulty with self-care"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Osteoporosis", "Diabetes", "Smoking", "Bleeding disorder / anticoagulation"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Extensor mechanism, palpation, neurovascular status",
@@ -10630,8 +10796,10 @@ const olecranonFxData = {
         { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP elbow", "Lateral elbow"] },
         { type: "info", title: "Review for", items: ["Fracture pattern and comminution", "Displacement", "Articular involvement/step-off", "Associated radial head or coronoid fracture"] },
         { type: "info", title: "CT (selected cases)", items: ["Comminuted or intra-articular fractures", "Preoperative planning"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
-        { type: "text", key: "ctFinding", label: "CT \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -10727,7 +10895,7 @@ const olecranonBursitisData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, systemic symptoms, risk factors",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation (especially roles involving leaning on elbows)" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 days" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Warmth", "Fever/systemic upset", "Recent skin break/penetrating injury near the elbow"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Discomfort leaning on the elbow", "Cosmetic concern", "Restricted clothing/sleeve fit"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Compression/elbow pad", "NSAIDs", "Aspiration", "Antibiotics"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Gout", "Rheumatoid arthritis", "Diabetes", "Immunosuppression"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation (especially roles involving leaning on elbows)" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 5 days" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Warmth", "Fever/systemic upset", "Recent skin break/penetrating injury near the elbow"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Discomfort leaning on the elbow", "Cosmetic concern", "Restricted clothing/sleeve fit"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Compression/elbow pad", "NSAIDs", "Aspiration", "Antibiotics"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Gout", "Rheumatoid arthritis", "Diabetes", "Immunosuppression"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Inspection, palpation, signs of infection",
@@ -10746,7 +10914,8 @@ const olecranonBursitisData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Imaging/investigations obtained", options: ["Elbow X-ray (exclude bony spur/foreign body)", "Bursal fluid aspiration for cell count/culture", "Bloods (WCC/CRP) if septic bursitis suspected"] },
         { type: "info", title: "Review for", items: ["Bony spur or foreign body on X-ray", "Aspirate appearance (clear/straw vs turbid/purulent)", "Crystal analysis if gout suspected"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
         { type: "text", key: "aspirateFinding", label: "Aspirate \u2014 notable finding" },
       ],
     },
@@ -10834,7 +11003,7 @@ const intersectionSyndromeData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, activity pattern, functional impact",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal forearm swelling/pain proximal to the wrist", "Crepitus with movement", "Pain worse with resisted extension"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty gripping", "Pain with repetitive wrist movement", "Difficulty with sport-specific activity"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Rest/activity modification", "Splinting", "NSAIDs", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "sport", label: "Sport (rowing/weightlifting/racquet sports/skiing)" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 weeks" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Dorsal forearm swelling/pain proximal to the wrist", "Crepitus with movement", "Pain worse with resisted extension"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty gripping", "Pain with repetitive wrist movement", "Difficulty with sport-specific activity"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Rest/activity modification", "Splinting", "NSAIDs", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "sport", label: "Sport (rowing/weightlifting/racquet sports/skiing)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Location relative to De Quervain's, provocative tests",
@@ -10852,8 +11021,10 @@ const intersectionSyndromeData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Imaging obtained (usually a clinical diagnosis)", options: ["Wrist/forearm X-ray (exclude bony cause)", "Ultrasound", "MRI (selected cases)"] },
         { type: "info", title: "Review for", items: ["Peritendinous fluid/oedema at the 2nd/1st extensor compartment crossover point", "Tenosynovitis of ECRB/ECRL and APL/EPB"] },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound \u2014 notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -10953,7 +11124,7 @@ const ecuTendinopathyData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, subluxation symptoms, functional impact",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Painful snapping/clicking", "Sensation of instability", "Weakness gripping"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with racquet sports/golf", "Difficulty gripping", "Pain with forearm rotation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "sport", label: "Sport (racquet sports/golf/rowing)" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Painful snapping/clicking", "Sensation of instability", "Weakness gripping"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with racquet sports/golf", "Difficulty gripping", "Pain with forearm rotation"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "sport", label: "Sport (racquet sports/golf/rowing)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Palpation, subluxation testing, resisted movement",
@@ -10972,8 +11143,10 @@ const ecuTendinopathyData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Imaging obtained", options: ["Wrist X-ray (exclude bony pathology)", "Ultrasound (dynamic assessment of subluxation)", "MRI (selected cases)"] },
         { type: "info", title: "Review for", items: ["ECU tendinopathy/tenosynovitis", "Subsheath tear allowing subluxation", "Split tears of the tendon", "Associated TFCC pathology"] },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound \u2014 notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -11065,7 +11238,7 @@ const drujInstabilityData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Onset, mechanism, functional impact",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Clicking/clunking", "Instability/giving way", "Reduced forearm rotation"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with push-up/weight-bearing through the wrist", "Difficulty gripping/twisting", "Difficulty with sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "prevSurgery", label: "Previous surgery (if any)", placeholder: "Free text \u2014 procedure & date" },{ type: "text", key: "sport", label: "Sport (gymnastics/racquet sports)" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 6 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided wrist pain", "Clicking/clunking", "Instability/giving way", "Reduced forearm rotation"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with push-up/weight-bearing through the wrist", "Difficulty gripping/twisting", "Difficulty with sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting/bracing", "NSAIDs", "Physiotherapy", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "text", key: "prevSurgery", label: "Previous surgery (if any)", placeholder: "Free text \u2014 procedure & date" },{ type: "text", key: "sport", label: "Sport (gymnastics/racquet sports)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "DRUJ stability, rotation, provocative tests",
@@ -11086,9 +11259,12 @@ const drujInstabilityData = {
         { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["PA wrist (neutral rotation)", "Lateral wrist (true lateral)", "Bilateral comparison views"] },
         { type: "info", title: "Review for", items: ["Ulnar variance", "DRUJ joint space/arthritic change", "Previous fracture malunion", "Sigmoid notch morphology"] },
         { type: "info", title: "MRI/CT (selected cases)", items: ["TFCC integrity", "DRUJ subluxation on rotational CT", "Cartilage status if arthritis suspected"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
-        { type: "text", key: "ctFinding", label: "CT \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
       ],
     },
     {
@@ -11178,7 +11354,7 @@ const boutonniereDeformityData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, timing, functional impact",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 5 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Forced flexion of an extended PIP joint (jammed finger)", "Direct blow to the dorsum of the finger", "Laceration over the dorsal PIP joint", "Volar PIP dislocation", "Chronic/attritional (e.g. rheumatoid arthritis)"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling over the dorsal PIP joint", "Inability to fully extend the PIP joint", "Fixed flexion deformity of the PIP joint", "DIP joint hyperextension"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine grip", "Difficulty fully extending the finger", "Catching on objects/gloves"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Buddy taping", "Splinting", "Analgesics"] },{ type: "text", key: "sport", label: "Sport (if applicable)" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 5 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Forced flexion of an extended PIP joint (jammed finger)", "Direct blow to the dorsum of the finger", "Laceration over the dorsal PIP joint", "Volar PIP dislocation", "Chronic/attritional (e.g. rheumatoid arthritis)"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling over the dorsal PIP joint", "Inability to fully extend the PIP joint", "Fixed flexion deformity of the PIP joint", "DIP joint hyperextension"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine grip", "Difficulty fully extending the finger", "Catching on objects/gloves"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Buddy taping", "Splinting", "Analgesics"] },{ type: "text", key: "sport", label: "Sport (if applicable)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Deformity assessment, Elson's test",
@@ -11199,7 +11375,8 @@ const boutonniereDeformityData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP finger", "Lateral finger", "Oblique finger"] },
         { type: "info", title: "Review for", items: ["Avulsion fracture at the base of the middle phalanx (central slip insertion)", "PIP joint congruency/subluxation", "Associated volar plate injury"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
       ],
     },
     {
@@ -11295,7 +11472,7 @@ const pipDislocationData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, reduction history, functional impact",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Axial load/hyperextension (ball to fingertip)", "Direct blow", "Twisting injury"], columns: 2 },{ type: "select", key: "dislocationDirection", label: "Direction of dislocation (if witnessed/known)", options: ["Dorsal", "Volar", "Lateral", "Unknown/already reduced"], noteLabel: "Direction of dislocation" },{ type: "select", key: "priorReduction", label: "Already reduced prior to this assessment?", options: ["Yes, reduced on-field/by patient", "Yes, reduced by another clinician", "No, still dislocated"], noteLabel: "Prior reduction" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling", "Bruising", "Sensation of instability", "Numbness/tingling in the digit"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to fully extend the finger", "Difficulty gripping", "Unable to continue sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Axial load/hyperextension (ball to fingertip)", "Direct blow", "Twisting injury"], columns: 2 },{ type: "select", key: "dislocationDirection", label: "Direction of dislocation (if witnessed/known)", options: ["Dorsal", "Volar", "Lateral", "Unknown/already reduced"], noteLabel: "Direction of dislocation" },{ type: "select", key: "priorReduction", label: "Already reduced prior to this assessment?", options: ["Yes, reduced on-field/by patient", "Yes, reduced by another clinician", "No, still dislocated"], noteLabel: "Prior reduction" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling", "Bruising", "Sensation of instability", "Numbness/tingling in the digit"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to fully extend the finger", "Difficulty gripping", "Unable to continue sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Stability, active motion, neurovascular status",
@@ -11316,7 +11493,8 @@ const pipDislocationData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP finger", "Lateral finger (true lateral)", "Oblique finger", "Post-reduction views"] },
         { type: "info", title: "Review for", items: ["Volar plate avulsion fracture at the base of the middle phalanx", "Joint congruency post-reduction", "Pilon/comminuted fracture-dislocation pattern", "Collateral ligament avulsion"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
       ],
     },
     {
@@ -11410,7 +11588,7 @@ const handOAData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Pattern, functional impact, comorbidities",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Joint pain", "Bony swelling", "Stiffness (especially morning)", "Reduced grip strength", "Intermittent locking/catching", "Mucous cyst at the DIP joint"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine motor tasks", "Difficulty opening jars/gripping", "Cosmetic concern regarding nodal swelling", "Difficulty with occupational tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs (oral or topical)", "Splinting", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Family history of hand OA", "Rheumatoid arthritis", "Psoriatic arthritis", "Gout/pseudogout"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Joint pain", "Bony swelling", "Stiffness (especially morning)", "Reduced grip strength", "Intermittent locking/catching", "Mucous cyst at the DIP joint"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Difficulty with fine motor tasks", "Difficulty opening jars/gripping", "Cosmetic concern regarding nodal swelling", "Difficulty with occupational tasks"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "NSAIDs (oral or topical)", "Splinting", "Injection"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Family history of hand OA", "Rheumatoid arthritis", "Psoriatic arthritis", "Gout/pseudogout"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Joint-by-joint assessment, deformity, grip",
@@ -11430,7 +11608,8 @@ const handOAData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["PA hand", "Lateral/oblique views of the affected digit"] },
         { type: "info", title: "Review for", items: ["Joint space narrowing", "Osteophytes", "Subchondral sclerosis/cysts", "Erosive change (erosive OA)", "Angular deformity"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
       ],
     },
     {
@@ -11519,7 +11698,7 @@ const flexorTenosynovitisData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, timeline, systemic symptoms",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury/onset" },{ type: "text", key: "timeSinceInjury", label: "Time since injury/onset", placeholder: "e.g. 2 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Penetrating injury/laceration", "Human bite", "Animal bite", "Splinter/foreign body", "No identifiable injury (haematogenous spread)"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Fever/chills", "Malaise", "Rapidly spreading redness up the hand/forearm"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the finger", "Unable to use the hand", "Difficulty with any grip"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Rapidly worsening"], columns: 2 },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Immunosuppression", "IV drug use", "Peripheral vascular disease"] },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury/onset" },{ type: "text", key: "timeSinceInjury", label: "Time since injury/onset", placeholder: "e.g. 2 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Penetrating injury/laceration", "Human bite", "Animal bite", "Splinter/foreign body", "No identifiable injury (haematogenous spread)"], columns: 2 },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Swelling", "Redness", "Fever/chills", "Malaise", "Rapidly spreading redness up the hand/forearm"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to extend the finger", "Unable to use the hand", "Difficulty with any grip"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Rapidly worsening"], columns: 2 },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Diabetes", "Immunosuppression", "IV drug use", "Peripheral vascular disease"] },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Kanavel's signs, spread of infection",
@@ -11539,7 +11718,8 @@ const flexorTenosynovitisData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Imaging/investigations obtained", options: ["Hand X-ray (exclude foreign body/osteomyelitis)", "Bloods (WCC/CRP)", "Blood cultures if systemically unwell", "Ultrasound (selected cases \u2014 assess for collection)"] },
         { type: "info", title: "Review for", items: ["Foreign body", "Bony involvement/osteomyelitis", "Fluid within the flexor sheath on ultrasound"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
         { type: "text", key: "bloodsFinding", label: "Bloods \u2014 notable finding" },
       ],
     },
@@ -11636,7 +11816,7 @@ const thoracicOutletSyndromeData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Symptom pattern, subtype clues, functional impact",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "text", key: "age", label: "Age" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Diffuse arm/hand pain", "Paraesthesia (often ulnar distribution)", "Weakness/heaviness of the arm with use", "Symptoms provoked by overhead activity", "Swelling/discolouration of the arm", "Diminished pulse/coolness of the hand", "Neck/shoulder girdle pain"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to sustain overhead activity", "Difficulty carrying bags/backpacks", "Difficulty sleeping with arm elevated", "Reduced work tolerance (especially overhead tasks)"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Physiotherapy", "Postural/nerve gliding exercises", "Analgesics", "Injection (scalene block)"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Cervical rib (known)", "Previous clavicle fracture", "Previous neck/whiplash injury", "Hypermobility"] },{ type: "text", key: "sport", label: "Sport (overhead/throwing/swimming)" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 8 months" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Diffuse arm/hand pain", "Paraesthesia (often ulnar distribution)", "Weakness/heaviness of the arm with use", "Symptoms provoked by overhead activity", "Swelling/discolouration of the arm", "Diminished pulse/coolness of the hand", "Neck/shoulder girdle pain"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to sustain overhead activity", "Difficulty carrying bags/backpacks", "Difficulty sleeping with arm elevated", "Reduced work tolerance (especially overhead tasks)"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Physiotherapy", "Postural/nerve gliding exercises", "Analgesics", "Injection (scalene block)"] },{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Treatment response" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["Cervical rib (known)", "Previous clavicle fracture", "Previous neck/whiplash injury", "Hypermobility"] },{ type: "text", key: "sport", label: "Sport (overhead/throwing/swimming)" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Provocative tests, vascular assessment, posture",
@@ -11656,8 +11836,10 @@ const thoracicOutletSyndromeData = {
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Imaging/investigations obtained", options: ["Chest/cervical spine X-ray (assess for cervical rib)", "MRI cervical spine and brachial plexus", "MR/CT angiography (if vascular subtype suspected)", "EMG/nerve conduction studies", "Duplex ultrasound (if venous subtype suspected)"] },
         { type: "info", title: "Review for", items: ["Cervical rib or elongated C7 transverse process", "Brachial plexus compression at the scalene triangle", "Subclavian artery/vein compression or thrombosis on positional imaging", "EMG evidence of a lower trunk/T1-predominant pattern"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 notable finding" },
-        { type: "text", key: "mriFinding", label: "MRI \u2014 notable finding" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
         { type: "text", key: "angiographyFinding", label: "CT/MR angiography \u2014 notable finding" },
       ],
     },
@@ -11825,9 +12007,12 @@ const generalShoulderData = {
       id: "imaging", index: 4, title: "Imaging", subtitle: "If obtained",
       fields: [
         { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["AP", "Grashey", "Axillary", "Scapular Y", "Not performed"] },
-        { type: "text", key: "radiographsFinding", label: "Radiograph findings" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound findings" },
-        { type: "text", key: "mriFinding", label: "MRI findings" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -11970,10 +12155,14 @@ const generalElbowData = {
       id: "imaging", index: 4, title: "Imaging", subtitle: "If obtained",
       fields: [
         { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["AP", "Lateral", "Oblique", "Not performed"] },
-        { type: "text", key: "radiographsFinding", label: "Radiograph findings" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound findings" },
-        { type: "text", key: "mriFinding", label: "MRI findings" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Nerve conduction studies / EMG findings" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -12109,11 +12298,16 @@ const generalWristData = {
       id: "imaging", index: 4, title: "Imaging", subtitle: "If obtained",
       fields: [
         { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["PA", "Lateral", "Oblique", "Scaphoid views", "Clenched fist PA", "Not performed"] },
-        { type: "text", key: "radiographsFinding", label: "Radiograph findings" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound findings" },
-        { type: "text", key: "mriFinding", label: "MRI findings" },
-        { type: "text", key: "ctFinding", label: "CT findings" },
-        { type: "text", key: "electrodiagnosticFinding", label: "Nerve conduction studies / EMG findings" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Nonunion", "Malunion", "Bone loss", "Degenerative change", "Loose body", "Hardware position satisfactory"] },
+        { type: "text", key: "ctFinding", label: "CT — additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
       ],
     },
     {
@@ -12249,9 +12443,12 @@ const generalHandData = {
       id: "imaging", index: 4, title: "Imaging", subtitle: "If obtained",
       fields: [
         { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["PA", "Lateral", "Oblique", "Dedicated digit views", "Not performed"] },
-        { type: "text", key: "radiographsFinding", label: "Radiograph findings" },
-        { type: "text", key: "ultrasoundFinding", label: "Ultrasound findings" },
-        { type: "text", key: "mriFinding", label: "MRI findings" },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Degenerative change", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Calcification", "Fracture", "Dislocation or subluxation", "Deformity or malalignment", "Erosions", "Loose body", "Hardware in situ"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon subluxation", "Effusion", "Bursitis", "Synovitis", "Nerve enlargement", "Ganglion or cyst", "Dynamic instability", "Calcification"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound — additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Tendinopathy", "Partial-thickness tear", "Full-thickness tear", "Tendon retraction", "Fatty infiltration", "Muscle atrophy", "Bone marrow oedema", "Chondral loss", "Labral tear", "Ligament injury", "Effusion", "Ganglion or cyst", "Synovitis", "Nerve signal change"] },
+        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
       ],
     },
     {
@@ -12411,7 +12608,7 @@ const RELATED_CONDITIONS = {
 // fields are auto-filled from whatever's already been entered for another
 // active condition, so the clinician isn't re-typing side/occupation/sport
 // for every coexisting diagnosis on the same patient.
-const SHARED_FIELD_KEYS = ["side", "occupation", "sport", "competitionLevel"];
+const SHARED_FIELD_KEYS = ["side", "age", "gender", "occupation", "occupationBeforeInjury", "sport", "hobbies", "competitionLevel", "workDemand", "workStatus", "medHistory"];
 
 // "Dominant arm" (Shoulder/Elbow templates) and "Dominant hand" (Wrist/Hand
 // templates) are the same clinical fact under a region-appropriate label and
@@ -12702,10 +12899,50 @@ function NumberField({ label, value, onChange, suffix, placeholder }) {
   );
 }
 
-function TextField({ label, value, onChange, placeholder }) {
+// Free text is the single biggest source of typing in clinic. Where a field
+// has a small set of very common answers, those are offered as one-tap chips
+// above the input - the input itself is untouched, so anything unusual is
+// still typed exactly as before and nothing becomes harder to record.
+// One-tap suggestions for the highest-frequency free-text fields, keyed
+// centrally so a change applies to every template at once rather than being
+// duplicated across 200+ field definitions. These are starting points, not
+// a closed list - the text input beneath always accepts anything.
+const FIELD_SUGGESTIONS = {
+  occupation: ["Retired", "Manual worker", "Office/desk work", "Healthcare", "Teacher", "Driver", "Student", "Homemaker"],
+  occupationBeforeInjury: ["Retired", "Manual worker", "Office/desk work", "Healthcare", "Teacher", "Driver", "Student", "Homemaker"],
+  duration: ["< 6 weeks", "6 weeks", "3 months", "6 months", "1 year", "> 2 years"],
+  timeSinceInjury: ["Same day", "< 1 week", "1-2 weeks", "3-6 weeks", "3 months", "> 6 months"],
+  timeFromInjury: ["Same day", "< 1 week", "1-2 weeks", "3-6 weeks", "3 months", "> 6 months"],
+  sport: ["None", "Gym/weights", "Racquet sports", "Swimming", "Golf", "Running", "Cycling", "Contact sport"],
+  hobbies: ["None", "Gardening", "DIY", "Knitting/crafts", "Musical instrument", "Gaming/computer"],
+};
+
+function TextField({ label, value, onChange, placeholder, suggestions }) {
   return (
     <div className="mb-3">
       <div className="text-[13px] mb-1" style={{ color: T.inkSoft }}>{label}</div>
+      {suggestions && suggestions.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {suggestions.map((s) => {
+            const active = String(value || "").trim().toLowerCase() === s.toLowerCase();
+            return (
+              <button
+                key={s}
+                onClick={() => onChange(active ? "" : s)}
+                className="rounded-full px-3 py-1.5 text-[12.5px] font-medium active:scale-95 transition"
+                style={{
+                  background: active ? T.teal : T.slateChip,
+                  color: active ? "#fff" : T.ink,
+                  border: `1px solid ${active ? T.teal : T.border}`,
+                  minHeight: 34,
+                }}
+              >
+                {s}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <input type="text" value={value || ""} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink }} />
     </div>
   );
@@ -13190,7 +13427,7 @@ function Field({ field, state, setField, region }) {
         </>
       );
     case "text":
-      return <TextField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} placeholder={field.placeholder} />;
+      return <TextField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} placeholder={field.placeholder} suggestions={field.suggestions || FIELD_SUGGESTIONS[field.key]} />;
     case "date":
       return <DateField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} />;
     case "number":
@@ -13430,7 +13667,21 @@ function fieldClause(field, state) {
       }
       if (/^typicalPresentation/i.test(key)) return `the presentation was consistent with ${list}`;
       if (/affectedDigit/i.test(key)) return `this affects the ${list} digit${(state[key] || []).length === 1 ? "" : "s"}`;
-      if (/symptom/i.test(key)) return list;
+      if (/symptom/i.test(key) || /painChar/i.test(key)) return list;
+      // Structured imaging findings render under a "Radiographs:" / "MRI:"
+      // heading that already names the modality, so the label would repeat it.
+      if (/^(radiographs|ultrasound|mri|ct|electrodiagnostic|emg)Common$/i.test(key)) return list;
+      // Same for the views checkbox. Its label varies a lot across templates
+      // ("Plain radiographs obtained", "Radiographs - recommended views",
+      // "Standard radiographs", ...) and every variant repeats the modality
+      // already supplied by the heading, so they all collapse to one phrase.
+      if (/^img/i.test(key) && /radiograph|views/i.test(String(label || ""))) {
+        return `views obtained included ${list}`;
+      }
+      if (/^diagTendons$/i.test(key)) {
+        const expanded = rawItems.map(expandTendon);
+        return `involving the ${humanizeList(expanded)}`;
+      }
       if (/functionalLimit/i.test(key)) return `difficulty with ${list}`;
       if (/prevTreatment/i.test(key)) return list;
       if (/(medHistory|relevantHistory)/i.test(key)) return `relevant medical history included ${list}`;
@@ -13516,6 +13767,12 @@ function fieldClause(field, state) {
       // "weakness was none" / "pain was none" reads as a form field rather
       // than prose; a clinician writes "no weakness". Handled generically
       // so it covers every select whose value is None/Nil/Absent.
+      // "Clinical impression: diagnosis was partial thickness tear" restates
+      // the frame; the bare diagnosis reads as a clinician would write it.
+      // Matched on the label rather than the key, because templates use many
+      // different key names (diagPrimary, diagType, injuryType, ...) for the
+      // same "Primary diagnosis" field.
+      if (/^(primary diagnosis|diagnosis)$/i.test(String(label || "").trim())) return lowerListItem(v);
       if (label && /^(none|nil|absent)$/i.test(String(v).trim())) return `no ${lowerLabel}`;
       if (label) return `${lowerLabel} was ${lowerListItem(v)}`;
       return v;
@@ -13540,7 +13797,7 @@ function fieldClause(field, state) {
       if (/^(timeSinceInjury|timeFromInjury|timeSinceInjurySurgery)$/i.test(key) && state.injuryDate && state.injuryDate.trim()) return null;
       if (/^occupation/i.test(key)) return `works as a ${v}`;
       if (/^(sport|hobby|hobbies|sportHobby)$/i.test(key)) return `participates in ${v}`;
-      if (/notable finding$/i.test(label)) return v;
+      if (/(notable finding|additional detail)$/i.test(label)) return v;
       if (label) return `${lowerLabel} was ${v}`;
       return v;
     }
@@ -13657,8 +13914,15 @@ function buildDemographics(condition, state) {
   // note (History section) rather than restated as part of this summary.
   const diagnoses = (medHistoryItems || []).filter((item) => typeof item === "string" && !/smoking/i.test(item));
   let opening = null;
-  if (age && gender) opening = `The patient is a ${age}-year-old ${String(gender).toLowerCase()}`;
-  else if (age) opening = `The patient is ${age} years old`;
+  // A plain number takes the "62-year-old" frame; an age band ("Under 20",
+  // "40-59", "75+") has to be phrased differently or it reads as
+  // "a Under 20-year-old male".
+  const ageStr = age == null ? null : String(age).trim();
+  const ageIsNumeric = ageStr != null && /^\d{1,3}$/.test(ageStr);
+  if (ageIsNumeric && gender) opening = `The patient is a ${ageStr}-year-old ${String(gender).toLowerCase()}`;
+  else if (ageIsNumeric) opening = `The patient is ${ageStr} years old`;
+  else if (ageStr && gender) opening = `The patient is ${String(gender).toLowerCase()}, in the ${ageStr} age group`;
+  else if (ageStr) opening = `The patient is in the ${ageStr} age group`;
   else if (gender) opening = `The patient is ${String(gender).toLowerCase()}`;
   if (opening) {
     if (diagnoses.length) opening += `, with known history of ${humanizeList(diagnoses)}`;
@@ -13912,7 +14176,12 @@ function buildExamination(condition, state) {
     return parts.length ? parts.join("\n\n") : null;
   }
 
-  return examinationTextFor(exam, { ...state, __region: condition.region });
+  const examText = examinationTextFor(exam, { ...state, __region: condition.region });
+  if (!examText) return null;
+  // Bilateral already labels each side above; unilateral gets the same
+  // treatment so examination findings are never attributed to no limb.
+  const side = sideWord(state);
+  return side ? `${side.charAt(0).toUpperCase()}${side.slice(1)} side:\n${examText}` : examText;
 }
 
 // Groups imaging clauses by modality (Radiographs, Ultrasound, MRI, CT,
@@ -14058,6 +14327,31 @@ function impressionClausesFor(dx, state) {
   return clauses;
 }
 
+// Laterality was previously recorded in the form but never reached the note
+// body - a generated note could state a diagnosis with no indication of
+// which limb, which is a real safety gap for a surgical service and one of
+// the most common things a clinician then had to hand-edit back in. This
+// returns "right"/"left" for unilateral cases and null for bilateral (which
+// is handled separately, per-side) or when side was never recorded.
+// Rotator cuff tendons are recorded as abbreviations because they are fast
+// to tap, but a clinic note should name them in full. Expansion happens
+// only at note-generation time so the UI stays terse.
+const TENDON_EXPANSIONS = {
+  SSP: "supraspinatus",
+  ISP: "infraspinatus",
+  SSC: "subscapularis",
+  "Teres Minor": "teres minor",
+};
+function expandTendon(name) {
+  return TENDON_EXPANSIONS[String(name).trim()] || name;
+}
+
+function sideWord(state) {
+  const s = String(state && state.side ? state.side : "").trim().toLowerCase();
+  if (s === "right" || s === "left") return s;
+  return null;
+}
+
 function buildImpression(condition, state) {
   const dx = condition.sections.find((s) => s.id === "diagnosis");
   if (!dx) return null;
@@ -14068,14 +14362,17 @@ function buildImpression(condition, state) {
     const rightClauses = impressionClausesFor(dx, rightState);
     const leftClauses = impressionClausesFor(dx, leftState);
     const parts = [];
-    if (rightClauses.length) parts.push(`Right side \u2014 ${joinClausesLower(rightClauses)}`);
-    if (leftClauses.length) parts.push(`Left side \u2014 ${joinClausesLower(leftClauses)}`);
+    const fix = (s) => s.replace(/;\s+(involving\b)/g, " $1");
+    if (rightClauses.length) parts.push(`Right side \u2014 ${fix(joinClausesLower(rightClauses))}`);
+    if (leftClauses.length) parts.push(`Left side \u2014 ${fix(joinClausesLower(leftClauses))}`);
     return parts.length ? `Clinical impression: ${parts.join(" ")}` : null;
   }
 
   const clauses = impressionClausesFor(dx, state);
   if (!clauses.length) return null;
-  return `Clinical impression: ${joinClausesLower(clauses)}`;
+  const side = sideWord(state);
+  const joined = joinClausesLower(clauses).replace(/;\s+(involving\b)/g, " $1");
+  return `Clinical impression: ${side ? `${side} side \u2014 ` : ""}${joined}`;
 }
 
 // Terms indicating the reached management plan involves an operative
@@ -14834,7 +15131,11 @@ function getPresentUrgentFlags(condition, state) {
 function buildNote(condition, state) {
   const parts = buildProseNote(condition, state);
   const presentUrgent = getPresentUrgentFlags(condition, state);
-  const lines = [`CLINIC NOTE \u2014 ${condition.name}`, ""];
+  // Side in the title so it is visible the moment the note is pasted,
+  // without having to read into the body.
+  const titleSide = sideWord(state);
+  const sideLabel = titleSide ? `${titleSide.charAt(0).toUpperCase()}${titleSide.slice(1)} ` : (String(state.side || "").toLowerCase() === "bilateral" ? "Bilateral " : "");
+  const lines = [`CLINIC NOTE \u2014 ${sideLabel}${condition.name}`, ""];
   // A senior clinician scanning this note needs to see anything
   // safety-critical before anything else, regardless of where in the
   // documentation it was captured \u2014 so urgent flags checked as present get
