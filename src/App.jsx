@@ -12018,9 +12018,9 @@ const generalShoulderData = {
     {
       id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
       fields: [
-        { type: "info", title: "Using this section", items: ["Tick the conditions still under consideration.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen \u2014 the full structured assessment and management pathway are there."] },
-        { type: "checkbox", key: "differentialConsidered", label: "Under consideration", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
-        { type: "text", key: "workingDiagnosis", label: "Working diagnosis (if one has emerged)" },
+        { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen \u2014 the full structured assessment and management pathway are there."] },
+        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
+        { type: "checkbox", key: "differentialConsidered", label: "Other diagnoses still being considered (optional)", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
       ],
     },
     {
@@ -12168,12 +12168,13 @@ const generalElbowData = {
     {
       id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
       fields: [
-        { type: "info", title: "Using this section", items: ["Tick the conditions still under consideration.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
-        { type: "checkbox", key: "differentialConsidered", label: "Under consideration", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Olecranon fracture", "Olecranon bursitis", "Cubital tunnel syndrome", "Radial tunnel syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
-        { type: "text", key: "workingDiagnosis", label: "Working diagnosis (if one has emerged)" },
+        { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
+        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Olecranon fracture", "Olecranon bursitis", "Cubital tunnel syndrome", "Radial tunnel syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
+        { type: "checkbox", key: "differentialConsidered", label: "Other diagnoses still being considered (optional)", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Olecranon fracture", "Olecranon bursitis", "Cubital tunnel syndrome", "Radial tunnel syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
       ],
     },
-    { id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review", fields: [] },
+    {
+      id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review", fields: [] },
     { id: "pathway", index: 7, title: "Management Pathway", subtitle: "Initial decision making", fields: [] },
     {
       id: "followup", index: 8, title: "Standard Follow-up", subtitle: "Review plan",
@@ -12313,12 +12314,13 @@ const generalWristData = {
     {
       id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
       fields: [
-        { type: "info", title: "Using this section", items: ["Tick the conditions still under consideration.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
-        { type: "checkbox", key: "differentialConsidered", label: "Under consideration", options: ["De Quervain's tenosynovitis", "Intersection syndrome", "Thumb CMC osteoarthritis", "Wrist osteoarthritis", "Scaphoid fracture", "Distal radius fracture", "Scapholunate injury", "TFCC injury", "DRUJ instability", "Ulnar impaction", "ECU tendinopathy", "Kienbock disease", "Ganglion", "Carpal tunnel syndrome", "Guyon's canal syndrome", "Perilunate injury", "Hook of hamate fracture"] },
-        { type: "text", key: "workingDiagnosis", label: "Working diagnosis (if one has emerged)" },
+        { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
+        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["De Quervain\'s tenosynovitis", "Intersection syndrome", "Thumb CMC osteoarthritis", "Wrist osteoarthritis", "Scaphoid fracture", "Distal radius fracture", "Scapholunate injury", "TFCC injury", "DRUJ instability", "Ulnar impaction", "ECU tendinopathy", "Kienbock disease", "Ganglion", "Carpal tunnel syndrome", "Guyon\'s canal syndrome", "Perilunate injury", "Hook of hamate fracture"] },
+        { type: "checkbox", key: "differentialConsidered", label: "Other diagnoses still being considered (optional)", options: ["De Quervain\'s tenosynovitis", "Intersection syndrome", "Thumb CMC osteoarthritis", "Wrist osteoarthritis", "Scaphoid fracture", "Distal radius fracture", "Scapholunate injury", "TFCC injury", "DRUJ instability", "Ulnar impaction", "ECU tendinopathy", "Kienbock disease", "Ganglion", "Carpal tunnel syndrome", "Guyon\'s canal syndrome", "Perilunate injury", "Hook of hamate fracture"] },
       ],
     },
-    { id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review", fields: [] },
+    {
+      id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review", fields: [] },
     { id: "pathway", index: 7, title: "Management Pathway", subtitle: "Initial decision making", fields: [] },
     {
       id: "followup", index: 8, title: "Standard Follow-up", subtitle: "Review plan",
@@ -12454,12 +12456,13 @@ const generalHandData = {
     {
       id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
       fields: [
-        { type: "info", title: "Using this section", items: ["Tick the conditions still under consideration.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
-        { type: "checkbox", key: "differentialConsidered", label: "Under consideration", options: ["Trigger finger", "Dupuytren's disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
-        { type: "text", key: "workingDiagnosis", label: "Working diagnosis (if one has emerged)" },
+        { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
+        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Trigger finger", "Dupuytren\'s disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
+        { type: "checkbox", key: "differentialConsidered", label: "Other diagnoses still being considered (optional)", options: ["Trigger finger", "Dupuytren\'s disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
       ],
     },
-    { id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review", fields: [] },
+    {
+      id: "redflags", index: 6, title: "When to Stop and Reconsider", subtitle: "Safety review", fields: [] },
     { id: "pathway", index: 7, title: "Management Pathway", subtitle: "Initial decision making", fields: [] },
     {
       id: "followup", index: 8, title: "Standard Follow-up", subtitle: "Review plan",
@@ -12719,6 +12722,17 @@ function deriveSharedDefaults(session, targetCondition) {
       // Marks which general assessment supplied this data, so the combined
       // note can avoid showing the same findings twice (see buildCombinedNote).
       defaults.__derivedFromGeneral = generalSource.cid;
+
+      // The general assessment's differential reasoning ("X, Y, Z were
+      // considered; working diagnosis is Q") lives only in that assessment's
+      // own state and has no field of its own on the specific template, so
+      // it wouldn't otherwise reach this note at all. Captured as one
+      // pre-built sentence here (reusing buildDifferential's own phrasing so
+      // the two are never inconsistent) and surfaced in buildHistory - this
+      // is what lets the specific diagnosis's OWN note, on its own, read as
+      // the complete story without requiring the session-wide combined note.
+      const diffText = buildDifferential(generalSource.cond, genState);
+      if (diffText) defaults.__generalAssessmentContext = diffText;
     }
   }
 
@@ -14194,12 +14208,18 @@ function buildHistory(condition, state) {
   // unilateral case merges both sections' groups into one combined set so
   // "presenting complaint" content from either section reads as a single
   // bullet rather than two.
+  // Carried forward from a general assessment at the point this diagnosis
+  // was opened from it (see deriveSharedDefaults) - stated first, since it
+  // is the reasoning that led to this specific diagnosis being pursued.
+  const generalContext = state.__generalAssessmentContext;
+
   if (state.side === "Bilateral" && history) {
     const rightState = dedupeSymptomsAgainstTypical(typical, { ...state, ...(state.limbData?.right || {}) });
     const leftState = dedupeSymptomsAgainstTypical(typical, { ...state, ...(state.limbData?.left || {}) });
     const rightGroups = historyGroupsFor(history.fields, rightState);
     const leftGroups = historyGroupsFor(history.fields, leftState);
     const parts = [];
+    if (generalContext) parts.push(generalContext);
     if (openingSentence) parts.push(openingSentence);
     const typicalText = typicalGroups && historyGroupsToText(typicalGroups);
     if (typicalText) parts.push(typicalText);
@@ -14215,9 +14235,10 @@ function buildHistory(condition, state) {
   const mergedText = historyGroupsToText(mergeHistoryGroups(typicalGroups, historyGroups));
   // The opening sentence now already states which side is affected, so
   // there's no separate laterality statement to add here anymore.
-  if (openingSentence && mergedText) return `${openingSentence}\n${mergedText}`;
-  if (openingSentence) return openingSentence;
-  return mergedText;
+  const bodyText = openingSentence && mergedText ? `${openingSentence}\n${mergedText}` : (openingSentence || mergedText);
+  if (generalContext && bodyText) return `${generalContext}\n${bodyText}`;
+  if (generalContext) return generalContext;
+  return bodyText;
 }
 
 // Groups examination clauses into a handful of themed, labeled bullet
@@ -16219,6 +16240,29 @@ function FieldGroup({ fields, state, setField, region, keyPrefix, dedupeFields }
   );
 }
 
+// Appears in a general assessment's Differential Diagnosis section once a
+// "most likely diagnosis" has been chosen and maps to a real template here,
+// so the clinician can continue straight into it without navigating back to
+// the top of the screen to find the related-conditions chip. onOpenCondition
+// already carries today's answers across via deriveSharedDefaults.
+function DifferentialContinueButton({ condition, state, onOpenCondition }) {
+  const map = DIFFERENTIAL_TO_CONDITION[condition.id];
+  if (!map) return null;
+  const targetId = state.workingDiagnosis && map[state.workingDiagnosis];
+  const target = targetId ? findConditionById(targetId) : null;
+  if (!target) return null;
+  return (
+    <button
+      onClick={() => onOpenCondition(target)}
+      className="w-full flex items-center justify-between gap-2 rounded-xl px-4 py-3.5 mt-1 mb-3 font-semibold text-[14.5px] active:scale-95 transition"
+      style={{ background: T.gradientTeal, color: "#fff", minHeight: 52 }}
+    >
+      <span>Continue to {target.name}</span>
+      <ChevronRight size={19} />
+    </button>
+  );
+}
+
 function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome }) {
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
@@ -16460,6 +16504,15 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
 
       <div className="px-3 pt-3 max-w-2xl lg:max-w-4xl mx-auto">
         <RelatedConditionsBar conditionId={condition.id} sessionOrder={session.order} onOpen={onOpenCondition} />
+
+        {state.__derivedFromGeneral && findConditionById(state.__derivedFromGeneral) && (
+          <div className="rounded-xl px-3 py-2.5 mb-3 flex items-start gap-2" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+            <CheckCircle2 size={15} color={T.tealDark} style={{ marginTop: 2, flexShrink: 0 }} />
+            <div className="text-[12.5px]" style={{ color: T.tealDark }}>
+              Details carried over from {findConditionById(state.__derivedFromGeneral).name} — review and adjust as needed.
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-2 mb-3">
           <button
@@ -16716,6 +16769,9 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <>
                 {section.id === "exam" && <NormalExamButton fields={section.fields} state={state} onApply={(patch) => onFieldChange(patch)} />}
                 <FieldGroup fields={section.fields} state={state} setField={setField} region={condition.region} keyPrefix={section.id} dedupeFields={dedupeFields} />
+                {condition.isGeneralAssessment && section.id === "differential" && (
+                  <DifferentialContinueButton condition={condition} state={state} onOpenCondition={onOpenCondition} />
+                )}
                 {section.id === "outcomes" && (
                   <div className="mt-4">
                     <OutcomeScores condition={condition} state={state} onFieldChange={onFieldChange} />
@@ -16982,6 +17038,74 @@ function InstallPrompt() {
     </div>
   );
 }
+
+const DIFFERENTIAL_TO_CONDITION = {
+  "general-shoulder": {
+    "Rotator cuff disease": "rotator-cuff",
+    "Subacromial pain syndrome": "saps",
+    "Adhesive capsulitis": "adhesive-capsulitis",
+    "Glenohumeral osteoarthritis": "gh-osteoarthritis",
+    "AC joint pathology": "ac-joint",
+    "Long head of biceps pathology": "long-head-biceps",
+    "Instability": "glenohumeral-instability",
+    "SLAP lesion": "slap-lesion",
+    "Calcific tendinitis": "calcific-tendinitis",
+    "Suprascapular neuropathy": "suprascapular-neuropathy",
+    "Parsonage-Turner syndrome": "parsonage-turner-syndrome",
+  },
+  "general-elbow": {
+    "Lateral epicondylopathy": "lateral-epicondylopathy",
+    "Medial epicondylopathy": "medial-epicondylopathy",
+    "Distal biceps rupture": "distal-biceps-rupture",
+    "Distal triceps rupture": "distal-triceps-rupture",
+    "Elbow osteoarthritis": "elbow-osteoarthritis",
+    "Elbow instability": "elbow-instability",
+    "Elbow stiffness": "elbow-stiffness",
+    "Radial head fracture": "radial-head-fracture",
+    "Olecranon fracture": "olecranon-fracture",
+    "Olecranon bursitis": "olecranon-bursitis",
+    "Cubital tunnel syndrome": "cubital-tunnel-syndrome",
+    "Radial tunnel syndrome": "radial-tunnel-syndrome",
+  },
+  "general-wrist": {
+    "De Quervain\'s tenosynovitis": "de-quervain",
+    "Intersection syndrome": "intersection-syndrome",
+    "Thumb CMC osteoarthritis": "thumb-cmc-oa",
+    "Wrist osteoarthritis": "wrist-oa",
+    "Scaphoid fracture": "scaphoid-fracture",
+    "Distal radius fracture": "distal-radius-fracture",
+    "Scapholunate injury": "scapholunate-injury",
+    "TFCC injury": "tfcc-injury",
+    "DRUJ instability": "druj-instability",
+    "Ulnar impaction": "ulnar-impaction",
+    "ECU tendinopathy": "ecu-tendinopathy",
+    "Kienbock disease": "kienbock-disease",
+    "Ganglion": "wrist-ganglion",
+    "Carpal tunnel syndrome": "carpal-tunnel-syndrome",
+    "Guyon\'s canal syndrome": "guyons-canal-syndrome",
+    "Perilunate injury": "perilunate-injury",
+    "Hook of hamate fracture": "hook-of-hamate-fracture",
+  },
+  "general-hand": {
+    "Trigger finger": "trigger-finger",
+    "Dupuytren\'s disease": "dupuytren-disease",
+    "Mallet finger": "mallet-finger",
+    "Jersey finger": "jersey-finger",
+    "Boutonniere deformity": "boutonniere-deformity",
+    "Sagittal band injury": "sagittal-band-injury",
+    "Extensor tendon injury": "extensor-tendon-injuries",
+    "Flexor tendon laceration": "tendon-laceration",
+    "PIP dislocation / volar plate injury": "pip-dislocation-volar-plate",
+    "Thumb UCL injury": "thumb-ucl-injury",
+    "Metacarpal fracture": "metacarpal-fracture",
+    "Phalangeal fracture": "phalangeal-fracture",
+    "Bennett / Rolando fracture": "bennett-rolando-fracture",
+    "Fingertip injury": "fingertip-injury",
+    "Hand osteoarthritis": "hand-osteoarthritis",
+    "Flexor tenosynovitis (infection)": "flexor-tenosynovitis",
+    "Carpal tunnel syndrome": "carpal-tunnel-syndrome",
+  },
+};
 
 function VisitTypeGate({ onSelect }) {
   return (
