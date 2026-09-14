@@ -4257,7 +4257,7 @@ const deQuervainData = {
           { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["First dorsal compartment tenderness", "APL tendon", "EPB tendon", "Thumb CMC joint", "Anatomical snuffbox", "Radial styloid"] },
-        { type: "numberGroup", key: "romWrist", label: "Range of motion \u2014 wrist", items: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation"], suffix: "\u00b0" },
+        { type: "rom", key: "rom", label: "Range of motion \u2014 wrist", motions: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation"] },
         { type: "select", key: "cmcMotion", label: "Thumb CMC motion", options: ["Normal", "Painful"], columns: 2 },
         { type: "checkbox", key: "mcpMotion", label: "Thumb MCP motion", options: ["Normal"] },
         { type: "checkbox", key: "ipMotion", label: "Thumb IP motion", options: ["Normal"] },
@@ -4432,7 +4432,7 @@ const thumbCMCOAData = {
         { type: "select", key: "cmcMotion", label: "Thumb CMC", options: ["Normal", "Painful"], columns: 2 },
         { type: "select", key: "mcpMotion", label: "Thumb MCP", options: ["Stable", "Hyperextension"], columns: 2 },
         { type: "checkbox", key: "ipMotion", label: "Thumb IP", options: ["Normal"] },
-        { type: "numberGroup", key: "romWrist", label: "Range of motion \u2014 wrist", items: ["Flexion", "Extension"], suffix: "\u00b0" },
+        { type: "rom", key: "rom", label: "Range of motion \u2014 wrist", motions: ["Flexion", "Extension"] },
         { type: "checkbox", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Grip strength", "Key pinch", "Tip pinch", "Three-jaw chuck pinch"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Grind Test", "Lever Test", "Traction Shift Test (if familiar)", "Finkelstein Test"] },
         { type: "select", key: "neuroAssessmentStatus", label: "Neurological assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
@@ -5719,12 +5719,9 @@ const triggerFingerData = {
           { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["A1 pulley tenderness", "Palpable nodule", "Crepitus"] },
-        // Motion is recorded as free-text findings in your original (no
-        // degree units given), unlike the degree-based ROM tables used
-        // elsewhere in this project \u2014 kept as free text accordingly.
-        { type: "text", key: "activeFlexion", label: "Active flexion" },
-        { type: "text", key: "activeExtension", label: "Active extension" },
-        { type: "text", key: "passiveMotion", label: "Passive motion" },
+        { type: "angleSlider", key: "activeFlexion", label: "Active flexion", max: 90, min: 0, referenceText: "0\u201390\u00b0 (approx.; MCP/PIP composite)" },
+        { type: "angleSlider", key: "activeExtension", label: "Active extension", max: 30, min: -30, referenceText: "0\u00b0 (a negative value records an extension lag/deficit)" },
+        { type: "angleSlider", key: "passiveMotion", label: "Passive motion", max: 90, min: 0, referenceText: "0\u201390\u00b0 (approx.; MCP/PIP composite)" },
         { type: "select", key: "compositeFist", label: "Composite fist", options: ["Complete", "Incomplete"], columns: 2 },
         { type: "select", key: "tendonGliding", label: "Tendon gliding", options: ["Smooth", "Painful", "Triggering", "Locked"], columns: 4 },
         { type: "checkbox", key: "triggerSeverity", label: "Trigger severity", options: ["Pain without triggering", "Intermittent triggering", "Triggering requiring active correction", "Triggering requiring passive correction", "Fixed locked digit"] },
@@ -6055,15 +6052,12 @@ const malletFingerData = {
           { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Terminal tendon tenderness", "Bony tenderness", "Skin integrity"] },
-        // Motion is recorded as free-text findings in your original (no
-        // degree units given for these four), consistent with how Trigger
-        // Finger's motion table was handled.
-        { type: "text", key: "activeDIPExtension", label: "Active DIP extension" },
-        { type: "text", key: "passiveDIPExtension", label: "Passive DIP extension" },
-        { type: "text", key: "dipFlexion", label: "DIP flexion" },
-        { type: "text", key: "pipMotion", label: "PIP motion" },
+        { type: "angleSlider", key: "activeDIPExtension", label: "Active DIP extension", max: 30, min: -30, referenceText: "0\u00b0 (a negative value records an extension lag/deficit)" },
+        { type: "angleSlider", key: "passiveDIPExtension", label: "Passive DIP extension", max: 30, min: -30, referenceText: "0\u00b0 (a negative value records an extension lag/deficit)" },
+        { type: "angleSlider", key: "dipFlexion", label: "DIP flexion", max: 90, min: 0, referenceText: "0\u201380\u00b0 (approx.; DIP joint)" },
+        { type: "angleSlider", key: "pipMotion", label: "PIP motion", max: 110, min: 0, referenceText: "0\u2013100\u00b0 (approx.; PIP joint)" },
         { type: "select", key: "compositeFist", label: "Composite fist", options: ["Complete", "Incomplete"], columns: 2 },
-        { type: "number", key: "extensionLagDegrees", label: "DIP extension lag", suffix: "\u00b0" },
+        { type: "angleSlider", key: "extensionLagDegrees", label: "DIP extension lag", max: 90, min: 0, referenceText: "0\u00b0 (any lag present is the key mallet finger finding)" },
         { type: "select", key: "passiveCorrection", label: "Passive correction", options: ["Full", "Partial", "None"], columns: 3 },
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
@@ -9295,7 +9289,7 @@ const phalangealFxData = {
         { type: "select", key: "fingerCascade", label: "Finger Cascade Assessment \u2014 Finger flexion", options: ["Normal cascade", "Rotational overlap", "Scissoring", "Malrotation"], columns: 2 },
         { type: "select", key: "pipStability", label: "PIP stability", options: ["Stable", "Unstable"], columns: 2 },
         { type: "select", key: "dipStability", label: "DIP stability", options: ["Stable", "Unstable"], columns: 2 },
-        { type: "numberGroup", key: "activeROM", label: "Active range of motion", items: ["MCP", "PIP", "DIP"], suffix: "\u00b0" },
+        { type: "numberGroup", key: "activeROM", label: "Active range of motion", items: ["MCP flexion", "PIP flexion", "DIP flexion"], suffix: "\u00b0", slider: true, max: 100 },
         { type: "number", key: "gripStrengthKg", label: "Grip strength", suffix: "kg" },
         { type: "checkbox", key: "tendonExtensor", label: "Tendons \u2014 Extensor", options: ["Intact"] },
         { type: "checkbox", key: "tendonFlexor", label: "Tendons \u2014 Flexor", options: ["Intact"] },
@@ -11983,7 +11977,6 @@ const generalShoulderData = {
           { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["No tenderness", "Greater tuberosity", "Acromioclavicular joint", "Bicipital groove", "Sternoclavicular joint", "Scapular border", "Cervical spine"] },
-        { type: "select", key: "romFullToggle", label: "Range of motion", options: ["Full", "Not full"], columns: 2 },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "strength", key: "strength", label: "Strength", muscles: [
           { key: "supraspinatus", label: "Supraspinatus (Jobe)" },
@@ -12020,7 +12013,7 @@ const generalShoulderData = {
       fields: [
         { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen \u2014 the full structured assessment and management pathway are there."] },
         { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
-        { type: "checkbox", key: "differentialConsidered", label: "Other diagnoses still being considered (optional)", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
+        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
       ],
     },
     {
@@ -12170,7 +12163,7 @@ const generalElbowData = {
       fields: [
         { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
         { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Olecranon fracture", "Olecranon bursitis", "Cubital tunnel syndrome", "Radial tunnel syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
-        { type: "checkbox", key: "differentialConsidered", label: "Other diagnoses still being considered (optional)", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Olecranon fracture", "Olecranon bursitis", "Cubital tunnel syndrome", "Radial tunnel syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
+        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Olecranon fracture", "Olecranon bursitis", "Cubital tunnel syndrome", "Radial tunnel syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
       ],
     },
     {
@@ -12316,7 +12309,7 @@ const generalWristData = {
       fields: [
         { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
         { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["De Quervain\'s tenosynovitis", "Intersection syndrome", "Thumb CMC osteoarthritis", "Wrist osteoarthritis", "Scaphoid fracture", "Distal radius fracture", "Scapholunate injury", "TFCC injury", "DRUJ instability", "Ulnar impaction", "ECU tendinopathy", "Kienbock disease", "Ganglion", "Carpal tunnel syndrome", "Guyon\'s canal syndrome", "Perilunate injury", "Hook of hamate fracture"] },
-        { type: "checkbox", key: "differentialConsidered", label: "Other diagnoses still being considered (optional)", options: ["De Quervain\'s tenosynovitis", "Intersection syndrome", "Thumb CMC osteoarthritis", "Wrist osteoarthritis", "Scaphoid fracture", "Distal radius fracture", "Scapholunate injury", "TFCC injury", "DRUJ instability", "Ulnar impaction", "ECU tendinopathy", "Kienbock disease", "Ganglion", "Carpal tunnel syndrome", "Guyon\'s canal syndrome", "Perilunate injury", "Hook of hamate fracture"] },
+        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["De Quervain\'s tenosynovitis", "Intersection syndrome", "Thumb CMC osteoarthritis", "Wrist osteoarthritis", "Scaphoid fracture", "Distal radius fracture", "Scapholunate injury", "TFCC injury", "DRUJ instability", "Ulnar impaction", "ECU tendinopathy", "Kienbock disease", "Ganglion", "Carpal tunnel syndrome", "Guyon\'s canal syndrome", "Perilunate injury", "Hook of hamate fracture"] },
       ],
     },
     {
@@ -12458,7 +12451,7 @@ const generalHandData = {
       fields: [
         { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
         { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Trigger finger", "Dupuytren\'s disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
-        { type: "checkbox", key: "differentialConsidered", label: "Other diagnoses still being considered (optional)", options: ["Trigger finger", "Dupuytren\'s disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
+        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Trigger finger", "Dupuytren\'s disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
       ],
     },
     {
@@ -12676,6 +12669,7 @@ function deriveSharedDefaults(session, targetCondition) {
     for (const cid of session.order) {
       const s = session.statesByConditionId[cid];
       if (s && s[key] != null && s[key] !== "") {
+        if (key === "age" && !/^\d{1,3}$/.test(String(s[key]).trim())) continue; // band value - see below
         defaults[key] = s[key];
         break;
       }
@@ -12709,6 +12703,7 @@ function deriveSharedDefaults(session, targetCondition) {
       const genState = generalSource.state;
       Object.keys(genState).forEach((key) => {
         if (defaults[key] != null) return;
+        if (key === "age" && genState[key] != null && !/^\d{1,3}$/.test(String(genState[key]).trim())) return; // band value - see below
         if (targetKeys.has(key) && genState[key] != null && genState[key] !== "") {
           defaults[key] = genState[key];
         }
@@ -12719,6 +12714,19 @@ function deriveSharedDefaults(session, targetCondition) {
           defaults[specKey] = genState[genKey];
         }
       });
+      // The general assessment records age as a band ("20-39"), not a
+      // number, so it can never be the specific template's own age value
+      // (that field expects a number and would render broken input if
+      // handed a band string). Kept as a fallback only: buildDemographics
+      // uses it purely for display when the clinician hasn't entered an
+      // exact age here, and an exact age always takes precedence the
+      // moment one is entered - it never gets overwritten back to the band.
+      if (defaults.age == null) {
+        const genAge = genState.age;
+        if (genAge != null && !/^\d{1,3}$/.test(String(genAge).trim())) {
+          defaults.__generalAssessmentAgeBand = genAge;
+        }
+      }
       // Marks which general assessment supplied this data, so the combined
       // note can avoid showing the same findings twice (see buildCombinedNote).
       defaults.__derivedFromGeneral = generalSource.cid;
@@ -12728,9 +12736,10 @@ function deriveSharedDefaults(session, targetCondition) {
       // own state and has no field of its own on the specific template, so
       // it wouldn't otherwise reach this note at all. Captured as one
       // pre-built sentence here (reusing buildDifferential's own phrasing so
-      // the two are never inconsistent) and surfaced in buildHistory - this
-      // is what lets the specific diagnosis's OWN note, on its own, read as
-      // the complete story without requiring the session-wide combined note.
+      // the two are never inconsistent) and surfaced in buildImpression -
+      // this is what lets the specific diagnosis's OWN note, on its own,
+      // read as the complete story without requiring the session-wide
+      // combined note.
       const diffText = buildDifferential(generalSource.cond, genState);
       if (diffText) defaults.__generalAssessmentContext = diffText;
     }
@@ -12987,8 +12996,8 @@ function NumberField({ label, value, onChange, suffix, placeholder }) {
 // duplicated across 200+ field definitions. These are starting points, not
 // a closed list - the text input beneath always accepts anything.
 const FIELD_SUGGESTIONS = {
-  occupation: ["Retired", "Manual worker", "Office/desk work", "Healthcare", "Teacher", "Driver", "Student", "Homemaker"],
-  occupationBeforeInjury: ["Retired", "Manual worker", "Office/desk work", "Healthcare", "Teacher", "Driver", "Student", "Homemaker"],
+  occupation: ["Retired", "Manual worker", "Office worker", "Healthcare worker", "Teacher", "Driver", "Student", "Homemaker"],
+  occupationBeforeInjury: ["Retired", "Manual worker", "Office worker", "Healthcare worker", "Teacher", "Driver", "Student", "Homemaker"],
   duration: ["< 6 weeks", "6 weeks", "3 months", "6 months", "1 year", "> 2 years"],
   timeSinceInjury: ["Same day", "< 1 week", "1-2 weeks", "3-6 weeks", "3 months", "> 6 months"],
   timeFromInjury: ["Same day", "< 1 week", "1-2 weeks", "3-6 weeks", "3 months", "> 6 months"],
@@ -13084,6 +13093,10 @@ const ROM_REFERENCE = {
     "MCP flexion": "0\u201390\u00b0 (approx.; MCP joint)",
     "Palmar abduction": "0\u201370\u00b0 (approx.; thumb)",
     "Radial abduction": "0\u201360\u00b0 (approx.; thumb)",
+    "PIP flexion": "0\u2013100\u00b0 (approx.; PIP joint)",
+    "PIP extension": "0\u00b0 (a negative value records an extension lag/deficit)",
+    "DIP flexion": "0\u201380\u00b0 (approx.; DIP joint)",
+    "DIP extension": "0\u00b0 (a negative value records an extension lag/deficit)",
   },
   peripheralNerve: {},
 };
@@ -13155,6 +13168,37 @@ function ROMSlider({ label, value, onChange, max, min, color }) {
   );
 }
 
+// Internal rotation is conventionally recorded as how high up the back the
+// thumb reaches, not as a degree value - it's difficult to measure
+// precisely as an angle, and "reaches L3" is how this is actually
+// documented and communicated clinically. Ordered worst (lowest reach) to
+// best (highest reach), matching the direction ROMSlider's degree scale
+// already runs in.
+const SPINAL_LEVELS = ["Buttock", "Sacrum", "L5", "L4", "L3", "L2", "L1", "T12", "T11", "T10", "T9", "T8", "T7 or higher"];
+
+function SpinalLevelSlider({ label, value, onChange, color }) {
+  const idx = value ? SPINAL_LEVELS.indexOf(value) : -1;
+  const sliderIdx = idx === -1 ? 0 : idx;
+  return (
+    <div className="flex items-center gap-2 py-1">
+      <span className="text-[11px] w-14 shrink-0" style={{ color: T.inkSoft }}>{label}</span>
+      <input
+        type="range"
+        min={0}
+        max={SPINAL_LEVELS.length - 1}
+        step={1}
+        value={sliderIdx}
+        onChange={(e) => onChange(SPINAL_LEVELS[Number(e.target.value)])}
+        className="flex-1"
+        style={{ accentColor: color, height: 32 }}
+      />
+      <span className="text-[12.5px] font-semibold shrink-0 text-right" style={{ width: 64, color }}>
+        {value || "\u2014"}
+      </span>
+    </div>
+  );
+}
+
 function ROMTable({ motions, values, onChange, region }) {
   const refs = ROM_REFERENCE[region] || {};
   return (
@@ -13164,13 +13208,24 @@ function ROMTable({ motions, values, onChange, region }) {
         const ref = refs[m];
         const max = romSliderMax(region, m);
         const min = romSliderMin(m);
+        const isSpinalLevel = region === "shoulder" && m === "Internal Rotation";
         return (
           <div key={m} className="px-3 py-2.5" style={{ background: i % 2 ? T.surface : "#FAFCFC", borderTop: `1px solid ${T.border}` }}>
             <div className="text-[13px] font-semibold mb-1" style={{ color: T.ink }}>{m}</div>
-            <ROMSlider label="Active" value={row.active} onChange={(v) => onChange(m, { ...row, active: v })} max={max} min={min} color={T.teal} />
-            <ROMSlider label="Passive" value={row.passive} onChange={(v) => onChange(m, { ...row, passive: v })} max={max} min={min} color={T.tealDark} />
-            {ref && <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
-            {min < 0 && <div className="text-[10.5px]" style={{ color: T.inkSoft }}>Drag below 0° to record a deficit/contracture.</div>}
+            {isSpinalLevel ? (
+              <>
+                <SpinalLevelSlider label="Active" value={row.active} onChange={(v) => onChange(m, { ...row, active: v })} color={T.teal} />
+                <SpinalLevelSlider label="Passive" value={row.passive} onChange={(v) => onChange(m, { ...row, passive: v })} color={T.tealDark} />
+                <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Level the thumb reaches up the back, Buttock (lowest) to T7 or higher (best)</div>
+              </>
+            ) : (
+              <>
+                <ROMSlider label="Active" value={row.active} onChange={(v) => onChange(m, { ...row, active: v })} max={max} min={min} color={T.teal} />
+                <ROMSlider label="Passive" value={row.passive} onChange={(v) => onChange(m, { ...row, passive: v })} max={max} min={min} color={T.tealDark} />
+                {ref && <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
+                {min < 0 && <div className="text-[10.5px]" style={{ color: T.inkSoft }}>Drag below 0° to record a deficit/contracture.</div>}
+              </>
+            )}
           </div>
         );
       })}
@@ -13181,8 +13236,24 @@ function ROMTable({ motions, values, onChange, region }) {
 /* Single-value measurement list — e.g. ROM recorded as one figure per motion
    rather than active/passive pairs. Reusable wherever a template lists bounded
    numeric fields without a two-column structure. */
-function NumberGroup({ items, values, onChange, suffix, region }) {
+function NumberGroup({ items, values, onChange, suffix, region, slider, max, min }) {
   const refs = ROM_REFERENCE[region] || {};
+  if (slider) {
+    return (
+      <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
+        {items.map((m, i) => {
+          const ref = refs[m];
+          return (
+            <div key={m} className="px-3 py-2.5" style={{ background: i % 2 ? T.surface : "#FAFCFC", borderTop: i ? `1px solid ${T.border}` : "none" }}>
+              <div className="text-[13px] font-semibold mb-1" style={{ color: T.ink }}>{m}</div>
+              <ROMSlider label="" value={values[m]} onChange={(v) => onChange(m, v)} max={max ?? 90} min={min ?? 0} color={T.teal} />
+              {ref && <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
       {items.map((m, i) => {
@@ -13200,6 +13271,22 @@ function NumberGroup({ items, values, onChange, suffix, region }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Single degree-value slider for a joint measurement that isn't part of an
+// Active/Passive pair (e.g. an isolated extension lag) and isn't grouped
+// with others under one key - reuses ROMSlider's drag-to-set control rather
+// than introducing a second slider implementation.
+function AngleSliderField({ label, value, onChange, max, min, referenceText }) {
+  return (
+    <div className="mb-3">
+      <SubLabel>{label}</SubLabel>
+      <div className="rounded-xl overflow-hidden px-3 py-2.5" style={{ border: `1px solid ${T.border}` }}>
+        <ROMSlider label="" value={value} onChange={onChange} max={max ?? 90} min={min ?? 0} color={T.teal} />
+        {referenceText && <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Normal: {referenceText}</div>}
+      </div>
     </div>
   );
 }
@@ -13444,6 +13531,7 @@ function isFilled(field, state) {
     case "text": return !!(state[field.key] && state[field.key].trim());
     case "date": return !!(state[field.key] && state[field.key].trim());
     case "number": return state[field.key] != null;
+    case "angleSlider": return state[field.key] != null;
     case "vas": return (state[field.key] || 0) > 0;
     case "rom": { const v = state[field.key] || {}; return state[`${field.key}Full`] === "Full" || Object.values(v).some((r) => r && (r.active != null || r.passive != null)); }
     case "numberGroup": { const v = state[field.key] || {}; return Object.values(v).some((n) => n != null); }
@@ -13484,13 +13572,17 @@ function Field({ field, state, setField, region }) {
           ))}
         </>
       );
-    case "checkbox":
+    case "checkbox": {
+      const excludeVal = field.excludeCurrentValueOf ? state[field.excludeCurrentValueOf] : null;
+      const options = excludeVal ? field.options.filter((o) => o !== excludeVal) : field.options;
+      const selected = excludeVal ? (state[field.key] || []).filter((v) => v !== excludeVal) : (state[field.key] || []);
       return (
         <>
           <SubLabel>{field.label}</SubLabel>
-          <CheckboxGroup options={field.options} selected={state[field.key] || []} onChange={(v) => setField(field.key, v)} />
+          <CheckboxGroup options={options} selected={selected} onChange={(v) => setField(field.key, v)} />
         </>
       );
+    }
     case "testGrid":
       return (
         <>
@@ -13535,8 +13627,19 @@ function Field({ field, state, setField, region }) {
       return (
         <>
           <SubLabel>{field.label}</SubLabel>
-          <NumberGroup items={field.items} suffix={field.suffix} values={state[field.key] || {}} onChange={(m, v) => setField(field.key, { ...(state[field.key] || {}), [m]: v })} region={region} />
+          <NumberGroup items={field.items} suffix={field.suffix} values={state[field.key] || {}} onChange={(m, v) => setField(field.key, { ...(state[field.key] || {}), [m]: v })} region={region} slider={field.slider} max={field.max} min={field.min} />
         </>
+      );
+    case "angleSlider":
+      return (
+        <AngleSliderField
+          label={field.label}
+          value={state[field.key]}
+          onChange={(v) => setField(field.key, v)}
+          max={field.max}
+          min={field.min}
+          referenceText={field.referenceText}
+        />
       );
     case "grid":
       return (
@@ -13895,10 +13998,11 @@ function fieldClause(field, state) {
       }
       return `${lowerLabel || "date"} was ${formatDateDMY(v)}`;
     }
-    case "number": {
+    case "number":
+    case "angleSlider": {
       const v = state[key];
       if (v == null) return null;
-      const suffix = field.suffix ? ` ${field.suffix}` : "";
+      const suffix = field.type === "angleSlider" ? "\u00b0" : (field.suffix ? ` ${field.suffix}` : "");
       if (label) return `${lowerLabel} was ${v}${suffix}`;
       return `${v}${suffix}`;
     }
@@ -13914,6 +14018,14 @@ function fieldClause(field, state) {
       const lines = [];
       Object.entries(v).forEach(([m, r]) => {
         if (!r || (r.active == null && r.passive == null)) return;
+        const isSpinalLevel = region === "shoulder" && m === "Internal Rotation";
+        if (isSpinalLevel) {
+          const bits = [];
+          if (r.active != null) bits.push(`${r.active} active`);
+          if (r.passive != null) bits.push(`${r.passive} passive`);
+          lines.push(`  \u2022 ${m}: reaches ${bits.join(", ")}`);
+          return;
+        }
         const normalMax = romNormalMax(region, m);
         const isFull = normalMax != null && r.active != null && r.passive != null && r.active >= normalMax && r.passive >= normalMax;
         if (isFull) {
@@ -13996,12 +14108,12 @@ function buildDemographics(condition, state) {
   // Sentence 1: age, gender, and any known past medical history. Smoking
   // is excluded here since it's tracked as a risk factor elsewhere in the
   // note (History section) rather than restated as part of this summary.
-  const diagnoses = (medHistoryItems || []).filter((item) => typeof item === "string" && !/smoking/i.test(item));
+  const diagnoses = (medHistoryItems || []).filter((item) => typeof item === "string" && !/smoking/i.test(item) && !/^(none|nil|n\/a|not applicable)$/i.test(item.trim()));
   let opening = null;
   // A plain number takes the "62-year-old" frame; an age band ("Under 20",
   // "40-59", "75+") has to be phrased differently or it reads as
   // "a Under 20-year-old male".
-  const ageStr = age == null ? null : String(age).trim();
+  const ageStr = age != null ? String(age).trim() : (state.__generalAssessmentAgeBand != null ? String(state.__generalAssessmentAgeBand).trim() : null);
   const ageIsNumeric = ageStr != null && /^\d{1,3}$/.test(ageStr);
   if (ageIsNumeric && gender) opening = `The patient is a ${ageStr}-year-old ${String(gender).toLowerCase()}`;
   else if (ageIsNumeric) opening = `The patient is ${ageStr} years old`;
@@ -14208,18 +14320,12 @@ function buildHistory(condition, state) {
   // unilateral case merges both sections' groups into one combined set so
   // "presenting complaint" content from either section reads as a single
   // bullet rather than two.
-  // Carried forward from a general assessment at the point this diagnosis
-  // was opened from it (see deriveSharedDefaults) - stated first, since it
-  // is the reasoning that led to this specific diagnosis being pursued.
-  const generalContext = state.__generalAssessmentContext;
-
   if (state.side === "Bilateral" && history) {
     const rightState = dedupeSymptomsAgainstTypical(typical, { ...state, ...(state.limbData?.right || {}) });
     const leftState = dedupeSymptomsAgainstTypical(typical, { ...state, ...(state.limbData?.left || {}) });
     const rightGroups = historyGroupsFor(history.fields, rightState);
     const leftGroups = historyGroupsFor(history.fields, leftState);
     const parts = [];
-    if (generalContext) parts.push(generalContext);
     if (openingSentence) parts.push(openingSentence);
     const typicalText = typicalGroups && historyGroupsToText(typicalGroups);
     if (typicalText) parts.push(typicalText);
@@ -14235,10 +14341,9 @@ function buildHistory(condition, state) {
   const mergedText = historyGroupsToText(mergeHistoryGroups(typicalGroups, historyGroups));
   // The opening sentence now already states which side is affected, so
   // there's no separate laterality statement to add here anymore.
-  const bodyText = openingSentence && mergedText ? `${openingSentence}\n${mergedText}` : (openingSentence || mergedText);
-  if (generalContext && bodyText) return `${generalContext}\n${bodyText}`;
-  if (generalContext) return generalContext;
-  return bodyText;
+  if (openingSentence && mergedText) return `${openingSentence}\n${mergedText}`;
+  if (openingSentence) return openingSentence;
+  return mergedText;
 }
 
 // Groups examination clauses into a handful of themed, labeled bullet
@@ -14266,7 +14371,7 @@ function examinationTextFor(exam, state) {
     if (/inspection/i.test(key)) groups.inspection.push(c);
     else if (/palpation/i.test(key)) groups.palpation.push(c);
     else if (f.type === "testGrid" || /(specialTest|provocat|impingement)/i.test(key) || /^stability[A-Z]/.test(key) || (/^st[A-Z]/.test(key) && key !== "stNeuro")) groups.special.push(c);
-    else if (f.type === "rom" || f.type === "strength" || /(strength|rom|motion|romFollowUp)/i.test(key)) groups.motion.push(c);
+    else if (f.type === "rom" || f.type === "strength" || f.type === "angleSlider" || /(strength|rom|motion|romFollowUp)/i.test(key)) groups.motion.push(c);
     else groups.other.push(c);
   });
 
@@ -14444,7 +14549,11 @@ function buildDifferential(condition, state) {
   const diff = condition.sections.find((s) => s.id === "differential");
   if (!diff) return null;
   const field = resolveFields(diff.fields, state).find((f) => f.type === "checkbox");
-  const list = field ? state[field.key] || [] : [];
+  let list = field ? state[field.key] || [] : [];
+  if (field && field.excludeCurrentValueOf) {
+    const excludeVal = state[field.excludeCurrentValueOf];
+    if (excludeVal) list = list.filter((v) => v !== excludeVal);
+  }
 
   // In a general (undifferentiated) assessment the ticked list is what is
   // still actively under consideration, which is the opposite of the
@@ -14503,7 +14612,12 @@ function sideWord(state) {
 
 function buildImpression(condition, state) {
   const dx = condition.sections.find((s) => s.id === "diagnosis");
-  if (!dx) return null;
+  // Carried forward from a general assessment at the point this diagnosis
+  // was opened from it (see deriveSharedDefaults) - the reasoning that led
+  // to this diagnosis being pursued belongs with the impression, not the
+  // history, and shows even before any diagnosis field here is filled in.
+  const generalContext = state.__generalAssessmentContext;
+  if (!dx) return generalContext || null;
 
   if (state.side === "Bilateral") {
     const rightState = { ...state, ...(state.limbData?.right || {}) };
@@ -14514,14 +14628,17 @@ function buildImpression(condition, state) {
     const fix = (s) => s.replace(/;\s+(involving\b)/g, " $1");
     if (rightClauses.length) parts.push(`Right side \u2014 ${fix(joinClausesLower(rightClauses))}`);
     if (leftClauses.length) parts.push(`Left side \u2014 ${fix(joinClausesLower(leftClauses))}`);
-    return parts.length ? `Clinical impression: ${parts.join(" ")}` : null;
+    const body = parts.length ? `Clinical impression: ${parts.join(" ")}` : null;
+    if (generalContext && body) return `${generalContext}\n${body}`;
+    return generalContext || body;
   }
 
   const clauses = impressionClausesFor(dx, state);
-  if (!clauses.length) return null;
   const side = sideWord(state);
-  const joined = joinClausesLower(clauses).replace(/;\s+(involving\b)/g, " $1");
-  return `Clinical impression: ${side ? `${side} side \u2014 ` : ""}${joined}`;
+  const joined = clauses.length ? joinClausesLower(clauses).replace(/;\s+(involving\b)/g, " $1") : null;
+  const body = joined ? `Clinical impression: ${side ? `${side} side \u2014 ` : ""}${joined}` : null;
+  if (generalContext && body) return `${generalContext}\n${body}`;
+  return generalContext || body;
 }
 
 // Terms indicating the reached management plan involves an operative
@@ -16267,7 +16384,6 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
-  const [noteScope, setNoteScope] = useState("this"); // "this" | "session"
   const [noteType, setNoteType] = useState("note"); // "note" | "physio"
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -16390,9 +16506,9 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const generatedNote = useMemo(
     () => {
       if (noteType === "physio") return buildPhysioReferral(condition, state);
-      return noteScope === "session" && hasMultipleActive ? buildCombinedNote(session) : buildNote(condition, state);
+      return hasMultipleActive ? buildCombinedNote(session) : buildNote(condition, state);
     },
-    [condition, state, noteScope, noteType, hasMultipleActive, session]
+    [condition, state, noteType, hasMultipleActive, session]
   );
 
   // Lets the clinician correct or add to the note here rather than pasting
@@ -16402,7 +16518,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   // not silently appear in another.
   const [noteEdits, setNoteEdits] = useState({});
   const [editingNote, setEditingNote] = useState(false);
-  const noteVariantKey = `${noteType}:${noteType === "physio" ? "this" : noteScope}`;
+  const noteVariantKey = noteType;
   const override = noteEdits[noteVariantKey];
   const isEdited = typeof override === "string";
   const note = isEdited ? override : generatedNote;
@@ -16470,9 +16586,15 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   // clinician to fill in - counting it meant progress could never reach
   // 100% even once everything actually fillable was documented.
   // Sections that carry a routine review. Deliberately excludes the
-  // reference-heavy ones (typical patient, differential, outcomes) rather
-  // than anything clinically load-bearing.
-  const BRIEF_SECTION_IDS = ["history", "exam", "imaging", "pathway", "followup"];
+  // reference-heavy ones (typical patient, outcomes) rather than anything
+  // clinically load-bearing. Differential Diagnosis is the exception: for a
+  // general assessment it isn't reference material, it's the whole point of
+  // the template - reaching a working diagnosis and continuing into it - so
+  // it stays in Brief Encounter there even though it's left out for specific
+  // diagnosis templates, where it really is just a reference checklist.
+  const BRIEF_SECTION_IDS = condition.isGeneralAssessment
+    ? ["history", "exam", "imaging", "differential", "pathway", "followup"]
+    : ["history", "exam", "imaging", "pathway", "followup"];
   const [briefMode, setBriefMode] = useState(false);
   const visibleSections = briefMode
     ? condition.sections.filter((s) => BRIEF_SECTION_IDS.includes(s.id))
@@ -16797,7 +16919,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <button
           onClick={() => {
             if (!redFlagsSettled && !flagPromptDismissed) { setFlagPromptOpen(true); return; }
-            setNoteScope("this"); setNoteOpen(true);
+            setNoteOpen(true);
           }}
           className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95"
           style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
@@ -16810,7 +16932,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
           <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
-              <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
+              <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : "Clinic note"}</span>
@@ -16824,13 +16946,8 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               </button>
             </div>
             {noteType === "note" && hasMultipleActive && (
-              <div className="flex gap-2 px-4 pt-2">
-                <button onClick={() => setNoteScope("this")} className="flex-1 rounded-lg py-2 text-[13px] font-semibold" style={{ background: noteScope === "this" ? T.teal : T.slateChip, color: noteScope === "this" ? "#fff" : T.ink }}>
-                  This condition
-                </button>
-                <button onClick={() => setNoteScope("session")} className="flex-1 rounded-lg py-2 text-[13px] font-semibold" style={{ background: noteScope === "session" ? T.teal : T.slateChip, color: noteScope === "session" ? "#fff" : T.ink }}>
-                  Full session ({session.order.length})
-                </button>
+              <div className="mx-4 mt-2 rounded-lg px-3 py-2 text-[12.5px] font-medium text-center" style={{ background: T.tealTint, color: T.tealDark }}>
+                Combined note for all {session.order.length} conditions in this session
               </div>
             )}
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
@@ -16871,10 +16988,10 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
                 style={{ background: editingNote ? T.tealTint : T.slateChip, color: editingNote ? T.tealDark : T.ink, border: `1px solid ${editingNote ? T.teal : T.border}`, minHeight: 48 }}
               >
-                {editingNote ? <><Check size={17} /> Done editing</> : <>Edit note before copying</>}
+                {editingNote ? <><Check size={17} /> Done editing</> : <>Edit note text</>}
               </button>
               <button onClick={() => { setEditingNote(false); setNoteOpen(false); }} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                <ArrowLeft size={17} /> Back to editing
+                <ArrowLeft size={17} /> Close preview
               </button>
               <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
@@ -16912,7 +17029,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 Review red flags
               </button>
               <button
-                onClick={() => { setFlagPromptOpen(false); setFlagPromptDismissed(true); setNoteScope("this"); setNoteOpen(true); }}
+                onClick={() => { setFlagPromptOpen(false); setFlagPromptDismissed(true); setNoteOpen(true); }}
                 className="w-full rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
                 style={{ background: T.surface, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}
               >
@@ -16947,7 +17064,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         onClose={() => setFlagsOpen(false)}
         reviewed={state.redFlagsReviewed}
         onToggleReviewed={toggleRedFlagsReviewed}
-        onPreviewNote={() => { setFlagsOpen(false); setNoteScope("this"); setNoteOpen(true); }}
+        onPreviewNote={() => { setFlagsOpen(false); setNoteOpen(true); }}
       />
     </div>
   );
@@ -17646,7 +17763,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
           <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
-              <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
+              <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Follow-up note</span>
@@ -17656,7 +17773,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                <ArrowLeft size={17} /> Back to editing
+                <ArrowLeft size={17} /> Close preview
               </button>
               <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
@@ -17832,7 +17949,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
           <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
-              <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
+              <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Post-op follow-up note</span>
@@ -17842,7 +17959,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                <ArrowLeft size={17} /> Back to editing
+                <ArrowLeft size={17} /> Close preview
               </button>
               <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
@@ -18611,7 +18728,7 @@ export default function App() {
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setCombinedNoteOpen(false)}>
           <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
-              <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Back to editing">
+              <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Combined clinic note</span>
@@ -18621,7 +18738,7 @@ export default function App() {
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
               <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                <ArrowLeft size={17} /> Back to editing
+                <ArrowLeft size={17} /> Close preview
               </button>
               <button onClick={copyCombinedNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {combinedCopied ? <Check size={17} /> : <Copy size={17} />}
