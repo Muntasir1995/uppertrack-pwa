@@ -12529,10 +12529,10 @@ const RELATED_CONDITIONS = {
   // General (undifferentiated) assessments link out to the likely specific
   // templates for that region, so once the picture clarifies the clinician
   // moves straight into the detailed template without re-navigating.
-  "general-shoulder": ["rotator-cuff", "saps", "adhesive-capsulitis", "ac-joint", "gh-osteoarthritis", "long-head-biceps"],
-  "general-elbow": ["lateral-epicondylopathy", "medial-epicondylopathy", "elbow-osteoarthritis", "cubital-tunnel-syndrome", "olecranon-bursitis", "distal-biceps-rupture"],
-  "general-wrist": ["de-quervain", "thumb-cmc-oa", "wrist-oa", "tfcc-injury", "scaphoid-fracture", "carpal-tunnel-syndrome"],
-  "general-hand": ["trigger-finger", "dupuytren-disease", "hand-osteoarthritis", "mallet-finger", "pip-dislocation-volar-plate", "boutonniere-deformity"],
+  "general-shoulder": ["rotator-cuff", "saps", "adhesive-capsulitis", "ac-joint", "gh-osteoarthritis", "long-head-biceps", "glenohumeral-instability", "avn-humeral-head", "calcific-tendinitis", "proximal-humerus-fracture", "scapular-dyskinesis", "slap-lesion", "pec-major-rupture", "clavicle-fracture", "parsonage-turner-syndrome"],
+  "general-elbow": ["lateral-epicondylopathy", "medial-epicondylopathy", "elbow-osteoarthritis", "cubital-tunnel-syndrome", "olecranon-bursitis", "distal-biceps-rupture", "distal-triceps-rupture", "radial-head-fracture", "coronoid-terrible-triad", "elbow-instability", "elbow-stiffness", "athletic-elbow-ocd-veo", "olecranon-fracture"],
+  "general-wrist": ["de-quervain", "thumb-cmc-oa", "wrist-oa", "tfcc-injury", "scaphoid-fracture", "carpal-tunnel-syndrome", "scapholunate-injury", "kienbock-disease", "ulnar-impaction", "wrist-ganglion", "intersection-syndrome", "ecu-tendinopathy", "druj-instability"],
+  "general-hand": ["trigger-finger", "dupuytren-disease", "hand-osteoarthritis", "mallet-finger", "pip-dislocation-volar-plate", "boutonniere-deformity", "jersey-finger", "sagittal-band-injury", "extensor-tendon-injuries", "distal-radius-fracture", "scaphoid-fracture", "thumb-ucl-injury", "metacarpal-fracture", "phalangeal-fracture", "bennett-rolando-fracture", "perilunate-injury", "hook-of-hamate-fracture", "fingertip-injury", "tendon-laceration", "flexor-tenosynovitis"],
   "clavicle-fracture": ["ac-joint", "proximal-humerus-fracture"],
   "parsonage-turner-syndrome": ["suprascapular-neuropathy", "rotator-cuff", "scapular-dyskinesis"],
   "suprascapular-neuropathy": ["parsonage-turner-syndrome", "rotator-cuff", "scapular-dyskinesis", "slap-lesion"],
@@ -12636,7 +12636,38 @@ function findConditionById(id) {
   return general || null;
 }
 
-function deriveSharedDefaults(session) {
+// Every field key a condition's template can hold, regardless of current
+// state (conditionals are walked unconditionally - this just needs to know
+// what the template CAN hold, not what is currently relevant).
+function allFieldKeysOf(condition) {
+  const keys = new Set();
+  const walk = (fields) => {
+    (fields || []).forEach((f) => {
+      if (f.type === "conditional") { walk(f.fields); return; }
+      if (f.key) keys.add(f.key);
+    });
+  };
+  (condition.sections || []).forEach((s) => walk(s.fields));
+  return keys;
+}
+
+// Field pairs that mean the same thing across a general assessment and a
+// specific diagnosis but use different key names - the key-naming
+// inconsistency already flagged elsewhere in this app. Verified by scanning
+// every general assessment against every condition it links to (via
+// RELATED_CONDITIONS) for matching field TYPE and matching or near-identical
+// LABEL, so a value is never copied into a field of an incompatible shape
+// (e.g. a testGrid's {test: "positive"} object into a plain checkbox array).
+const GENERAL_TO_SPECIFIC_SYNONYMS = [
+  ["functionalLimitation", "functionalLimits"],
+  ["imgViews", "imgEssential"],
+  ["imgViews", "imgRecommended"],
+  ["imgViews", "initialRadiographs"],
+  ["occupation", "occupationBeforeInjury"],
+  ["painPattern", "painChar"],
+];
+
+function deriveSharedDefaults(session, targetCondition) {
   const defaults = {};
   for (const key of SHARED_FIELD_KEYS) {
     for (const cid of session.order) {
@@ -12657,6 +12688,40 @@ function deriveSharedDefaults(session) {
       }
     }
   }
+
+  // A specific diagnosis reached from a general (undifferentiated)
+  // assessment is a continuation of the same encounter, not a fresh one -
+  // so far more than the standard patient-level facts above should carry
+  // forward: duration, mechanism, symptoms, exam findings, imaging. Only
+  // fires when a region-matched general assessment with data already
+  // exists in this session, and only copies into fields the target
+  // template actually has (exact key match, plus a short list of verified
+  // synonym pairs for fields that mean the same thing under a different key).
+  if (targetCondition && !targetCondition.isGeneralAssessment) {
+    const generalSource = session.order
+      .map((cid) => ({ cid, cond: findConditionById(cid), state: session.statesByConditionId[cid] }))
+      .find((e) => e.cond && e.cond.isGeneralAssessment && e.cond.region === targetCondition.region && e.state);
+    if (generalSource) {
+      const targetKeys = allFieldKeysOf(targetCondition);
+      const genState = generalSource.state;
+      Object.keys(genState).forEach((key) => {
+        if (defaults[key] != null) return;
+        if (targetKeys.has(key) && genState[key] != null && genState[key] !== "") {
+          defaults[key] = genState[key];
+        }
+      });
+      GENERAL_TO_SPECIFIC_SYNONYMS.forEach(([genKey, specKey]) => {
+        if (defaults[specKey] != null) return;
+        if (targetKeys.has(specKey) && genState[genKey] != null && genState[genKey] !== "") {
+          defaults[specKey] = genState[genKey];
+        }
+      });
+      // Marks which general assessment supplied this data, so the combined
+      // note can avoid showing the same findings twice (see buildCombinedNote).
+      defaults.__derivedFromGeneral = generalSource.cid;
+    }
+  }
+
   return defaults;
 }
 
@@ -12664,7 +12729,7 @@ function addConditionToSession(session, condition) {
   if (session.statesByConditionId[condition.id]) return session; // already active
   return {
     order: [...session.order, condition.id],
-    statesByConditionId: { ...session.statesByConditionId, [condition.id]: deriveSharedDefaults(session) },
+    statesByConditionId: { ...session.statesByConditionId, [condition.id]: deriveSharedDefaults(session, condition) },
   };
 }
 
@@ -15261,11 +15326,24 @@ function buildCombinedNote(session) {
     return lines.join("\n");
   }
 
+  // A specific diagnosis reached from a general assessment carries that
+  // assessment's data forward (see deriveSharedDefaults), so showing both
+  // in full would repeat the same history and examination twice. The
+  // general assessment is named once here as context, then its own detail
+  // sections and impression are left out below - not because nothing was
+  // recorded, but because it now lives under the diagnosis it led to.
+  const supersededGeneralIds = new Set(withStates.map(({ state }) => state.__derivedFromGeneral).filter(Boolean));
+  const nameFor = (condition) => {
+    if (!supersededGeneralIds.has(condition.id)) return condition.name;
+    const successor = withStates.find(({ state }) => state.__derivedFromGeneral === condition.id);
+    return successor ? `${condition.name} (superseded by ${successor.condition.name})` : condition.name;
+  };
+
   lines.push("CONDITIONS ASSESSED THIS SESSION");
-  lines.push(`Primary diagnosis: ${withStates[0].condition.name}`);
+  lines.push(`Primary diagnosis: ${nameFor(withStates[0].condition)}`);
   const secondaries = withStates.slice(1);
   if (secondaries.length) {
-    lines.push(`Secondary diagnos${secondaries.length === 1 ? "is" : "es"}: ${secondaries.map((s) => s.condition.name).join(", ")}`);
+    lines.push(`Secondary diagnos${secondaries.length === 1 ? "is" : "es"}: ${secondaries.map((s) => nameFor(s.condition)).join(", ")}`);
   }
   lines.push("");
 
@@ -15295,7 +15373,9 @@ function buildCombinedNote(session) {
   }
 
   const pushPerDiagnosisSection = (heading, builder) => {
-    const entries = withStates.map(({ condition, state }, idx) => ({ condition, idx, text: builder(condition, state) })).filter((e) => e.text);
+    const entries = withStates
+      .map(({ condition, state }, idx) => ({ condition, idx, text: builder(condition, state) }))
+      .filter((e) => e.text && !supersededGeneralIds.has(e.condition.id));
     if (!entries.length) return;
     lines.push(heading);
     entries.forEach(({ condition, idx, text }) => {
@@ -15316,6 +15396,7 @@ function buildCombinedNote(session) {
   // picture for the patient.
   const impressionParts = withStates
     .map(({ condition, state }, idx) => {
+      if (supersededGeneralIds.has(condition.id)) return null;
       const text = buildImpression(condition, state);
       if (!text) return null;
       const clause = text.replace(/^Clinical impression:\s*/i, "").trim().replace(/\.$/, "");
