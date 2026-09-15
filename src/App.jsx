@@ -652,9 +652,7 @@ const instabilityData = {
         { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
           { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
         ] },
-        // Original records one figure per motion here (no active/passive split,
-        // unlike the other shoulder templates) — flagged for your review.
-        { type: "numberGroup", key: "rom", label: "Range of motion", items: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"], suffix: "\u00b0" },
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "testGrid", key: "stabilityTests", label: "Stability tests", options: ["Anterior Apprehension", "Relocation", "Surprise Test (where appropriate)", "Sulcus Sign", "Posterior Apprehension", "Jerk Test", "Kim Test"] },
         { type: "select", key: "loadAndShift", label: "Load and Shift \u2014 grade", options: ["1+", "2+", "3+"], columns: 3, noteLabel: "Load and Shift grade" },
         { type: "info", title: "Load and Shift grading reference", items: ["1+: Apparent translation but the humeral head does not reach the glenoid rim.", "2+: Translation extends up to the glenolabral rim.", "3+: The humeral head translates completely over the glenolabral rim."] },
@@ -2272,7 +2270,7 @@ const pecMajorRuptureData = {
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Tendon defect", "Tenderness", "Hematoma"] },
         { type: "info", title: "Range of motion", items: ["Usually preserved.", "Pain at terminal motion."] },
-        { type: "numberGroup", key: "rom", label: "Range of motion \u2014 document", items: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"], suffix: "\u00b0" },
+        { type: "rom", key: "rom", label: "Range of motion — document", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "checkbox", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Adduction", "Internal Rotation", "Horizontal Adduction"] },
         { type: "checkbox", key: "functionalTesting", label: "Functional testing (if tolerated)", options: ["Push-up", "Wall push"] },
         { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
@@ -15428,9 +15426,27 @@ function buildNote(condition, state) {
 // Combines every condition active in the patient session into one note,
 // each under its own heading, for consultations with more than one working
 // diagnosis (e.g. Rotator Cuff Disease + AC Joint Disorders).
+// A specific diagnosis reached from a general assessment carries that
+// assessment's data forward (see deriveSharedDefaults) and is really a
+// continuation of the same clinical workup, not a second condition. Shared
+// between buildCombinedNote (which excludes these from Primary/Secondary
+// numbering) and ConditionTemplate (which uses it to decide whether a
+// session genuinely has more than one condition, or just looks like it
+// does because a general assessment is still sitting in session.order).
+function getSupersededGeneralIds(session) {
+  return new Set(
+    session.order
+      .map((id) => session.statesByConditionId[id])
+      .filter(Boolean)
+      .map((state) => state.__derivedFromGeneral)
+      .filter(Boolean)
+  );
+}
+
 function buildCombinedNote(session) {
   const items = session.order.map((id) => findConditionById(id)).filter(Boolean);
-  const lines = ["COMBINED CLINIC NOTE", `${items.length} condition${items.length === 1 ? "" : "s"} documented this session`, ""];
+  const realCount = items.length - getSupersededGeneralIds(session).size;
+  const lines = ["COMBINED CLINIC NOTE", `${realCount} condition${realCount === 1 ? "" : "s"} documented this session`, ""];
 
   // Session-wide safety banner, same rationale as the single-condition note:
   // a senior clinician needs to see anything urgent across every active
@@ -15449,9 +15465,10 @@ function buildCombinedNote(session) {
   // The first diagnosis added to the session is treated as primary and
   // every other active diagnosis as secondary - this is the same ordering
   // already used for the "N diagnoses reviewed" chips elsewhere, so it
-  // stays consistent with how the session is actually built up.
+  // stays consistent with how the session is actually built up. (labelFor
+  // itself is defined further below, once supersededGeneralIds is known -
+  // it needs that to decide whether Primary/Secondary applies at all.)
   const withStates = items.map((condition) => ({ condition, state: session.statesByConditionId[condition.id] || {} }));
-  const labelFor = (idx) => (idx === 0 ? "Primary" : "Secondary");
 
   // Guard against an empty session: previously this emitted the section
   // headings below with nothing under them, producing a note that looked
@@ -15466,29 +15483,47 @@ function buildCombinedNote(session) {
 
   // A specific diagnosis reached from a general assessment carries that
   // assessment's data forward (see deriveSharedDefaults), so showing both
-  // in full would repeat the same history and examination twice. The
-  // general assessment is named once here as context, then its own detail
-  // sections and impression are left out below - not because nothing was
-  // recorded, but because it now lives under the diagnosis it led to.
-  const supersededGeneralIds = new Set(withStates.map(({ state }) => state.__derivedFromGeneral).filter(Boolean));
-  const nameFor = (condition) => {
-    if (!supersededGeneralIds.has(condition.id)) return condition.name;
-    const successor = withStates.find(({ state }) => state.__derivedFromGeneral === condition.id);
-    return successor ? `${condition.name} (superseded by ${successor.condition.name})` : condition.name;
+  // in full would repeat the same history and examination twice. It also
+  // means the general assessment isn't a second diagnosis - it's the same
+  // clinical workup that led to the one diagnosis below - so it's excluded
+  // from Primary/Secondary numbering entirely, not just given a label.
+  const supersededGeneralIds = getSupersededGeneralIds(session);
+
+  // Only genuinely distinct diagnoses count toward Primary/Secondary - a
+  // general assessment plus the one diagnosis it led to is really a single
+  // condition being assessed, not two. With two or more real diagnoses
+  // (e.g. the patient also has a separate, unrelated condition documented
+  // this session), Primary/Secondary still applies, but only among those -
+  // the superseded general assessment is never numbered, though it still
+  // gets its own row in Red Flags, labelled "initial assessment" there.
+  const realDiagnoses = withStates.filter(({ condition }) => !supersededGeneralIds.has(condition.id));
+  const labelFor = (condition) => {
+    if (supersededGeneralIds.has(condition.id)) return "initial assessment";
+    if (realDiagnoses.length <= 1) return null;
+    const idx = realDiagnoses.findIndex((e) => e.condition.id === condition.id);
+    return idx === 0 ? "Primary" : "Secondary";
   };
+  const withLabel = (name, label) => (label ? `${name} (${label})` : name);
 
   lines.push("CONDITIONS ASSESSED THIS SESSION");
-  lines.push(`Primary diagnosis: ${nameFor(withStates[0].condition)}`);
-  const secondaries = withStates.slice(1);
-  if (secondaries.length) {
-    lines.push(`Secondary diagnos${secondaries.length === 1 ? "is" : "es"}: ${secondaries.map((s) => nameFor(s.condition)).join(", ")}`);
+  if (!realDiagnoses.length) {
+    // A general assessment on its own, not yet continued into a specific
+    // diagnosis - shouldn't normally reach the combined note, but handled
+    // rather than producing an empty header.
+    lines.push(`Assessment in progress: ${withStates[0].condition.name}`);
+  } else if (realDiagnoses.length === 1) {
+    lines.push(`Diagnosis: ${realDiagnoses[0].condition.name}`);
+  } else {
+    lines.push(`Primary diagnosis: ${realDiagnoses[0].condition.name}`);
+    const secondaries = realDiagnoses.slice(1);
+    lines.push(`Secondary diagnos${secondaries.length === 1 ? "is" : "es"}: ${secondaries.map((s) => s.condition.name).join(", ")}`);
   }
   lines.push("");
 
   lines.push("RED FLAGS");
-  withStates.forEach(({ condition, state }, idx) => {
+  withStates.forEach(({ condition, state }) => {
     const text = buildRedFlagsExcluded(condition, state) || "Red flags not yet reviewed for this diagnosis.";
-    lines.push(`${condition.name} (${labelFor(idx)}): ${text}`);
+    lines.push(`${withLabel(condition.name, labelFor(condition))}: ${text}`);
   });
   lines.push("");
 
@@ -15516,8 +15551,8 @@ function buildCombinedNote(session) {
       .filter((e) => e.text && !supersededGeneralIds.has(e.condition.id));
     if (!entries.length) return;
     lines.push(heading);
-    entries.forEach(({ condition, idx, text }) => {
-      lines.push(`${condition.name} (${labelFor(idx)})`);
+    entries.forEach(({ condition, text }) => {
+      lines.push(withLabel(condition.name, labelFor(condition)));
       lines.push(text);
       lines.push("");
     });
@@ -15538,7 +15573,8 @@ function buildCombinedNote(session) {
       const text = buildImpression(condition, state);
       if (!text) return null;
       const clause = text.replace(/^Clinical impression:\s*/i, "").trim().replace(/\.$/, "");
-      return `${condition.name} (${labelFor(idx).toLowerCase()}) \u2014 ${clause}`;
+      const label = labelFor(condition);
+      return `${withLabel(condition.name, label ? label.toLowerCase() : null)} \u2014 ${clause}`;
     })
     .filter(Boolean);
   if (impressionParts.length) {
@@ -15549,11 +15585,12 @@ function buildCombinedNote(session) {
 
   // Management and review plans stay paired per diagnosis, since a plan
   // and its follow-up interval are only meaningful read together.
-  withStates.forEach(({ condition, state }, idx) => {
+  withStates.forEach(({ condition, state }) => {
+    if (supersededGeneralIds.has(condition.id)) return;
     const mgmt = buildManagementPlan(condition, state);
     const review = buildReviewPlan(condition, state);
     if (!mgmt && !review) return;
-    lines.push(`MANAGEMENT & REVIEW PLAN \u2014 ${condition.name} (${labelFor(idx)})`);
+    lines.push(`MANAGEMENT & REVIEW PLAN \u2014 ${withLabel(condition.name, labelFor(condition))}`);
     if (mgmt) {
       lines.push("Management Plan:");
       lines.push(mgmt);
@@ -16408,7 +16445,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
 
   const setField = useCallback((key, val) => onFieldChange({ [key]: val }), [onFieldChange]);
   const toggleSection = (id) => setOpenSection((cur) => (cur === id ? null : id));
-  const hasMultipleActive = session.order.length > 1;
+  const hasMultipleActive = session.order.length - getSupersededGeneralIds(session).size > 1;
 
   // When Side is set to Bilateral, History, Examination, Imaging, and
   // Diagnosis Classification are documented independently per limb (imaging
@@ -16947,7 +16984,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
             </div>
             {noteType === "note" && hasMultipleActive && (
               <div className="mx-4 mt-2 rounded-lg px-3 py-2 text-[12.5px] font-medium text-center" style={{ background: T.tealTint, color: T.tealDark }}>
-                Combined note for all {session.order.length} conditions in this session
+                Combined note for all {session.order.length - getSupersededGeneralIds(session).size} conditions in this session
               </div>
             )}
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
