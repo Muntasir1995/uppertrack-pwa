@@ -92,7 +92,7 @@ const rotatorCuffData = {
       suitableForRepair: {
         type: "question",
         title: "Suitable for repair?",
-        text: "Pathway suggests this decision point once imaging is reviewed.",
+        text: "Consider tear size and retraction (Patte grade), fatty infiltration (Goutallier grade) and muscle atrophy, tear acuity (acute vs chronic), and patient age/functional demand \u2014 more advanced retraction and fatty infiltration reduce the likelihood of a durable repair.",
         options: [
           { label: "Yes", next: "sharedDecision" },
           { label: "No", next: "nonOperative" },
@@ -161,10 +161,11 @@ const rotatorCuffData = {
         { type: "testGrid", key: "stBiceps", label: "Special tests — Biceps", options: ["Speed", "Yergason"] },
         { type: "testGrid", key: "stAC", label: "Special tests — AC Joint", options: ["Cross-body Adduction"] },
         { type: "testGrid", key: "stInstability", label: "Special tests — Instability (if indicated)", options: ["Apprehension", "Relocation"] },
-        { type: "testGrid", key: "stCervical", label: "Cervical Spine Screening", options: ["Neck ROM", "Spurling", "Radicular symptoms"] },
+        { type: "testGrid", key: "stCervical", label: "Cervical Spine Screening", options: ["Neck ROM", "Spurling", "Radicular symptoms"], itemOptions: { "Neck ROM": ["Normal", "Abnormal"] } },
         { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [
           { type: "checkbox", key: "stNeuro", label: "Neurovascular \u2014 abnormal in", options: ["Axillary nerve sensation", "Distal motor", "Distal sensation", "Pulses"] },
+          { type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -285,10 +286,11 @@ const sapsData = {
         title: "Persistent symptoms >3–6 months despite optimised non-operative management? (Decision Points 3 & 4)",
         text: "Pathway suggests reassessing before further escalation.",
         options: [
-          { label: "Yes", next: "surgicalOpinion" },
+          { label: "Yes", next: "decompressionEvidence" },
           { label: "No", next: "continueNonOp" },
         ],
       },
+      decompressionEvidence: { type: "info", title: "Evidence on subacromial decompression", text: "Placebo-controlled trials (CSAW, Lancet 2018; FIMPACT 10-year follow-up, 2025) show no meaningful benefit of arthroscopic subacromial decompression over placebo surgery for subacromial pain with an intact cuff. Surgical referral at this stage is appropriate for diagnostic reassessment or where a structural lesion is suspected, rather than for decompression itself.", next: "surgicalOpinion" },
       surgicalOpinion: { type: "terminal", tone: "amber", title: "Reassess diagnosis and consider specialist surgical opinion", text: "Pathway suggests reassessing the diagnosis and considering specialist surgical assessment if clinically appropriate." },
       continueNonOp: { type: "terminal", tone: "teal", title: "Continue non-operative management", text: "Pathway suggests continuing the current non-operative programme." },
     },
@@ -327,7 +329,7 @@ const sapsData = {
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "strength", key: "strength", label: "Strength (0–5)", muscles: [{ key: "supraspinatus", label: "Supraspinatus" }, { key: "externalRotation", label: "External Rotation" }, { key: "subscapularis", label: "Subscapularis" }] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Painful Arc", "Neer", "Hawkins-Kennedy", "Jobe", "External Rotation Resistance", "Cross-body Adduction", "Speed", "Scapular Assistance Test", "Scapular Retraction Test"] },
-        { type: "testGrid", key: "stCervical", label: "Cervical Spine", options: ["ROM", "Spurling", "Radicular symptoms"] },
+        { type: "testGrid", key: "stCervical", label: "Cervical Spine", options: ["ROM", "Spurling", "Radicular symptoms"], itemOptions: { "ROM": ["Normal", "Abnormal"] } },
         { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
       ],
     },
@@ -483,7 +485,7 @@ const adhesiveCapsulitisData = {
         { type: "checkbox", key: "endFeel", label: "End feel", options: ["Firm capsular", "Painful"] },
         { type: "select", key: "strengthAssessment", label: "Strength", options: ["Difficult to assess due to pain", "Preserved", "Weak (consider associated cuff pathology)"], columns: 1 },
         { type: "testGrid", key: "specialTests", label: "Special tests (perform only if tolerated)", options: ["Jobe", "Hawkins", "Neer", "Cross-body"] },
-        { type: "testGrid", key: "stCervical", label: "Cervical spine", options: ["ROM", "Spurling"] },
+        { type: "testGrid", key: "stCervical", label: "Cervical spine", options: ["ROM", "Spurling"], itemOptions: { "ROM": ["Normal", "Abnormal"] } },
         { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
       ],
     },
@@ -611,7 +613,7 @@ const instabilityData = {
       highRecurrenceRisk: {
         type: "question",
         title: "High recurrence risk?",
-        text: "Pathway suggests this decision once risk has been assessed.",
+        text: "Pathway suggests this decision once risk has been assessed. Key factors: age under 30 (highest risk 14\u201320 years, with recurrence rates reported up to 47% after conservative treatment versus roughly 17% at 30\u201340), male sex, and contact/collision or overhead sport participation. Current evidence increasingly favours early surgical stabilisation in this group rather than a rehabilitation-first approach.",
         options: [
           { label: "Yes", next: "earlySurgicalConsult" },
           { label: "No", next: "continueRehabFt" },
@@ -782,7 +784,7 @@ const bicepsData = {
           { label: "No", next: "continueConservative" },
         ],
       },
-      sharedDecision: { type: "terminal", tone: "amber", title: "Shared decision-making regarding surgery", text: "Pathway suggests shared decision-making regarding tenotomy or tenodesis (patient-specific)." },
+      sharedDecision: { type: "terminal", tone: "amber", title: "Shared decision-making regarding surgery", text: "Pathway suggests shared decision-making regarding tenotomy or tenodesis (patient-specific). RCT evidence shows broadly equivalent functional outcomes at 12+ months; tenotomy is faster with quicker early recovery but carries a real risk of Popeye deformity and some strength loss, which tends to matter more to younger, active, or cosmesis-conscious patients \u2014 tenodesis is generally favoured in that group, tenotomy more often chosen for older, lower-demand patients." },
       continueConservative: { type: "terminal", tone: "green", title: "Continue conservative management", text: "Pathway suggests continuing the current conservative programme." },
     },
   },
@@ -1056,10 +1058,11 @@ const acJointData = {
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "info", title: null, items: ["ROM usually preserved.", "Pain often occurs at terminal elevation."] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Cross-body Adduction", "O'Brien (AC localization)", "Paxinos Test", "AC Resisted Extension Test", "Hawkins", "Neer", "Jobe"] },
-        { type: "checkbox", key: "cuffDocument", label: "Rotator cuff \u2014 document", options: ["Supraspinatus", "ER", "Subscapularis"] },
+        { type: "testGrid", key: "cuffDocument", label: "Rotator cuff \u2014 document", options: ["Supraspinatus", "ER", "Subscapularis"], defaultOptions: ["Intact", "Weak"] },
         { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [
           { type: "checkbox", key: "stNeuro", label: "Neurovascular \u2014 abnormal in", options: ["Sensation", "Distal pulses", "Motor function"] },
+          { type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -1226,7 +1229,7 @@ const gleroarthritisData = {
       cuffIntact: {
         type: "question",
         title: "Rotator cuff intact? (Decision Points 3 & 4)",
-        text: "Pathway suggests this decision once expectations have been reviewed.",
+        text: "Pathway suggests this decision once expectations have been reviewed. An intact cuff no longer automatically favours anatomic TSA: recent evidence shows reverse TSA carries a lower reoperation rate even with an intact cuff, particularly in patients aged 70+, with posterior glenoid wear, or with restricted preoperative forward elevation \u2014 anatomic TSA retains an advantage in active external rotation and, in some series, functional outcome. Cuff status is one factor among several informing this shared decision, not a standalone rule.",
         options: [
           { label: "Yes", next: "anatomicTSA" },
           { label: "No", next: "reverseTSA" },
@@ -1269,7 +1272,7 @@ const gleroarthritisData = {
         ] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "checkbox", key: "mechanicalFindings", label: "Mechanical findings", options: ["Crepitus", "Pain at end range", "Capsular stiffness"] },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 document", options: ["Supraspinatus", "External Rotation", "Subscapularis", "Deltoid"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 document", options: ["Supraspinatus", "External Rotation", "Subscapularis", "Deltoid"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "info", title: "Special tests", items: ["Perform only if clinically useful \u2014 no fixed battery specified."] },
         { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
       ],
@@ -1403,7 +1406,7 @@ const avnData = {
       cuffIntact: {
         type: "question",
         title: "Rotator cuff intact? (Decision Point 4)",
-        text: "Pathway suggests this decision once evaluation is complete.",
+        text: "Pathway suggests this decision once evaluation is complete. As with glenohumeral osteoarthritis, an intact cuff no longer automatically favours anatomic TSA \u2014 reverse TSA now shows a lower reoperation rate even with an intact cuff in several groups (older patients, posterior glenoid wear, limited preoperative elevation), so cuff status is one factor among several rather than a standalone rule.",
         options: [
           { label: "Yes", next: "anatomicTSA" },
           { label: "No", next: "reverseTSA" },
@@ -1563,7 +1566,7 @@ const calcificTendinitisData = {
       },
       barbotageConsider: { type: "terminal", tone: "teal", title: "Consider ultrasound-guided barbotage", text: "Pathway suggests considering ultrasound-guided barbotage, then reassessing." },
       acuteResolved: { type: "terminal", tone: "green", title: "Continue symptom control", text: "Pathway suggests continuing symptom control and reassessing as the acute phase settles." },
-      persistentTrack: { type: "info", title: "Persistent Symptoms (>3\u20136 months)", text: "Review imaging \u2192 Repeat assessment", next: "failureConservative" },
+      persistentTrack: { type: "info", title: "Persistent Symptoms (>3\u20136 months)", text: "Review imaging \u2192 Repeat assessment \u2192 Ultrasound-guided barbotage is equally applicable here, not just in the acute phase \u2014 recent evidence shows physiotherapy, corticosteroid injection, and barbotage have broadly similar success at avoiding surgery, so a modality not yet tried is worth considering before concluding conservative treatment has failed. Barbotage's benefit can be short-lived (one series: roughly half of patients needed a further procedure within about a year), which is worth setting as an expectation.", next: "failureConservative" },
       failureConservative: {
         type: "question",
         title: "Failure of comprehensive conservative treatment? (Decision Point 4)",
@@ -1611,7 +1614,8 @@ const calcificTendinitisData = {
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "info", title: null, items: ["During the acute resorptive phase, movement may be markedly pain-limited despite preserved passive motion once pain is controlled."] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Greater tuberosity tenderness", "Subacromial tenderness"] },
-        { type: "checkbox", key: "strength", label: "Strength", options: ["Difficult to assess due to pain", "Supraspinatus", "External Rotation", "Subscapularis"] },
+        { type: "checkbox", key: "strengthLimitedByPain", label: "Strength assessment", options: ["Difficult to assess due to pain"] },
+        { type: "testGrid", key: "strength", label: "Strength", options: ["Supraspinatus", "External Rotation", "Subscapularis"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Painful Arc", "Hawkins-Kennedy", "Neer", "Jobe"] },
         { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
       ],
@@ -1728,17 +1732,19 @@ const proximalHumerusFxData = {
         ],
       },
       nonOperative: { type: "terminal", tone: "green", title: "Non-operative pathway", text: "Pathway suggests sling \u2192 early pendulum \u2192 progressive rehabilitation \u2192 follow-up." },
-      displacedFactors: { type: "info", title: "Displaced fracture \u2014 patient factors", text: "Consider age, bone quality, function, and medical fitness \u2192 Shared decision-making", next: "treatmentChoice" },
+      displacedFactors: { type: "info", title: "Displaced fracture \u2014 patient factors", text: "Consider age, bone quality, function, and medical fitness \u2192 Shared decision-making. Randomised evidence (PROFHER, JAMA 2015; NITEP, PLOS Med 2019) shows no significant outcome difference between surgical and non-operative treatment for most displaced fractures in older adults \u2014 non-operative management is a reasonable default rather than a fallback.", next: "treatmentChoice" },
       treatmentChoice: {
         type: "question",
         title: "Which treatment following shared decision-making?",
         text: "Pathway suggests choosing between these options based on patient and fracture factors.",
         options: [
+          { label: "Non-operative (selected patients)", next: "nonOperativeDisplacedTerminal" },
           { label: "ORIF (young, reconstructible)", next: "orifTerminal" },
           { label: "Hemiarthroplasty (selected cases)", next: "hemiTerminal" },
           { label: "Reverse TSA (elderly, unreconstructible)", next: "reverseTerminal" },
         ],
       },
+      nonOperativeDisplacedTerminal: { type: "terminal", tone: "green", title: "Non-operative management (displaced fracture)", text: "Pathway suggests sling immobilisation \u2192 early pendulum exercises \u2192 progressive rehabilitation \u2192 serial radiographs \u2192 follow-up, given randomised evidence of no outcome benefit from surgery for most displaced fractures in this group." },
       orifTerminal: { type: "terminal", tone: "teal", title: "ORIF (Decision Point 2)", text: "Pathway suggests proceeding with ORIF for a young patient with a reconstructible fracture." },
       hemiTerminal: { type: "terminal", tone: "teal", title: "Hemiarthroplasty", text: "Pathway suggests proceeding with hemiarthroplasty in selected cases." },
       reverseTerminal: { type: "terminal", tone: "amber", title: "Reverse TSA (Decision Point 3)", text: "Pathway suggests proceeding with reverse TSA for an elderly patient with poor bone quality and an unreconstructible fracture." },
@@ -1779,6 +1785,7 @@ const proximalHumerusFxData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 document carefully \u2014 abnormal in", options: ["Axillary nerve sensation", "Deltoid contraction", "Radial pulse", "Median nerve", "Ulnar nerve", "Radial nerve", "Capillary refill"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
         { type: "checkbox", key: "associatedInjuries", label: "Associated injuries", options: ["Elbow", "Wrist", "Clavicle", "Chest trauma"] },
       ],
@@ -1950,6 +1957,7 @@ const scapularDyskinesisData = {
         { type: "select", key: "neuroAssessmentExamStatus", label: "Neurological assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neuroAssessmentExamStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neuroAssessmentExam", label: "Neurological assessment \u2014 abnormal in", options: ["Long thoracic nerve", "Spinal accessory nerve", "Dorsal scapular nerve"] },
+          { type: "text", key: "neuroAssessmentExamFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -2060,7 +2068,7 @@ const slapData = {
           { label: "No", next: "olderBicepsQ" },
         ],
       },
-      slapRepairDiscussion: { type: "terminal", tone: "teal", title: "Shared decision-making regarding SLAP repair", text: "Pathway suggests shared decision-making, considering arthroscopic SLAP repair if clinical findings and imaging correlate." },
+      slapRepairDiscussion: { type: "terminal", tone: "teal", title: "Shared decision-making regarding SLAP repair", text: "Pathway suggests shared decision-making, considering arthroscopic SLAP repair if clinical findings and imaging correlate. Note that the traditional \"repair for young athletes, tenodesis for older patients\" split is increasingly questioned \u2014 multiple systematic reviews show comparable or better return-to-sport rates and lower revision rates with biceps tenodesis even in young overhead athletes, and tenodesis incidence has surpassed SLAP repair since 2017. Worth discussing as a genuine alternative here, not just reserving it for older patients." },
       olderBicepsQ: {
         type: "question",
         title: "Older patient with concomitant biceps pathology? (Decision Point 4)",
@@ -2271,8 +2279,8 @@ const pecMajorRuptureData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Tendon defect", "Tenderness", "Hematoma"] },
         { type: "info", title: "Range of motion", items: ["Usually preserved.", "Pain at terminal motion."] },
         { type: "rom", key: "rom", label: "Range of motion — document", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Adduction", "Internal Rotation", "Horizontal Adduction"] },
-        { type: "checkbox", key: "functionalTesting", label: "Functional testing (if tolerated)", options: ["Push-up", "Wall push"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Adduction", "Internal Rotation", "Horizontal Adduction"], defaultOptions: ["Normal", "Reduced", "Absent"] },
+        { type: "testGrid", key: "functionalTesting", label: "Functional testing (if tolerated)", options: ["Push-up", "Wall push"], defaultOptions: ["Normal", "Painful", "Weak"] },
         { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
       ],
     },
@@ -2400,7 +2408,7 @@ const lateralEpicondylopathyData = {
         ],
       },
       progressiveReturn: { type: "terminal", tone: "green", title: "Progressive return to work/sport", text: "Pathway suggests a progressive return to work/sport, then a maintenance programme." },
-      reviewDiagnosis: { type: "info", title: "Review diagnosis (Decision Point 3)", text: "Review diagnosis \u2192 Consider adjunctive therapies", next: "persistentQ" },
+      reviewDiagnosis: { type: "info", title: "Review diagnosis (Decision Point 3)", text: "Review diagnosis \u2192 Consider adjunctive therapies: extracorporeal shockwave therapy or PRP have more favourable evidence for persistent cases; corticosteroid injection is not favoured \u2014 randomised evidence (Coombes et al, JAMA 2013) shows short-term relief but worse outcomes and higher recurrence at 12 months versus physiotherapy or wait-and-see.", next: "persistentQ" },
       persistentQ: {
         type: "question",
         title: "Persistent disabling symptoms beyond 6\u201312 months despite structured rehabilitation? (Decision Point 4)",
@@ -2448,13 +2456,14 @@ const lateralEpicondylopathyData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Lateral epicondyle tenderness", "Extensor origin tenderness", "Radial tunnel tenderness"] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination"] },
         { type: "select", key: "functionalArc", label: "Functional arc maintained?", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "strength", label: "Strength", options: ["Grip strength (compare side)", "Wrist extension", "Middle finger extension", "Supination"] },
+        { type: "testGrid", key: "strength", label: "Strength", options: ["Grip strength (compare side)", "Wrist extension", "Middle finger extension", "Supination"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Cozen Test", "Mill Test", "Maudsley Test", "Chair Lift Test", "Coffee Cup Test"] },
         { type: "select", key: "stabilityVarus", label: "Varus stress test", options: ["Stable", "Lax", "Painful"], columns: 3 },
         { type: "select", key: "stabilityValgus", label: "Valgus stress test (if clinically indicated)", options: ["Stable", "Lax", "Painful"], columns: 3 },
         { type: "select", key: "neuroAssessmentStatus", label: "Neurological assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neuroAssessmentStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neuroAssessment", label: "Neurological assessment \u2014 abnormal in", options: ["Radial nerve", "PIN", "Ulnar nerve", "Median nerve"] },
+          { type: "text", key: "neuroAssessmentFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -2643,13 +2652,14 @@ const medialEpicondylopathyData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Medial epicondyle tenderness", "Flexor-pronator origin tenderness", "Cubital tunnel tenderness", "Ulnar collateral ligament tenderness"] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination"] },
         { type: "select", key: "functionalArc", label: "Functional arc maintained?", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "strength", label: "Strength", options: ["Grip strength", "Wrist flexion", "Forearm pronation", "Finger flexion"] },
+        { type: "testGrid", key: "strength", label: "Strength", options: ["Grip strength", "Wrist flexion", "Forearm pronation", "Finger flexion"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Resisted Wrist Flexion", "Resisted Forearm Pronation", "Moving Valgus Stress Test (if indicated)", "Milking Maneuver (if indicated)", "Tinel Sign (Cubital Tunnel)", "Elbow Flexion Test"] },
         { type: "select", key: "stabilityValgus", label: "Valgus stress test", options: ["Stable", "Lax", "Painful"], columns: 3 },
         { type: "select", key: "stabilityVarus", label: "Varus stress test", options: ["Stable", "Lax", "Painful"], columns: 3 },
         { type: "select", key: "neuroAssessmentStatus", label: "Neurological assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neuroAssessmentStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neuroAssessment", label: "Neurological assessment \u2014 abnormal in", options: ["Ulnar nerve sensation", "Intrinsic hand muscle strength", "Froment Sign (if indicated)", "Wartenberg Sign (if indicated)", "Median nerve", "Radial nerve"] },
+          { type: "text", key: "neuroAssessmentFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -2823,11 +2833,12 @@ const distalBicepsRuptureData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Distal biceps tendon palpable", "Tendon defect", "Tenderness"] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination"] },
         { type: "select", key: "functionalArc", label: "Functional arc maintained?", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Elbow flexion", "Forearm supination", "Grip strength"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Elbow flexion", "Forearm supination", "Grip strength"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Hook Test", "Biceps Squeeze Test", "Passive Forearm Pronation Test", "Bicipital Crease Interval (optional)"] },
         { type: "select", key: "neuroAssessmentStatus", label: "Neurological assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neuroAssessmentStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neuroAssessment", label: "Neurological assessment \u2014 abnormal in", options: ["Lateral antebrachial cutaneous nerve sensation", "Median nerve", "Radial nerve", "Ulnar nerve"] },
+          { type: "text", key: "neuroAssessmentFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -2956,7 +2967,7 @@ const elbowOAData = {
           { label: "No", next: "continueConservativeTerminal" },
         ],
       },
-      sharedDecision: { type: "terminal", tone: "amber", title: "Shared decision-making regarding arthroplasty", text: "Pathway suggests shared decision-making, considering arthroplasty in carefully selected patients." },
+      sharedDecision: { type: "terminal", tone: "amber", title: "Shared decision-making regarding arthroplasty", text: "Pathway suggests shared decision-making, considering arthroplasty in carefully selected patients. Total elbow arthroplasty carries a lifelong lifting restriction (commonly 2\u20135kg/5\u201310lb) given the risk of aseptic loosening \u2014 this makes it a poor fit for younger, higher-demand patients, for whom interposition arthroplasty (preserving bone stock, avoiding hardware, no comparable lifting restriction, and keeping TEA available as a later option) is a reasonable alternative worth discussing." },
       continueConservativeTerminal: { type: "terminal", tone: "green", title: "Continue conservative management", text: "Pathway suggests continuing conservative management." },
     },
   },
@@ -2996,13 +3007,14 @@ const elbowOAData = {
         { type: "select", key: "flexExtArc", label: "Functional arc \u2014 flexion\u2013extension", options: ["Preserved", "Lost"], columns: 2 },
         { type: "select", key: "pronSupArc", label: "Functional arc \u2014 pronation\u2013supination", options: ["Preserved", "Lost"], columns: 2 },
         { type: "checkbox", key: "mechanicalFindings", label: "Mechanical findings", options: ["Crepitus", "End-range pain", "Mechanical block", "Locking"] },
-        { type: "checkbox", key: "strength", label: "Strength", options: ["Flexion", "Extension", "Grip strength"] },
+        { type: "testGrid", key: "strength", label: "Strength", options: ["Flexion", "Extension", "Grip strength"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "select", key: "stabilityValgus", label: "Valgus stress test", options: ["Stable", "Lax", "Painful"], columns: 3 },
         { type: "select", key: "stabilityVarus", label: "Varus stress test", options: ["Stable", "Lax", "Painful"], columns: 3 },
         { type: "select", key: "stabilityPLRI", label: "PLRI test (if indicated)", options: ["Stable", "Lax", "Painful"], columns: 3 },
         { type: "select", key: "neuroAssessmentStatus", label: "Neurological assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neuroAssessmentStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neuroAssessment", label: "Neurological assessment \u2014 abnormal in", options: ["Ulnar nerve", "Median nerve", "Radial nerve"] },
+          { type: "text", key: "neuroAssessmentFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -3176,11 +3188,12 @@ const distalTricepsRuptureData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Tender triceps insertion", "Palpable tendon gap", "Olecranon tenderness"] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination"] },
         { type: "select", key: "functionalArc", label: "Functional arc maintained?", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Active extension against gravity", "Extension against resistance", "Grip strength"] },
-        { type: "checkbox", key: "functionalTests", label: "Functional tests (if tolerated)", options: ["Modified Push-up Test", "Chair Push-off Test"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Active extension against gravity", "Extension against resistance", "Grip strength"], defaultOptions: ["Normal", "Reduced", "Absent"] },
+        { type: "testGrid", key: "functionalTests", label: "Functional tests (if tolerated)", options: ["Modified Push-up Test", "Chair Push-off Test"], defaultOptions: ["Normal", "Painful", "Weak"] },
         { type: "select", key: "neurovascularStatus", label: "Neurovascular assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular assessment \u2014 abnormal in", options: ["Ulnar nerve", "Radial nerve", "Median nerve", "Distal perfusion"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -3316,7 +3329,7 @@ const radialHeadFxData = {
       mason2BlockQ: {
         type: "question",
         title: "Mechanical block present? (Decision Point 2)",
-        text: "Pathway suggests this decision for a Mason II fracture.",
+        text: "Pathway suggests this decision for a Mason II fracture. Commonly cited operative criteria: articular step >2mm, fracture fragment >30% of the articular surface, or angulation >30\u00b0 \u2014 instability of the fracture is generally considered more important than displacement alone.",
         options: [
           { label: "Yes", next: "mason2CT" },
           { label: "No", next: "mason2Conservative" },
@@ -3377,6 +3390,7 @@ const radialHeadFxData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular assessment \u2014 abnormal in", options: ["Radial nerve", "Median nerve", "Ulnar nerve", "Distal perfusion"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -3571,6 +3585,7 @@ const coronoidTerribleTriadData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular assessment \u2014 abnormal in", options: ["Radial nerve", "Median nerve", "Ulnar nerve", "Distal perfusion"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -3743,6 +3758,7 @@ const elbowInstabilityData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Ulnar nerve", "Median nerve", "Radial nerve", "Distal perfusion"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -3861,7 +3877,7 @@ const elbowStiffnessData = {
         ],
       },
       mechanicalTerminal: { type: "terminal", tone: "amber", title: "CT \u2192 surgical planning", text: "Pathway suggests CT, then surgical planning for an arthrolysis pathway." },
-      hoTerminal: { type: "terminal", tone: "amber", title: "Assess HO maturation", text: "Pathway suggests assessing HO maturation, with excision if indicated." },
+      hoTerminal: { type: "terminal", tone: "amber", title: "Assess HO maturation", text: "Pathway suggests assessing HO maturation, with excision if indicated. Maturity is typically confirmed around 6\u201312 months post-injury (serial imaging \u00b1 bone scan/alkaline phosphatase trending down) \u2014 excising before maturity raises the risk of recurrence." },
       softTissueTrack: { type: "info", title: "Soft tissue contracture", text: "Physiotherapy \u2192 Splinting \u2192 Progressive stretching \u2192 Review", next: "persistentQ" },
       persistentQ: {
         type: "question",
@@ -3913,10 +3929,11 @@ const elbowStiffnessData = {
         { type: "select", key: "pronSupArc", label: "Functional arc \u2014 pronation-supination", options: ["Preserved", "Lost"], columns: 2 },
         { type: "checkbox", key: "endFeel", label: "End feel", options: ["Soft tissue", "Mechanical", "Pain limited", "Spastic"] },
         { type: "select", key: "stability", label: "Stability", options: ["Stable", "Instability"], columns: 2 },
-        { type: "checkbox", key: "strength", label: "Strength", options: ["Flexion", "Extension", "Grip strength"] },
+        { type: "testGrid", key: "strength", label: "Strength", options: ["Flexion", "Extension", "Grip strength"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Ulnar nerve", "Median nerve", "Radial nerve"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -4034,7 +4051,7 @@ const athleticElbowData = {
       ocdStabilityQ: {
         type: "question",
         title: "Stable OCD?",
-        text: "Pathway suggests this decision once OCD is confirmed as the primary pathology.",
+        text: "Pathway suggests this decision once OCD is confirmed as the primary pathology. Stability is generally assessed on MRI: intact overlying cartilage, no loose body, and no fluid line between the fragment and parent bone all support a stable lesion; any of these being absent points to instability.",
         options: [
           { label: "Yes", next: "stableOCDTrack" },
           { label: "No", next: "unstableOCDTrack" },
@@ -4089,10 +4106,11 @@ const athleticElbowData = {
         { type: "select", key: "stabilityMovingValgus", label: "Moving Valgus Stress Test", options: ["Stable", "Lax", "Painful"], columns: 3 },
         { type: "select", key: "stabilityMilking", label: "Milking Maneuver", options: ["Stable", "Lax", "Painful"], columns: 3 },
         { type: "select", key: "stabilityPLRI", label: "PLRI test", options: ["Stable", "Lax", "Painful"], columns: 3 },
-        { type: "checkbox", key: "strength", label: "Strength", options: ["Grip", "Wrist flexors", "Wrist extensors", "Pronation", "Supination"] },
+        { type: "testGrid", key: "strength", label: "Strength", options: ["Grip", "Wrist flexors", "Wrist extensors", "Pronation", "Supination"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Ulnar nerve", "Median nerve", "Radial nerve"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
         { type: "checkbox", key: "kineticChain", label: "Athletic kinetic chain assessment", options: ["Scapular control", "Glenohumeral internal rotation deficit (GIRD)", "Core stability", "Hip rotation", "Lower limb mechanics", "Throwing mechanics reviewed"] },
       ],
@@ -4259,11 +4277,12 @@ const deQuervainData = {
         { type: "select", key: "cmcMotion", label: "Thumb CMC motion", options: ["Normal", "Painful"], columns: 2 },
         { type: "checkbox", key: "mcpMotion", label: "Thumb MCP motion", options: ["Normal"] },
         { type: "checkbox", key: "ipMotion", label: "Thumb IP motion", options: ["Normal"] },
-        { type: "checkbox", key: "strength", label: "Strength", options: ["Grip strength", "Key pinch", "Tip pinch"] },
+        { type: "testGrid", key: "strength", label: "Strength", options: ["Grip strength", "Key pinch", "Tip pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Finkelstein Test", "Eichhoff Test", "WHAT Test (Wrist Hyperflexion and Abduction of the Thumb)", "CMC Grind Test", "Watson Test (if indicated)"] },
         { type: "select", key: "neuroAssessmentStatus", label: "Neurological assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neuroAssessmentStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neuroAssessment", label: "Neurological assessment \u2014 abnormal in", options: ["Superficial radial nerve", "Median nerve", "Ulnar nerve"] },
+          { type: "text", key: "neuroAssessmentFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -4431,11 +4450,12 @@ const thumbCMCOAData = {
         { type: "select", key: "mcpMotion", label: "Thumb MCP", options: ["Stable", "Hyperextension"], columns: 2 },
         { type: "checkbox", key: "ipMotion", label: "Thumb IP", options: ["Normal"] },
         { type: "rom", key: "rom", label: "Range of motion \u2014 wrist", motions: ["Flexion", "Extension"] },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Grip strength", "Key pinch", "Tip pinch", "Three-jaw chuck pinch"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Grip strength", "Key pinch", "Tip pinch", "Three-jaw chuck pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Grind Test", "Lever Test", "Traction Shift Test (if familiar)", "Finkelstein Test"] },
         { type: "select", key: "neuroAssessmentStatus", label: "Neurological assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neuroAssessmentStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neuroAssessment", label: "Neurological assessment \u2014 abnormal in", options: ["Median nerve", "Ulnar nerve", "Superficial radial nerve"] },
+          { type: "text", key: "neuroAssessmentFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -4579,7 +4599,7 @@ const wristOAData = {
         ],
       },
       fusionDiscussion: { type: "terminal", tone: "amber", title: "Discuss fusion procedures", text: "Pathway suggests discussing motion-preserving versus fusion procedures given advanced disease. For high-demand manual workers, prioritize durability while balancing motion preservation and functional requirements." },
-      motionPreservingDiscussion: { type: "terminal", tone: "teal", title: "Discuss motion-preserving options", text: "Pathway suggests discussing motion-preserving procedure options (e.g., proximal row carpectomy) given preserved remaining motion. For high-demand manual workers, prioritize durability while balancing motion preservation and functional requirements." },
+      motionPreservingDiscussion: { type: "terminal", tone: "teal", title: "Discuss motion-preserving options", text: "Pathway suggests discussing motion-preserving procedure options given preserved remaining motion: proximal row carpectomy, or partial wrist denervation (dividing the anterior/posterior interosseous nerves) as a lower-morbidity alternative with comparable short-to-medium-term success, though durability wanes over time and further surgery remains possible if it fails. For high-demand manual workers, prioritize durability while balancing motion preservation and functional requirements." },
       pancarpalTerminal: { type: "terminal", tone: "amber", title: "Discuss definitive reconstructive options", text: "Pathway suggests shared decision-making, considering definitive reconstructive options (partial or total wrist arthrodesis, or total wrist arthroplasty in carefully selected patients). For high-demand manual workers, prioritize durability while balancing motion preservation and functional requirements." },
     },
   },
@@ -4618,11 +4638,12 @@ const wristOAData = {
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation", "Pronation", "Supination"] },
         { type: "select", key: "flexExtArc", label: "Functional wrist arc \u2014 flexion-extension", options: ["Preserved", "Reduced"], columns: 2 },
         { type: "select", key: "forearmRotationArc", label: "Functional wrist arc \u2014 forearm rotation", options: ["Preserved", "Reduced"], columns: 2 },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Grip strength", "Key pinch", "Tip pinch"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Grip strength", "Key pinch", "Tip pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Watson Test", "Scaphoid Shift", "Ballottement (if indicated)", "DRUJ stress test"] },
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Median nerve", "Ulnar nerve", "Radial nerve"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -4807,7 +4828,7 @@ const tfccInjuryData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["TFCC fovea tenderness", "ECU tendon", "DRUJ", "Ulnocarpal joint", "Pisotriquetral joint"] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination"] },
         { type: "select", key: "painWithRotation", label: "Pain with rotation?", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Grip strength", "Key pinch", "Tip pinch"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Grip strength", "Key pinch", "Tip pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Fovea Sign", "TFCC Load Test (Ulnocarpal Stress Test)", "Press Test", "Piano Key Test", "DRUJ Ballottement Test", "ECU Synergy Test (if indicated)"] },
         { type: "select", key: "ring1", label: "Three Stability Rings \u2014 Ring 1: Radiocarpal stability", options: ["Preserved", "Abnormal"], columns: 2 },
         { type: "select", key: "ring2", label: "Three Stability Rings \u2014 Ring 2: Intercarpal stability", options: ["Preserved", "Suspected instability"], columns: 2 },
@@ -4815,6 +4836,7 @@ const tfccInjuryData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Median nerve", "Ulnar nerve", "Superficial radial nerve"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -4927,7 +4949,7 @@ const scapholunateInjuryData = {
       presentationQ: {
         type: "question",
         title: "Which presentation applies?",
-        text: "Pathway suggests a track based on stability, acuity, and reducibility.",
+        text: "Pathway suggests a track based on stability, acuity, and reducibility (Garcia-Elias staging). \"Acute\" here generally means presentation within ~6 weeks of injury, favouring direct repair; beyond that, chronicity shifts the approach toward reconstruction rather than repair.",
         options: [
           { label: "Stable partial injury", next: "stablePartialTerminal" },
           { label: "Acute complete injury, repairable tissue", next: "acuteRepairTerminal" },
@@ -4974,7 +4996,7 @@ const scapholunateInjuryData = {
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Scapholunate interval", "Dorsal wrist", "Radioscaphoid joint", "STT joint"] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation", "Pronation", "Supination"] },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Grip strength", "Key pinch", "Tip pinch"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Grip strength", "Key pinch", "Tip pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Watson (Scaphoid Shift) Test", "Finger Extension Test", "Scaphoid Ballottement", "Midcarpal Shift Test (if indicated)"] },
         { type: "select", key: "ring1", label: "Three Stability Rings \u2014 Ring 1: Radiocarpal stability", options: ["Preserved", "Abnormal"], columns: 2 },
         { type: "select", key: "ring2", label: "Three Stability Rings \u2014 Ring 2: Intercarpal stability", options: ["Stable", "Dynamic instability", "Static instability"], columns: 3 },
@@ -4982,6 +5004,7 @@ const scapholunateInjuryData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Median nerve", "Ulnar nerve", "Superficial radial nerve"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -5118,7 +5141,7 @@ const kienbockDiseaseData = {
           { label: "No", next: "revascularizationTerminal" },
         ],
       },
-      revascularizationTerminal: { type: "terminal", tone: "teal", title: "Joint-leveling / revascularization procedure", text: "Pathway suggests shared decision-making, considering a joint-leveling or revascularization procedure, then rehabilitation and functional recovery. For heavy manual workers, prioritize long-term durability while balancing preservation of function." },
+      revascularizationTerminal: { type: "terminal", tone: "teal", title: "Joint-leveling / revascularization procedure", text: "Pathway suggests shared decision-making, considering a joint-leveling or revascularization procedure, then rehabilitation and functional recovery. Ulnar variance is a key factor in procedure choice \u2014 ulnar-negative variance favours radial shortening osteotomy (well-supported long-term outcomes, whether or not combined with vascularized bone grafting), while neutral/ulnar-positive variance shifts the decision toward revascularization or capitate-shortening approaches instead. For heavy manual workers, prioritize long-term durability while balancing preservation of function." },
       arthritisQ: {
         type: "question",
         title: "Associated arthritis present?",
@@ -5165,7 +5188,7 @@ const kienbockDiseaseData = {
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Lunate tenderness", "Dorsal wrist tenderness", "Radioscaphoid joint", "Midcarpal joint"] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation", "Pronation", "Supination"] },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Grip strength", "Key pinch", "Tip pinch"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Grip strength", "Key pinch", "Tip pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Lunate compression tenderness", "Axial loading pain", "Watson Test (exclude associated instability)"] },
         { type: "select", key: "ring1", label: "Three Stability Rings \u2014 Ring 1: Radiocarpal stability", options: ["Preserved", "Collapse"], columns: 2 },
         { type: "select", key: "ring2", label: "Three Stability Rings \u2014 Ring 2: Intercarpal stability", options: ["Stable", "DISI", "Carpal collapse"], columns: 3 },
@@ -5173,6 +5196,7 @@ const kienbockDiseaseData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Median nerve", "Ulnar nerve", "Superficial radial nerve"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -5354,7 +5378,7 @@ const ulnarImpactionData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["TFCC fovea", "Ulnocarpal joint", "ECU tendon", "DRUJ", "Pisotriquetral joint"] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination", "Radial deviation", "Ulnar deviation"] },
         { type: "select", key: "painWithUlnarDeviation", label: "Pain with ulnar deviation?", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Grip strength", "Key pinch", "Tip pinch"] },
+        { type: "testGrid", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Grip strength", "Key pinch", "Tip pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Ulnocarpal Stress Test", "Press Test", "Fovea Sign", "Piano Key Test", "DRUJ Ballottement"] },
         { type: "select", key: "ring1", label: "Three Stability Rings \u2014 Ring 1: Radiocarpal stability", options: ["Stable", "Abnormal"], columns: 2 },
         { type: "select", key: "ring2", label: "Three Stability Rings \u2014 Ring 2: Intercarpal stability", options: ["Stable", "Abnormal"], columns: 2 },
@@ -5365,6 +5389,7 @@ const ulnarImpactionData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Median nerve", "Ulnar nerve", "Superficial radial nerve"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -5538,7 +5563,7 @@ const wristGanglionData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Firm", "Fluctuant", "Mobile", "Tender", "Fixed"] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation"] },
         { type: "select", key: "painReproduced", label: "Pain reproduced?", options: ["Yes", "No"], columns: 2 },
-        { type: "checkbox", key: "strength", label: "Strength", options: ["Grip strength", "Key pinch", "Tip pinch"] },
+        { type: "testGrid", key: "strength", label: "Strength", options: ["Grip strength", "Key pinch", "Tip pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "checkbox", key: "specialAssessment", label: "Special assessment", options: ["Transillumination (when appropriate)", "Relation to scapholunate interval", "Volar neurovascular structures assessed"] },
         { type: "checkbox", key: "ring1", label: "Three Stability Rings \u2014 Ring 1: Radiocarpal stability", options: ["Stable"] },
         { type: "select", key: "ring2", label: "Three Stability Rings \u2014 Ring 2: Intercarpal stability", options: ["Stable", "Suspicious for instability"], columns: 2 },
@@ -5547,6 +5572,7 @@ const wristGanglionData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Median nerve", "Ulnar nerve", "Superficial radial nerve"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -5671,7 +5697,7 @@ const triggerFingerData = {
         ],
       },
       continueConservative: { type: "terminal", tone: "green", title: "Continue observation \u00b1 splint", text: "Pathway suggests continuing observation, with splinting if appropriate." },
-      injectionStep: { type: "info", title: "Injection step", text: "Shared decision-making \u2192 Corticosteroid injection \u2192 Review", next: "persistentQ2" },
+      injectionStep: { type: "info", title: "Injection step", text: "Shared decision-making \u2192 Corticosteroid injection \u2192 Review. Reported success is around 45\u201380% initially; predictors of a poorer response are multiple digit involvement, advanced disease stage, and metabolic syndrome \u2014 diabetes alone is no longer considered a consistent predictor of failure on more recent evidence, which supersedes older teaching to the contrary.", next: "persistentQ2" },
       persistentQ2: {
         type: "question",
         title: "Persistent triggering, recurrence, or fixed locking?",
@@ -5727,6 +5753,7 @@ const triggerFingerData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Median nerve", "Ulnar nerve", "Digital sensation intact"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -6008,7 +6035,7 @@ const malletFingerData = {
         ],
       },
       operativeTerminal: { type: "terminal", tone: "amber", title: "Early hand surgery referral", text: "Pathway suggests early hand surgery referral, with the procedure individualized according to injury pattern, then rehabilitation. Open injury warrants urgent surgical assessment; volar subluxation warrants the operative pathway." },
-      splintTrack: { type: "info", title: "Congruent joint \u2014 splint pathway", text: "Continuous DIP extension splinting \u2192 Strict splint compliance \u2192 Protected mobilisation \u2192 Progressive rehabilitation", next: "extensionLagQ" },
+      splintTrack: { type: "info", title: "Congruent joint \u2014 splint pathway", text: "Continuous DIP extension splinting \u2192 Strict splint compliance \u2192 Protected mobilisation \u2192 Progressive rehabilitation. Splinting achieves comparably good outcomes even with delayed presentation \u2014 several weeks to months post-injury \u2014 so a late presentation alone is not a reason to move straight to surgery; it remains a reasonable first trial for a congruent joint regardless of chronicity.", next: "extensionLagQ" },
       extensionLagQ: {
         type: "question",
         title: "Persistent extension lag?",
@@ -6060,6 +6087,7 @@ const malletFingerData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Digital sensation intact", "Perfusion intact"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -6177,7 +6205,7 @@ const jerseyFingerData = {
         ],
       },
       reconsiderTerminal: { type: "terminal", tone: "green", title: "Reconsider diagnosis", text: "Pathway suggests reconsidering the diagnosis; re-examine with the PIP held in extension before excluding FDP avulsion." },
-      urgentReferralStep: { type: "info", title: "Urgent referral to hand surgery", text: "Urgent referral to hand surgery", next: "chronicityQ" },
+      urgentReferralStep: { type: "info", title: "Urgent referral to hand surgery", text: "Urgent referral to hand surgery \u2014 true urgency depends on the Leddy-Packer retraction level, not chronicity alone: Type I (retracted into the palm, both vincula disrupted) needs repair within 7\u201310 days or the tendon may become irreparable; Type II (retracted to the PIP, long vinculum intact) tolerates repair within 3\u20136 weeks; Type III (bony fragment held at the A4 pulley) can often wait up to 6 weeks. Determine the level of retraction as part of this referral rather than treating every case as equally time-critical.", next: "chronicityQ" },
       chronicityQ: {
         type: "question",
         title: "Delayed presentation? (Decision Point 3)",
@@ -6237,6 +6265,7 @@ const jerseyFingerData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Digital sensation intact", "Perfusion intact"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -6414,6 +6443,7 @@ const sagittalBandInjuryData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Digital sensation intact", "Perfusion intact"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -6580,6 +6610,7 @@ const extensorTendonInjuriesData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Digital sensation", "Capillary refill"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -6913,7 +6944,7 @@ const cubitalTunnelData = {
         ],
       },
       continueConservative: { type: "terminal", tone: "green", title: "Continue conservative management", text: "Pathway suggests continuing conservative management." },
-      operativeTerminal: { type: "terminal", tone: "amber", title: "Discuss operative decompression", text: "Pathway suggests shared decision-making, electrodiagnostic studies if indicated, then discussing operative decompression (with or without anterior transposition based on individual pathology and surgeon judgment), hand therapy, progressive strengthening, and return to function. Dynamic nerve instability should be considered during operative planning if present (Decision Point 3)." },
+      operativeTerminal: { type: "terminal", tone: "amber", title: "Discuss operative decompression", text: "Pathway suggests shared decision-making, electrodiagnostic studies if indicated, then discussing operative decompression (with or without anterior transposition based on individual pathology and surgeon judgment), hand therapy, progressive strengthening, and return to function. Dynamic nerve instability should be considered during operative planning if present (Decision Point 3). Meta-analyses (including a 2025 update) show no consistent outcome difference between simple decompression and anterior transposition for most cases \u2014 simple decompression is generally favoured first-line given lower morbidity and shorter surgery, with transposition reserved for nerve subluxation/instability, significant elbow deformity or prior fracture, or revision surgery." },
     },
   },
   sections: [{
@@ -7462,7 +7493,7 @@ const radialTunnelSyndromeData = {
         ],
       },
       continueConservative: { type: "terminal", tone: "green", title: "Continue conservative management", text: "Pathway suggests continuing conservative management." },
-      decompressionTerminal: { type: "terminal", tone: "amber", title: "Discuss radial tunnel decompression", text: "Pathway suggests shared decision-making, discussing radial tunnel decompression in carefully selected patients, then hand therapy, progressive strengthening, and return to function." },
+      decompressionTerminal: { type: "terminal", tone: "amber", title: "Discuss radial tunnel decompression", text: "Pathway suggests shared decision-making, discussing radial tunnel decompression in carefully selected patients, then hand therapy, progressive strengthening, and return to function. The evidence base for surgical benefit is weak (retrospective series only, no RCTs) and the diagnosis itself remains contested \u2014 outcomes are notably worse when radial tunnel syndrome coexists with lateral epicondylitis or where a workers' compensation claim is involved, which is worth factoring into patient selection and expectation-setting." },
     },
   },
   sections: [{
@@ -7512,6 +7543,7 @@ const radialTunnelSyndromeData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Radial sensory examination", "Perfusion normal"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -7715,6 +7747,7 @@ const pinSyndromeData = {
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
           { type: "checkbox", key: "neurovascular", label: "Neurovascular \u2014 abnormal in", options: ["Radial pulse normal", "Perfusion intact"] },
+          { type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" },
         ] },
       ],
     },
@@ -8414,9 +8447,19 @@ const distalRadiusFxData = {
         text: "Pathway suggests this decision once the Trauma Decision Ladder has been applied.",
         options: [
           { label: "Yes", next: "conservativeTrack" },
-          { label: "No (unstable)", next: "operativeTerminal" },
+          { label: "No (unstable)", next: "functionalDemandQ" },
         ],
       },
+      functionalDemandQ: {
+        type: "question",
+        title: "Functional demand and physiological age?",
+        text: "AAOS/ASSH 2020 clinical practice guideline (strong-strength recommendation): operative fixation does not improve long-term patient-reported outcomes over non-operative treatment in lower-demand/older patients, even with radiographic displacement. Age is a proxy for functional demand rather than a fixed cutoff \u2014 a healthy, active 68-year-old differs from an unwell, low-demand 63-year-old.",
+        options: [
+          { label: "Lower functional demand / older", next: "nonOperativeDespiteDisplacementTerminal" },
+          { label: "Higher functional demand", next: "operativeTerminal" },
+        ],
+      },
+      nonOperativeDespiteDisplacementTerminal: { type: "terminal", tone: "green", title: "Non-operative management appropriate", text: "Pathway suggests non-operative management despite displacement, given strong evidence (AAOS/ASSH 2020) of no long-term functional benefit from surgery in this group \u2192 immobilization \u2192 serial radiographs \u2192 progressive rehabilitation." },
       operativeTerminal: { type: "terminal", tone: "amber", title: "Discuss operative fixation", text: "Pathway suggests shared decision-making, discussing operative fixation, then early finger motion, progressive wrist motion, strengthening, and return to function." },
       conservativeTrack: { type: "info", title: "Conservative treatment", text: "Immobilization \u2192 Serial radiographs \u2192 Progressive rehabilitation", next: "displacementQ" },
       displacementQ: {
@@ -8615,10 +8658,20 @@ const scaphoidFxData = {
         title: "Stable distal pole/waist fracture? (Decision Point 2)",
         text: "Pathway suggests this decision once fracture location and stability have been assessed.",
         options: [
-          { label: "Yes", next: "conservativeTrack" },
+          { label: "Yes", next: "stableTreatmentChoice" },
           { label: "No (unstable, proximal pole, displaced, or nonunion)", next: "operativeTerminal" },
         ],
       },
+      stableTreatmentChoice: {
+        type: "question",
+        title: "Cast immobilization or percutaneous fixation?",
+        text: "Both achieve broadly similar union rates for stable distal pole/waist fractures. Percutaneous screw fixation may shorten time to return to work/sport and avoids prolonged cast immobilization, at the cost of a surgical procedure \u2014 a genuine preference-sensitive choice rather than a default.",
+        options: [
+          { label: "Cast immobilization", next: "conservativeTrack" },
+          { label: "Percutaneous fixation (patient preference)", next: "percutaneousTerminal" },
+        ],
+      },
+      percutaneousTerminal: { type: "terminal", tone: "teal", title: "Percutaneous screw fixation", text: "Pathway suggests percutaneous screw fixation given patient preference for earlier return to function \u2192 progressive rehabilitation \u2192 return to work/sport." },
       operativeTerminal: { type: "terminal", tone: "amber", title: "Discuss operative fixation (Decision Point 3)", text: "Pathway suggests shared decision-making, discussing operative fixation (\u00b1 bone grafting when indicated), then serial CT assessment, rehabilitation, and return to function." },
       conservativeTrack: { type: "info", title: "Conservative management", text: "Immobilization \u2192 Serial imaging \u2192 Progressive rehabilitation", next: "delayedUnionQ" },
       delayedUnionQ: {
@@ -9032,7 +9085,7 @@ const metacarpalFxData = {
       stableQ: {
         type: "question",
         title: "Stable fracture with acceptable alignment? (Decision Point 2)",
-        text: "Pathway suggests this decision once rotation has been addressed.",
+        text: "Pathway suggests this decision once rotation has been addressed. Commonly cited tolerable angulation thresholds (neck fractures, no rotational deformity): index ~10\u201315\u00b0, middle ~15\u201320\u00b0, ring ~30\u00b0, little finger ~40\u201370\u00b0 \u2014 the little finger tolerates substantially more given greater CMC joint mobility.",
         options: [
           { label: "Yes", next: "conservativeTerminal" },
           { label: "No", next: "unstableTerminal" },
@@ -9222,7 +9275,7 @@ const phalangealFxData = {
       stableQ: {
         type: "question",
         title: "Stable fracture with acceptable alignment?",
-        text: "Pathway suggests this decision once rotation has been addressed.",
+        text: "Pathway suggests this decision once rotation has been addressed. Phalangeal fractures tolerate less angulation than metacarpal fractures, particularly near the PIP joint where tendon excursion is more sensitive to malalignment \u2014 near-anatomic reduction is generally preferred over the wider thresholds acceptable for metacarpal shaft/neck fractures.",
         options: [
           { label: "Yes", next: "conservativeTerminal" },
           { label: "No", next: "operativeStep" },
@@ -9415,7 +9468,7 @@ const bennettRolandoFxData = {
       stableQ: {
         type: "question",
         title: "CMC congruent and stable? (Decision Point 1)",
-        text: "Pathway suggests this decision once the Thumb Column Principle has been assessed.",
+        text: "Pathway suggests this decision once the Thumb Column Principle has been assessed. Non-operative management is generally reserved for <1mm displacement/articular step-off with no CMC subluxation \u2014 the deforming pull of abductor pollicis longus makes these fractures prone to late displacement even when initially well-aligned, so most authors favour operative stabilisation once subluxation is present.",
         options: [
           { label: "Yes", next: "conservativeTerminal" },
           { label: "No", next: "subluxationQ" },
@@ -9629,7 +9682,7 @@ const perilunateInjuryData = {
       chronicQ: {
         type: "question",
         title: "Chronic presentation? (Decision Point 4)",
-        text: "Pathway suggests this decision once median nerve status has been addressed, since chronicity changes reconstructability.",
+        text: "Pathway suggests this decision once median nerve status has been addressed, since chronicity changes reconstructability. \"Chronic\" is generally considered presentation beyond ~6\u20138 weeks from injury, beyond which closed reduction becomes progressively less reliable and open/salvage options become more likely.",
         options: [
           { label: "Yes", next: "chronicTerminal" },
           { label: "No", next: "instabilityQ" },
@@ -9836,7 +9889,7 @@ const hookOfHamateFxData = {
           { label: "No", next: "nonunionQ" },
         ],
       },
-      nonOperativeTerminal: { type: "terminal", tone: "green", title: "Immobilization or operative management", text: "Pathway suggests shared decision-making, choosing immobilization or operative management based on patient factors and functional demands, then rehabilitation and restoring grip." },
+      nonOperativeTerminal: { type: "terminal", tone: "green", title: "Immobilization or operative management", text: "Pathway suggests shared decision-making, choosing immobilization or operative management based on patient factors and functional demands, then rehabilitation and restoring grip. Conservative treatment has a documented high nonunion rate for this fracture (case series report success in roughly 1 in 6 versus 8 in 8 with primary surgical treatment) \u2014 excision is generally favoured as first-line, particularly for athletes and others prioritising a faster, more reliable return to activity." },
       nonunionQ: {
         type: "question",
         title: "Nonunion? (Decision Point 3)",
@@ -10726,24 +10779,40 @@ const olecranonFxData = {
   pathway: {
     start: "diagnosis",
     nodes: {
-      diagnosis: { type: "info", text: "Diagnosis \u2192 Assess displacement, articular involvement and extensor mechanism integrity", next: "displaced" },
-      displaced: {
-        type: "question", text: "Is the fracture displaced or is the extensor mechanism disrupted?",
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Assess displacement, articular involvement and extensor mechanism integrity", next: "extensorQ" },
+      extensorQ: {
+        type: "question", text: "Extensor mechanism intact \u2014 can the patient actively extend the elbow against gravity?",
         options: [
-          { label: "Yes", next: "surgDiscuss" },
+          { label: "No \u2014 disrupted", next: "surgMandatoryTerminal" },
+          { label: "Yes \u2014 intact", next: "displaced" },
+        ],
+      },
+      surgMandatoryTerminal: { type: "terminal", tone: "amber", text: "Discuss Surgery \u2192 An intact extensor mechanism is required for elbow function against gravity; disruption warrants surgical repair regardless of age or functional demand." },
+      displaced: {
+        type: "question", text: "Is the fracture displaced (with extensor mechanism intact)?",
+        options: [
+          { label: "Yes", next: "demandQ" },
           { label: "No \u2014 undisplaced, extensor mechanism intact", next: "conservative" },
         ],
       },
+      demandQ: {
+        type: "question", text: "Low functional demand, elderly, or high surgical risk? Randomised evidence (Duckworth et al, Bone Joint J 2017; JBJS 2014) supports non-operative management in this group, with tension band wiring/plate fixation carrying reported complication rates up to 30% (largely hardware-related, often requiring removal).",
+        options: [
+          { label: "Yes \u2014 low demand/elderly/high risk", next: "nonOperativeDisplacedTerminal" },
+          { label: "No \u2014 higher functional demand", next: "surgDiscuss" },
+        ],
+      },
+      nonOperativeDisplacedTerminal: { type: "terminal", tone: "green", text: "Non-operative management appropriate \u2192 Splint in slight flexion for comfort \u2192 Early protected range of motion as pain allows \u2192 Review with repeat radiograph, given evidence of comparable function and pain with fewer complications than surgery in this group." },
       conservative: { type: "info", text: "Splint in slight flexion for comfort \u2192 Early protected range of motion \u2192 Review at 1\u20132 weeks with repeat radiograph to confirm no displacement", next: "review" },
       review: {
         type: "question", text: "Remains undisplaced with intact extension on review?",
         options: [
           { label: "Yes", next: "continueRehab" },
-          { label: "No \u2014 has displaced", next: "surgDiscuss" },
+          { label: "No \u2014 has displaced", next: "demandQ" },
         ],
       },
       continueRehab: { type: "terminal", text: "Continue protected range of motion \u2192 Progress physiotherapy as fracture unites" },
-      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding tension band wiring or plate fixation" },
+      surgDiscuss: { type: "terminal", tone: "amber", text: "Discuss Surgery \u2192 Shared decision-making regarding tension band wiring or plate fixation" },
     },
   },
   id: "olecranon-fracture",
@@ -11663,7 +11732,7 @@ const flexorTenosynovitisData = {
           { label: "No \u2014 early/equivocal presentation", next: "closeObservation" },
         ],
       },
-      closeObservation: { type: "terminal", text: "Elevation, splintage and close interval review within 12\u201324 hours \u2192 Empirical antibiotics if any concern for evolving infection \u2192 Low threshold to escalate to urgent surgical referral if any Kanavel sign develops" },
+      closeObservation: { type: "terminal", text: "Elevation, splintage and close interval review within 12\u201324 hours \u2192 IV (not oral) antibiotics given any concern for evolving infection \u2192 Low threshold to escalate to urgent surgical referral if any Kanavel sign develops. Non-operative management is best supported within ~48 hours of a penetrating injury with less pronounced signs (StatPearls, 2026) \u2014 outside that window, or if any sign strengthens, escalate." },
       surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Urgent surgical washout/drainage of the flexor sheath \u2192 IV antibiotics \u2192 This is not an elective shared decision-making discussion \u2014 delay risks tendon necrosis and irreversible loss of function" },
     },
   },
@@ -11987,7 +12056,7 @@ const generalShoulderData = {
         { type: "testGrid", key: "stBiceps", label: "Special tests \u2014 Biceps", options: ["Speed", "Yergason"] },
         { type: "testGrid", key: "stAC", label: "Special tests \u2014 AC Joint", options: ["Cross-body Adduction"] },
         { type: "testGrid", key: "stInstability", label: "Special tests \u2014 Instability", options: ["Apprehension", "Relocation", "Sulcus Sign"] },
-        { type: "testGrid", key: "stCervical", label: "Special tests \u2014 Cervical Screen", options: ["Spurling", "Neck ROM restriction"] },
+        { type: "testGrid", key: "stCervical", label: "Special tests \u2014 Cervical Screen", options: ["Spurling", "Neck ROM restriction"], itemOptions: { "Neck ROM restriction": ["Normal", "Abnormal"] } },
         { type: "select", key: "neurovascular", label: "Neurovascular assessment", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascular === "Abnormal", fields: [
           { type: "text", key: "neurovascularDetail", label: "Neurovascular abnormality \u2014 notable finding" },
@@ -12010,8 +12079,8 @@ const generalShoulderData = {
       id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
       fields: [
         { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen \u2014 the full structured assessment and management pathway are there."] },
-        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
-        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
+        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "AVN of humeral head", "Scapular dyskinesis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
+        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "AVN of humeral head", "Scapular dyskinesis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
       ],
     },
     {
@@ -12160,8 +12229,8 @@ const generalElbowData = {
       id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
       fields: [
         { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
-        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Olecranon fracture", "Olecranon bursitis", "Cubital tunnel syndrome", "Radial tunnel syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
-        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Olecranon fracture", "Olecranon bursitis", "Cubital tunnel syndrome", "Radial tunnel syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
+        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Coronoid fracture / terrible triad", "Olecranon fracture", "Olecranon bursitis", "Athletic elbow (OCD/VEO)", "Cubital tunnel syndrome", "Radial tunnel syndrome", "PIN syndrome", "AIN syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
+        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Lateral epicondylopathy", "Medial epicondylopathy", "Distal biceps rupture", "Distal triceps rupture", "Elbow osteoarthritis", "Elbow instability", "Elbow stiffness", "Radial head fracture", "Coronoid fracture / terrible triad", "Olecranon fracture", "Olecranon bursitis", "Athletic elbow (OCD/VEO)", "Cubital tunnel syndrome", "Radial tunnel syndrome", "PIN syndrome", "AIN syndrome", "Cervical radiculopathy", "Referred from shoulder"] },
       ],
     },
     {
@@ -12908,29 +12977,57 @@ function CheckboxGroup({ options, selected, onChange }) {
 // values is a map of { [testName]: "positive" | "negative" }; a test with
 // no entry is simply not yet marked. Tapping the active state again clears
 // it back to unmarked.
-function TestGrid({ tests, values, onChange }) {
+// Assigns a sensible color to any test-grid option generically, rather
+// than hardcoding logic per option-pair - "concerning" results (positive,
+// abnormal, weak, painful, absent) read amber/red, "reassuring" ones
+// (negative, normal, intact, present) read green, and anything else falls
+// back to the app's standard active color. This lets new option sets (see
+// itemOptions) get correct coloring automatically without code changes.
+const TESTGRID_CONCERNING = new Set(["positive", "abnormal", "weak", "painful", "absent", "unstable"]);
+const TESTGRID_REASSURING = new Set(["negative", "normal", "intact", "present", "stable"]);
+function testGridOptionColor(opt) {
+  const o = opt.trim().toLowerCase();
+  if (TESTGRID_CONCERNING.has(o)) return T.amber;
+  if (TESTGRID_REASSURING.has(o)) return T.green;
+  return T.tealDark;
+}
+
+// For special/provocative tests: each test can be marked with one of a set
+// of result options (default Positive/Negative) rather than just
+// "selected", since the clinically meaningful thing about a special test
+// isn't that it was performed but what it showed. itemOptions optionally
+// overrides the option set for specific items by name, e.g.
+// { "ROM": ["Normal", "Abnormal"] } for a range-of-motion screen mixed in
+// with true special tests, or a three-option set like
+// ["Normal", "Painful", "Weak"] for a functional/strength test. values is a
+// map of { [testName]: "<lowercased option>" }; a test with no entry is
+// simply not yet marked. Tapping the active state again clears it back to
+// unmarked.
+function TestGrid({ tests, values, onChange, itemOptions, defaultOptions }) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
       {tests.map((t, i) => {
         const val = values[t];
+        const options = (itemOptions && itemOptions[t]) || defaultOptions || ["Positive", "Negative"];
         return (
-          <div key={t} className="flex items-center justify-between gap-2 px-3 py-2.5" style={{ borderTop: i ? `1px solid ${T.border}` : "none" }}>
+          <div key={t} className="flex items-center justify-between gap-2 px-3 py-2.5 flex-wrap" style={{ borderTop: i ? `1px solid ${T.border}` : "none" }}>
             <span className="text-[14px] flex-1" style={{ color: T.ink }}>{t}</span>
-            <div className="flex gap-1.5 shrink-0">
-              <button
-                onClick={() => onChange(t, val === "positive" ? null : "positive")}
-                className="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold active:scale-95 transition"
-                style={{ minHeight: 32, background: val === "positive" ? T.amber : T.slateChip, color: val === "positive" ? "#fff" : T.inkSoft, border: `1px solid ${val === "positive" ? T.amber : T.border}` }}
-              >
-                Positive
-              </button>
-              <button
-                onClick={() => onChange(t, val === "negative" ? null : "negative")}
-                className="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold active:scale-95 transition"
-                style={{ minHeight: 32, background: val === "negative" ? T.green : T.slateChip, color: val === "negative" ? "#fff" : T.inkSoft, border: `1px solid ${val === "negative" ? T.green : T.border}` }}
-              >
-                Negative
-              </button>
+            <div className="flex gap-1.5 shrink-0 flex-wrap justify-end">
+              {options.map((opt) => {
+                const optKey = opt.trim().toLowerCase();
+                const active = val === optKey;
+                const color = testGridOptionColor(opt);
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => onChange(t, active ? null : optKey)}
+                    className="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold active:scale-95 transition"
+                    style={{ minHeight: 32, background: active ? color : T.slateChip, color: active ? "#fff" : T.inkSoft, border: `1px solid ${active ? color : T.border}` }}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
             </div>
           </div>
         );
@@ -12985,6 +13082,26 @@ function NumberField({ label, value, onChange, suffix, placeholder }) {
   );
 }
 
+// Age is asked in every single template and is one of the most important
+// demographic fields, but NumberField's row layout (label left, input
+// pushed to the far right via justify-between) breaks the left-aligned,
+// stacked scan pattern every other field type uses (label above, input
+// starting at the left edge) - making it easy to skim straight past.
+// AgeField matches TextField/DateField's layout instead: same position,
+// same reading flow, just a right-sized box for a short number rather than
+// a full-width text input.
+function AgeField({ label, value, onChange, suffix }) {
+  return (
+    <div className="mb-3">
+      <div className="text-[13px] mb-1" style={{ color: T.inkSoft }}>{label}</div>
+      <div className="flex items-center gap-2">
+        <input inputMode="numeric" type="number" placeholder="0" value={value ?? ""} onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))} className="rounded-lg px-3 py-2.5 text-[15px] font-medium" style={{ width: 104, border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink }} />
+        {suffix && <span className="text-[13px]" style={{ color: T.inkSoft }}>{suffix}</span>}
+      </div>
+    </div>
+  );
+}
+
 // Free text is the single biggest source of typing in clinic. Where a field
 // has a small set of very common answers, those are offered as one-tap chips
 // above the input - the input itself is untouched, so anything unusual is
@@ -13003,18 +13120,34 @@ const FIELD_SUGGESTIONS = {
   hobbies: ["None", "Gardening", "DIY", "Knitting/crafts", "Musical instrument", "Gaming/computer"],
 };
 
-function TextField({ label, value, onChange, placeholder, suggestions }) {
+function TextField({ label, value, onChange, placeholder, suggestions, multiSelect }) {
+  const selectedList = multiSelect ? String(value || "").split(",").map((v) => v.trim()).filter(Boolean) : [];
+  const toggleMultiSelect = (s) => {
+    const isNoneChip = s.trim().toLowerCase() === "none";
+    const currentlyIncludes = selectedList.some((v) => v.toLowerCase() === s.toLowerCase());
+    let next;
+    if (currentlyIncludes) {
+      next = selectedList.filter((v) => v.toLowerCase() !== s.toLowerCase());
+    } else if (isNoneChip) {
+      next = [s];
+    } else {
+      next = [...selectedList.filter((v) => v.toLowerCase() !== "none"), s];
+    }
+    onChange(next.join(", "));
+  };
   return (
     <div className="mb-3">
       <div className="text-[13px] mb-1" style={{ color: T.inkSoft }}>{label}</div>
       {suggestions && suggestions.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
           {suggestions.map((s) => {
-            const active = String(value || "").trim().toLowerCase() === s.toLowerCase();
+            const active = multiSelect
+              ? selectedList.some((v) => v.toLowerCase() === s.toLowerCase())
+              : String(value || "").trim().toLowerCase() === s.toLowerCase();
             return (
               <button
                 key={s}
-                onClick={() => onChange(active ? "" : s)}
+                onClick={() => (multiSelect ? toggleMultiSelect(s) : onChange(active ? "" : s))}
                 className="rounded-full px-3 py-1.5 text-[12.5px] font-medium active:scale-95 transition"
                 style={{
                   background: active ? T.teal : T.slateChip,
@@ -13585,7 +13718,7 @@ function Field({ field, state, setField, region }) {
       return (
         <>
           <SubLabel>{field.label}</SubLabel>
-          <TestGrid tests={field.options} values={state[field.key] || {}} onChange={(t, v) => { const next = { ...(state[field.key] || {}) }; if (v === null) delete next[t]; else next[t] = v; setField(field.key, next); }} />
+          <TestGrid tests={field.options} values={state[field.key] || {}} onChange={(t, v) => { const next = { ...(state[field.key] || {}) }; if (v === null) delete next[t]; else next[t] = v; setField(field.key, next); }} itemOptions={field.itemOptions} defaultOptions={field.defaultOptions} />
         </>
       );
     case "select":
@@ -13596,11 +13729,13 @@ function Field({ field, state, setField, region }) {
         </>
       );
     case "text":
-      return <TextField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} placeholder={field.placeholder} suggestions={field.suggestions || FIELD_SUGGESTIONS[field.key]} />;
+      return <TextField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} placeholder={field.placeholder} suggestions={field.suggestions || FIELD_SUGGESTIONS[field.key]} multiSelect={field.key === "sport"} />;
     case "date":
       return <DateField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} />;
     case "number":
-      return <NumberField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} suffix={field.suffix} />;
+      return field.key === "age"
+        ? <AgeField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} suffix={field.suffix} />
+        : <NumberField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} suffix={field.suffix} />;
     case "vas":
       return (
         <>
@@ -13896,11 +14031,22 @@ function fieldClause(field, state) {
     }
     case "testGrid": {
       const results = state[key] || {};
-      const positives = Object.keys(results).filter((t) => results[t] === "positive");
-      const negatives = Object.keys(results).filter((t) => results[t] === "negative");
-      const clauses = [];
-      if (positives.length) clauses.push(`${humanizeList(positives, { preserveCase: true })} ${positives.length === 1 ? "was" : "were"} positive`);
-      if (negatives.length) clauses.push(`${humanizeList(negatives, { preserveCase: true })} ${negatives.length === 1 ? "was" : "were"} negative`);
+      const byValue = {};
+      Object.keys(results).forEach((t) => {
+        const v = results[t];
+        if (!v) return;
+        (byValue[v] = byValue[v] || []).push(t);
+      });
+      // Concerning results are mentioned before reassuring ones, matching
+      // how a clinician would naturally lead with the abnormal finding.
+      const orderedValues = Object.keys(byValue).sort((a, b) => {
+        const rank = (v) => (TESTGRID_CONCERNING.has(v) ? 0 : TESTGRID_REASSURING.has(v) ? 2 : 1);
+        return rank(a) - rank(b);
+      });
+      const clauses = orderedValues.map((v) => {
+        const items = byValue[v];
+        return `${humanizeList(items, { preserveCase: true })} ${items.length === 1 ? "was" : "were"} ${v}`;
+      });
       if (!clauses.length) return null;
       // Same "Special tests — Rotator Cuff" -> "rotator cuff tests" promotion
       // used for the plain-checkbox fallback, so testGrid-typed special
@@ -16417,6 +16563,97 @@ function DifferentialContinueButton({ condition, state, onOpenCondition }) {
   );
 }
 
+const SYNC_SYNONYMS = {
+  "diabetes mellitus": "diabetes",
+  "type 1 diabetes": "diabetes",
+  "type 2 diabetes": "diabetes",
+  "ra": "rheumatoid arthritis",
+  "cts": "carpal tunnel syndrome",
+  "carpal tunnel": "carpal tunnel syndrome",
+  "oa": "osteoarthritis",
+};
+
+// Sync is restricted to fields that are genuinely asking the same kind of
+// question - "what's true of this patient's background" - never a
+// differential-diagnosis checklist (a condition being considered/excluded
+// is not the same claim as a condition the patient has), an imaging
+// finding (different modalities can genuinely disagree; that disagreement
+// is clinically meaningful, not redundant entry), or a symptom/exam-
+// observation field (what a patient reports and what's observed on exam
+// are different assessments even when worded identically). An exhaustive
+// scan across all 73 templates confirmed this restriction: without it,
+// generic fields like "Other" or "Normal appearances" produced hundreds of
+// false matches across semantically unrelated checkboxes; with it, every
+// remaining match was a genuine same-fact duplicate.
+const SYNC_ELIGIBLE_KEYS = new Set(["medHistory", "riskFactors", "relevantHistory", "associatedDisease", "associatedConditionsExam"]);
+
+// Generic placeholder values that are structurally ambiguous no matter
+// which field they appear in - "None" in a risk-factors checklist and
+// "None" in a previous-treatment checklist are not the same claim, so
+// these must never trigger sync even when they text-match exactly.
+const SYNC_BLOCKED_TERMS = new Set(["other", "none", "normal", "intact", "negative", "yes", "no", "stable", "acute", "unstable", "present", "absent"]);
+
+function normalizeForSync(text) {
+  const t = String(text).trim().toLowerCase();
+  return SYNC_SYNONYMS[t] || t;
+}
+
+// Flattens every checkbox field's {key, options} across an entire
+// condition (all sections, resolving conditional wrappers), restricted to
+// SYNC_ELIGIBLE_KEYS - so a toggle in one field can be checked against
+// every other eligible field's options, not just the ones in the same
+// section. Order and current visibility don't matter here: a field hidden
+// behind an unmet conditional should still end up holding the synced value
+// for when it does become visible.
+function collectSyncableCheckboxFields(condition) {
+  const out = [];
+  function walk(fields) {
+    (fields || []).forEach((f) => {
+      if (f.type === "conditional") { walk(f.fields); return; }
+      if (f.type === "checkbox" && f.key && SYNC_ELIGIBLE_KEYS.has(f.key) && Array.isArray(f.options) && f.options.length) {
+        out.push({ key: f.key, options: f.options });
+      }
+    });
+  }
+  (condition.sections || []).forEach((s) => walk(s.fields));
+  return out;
+}
+
+// Given a checkbox field's key changing from oldVal to newVal (both
+// arrays), returns a patch object also updating any other checkbox field
+// in the same condition whose options include a normalized match for
+// whatever was just added or removed - e.g. ticking "Diabetes mellitus" in
+// one field also ticks "Diabetes" in another; unticking does the reverse.
+// Matching is exact-after-normalization only (see SYNC_SYNONYMS), skipping
+// anything in SYNC_BLOCKED_TERMS - deliberately no fuzzy/substring
+// matching, since a false match here means a checkbox gets silently
+// (un)ticked in a clinical note.
+function computeSyncPatch(key, oldVal, newVal, allCheckboxFields, scopeState) {
+  const patch = { [key]: newVal };
+  const added = newVal.filter((v) => !oldVal.includes(v));
+  const removed = oldVal.filter((v) => !newVal.includes(v));
+  if (!added.length && !removed.length) return patch;
+  allCheckboxFields.forEach(({ key: otherKey, options }) => {
+    if (otherKey === key) return;
+    let otherVal = patch[otherKey] || scopeState[otherKey] || [];
+    let changed = false;
+    added.forEach((a) => {
+      const norm = normalizeForSync(a);
+      if (SYNC_BLOCKED_TERMS.has(norm)) return;
+      const match = options.find((o) => normalizeForSync(o) === norm);
+      if (match && !otherVal.includes(match)) { otherVal = [...otherVal, match]; changed = true; }
+    });
+    removed.forEach((r) => {
+      const norm = normalizeForSync(r);
+      if (SYNC_BLOCKED_TERMS.has(norm)) return;
+      const match = options.find((o) => normalizeForSync(o) === norm);
+      if (match && otherVal.includes(match)) { otherVal = otherVal.filter((v) => v !== match); changed = true; }
+    });
+    if (changed) patch[otherKey] = otherVal;
+  });
+  return patch;
+}
+
 function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome }) {
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
@@ -16443,7 +16680,17 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
     }
   }, [openSection]);
 
-  const setField = useCallback((key, val) => onFieldChange({ [key]: val }), [onFieldChange]);
+  const syncableCheckboxFields = useMemo(() => collectSyncableCheckboxFields(condition), [condition]);
+  const setField = useCallback(
+    (key, val) => {
+      if (Array.isArray(val)) {
+        onFieldChange(computeSyncPatch(key, state[key] || [], val, syncableCheckboxFields, state));
+      } else {
+        onFieldChange({ [key]: val });
+      }
+    },
+    [onFieldChange, state, syncableCheckboxFields]
+  );
   const toggleSection = (id) => setOpenSection((cur) => (cur === id ? null : id));
   const hasMultipleActive = session.order.length - getSupersededGeneralIds(session).size > 1;
 
@@ -16459,12 +16706,22 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const rightLimbState = state.limbData?.right || {};
   const leftLimbState = state.limbData?.left || {};
   const setRightField = useCallback(
-    (key, val) => onFieldChange({ limbData: { ...(state.limbData || {}), right: { ...(state.limbData?.right || {}), [key]: val } } }),
-    [onFieldChange, state.limbData]
+    (key, val) => {
+      const patch = Array.isArray(val)
+        ? computeSyncPatch(key, rightLimbState[key] || [], val, syncableCheckboxFields, rightLimbState)
+        : { [key]: val };
+      onFieldChange({ limbData: { ...(state.limbData || {}), right: { ...(state.limbData?.right || {}), ...patch } } });
+    },
+    [onFieldChange, state.limbData, rightLimbState, syncableCheckboxFields]
   );
   const setLeftField = useCallback(
-    (key, val) => onFieldChange({ limbData: { ...(state.limbData || {}), left: { ...(state.limbData?.left || {}), [key]: val } } }),
-    [onFieldChange, state.limbData]
+    (key, val) => {
+      const patch = Array.isArray(val)
+        ? computeSyncPatch(key, leftLimbState[key] || [], val, syncableCheckboxFields, leftLimbState)
+        : { [key]: val };
+      onFieldChange({ limbData: { ...(state.limbData || {}), left: { ...(state.limbData?.left || {}), ...patch } } });
+    },
+    [onFieldChange, state.limbData, leftLimbState, syncableCheckboxFields]
   );
 
   // Trigger finger: each affected digit can be at a different stage and
@@ -16476,8 +16733,14 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const isPerDigitCondition = condition.id === "trigger-finger";
   const affectedDigitsList = isPerDigitCondition ? state.affectedDigits || [] : [];
   const setDigitField = useCallback(
-    (digit, key, val) => onFieldChange({ digitData: { ...(state.digitData || {}), [digit]: { ...(state.digitData?.[digit] || {}), [key]: val } } }),
-    [onFieldChange, state.digitData]
+    (digit, key, val) => {
+      const digitState = state.digitData?.[digit] || {};
+      const patch = Array.isArray(val)
+        ? computeSyncPatch(key, digitState[key] || [], val, syncableCheckboxFields, digitState)
+        : { [key]: val };
+      onFieldChange({ digitData: { ...(state.digitData || {}), [digit]: { ...digitState, ...patch } } });
+    },
+    [onFieldChange, state.digitData, syncableCheckboxFields]
   );
   const setDigitPathwayAnswer = useCallback(
     (digit, q, a) =>
@@ -17204,6 +17467,8 @@ const DIFFERENTIAL_TO_CONDITION = {
     "Instability": "glenohumeral-instability",
     "SLAP lesion": "slap-lesion",
     "Calcific tendinitis": "calcific-tendinitis",
+    "AVN of humeral head": "avn-humeral-head",
+    "Scapular dyskinesis": "scapular-dyskinesis",
     "Suprascapular neuropathy": "suprascapular-neuropathy",
     "Parsonage-Turner syndrome": "parsonage-turner-syndrome",
   },
@@ -17216,10 +17481,14 @@ const DIFFERENTIAL_TO_CONDITION = {
     "Elbow instability": "elbow-instability",
     "Elbow stiffness": "elbow-stiffness",
     "Radial head fracture": "radial-head-fracture",
+    "Coronoid fracture / terrible triad": "coronoid-terrible-triad",
     "Olecranon fracture": "olecranon-fracture",
     "Olecranon bursitis": "olecranon-bursitis",
+    "Athletic elbow (OCD/VEO)": "athletic-elbow-ocd-veo",
     "Cubital tunnel syndrome": "cubital-tunnel-syndrome",
     "Radial tunnel syndrome": "radial-tunnel-syndrome",
+    "PIN syndrome": "pin-syndrome",
+    "AIN syndrome": "ain-syndrome",
   },
   "general-wrist": {
     "De Quervain\'s tenosynovitis": "de-quervain",
@@ -17551,15 +17820,52 @@ function RegionPicker({ onSelect, onBack }) {
   );
 }
 
-function ConditionButton({ condition, active, onSelect }) {
+function ConditionButton({ condition, active, onSelect, onRemove }) {
+  const [confirmRemove, setConfirmRemove] = useState(false);
   return (
-    <button onClick={() => onSelect(condition)} className="rounded-2xl px-4 py-4 flex items-center justify-between text-left active:scale-95 transition" style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 60 }}>
-      <span className="flex items-center gap-2 font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>
-        {active && <CheckCircle2 size={17} color={T.teal} />}
-        {condition.name}
-      </span>
-      <ChevronRight size={20} color={T.inkSoft} />
-    </button>
+    <>
+      <button onClick={() => onSelect(condition)} className="rounded-2xl px-4 py-4 flex items-center justify-between text-left active:scale-95 transition" style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 60 }}>
+        <span className="flex items-center gap-2 font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>
+          {active && <CheckCircle2 size={17} color={T.teal} />}
+          {condition.name}
+        </span>
+        <span className="flex items-center gap-1">
+          {active && onRemove && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => { e.stopPropagation(); setConfirmRemove(true); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); setConfirmRemove(true); } }}
+              className="p-1.5 rounded-full active:scale-90"
+              aria-label={`Remove ${condition.name} from this session`}
+            >
+              <X size={15} color={T.tealDark} />
+            </span>
+          )}
+          <ChevronRight size={20} color={T.inkSoft} />
+        </span>
+      </button>
+      {confirmRemove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
+            <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Remove this diagnosis?</div>
+            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>
+              {condition.name} will be removed from this session, along with anything entered for it. Other diagnoses are kept.
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmRemove(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
+              <button
+                onClick={() => { onRemove(condition.id); setConfirmRemove(false); }}
+                className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]"
+                style={{ background: T.red, color: "#fff" }}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -17572,7 +17878,7 @@ function EmptySubsection() {
   );
 }
 
-function ConditionList({ regionKey, session, onSelect, onBack }) {
+function ConditionList({ regionKey, session, onSelect, onBack, onRemove }) {
   const region = REGIONS[regionKey];
   const hasSubsections = !!region.subsections;
   return (
@@ -17612,7 +17918,7 @@ function ConditionList({ regionKey, session, onSelect, onBack }) {
                 ) : (
                   <div className="flex flex-col gap-2.5">
                     {sub.conditions.map((c) => (
-                      <ConditionButton key={c.id} condition={c} active={session.order.includes(c.id)} onSelect={onSelect} />
+                      <ConditionButton key={c.id} condition={c} active={session.order.includes(c.id)} onSelect={onSelect} onRemove={onRemove} />
                     ))}
                   </div>
                 )}
@@ -17627,7 +17933,7 @@ function ConditionList({ regionKey, session, onSelect, onBack }) {
         ) : (
           <div className="flex flex-col gap-2.5">
             {region.conditions.map((c) => (
-              <ConditionButton key={c.id} condition={c} active={session.order.includes(c.id)} onSelect={onSelect} />
+              <ConditionButton key={c.id} condition={c} active={session.order.includes(c.id)} onSelect={onSelect} onRemove={onRemove} />
             ))}
           </div>
         )}
@@ -18745,6 +19051,7 @@ export default function App() {
           session={session}
           onSelect={openCondition}
           onBack={() => window.history.back()}
+          onRemove={removeCondition}
         />
       )}
 
