@@ -17,6 +17,7 @@ import {
   Slice,
   Mic,
   FileText,
+  ChevronLeft,
 } from "lucide-react";
 
 /* ============================================================================
@@ -12606,15 +12607,16 @@ const PM = (q) => `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(q)
 const AAOS_CPG = "https://www.aaos.org/quality/clinical-practice-guidelines/";
 const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 
-// App version. Scheme: MAJOR.MINOR where a whole-number bump marks a
-// structural change (a new visit type, the evidence layer, this side
-// panel) and the two-decimal part marks refinements. Set at 5.00 for the
+// App version, written as v5.0.0. Scheme: MAJOR.MINOR.PATCH - a
+// whole-number bump marks a structural change (a new visit type, the
+// evidence layer, this side panel), MINOR marks a new feature within
+// that, PATCH marks fixes and content edits. Set at 5.0.0 for the
 // side panel release: the preceding whole numbers correspond to the app
 // shell and first templates (1.x), the full 73-condition library (2.x),
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.00";
+const APP_VERSION = "5.0.0";
 
 // Outcome measures referenced by the templates, with what each is for and
 // where to obtain it. QuickDASH and DASH are included as references only -
@@ -17314,8 +17316,29 @@ function EvidencePanel({ conditionId }) {
 // existing modal treatment.
 function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote }) {
   const [section, setSection] = useState(null);
+  const [evQuery, setEvQuery] = useState("");
   const recents = (recentIds || []).map((id) => findConditionById(id)).filter(Boolean);
   const evidenceIds = Object.keys(CONDITION_EVIDENCE);
+
+  // Evidence grouped by body region and filtered by the search box, so a
+  // 42-entry list stays navigable. Matching runs over the diagnosis name
+  // and the evidence summary and bullet text, since a clinician may recall
+  // the trial rather than the condition.
+  const REGION_LABELS = { shoulder: "Shoulder", elbow: "Elbow", wrist: "Wrist", hand: "Hand", peripheralNerve: "Peripheral nerve" };
+  const q = evQuery.trim().toLowerCase();
+  const evidenceByRegion = Object.keys(REGION_LABELS).map((regionKey) => {
+    const entries = evidenceIds
+      .map((id) => ({ id, cond: findConditionById(id), ev: CONDITION_EVIDENCE[id] }))
+      .filter((e) => e.cond && e.cond.region === regionKey)
+      .filter((e) => {
+        if (!q) return true;
+        const hay = [e.cond.name, e.ev.summary, ...(e.ev.points || []), ...((e.ev.links || []).map((l) => l.label))].join(" ").toLowerCase();
+        return hay.includes(q);
+      })
+      .sort((a, b) => a.cond.name.localeCompare(b.cond.name));
+    return { regionKey, label: REGION_LABELS[regionKey], entries };
+  }).filter((g) => g.entries.length > 0);
+
   if (!open) return null;
 
   const Row = ({ id, title, count, children }) => (
@@ -17339,23 +17362,23 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
   const Empty = ({ children }) => <div className="text-[13px] mt-3" style={{ color: T.inkSoft }}>{children}</div>;
 
   return (
-    <div className="fixed inset-0 z-50 flex" style={{ background: "rgba(16,30,43,0.5)" }} onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex" style={{ background: "rgba(16,30,43,0.4)" }} onClick={onClose}>
       <div
         className="h-full w-[86%] max-w-sm flex flex-col"
         style={{ background: T.bg, boxShadow: "8px 0 28px rgba(16,30,43,0.18)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-2 px-4 py-3 shrink-0" style={{ background: T.tealDark }}>
-          <span className="font-bold text-[15px]" style={{ color: "#fff" }}>Quick reference</span>
-          <button onClick={onClose} aria-label="Close panel" className="p-2 -mr-1 rounded-lg active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
-            <X size={20} color="#fff" />
+        <div className="flex items-center justify-between gap-2 px-3 py-2 shrink-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
+          <span className="font-bold text-[15px] pl-1" style={{ color: "#fff" }}>Reference</span>
+          <button onClick={onClose} aria-label="Close reference panel" className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }}>
+            <ChevronLeft size={16} color="#fff" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
           <Row id="notes" title="Recent clinic notes" count={(recentNotes || []).length}>
             {(recentNotes || []).length === 0 ? (
-              <Empty>Notes you preview or copy during this session appear here, newest first. They are held in memory only and clear when the app is closed.</Empty>
+              <Empty>No notes yet this session.</Empty>
             ) : (
               <div className="flex flex-col gap-1.5 mt-3">
                 {recentNotes.map((n) => (
@@ -17375,7 +17398,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
 
           <Row id="recent" title="Recent diagnoses" count={recents.length}>
             {recents.length === 0 ? (
-              <Empty>Diagnoses you open appear here for quick access, newest first.</Empty>
+              <Empty>No diagnoses opened yet this session.</Empty>
             ) : (
               <div className="flex flex-col gap-1.5 mt-3">
                 {recents.map((c) => (
@@ -17393,40 +17416,48 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
           </Row>
 
           <Row id="evidence" title="Evidence library" count={evidenceIds.length}>
-            <div className="text-[12px] mt-3 mb-2" style={{ color: T.inkSoft }}>
-              The same evidence shown inside each pathway, gathered in one place. Entries with a DOI link directly to the paper; the rest open a literature search for the cited trial or guideline.
+            <div className="mt-3 mb-2">
+              <input
+                type="text"
+                value={evQuery}
+                onChange={(e) => setEvQuery(e.target.value)}
+                placeholder="Search diagnoses or evidence…"
+                className="w-full rounded-lg px-3 py-2.5 text-[14px]"
+                style={{ border: `1px solid ${T.border}`, background: T.surface, color: T.ink, minHeight: 44 }}
+              />
             </div>
-            <div className="flex flex-col gap-2 mt-2">
-              {evidenceIds.map((id) => {
-                const cond = findConditionById(id);
-                const ev = CONDITION_EVIDENCE[id];
-                if (!cond) return null;
-                return (
-                  <div key={id} className="rounded-lg px-3 py-2.5" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
-                    <div className="text-[13px] font-semibold mb-1" style={{ color: T.tealDark }}>{cond.name}</div>
-                    <div className="text-[12px] mb-2" style={{ color: T.inkSoft }}>{ev.summary}</div>
-                    <div className="flex flex-col gap-1">
-                      {(ev.links || []).map((l, i) => (
-                        <a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
-                           className="text-[12px] font-medium flex items-start gap-1.5 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 32 }}>
-                          <ChevronRight size={14} color={T.teal} style={{ flexShrink: 0, marginTop: 2 }} />
-                          <span>
-                            {l.label}
-                            {l.doi && <span className="block" style={{ color: T.inkSoft }}>DOI: {l.doi}{l.pmid ? ` \u00b7 PMID: ${l.pmid}` : ""}</span>}
-                          </span>
-                        </a>
-                      ))}
-                    </div>
+            {evidenceByRegion.length === 0 ? (
+              <Empty>No matches for that search.</Empty>
+            ) : (
+              evidenceByRegion.map(({ regionKey, label, entries }) => (
+                <div key={regionKey} className="mb-3">
+                  <div className="text-[12px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: T.tealDark }}>{label}</div>
+                  <div className="flex flex-col gap-2">
+                    {entries.map(({ id, cond, ev }) => (
+                      <div key={id} className="rounded-lg px-3 py-2.5" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+                        <div className="text-[13px] font-semibold mb-1" style={{ color: T.ink }}>{cond.name}</div>
+                        <div className="text-[12px] mb-2" style={{ color: T.inkSoft }}>{ev.summary}</div>
+                        <div className="flex flex-col gap-1">
+                          {(ev.links || []).map((l, i) => (
+                            <a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
+                               className="text-[12px] font-medium flex items-start gap-1.5 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 32 }}>
+                              <ChevronRight size={14} color={T.teal} style={{ flexShrink: 0, marginTop: 2 }} />
+                              <span>
+                                {l.label}
+                                {l.doi && <span className="block" style={{ color: T.inkSoft }}>DOI: {l.doi}{l.pmid ? ` \u00b7 PMID: ${l.pmid}` : ""}</span>}
+                              </span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              ))
+            )}
           </Row>
 
           <Row id="outcomes" title="Outcome measures" count={OUTCOME_MEASURES.length}>
-            <div className="text-[12px] mt-3 mb-2" style={{ color: T.inkSoft }}>
-              Scores referenced by the templates, with what each is for and where to obtain it.
-            </div>
             <div className="flex flex-col gap-2">
               {OUTCOME_MEASURES.map((m) => (
                 <div key={m.abbr} className="rounded-lg px-3 py-2.5" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
@@ -18381,7 +18412,7 @@ function VisitTypeGate({ onSelect }) {
         <div className="text-center mt-8">
           <div className="text-[13px] font-medium" style={{ color: T.inkSoft }}>Created by Dr. Muntasir Al-Naamani</div>
           <div className="text-[13px]" style={{ color: T.inkSoft }}>Suggestions: namanimuntasir@gmail.com</div>
-          <div className="text-[12px] mt-2" style={{ color: T.inkSoft }}>Version {APP_VERSION}</div>
+          <div className="text-[12px] mt-2" style={{ color: T.inkSoft }}>v{APP_VERSION}</div>
         </div>
       </div>
     </div>
@@ -18591,7 +18622,8 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
           height={zones.find((z) => z.key === activeRegion).h - 6}
           fill="none"
           stroke={T.teal}
-          strokeWidth="2.5"
+          strokeWidth="1.5"
+          strokeOpacity="0.55"
           rx="9"
         />
       )}
@@ -18703,12 +18735,19 @@ function ConditionList({ regionKey, session, onSelect, onBack, onRemove }) {
   const region = REGIONS[regionKey];
   const hasSubsections = !!region.subsections;
   return (
-    <div className="min-h-screen px-4 pt-4 pb-8" style={{ background: T.bg }}>
-      <div className="max-w-2xl lg:max-w-4xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-1.5 mb-4 active:opacity-60" style={{ color: T.inkSoft }}>
-          <ArrowLeft size={18} /><span className="text-[14px] font-medium">All regions</span>
-        </button>
-        <h1 className="text-[22px] font-bold mb-4" style={{ color: T.ink }}>{region.label}</h1>
+    <div className="min-h-screen pb-8" style={{ background: T.bg }}>
+      {/* Sticky so the way back is always reachable without scrolling to
+          the top of a long condition list, and styled as a filled control
+          rather than plain text so it reads as a button at a glance. */}
+      <div className="sticky top-0 z-30 px-4 pt-3 pb-3" style={{ background: T.bg, borderBottom: `1px solid ${T.border}` }}>
+        <div className="max-w-2xl lg:max-w-4xl mx-auto flex items-center gap-3">
+          <button onClick={onBack} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 active:scale-95 transition" style={{ background: T.slateChip, border: `1px solid ${T.borderStrong}`, color: T.ink, minHeight: 44 }}>
+            <ArrowLeft size={17} /><span className="text-[13px] font-semibold">All regions</span>
+          </button>
+          <h1 className="text-[20px] font-bold truncate" style={{ color: T.ink }}>{region.label}</h1>
+        </div>
+      </div>
+      <div className="max-w-2xl lg:max-w-4xl mx-auto px-4 pt-4">
 
         {GENERAL_ASSESSMENTS[regionKey] && (
           <button
@@ -19214,16 +19253,16 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
       <button onClick={onGoHome} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Go to home">
         <Home size={16} color="#fff" />
       </button>
+      {onOpenPanel && (
+        <button onClick={onOpenPanel} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Open reference panel">
+          <FileText size={16} color="#fff" />
+        </button>
+      )}
       <button onClick={onOpenSearch} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="Search templates">
         <Search size={14} color="#fff" />
         <span>Search</span>
       </button>
-      {onOpenPanel && (
-        <button onClick={onOpenPanel} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="Open quick reference panel">
-          <FileText size={14} color="#fff" />
-          <span>Reference</span>
-        </button>
-      )}
+
       {items.length > 0 && (
         <>
           <span className="text-[12px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "rgba(255,255,255,0.75)" }}>Session</span>
@@ -19485,15 +19524,14 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
         {/* On desktop the map is always visible alongside the list, so there
             is no separate "diagnosis view" to step back out of - back
             always exits to Home. */}
-        <button onClick={onBack} className="p-2 -ml-1 active:opacity-60 hidden lg:block" aria-label="Back">
-          <ArrowLeft size={24} color={T.ink} />
+        <button onClick={onBack} className="shrink-0 flex items-center justify-center rounded-full active:scale-95 transition hidden lg:flex" aria-label="Back" style={{ background: T.slateChip, border: `1px solid ${T.borderStrong}`, width: 44, height: 44 }}>
+          <ArrowLeft size={20} color={T.ink} />
         </button>
         <div className="flex-1 min-w-0">
           <div className="font-bold text-[15px] lg:text-[19px]" style={{ color: T.ink }}>{title || "Follow-up Visit"}</div>
           <div className="text-[12px] truncate lg:hidden" style={{ color: T.inkSoft }}>
             {showRegionPicker ? "Tap the region being reviewed" : `${REGIONS[regionKey].label} \u2014 select the diagnosis (or diagnoses)`}
           </div>
-          <div className="text-[14px] hidden lg:block" style={{ color: T.inkSoft }}>Tap a region, then select the diagnosis (or diagnoses) being reviewed</div>
         </div>
       </div>
 
