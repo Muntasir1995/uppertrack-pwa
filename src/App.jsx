@@ -15,6 +15,8 @@ import {
   FilePlus,
   CalendarClock,
   Slice,
+  Mic,
+  FileText,
 } from "lucide-react";
 
 /* ============================================================================
@@ -12588,6 +12590,462 @@ function getRegionConditions(region) {
 // throughout this project). Used to surface a "Related conditions" quick-add
 // strip on each template. Ids that don't yet have a built template (e.g.
 // future Elbow/Wrist/Hand conditions) simply won't resolve and are skipped.
+// Evidence behind each management pathway, from the structured evidence
+// review of all 73 templates (September 2026). Only conditions that
+// received a Tier 1 evidence-compared review appear here; a condition
+// absent from this map shows no Evidence panel rather than an empty one,
+// so silence means "not yet reviewed at this depth", never "no evidence
+// exists".
+//
+// Links are PubMed searches and official guideline landing pages rather
+// than direct article PMIDs. That is deliberate: a search for a named
+// trial always resolves and stays valid as records are updated, whereas a
+// hand-copied PMID can silently point at the wrong paper. Follow the link
+// and the trial is the first result.
+const PM = (q) => `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(q)}`;
+const AAOS_CPG = "https://www.aaos.org/quality/clinical-practice-guidelines/";
+const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
+
+// App version. Scheme: MAJOR.MINOR where a whole-number bump marks a
+// structural change (a new visit type, the evidence layer, this side
+// panel) and the two-decimal part marks refinements. Set at 5.00 for the
+// side panel release: the preceding whole numbers correspond to the app
+// shell and first templates (1.x), the full 73-condition library (2.x),
+// the PWA and follow-up/post-op visit types (3.x), and the structured
+// evidence review with its in-pathway citations (4.x). Bump MINOR for
+// fixes and content edits, MAJOR when a new capability lands.
+const APP_VERSION = "5.00";
+
+// Outcome measures referenced by the templates, with what each is for and
+// where to obtain it. QuickDASH and DASH are included as references only -
+// the scoring engine is deliberately not built into the app, since the
+// instruments are copyright the Institute for Work & Health.
+const OUTCOME_MEASURES = [
+  { abbr: "ASES", name: "American Shoulder and Elbow Surgeons Score", use: "Shoulder pain and function. Used at initial, 3, 6 and 12 month time points across the shoulder templates.", url: "https://www.orthopaedicscore.com/scorepages/american_shoulder_elbow_surgeons_ases.html" },
+  { abbr: "QuickDASH", name: "Quick Disabilities of the Arm, Shoulder and Hand", use: "Upper limb disability, 11 items. Used across shoulder, elbow, wrist and hand templates.", note: "Copyright Institute for Work & Health \u2014 obtain via the official site.", url: "https://dash.iwh.on.ca/quickdash" },
+  { abbr: "DASH", name: "Disabilities of the Arm, Shoulder and Hand", use: "Full 30-item version, where greater sensitivity is needed than QuickDASH.", note: "Copyright Institute for Work & Health.", url: "https://dash.iwh.on.ca/" },
+  { abbr: "VAS", name: "Visual Analogue Scale (pain)", use: "Pain severity 0\u201310. Captured directly in the app in every template.", url: "https://pubmed.ncbi.nlm.nih.gov/?term=visual+analogue+scale+pain+measurement+properties" },
+  { abbr: "SANE", name: "Single Assessment Numeric Evaluation", use: "Single-question percentage-of-normal rating. Used at 12 months in surgical shoulder pathways.", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Single+Assessment+Numeric+Evaluation+SANE+shoulder" },
+  { abbr: "MEPS", name: "Mayo Elbow Performance Score", use: "Elbow pain, motion, stability and function. Used across the elbow templates.", url: "https://www.orthopaedicscore.com/scorepages/mayo_elbow_performance_score.html" },
+  { abbr: "Constant", name: "Constant-Murley Score", use: "Shoulder function including strength measurement. Used where an examiner-rated score is preferred.", url: "https://www.orthopaedicscore.com/scorepages/constant_shoulder_score.html" },
+  { abbr: "PRWE", name: "Patient-Rated Wrist Evaluation", use: "Wrist pain and function. Used in the wrist templates.", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Patient-Rated+Wrist+Evaluation+PRWE" },
+];
+
+const CONDITION_EVIDENCE = {
+  "adhesive-capsulitis": {
+    summary: "Stage-based management (painful / frozen / thawing) with stage-appropriate treatment is well aligned with current practice. Hydrodilatation is an established option in the appropriate stage.",
+    points: [
+      "Treatment intensity should match the stage: pain control dominates the painful phase, mobilisation the frozen and thawing phases.",
+      "Reviewed against current practice and found consistent \u2014 no change was made to this pathway.",
+    ],
+    links: [{ label: "Frozen shoulder management", url: PM("adhesive capsulitis frozen shoulder stage management hydrodilatation") }],
+  },
+  "carpal-tunnel-syndrome": {
+    summary: "Severity-stratified management with early release for motor involvement, and splinting plus injection for mild disease, is consistent with AAOS guideline structure.",
+    points: [
+      "Thenar wasting or motor involvement moves the decision toward early release rather than a further conservative trial.",
+      "Reviewed against AAOS guideline structure and found consistent \u2014 no change was made to this pathway.",
+    ],
+    links: [
+      { label: "AAOS carpal tunnel CPG", url: ORTHOGUIDELINES },
+      { label: "Carpal tunnel management evidence", url: PM("carpal tunnel syndrome clinical practice guideline surgical release severity") },
+    ],
+  },
+  "dupuytren-disease": {
+    summary: "Gating on functional limitation rather than contracture angle alone is the correct trigger. Treatment is individualised by disease pattern.",
+    points: [
+      "Needle fasciotomy, collagenase and fasciectomy each suit different patterns and recurrence risk profiles.",
+      "Practical note: collagenase (CCH) availability has changed in several markets \u2014 confirm local availability before offering it.",
+    ],
+    links: [{ label: "Dupuytren treatment comparison", url: PM("Dupuytren contracture needle fasciotomy collagenase fasciectomy recurrence") }],
+  },
+  "thumb-cmc-oa": {
+    summary: "Conservative management, then injection, then surgery. No trapeziectomy adjunct has shown clear superiority, so leaving the procedure individualised matches the evidence.",
+    points: [
+      "Cochrane-level evidence shows no clear advantage for ligament reconstruction or tendon interposition over trapeziectomy alone.",
+      "Reviewed and found consistent \u2014 no change was made to this pathway.",
+    ],
+    links: [{ label: "Thumb CMC arthritis surgical options", url: PM("trapeziectomy ligament reconstruction tendon interposition thumb carpometacarpal osteoarthritis") }],
+  },
+  "clavicle-fracture": {
+    summary: "Displaced midshaft fractures with significant shortening warrant a shared decision about fixation rather than automatic surgery \u2014 non-operative management remains reasonable for many.",
+    points: [
+      "Shortening beyond roughly 2cm is a commonly used threshold for discussing fixation.",
+      "Routing to shared decision-making rather than directly to surgery reflects the balance of evidence.",
+    ],
+    links: [{ label: "Midshaft clavicle fracture management", url: PM("displaced midshaft clavicle fracture operative versus nonoperative") }],
+  },
+  "de-quervain": {
+    summary: "Injection and splinting are effective first-line. A septated first dorsal compartment is a recognised cause of both injection and surgical failure and is worth anticipating.",
+    points: [
+      "A separate subsheath for extensor pollicis brevis can leave the compartment inadequately treated if not recognised.",
+      "Reviewed and found consistent \u2014 no change was made to this pathway.",
+    ],
+    links: [{ label: "De Quervain injection and septation", url: PM("de Quervain tenosynovitis corticosteroid injection septum extensor pollicis brevis") }],
+  },
+  "distal-biceps-rupture": {
+    summary: "Early repair is favoured in higher-demand patients; chronicity and retraction change reconstructability and should be assessed before planning.",
+    points: [
+      "Delay allows retraction and scarring, which may shift the operation from primary repair to graft reconstruction.",
+      "Lower-demand patients may reasonably choose non-operative management, accepting supination weakness.",
+    ],
+    links: [{ label: "Distal biceps repair timing", url: PM("distal biceps tendon rupture repair timing chronic reconstruction outcomes") }],
+  },
+  "thumb-ucl-injury": {
+    summary: "A Stener lesion cannot heal without surgery, making it an absolute operative indication and the key thing to identify.",
+    points: [
+      "Adductor aponeurosis interposition prevents ligament apposition, so conservative management will not restore stability.",
+      "Reviewed and found consistent \u2014 no change was made to this pathway.",
+    ],
+    links: [{ label: "Stener lesion and thumb UCL injury", url: PM("Stener lesion thumb ulnar collateral ligament operative indication") }],
+  },
+  "thoracic-outlet-syndrome": {
+    summary: "The vascular subtype is urgent and must be separated from neurogenic TOS, where conservative management is first-line. The 'disputed' neurogenic subtype remains genuinely contested.",
+    points: [
+      "Arterial or venous TOS requires prompt vascular assessment; delay risks limb-threatening complications.",
+      "Neurogenic TOS is conservative-first, and the disputed subtype has a weak evidence base for surgery.",
+    ],
+    links: [{ label: "Thoracic outlet syndrome subtypes", url: PM("thoracic outlet syndrome neurogenic vascular disputed diagnosis management") }],
+  },
+  "parsonage-turner-syndrome": {
+    summary: "Largely self-limiting but slow. Corticosteroids have mixed and limited supporting evidence, with most benefit when given early. Recovery is measured in years.",
+    points: [
+      "Typical recovery spans 1\u20133 years; counselling on that timeframe matters.",
+      "Tendon transfer discussion is generally deferred to around 18\u201324 months without recovery.",
+    ],
+    links: [{ label: "Parsonage-Turner syndrome course and treatment", url: PM("Parsonage Turner syndrome neuralgic amyotrophy corticosteroid recovery") }],
+  },
+  "proximal-humerus-fracture": {
+    summary: "Randomised evidence does not support routine surgery for most displaced proximal humerus fractures in older adults. Non-operative management is a reasonable default rather than a fallback, and is offered as a first-class option in this pathway for that reason.",
+    points: [
+      "PROFHER (n=250, displaced surgical-neck fractures): no significant difference in Oxford Shoulder Score over 2 years between surgical and non-surgical treatment. Authors concluded the results do not support the trend toward increased surgery.",
+      "NITEP (n=88, aged 60+, displaced 2-part): no significant difference at 2 years; complications requiring revision occurred in the operative group only.",
+      "PROFHER-2 is ongoing for 3- and 4-part fractures, comparing reverse arthroplasty, hemiarthroplasty and non-surgical treatment \u2014 non-surgical remains an accepted comparator arm.",
+    ],
+    links: [
+      { label: "PROFHER trial (JAMA 2015)", url: "https://doi.org/10.1001/jama.2015.1629", doi: "10.1001/jama.2015.1629", pmid: "25756440" },
+      { label: "NITEP trial (PLOS Medicine 2019)", url: PM("NITEP proximal humerus nonoperative") },
+    ],
+  },
+  saps: {
+    summary: "Two placebo-controlled trials now agree at long-term follow-up that arthroscopic subacromial decompression confers no meaningful benefit over placebo surgery for subacromial pain with an intact cuff. Surgical referral in this pathway is framed for diagnostic reassessment, not for decompression itself.",
+    points: [
+      "CSAW (Lancet 2018): no clinically meaningful benefit of decompression over placebo surgery.",
+      "FIMPACT 10-year follow-up (2025): confirms no long-term benefit over placebo, with 87% retention.",
+      "The Dutch Orthopaedic Association SAPS guideline update (Acta Orthopaedica, 2026) reflects this position.",
+    ],
+    links: [
+      { label: "CSAW trial (Lancet 2018)", url: "https://doi.org/10.1016/S0140-6736(17)32457-1", doi: "10.1016/S0140-6736(17)32457-1", pmid: "29169668" },
+      { label: "FIMPACT long-term follow-up", url: PM("FIMPACT subacromial decompression placebo follow-up") },
+    ],
+  },
+  "distal-radius-fracture": {
+    summary: "Operative fixation does not improve long-term patient-reported outcomes over non-operative treatment in lower-demand or older patients, even with radiographic displacement. This pathway therefore branches on functional demand before routing to fixation.",
+    points: [
+      "AAOS/ASSH 2020 clinical practice guideline: strong-strength recommendation that operative treatment in patients over 65 does not improve long-term patient-reported outcomes.",
+      "Accompanying commentary notes age is best treated as a proxy for functional demand, which is the more meaningful variable \u2014 a healthy active 68-year-old differs from a low-demand 63-year-old.",
+    ],
+    links: [
+      { label: "AAOS Clinical Practice Guidelines", url: AAOS_CPG },
+      { label: "AAOS/ASSH distal radius CPG evidence", url: PM("AAOS distal radius fracture clinical practice guideline older patients") },
+    ],
+  },
+  "olecranon-fracture": {
+    summary: "For a displaced fracture with an intact extensor mechanism in a low-demand or elderly patient, non-operative management gives comparable function and pain with substantially fewer complications. A disrupted extensor mechanism is a separate question and still warrants surgery.",
+    points: [
+      "Duckworth et al (Bone Joint J 2017) and a JBJS 2014 series support non-operative management in low-demand elderly patients.",
+      "Tension band wiring and plate fixation carry reported complication rates up to 30%, largely hardware-related and often requiring removal.",
+    ],
+    links: [
+      { label: "Duckworth olecranon RCT (Bone Joint J 2017)", url: PM("Duckworth olecranon fracture elderly randomised") },
+    ],
+  },
+  "lateral-epicondylopathy": {
+    summary: "A degenerative rather than inflammatory condition. Load management and eccentric loading are first-line, with a long runway before surgery. Corticosteroid injection trades short-term relief for worse outcomes at one year.",
+    points: [
+      "Coombes et al (JAMA 2013): corticosteroid injection gives short-term relief but worse outcomes and higher recurrence at 12 months versus physiotherapy or wait-and-see.",
+      "Extracorporeal shockwave therapy and PRP have more favourable evidence for persistent cases.",
+    ],
+    links: [
+      { label: "Coombes corticosteroid RCT (JAMA 2013)", url: PM("Coombes corticosteroid physiotherapy lateral epicondylalgia JAMA") },
+    ],
+  },
+  "slap-lesion": {
+    summary: "The traditional split \u2014 repair for young athletes, tenodesis for older patients \u2014 is increasingly questioned. Tenodesis is worth discussing as a genuine alternative in young overhead athletes, not reserved for older patients.",
+    points: [
+      "Multiple systematic reviews report comparable or better return-to-sport rates and lower revision rates with biceps tenodesis, including in young overhead athletes.",
+      "Tenodesis incidence has surpassed SLAP repair since 2017.",
+      "One 2022 systematic review described the young-athlete repair default as grounded in dogma more than evidence.",
+    ],
+    links: [
+      { label: "SLAP repair vs biceps tenodesis reviews", url: PM("SLAP repair versus biceps tenodesis systematic review return to sport") },
+    ],
+  },
+  "glenohumeral-instability": {
+    summary: "Current evidence increasingly favours early surgical stabilisation over a rehabilitation-first approach in young, high-risk patients after a first-time anterior dislocation.",
+    points: [
+      "Age under 30 is the strongest risk factor, highest between 14\u201320 years; recurrence after conservative treatment is reported up to 47% in this group versus roughly 17% at ages 30\u201340.",
+      "Male sex and contact/collision or overhead sport participation further raise recurrence risk.",
+    ],
+    links: [
+      { label: "First-time dislocation: surgery vs rehabilitation", url: PM("first time anterior shoulder dislocation early surgical stabilisation recurrence young") },
+    ],
+  },
+  "jersey-finger": {
+    summary: "Urgency depends on the level of tendon retraction (Leddy-Packer), not on chronicity alone. Determining the type is part of the referral, because the acceptable delay differs by an order of magnitude between types.",
+    points: [
+      "Type I (retracted into the palm, both vincula disrupted): repair within 7\u201310 days or the tendon may become irreparable.",
+      "Type II (retracted to PIP, long vinculum intact): tolerates repair within 3\u20136 weeks.",
+      "Type III (bony fragment held at the A4 pulley): can often wait up to 6 weeks.",
+    ],
+    links: [
+      { label: "Leddy-Packer classification and timing", url: PM("Leddy Packer flexor digitorum profundus avulsion classification") },
+    ],
+  },
+  "hook-of-hamate-fracture": {
+    summary: "Conservative treatment has a documented high nonunion rate. Excision is generally favoured first-line, particularly for athletes prioritising a reliable return to activity.",
+    points: [
+      "Case series report union in roughly 1 of 6 treated with casting, versus 8 of 8 with primary surgical treatment.",
+      "Excision avoids the prolonged immobilisation and uncertain union of a conservative trial.",
+    ],
+    links: [
+      { label: "Hook of hamate: excision vs conservative", url: PM("hook of hamate fracture excision nonunion athletes") },
+    ],
+  },
+  "cubital-tunnel-syndrome": {
+    summary: "Simple decompression and anterior transposition give broadly equivalent outcomes for most cases. Simple decompression is generally preferred first-line on lower morbidity; transposition is reserved for specific indications.",
+    points: [
+      "Meta-analyses, including a 2025 update, show no consistent outcome difference between the two techniques for most cases.",
+      "Transposition indications: nerve subluxation or instability, significant elbow deformity or prior fracture, and revision surgery.",
+    ],
+    links: [
+      { label: "Simple decompression vs transposition meta-analyses", url: PM("cubital tunnel simple decompression versus anterior transposition meta-analysis") },
+    ],
+  },
+  "radial-tunnel-syndrome": {
+    summary: "A contested diagnosis with a weak evidence base \u2014 retrospective series only, no randomised trials. Patient selection and expectation-setting matter more here than in most conditions.",
+    points: [
+      "No RCTs exist; the diagnosis has poor specificity relative to lateral epicondylitis.",
+      "Outcomes are notably worse where radial tunnel syndrome coexists with lateral epicondylitis, or where a workers' compensation claim is involved.",
+    ],
+    links: [
+      { label: "Radial tunnel syndrome outcomes literature", url: PM("radial tunnel syndrome surgical decompression outcomes controversy") },
+    ],
+  },
+  "gh-osteoarthritis": {
+    summary: "An intact rotator cuff no longer automatically favours anatomic total shoulder arthroplasty. Cuff status is one factor among several in this decision, not a standalone rule.",
+    points: [
+      "Recent meta-analyses and age-stratified comparative studies show reverse TSA carries a lower reoperation rate even with an intact cuff \u2014 particularly in patients aged 70+, with posterior glenoid wear, or restricted preoperative forward elevation.",
+      "Anatomic TSA retains an advantage in active external rotation and, in some series, functional outcome.",
+    ],
+    links: [
+      { label: "Anatomic vs reverse TSA with intact cuff", url: PM("anatomic versus reverse total shoulder arthroplasty intact rotator cuff reoperation") },
+    ],
+  },
+  "elbow-osteoarthritis": {
+    summary: "Total elbow arthroplasty carries a lifelong lifting restriction, which makes it a poor fit for younger, higher-demand patients. Interposition arthroplasty preserves bone stock and keeps TEA available later.",
+    points: [
+      "A lifelong restriction of roughly 2\u20135kg (5\u201310lb) is standard counselling after TEA, given the risk of aseptic loosening.",
+      "Interposition arthroplasty avoids hardware and that restriction, and does not preclude later TEA.",
+    ],
+    links: [
+      { label: "TEA lifting restrictions and alternatives", url: PM("total elbow arthroplasty lifting restriction interposition arthroplasty young") },
+    ],
+  },
+  "wrist-oa": {
+    summary: "Partial wrist denervation is a lower-morbidity motion-preserving option alongside proximal row carpectomy, with the honest caveat that its benefit wanes over time.",
+    points: [
+      "Dividing the anterior and posterior interosseous nerves gives comparable short-to-medium-term success with lower morbidity than bony procedures.",
+      "Durability declines with time \u2014 one series reports roughly 85% success at 1 year falling to 57% at 15 years \u2014 and failure does not preclude further surgery.",
+    ],
+    links: [
+      { label: "Wrist denervation outcomes", url: PM("partial wrist denervation anterior posterior interosseous nerve outcomes") },
+    ],
+  },
+  "kienbock-disease": {
+    summary: "Ulnar variance is the key factor selecting between joint-levelling and revascularisation approaches, alongside the disease stage.",
+    points: [
+      "Ulnar-negative variance favours radial shortening osteotomy, which has well-supported long-term outcomes.",
+      "Neutral or ulnar-positive variance shifts the decision toward revascularisation or capitate-shortening approaches.",
+    ],
+    links: [
+      { label: "Kienbock staging and ulnar variance", url: PM("Kienbock disease radial shortening osteotomy ulnar variance outcomes") },
+    ],
+  },
+  "long-head-biceps": {
+    summary: "Tenotomy and tenodesis give broadly equivalent functional outcomes. The choice turns on Popeye deformity risk, strength, age and cosmesis rather than on function alone.",
+    points: [
+      "RCT evidence shows equivalent functional outcomes at 12+ months.",
+      "Tenotomy is faster with quicker early recovery but carries a real risk of Popeye deformity and some strength loss \u2014 matters more to younger, active or cosmesis-conscious patients.",
+    ],
+    links: [
+      { label: "Tenotomy vs tenodesis RCTs", url: PM("biceps tenotomy versus tenodesis randomised functional outcome Popeye") },
+    ],
+  },
+  "calcific-tendinitis": {
+    summary: "Physiotherapy, corticosteroid injection and ultrasound-guided barbotage have broadly similar success at avoiding surgery. Barbotage applies to persistent disease too, not only the acute phase.",
+    points: [
+      "A 2026 cohort study found similar rates of avoiding surgery across the three modalities regardless of phase.",
+      "Barbotage benefit can be short-lived \u2014 one series reports roughly half needing a further procedure within about a year \u2014 which is worth setting as an expectation.",
+    ],
+    links: [
+      { label: "Calcific tendinitis treatment comparison", url: PM("calcific tendinitis shoulder barbotage corticosteroid physiotherapy comparison") },
+    ],
+  },
+  "trigger-finger": {
+    summary: "Corticosteroid injection succeeds in roughly 45\u201380% of cases initially. Note that diabetes alone is no longer considered a consistent predictor of failure \u2014 this supersedes older teaching.",
+    points: [
+      "Predictors of poorer response: multiple digit involvement, advanced disease stage, and metabolic syndrome.",
+      "More recent evidence does not support diabetes alone as a consistent predictor of injection failure.",
+    ],
+    links: [
+      { label: "Trigger finger injection outcome predictors", url: PM("trigger finger corticosteroid injection success predictors diabetes") },
+    ],
+  },
+  "mallet-finger": {
+    summary: "Splinting achieves comparably good outcomes even with delayed presentation, so a late presentation alone is not a reason to move straight to surgery for a congruent joint.",
+    points: [
+      "Outcomes remain good when splinting is started weeks to months after injury.",
+      "A congruent joint remains a reasonable first trial for splinting regardless of chronicity.",
+    ],
+    links: [
+      { label: "Mallet finger delayed splinting outcomes", url: PM("mallet finger delayed presentation splinting outcomes") },
+    ],
+  },
+  "flexor-tenosynovitis": {
+    summary: "Pyogenic flexor tenosynovitis is a surgical emergency. Kanavel's signs drive the decision; non-operative management has a narrow window and a low threshold to escalate.",
+    points: [
+      "Non-operative management is best supported within roughly 48 hours of a penetrating injury with less pronounced signs (StatPearls, 2026).",
+      "IV rather than oral antibiotics are appropriate even in the observation arm, with review inside 12\u201324 hours.",
+      "Any strengthening sign warrants urgent surgical escalation.",
+    ],
+    links: [
+      { label: "Pyogenic flexor tenosynovitis management", url: PM("pyogenic flexor tenosynovitis Kanavel signs management") },
+    ],
+  },
+  "scapholunate-injury": {
+    summary: "Management follows Garcia-Elias staging \u2014 acuity, reducibility and the presence of arthritic change. 'Acute' generally means within about 6 weeks, favouring direct repair.",
+    points: [
+      "Beyond roughly 6 weeks, chronicity shifts the approach from repair toward reconstruction.",
+      "Established SLAC change moves the decision to salvage procedures rather than ligament surgery.",
+    ],
+    links: [
+      { label: "Scapholunate instability staging", url: PM("scapholunate ligament injury Garcia-Elias staging treatment algorithm") },
+    ],
+  },
+  "scaphoid-fracture": {
+    summary: "For stable distal pole and waist fractures, cast immobilisation and percutaneous fixation achieve broadly similar union rates \u2014 making this a preference-sensitive choice rather than a default.",
+    points: [
+      "Percutaneous screw fixation may shorten time to return to work or sport, at the cost of a surgical procedure.",
+      "MRI remains the most sensitive and specific test for an occult fracture.",
+    ],
+    links: [
+      { label: "Scaphoid fixation vs casting", url: PM("scaphoid waist fracture percutaneous fixation versus cast union return to work") },
+    ],
+  },
+  "metacarpal-fracture": {
+    summary: "Rotational deformity is the priority; angulation tolerance then varies substantially by digit, with the little finger tolerating the most.",
+    points: [
+      "Commonly cited neck-fracture thresholds with no rotational deformity: index ~10\u201315\u00b0, middle ~15\u201320\u00b0, ring ~30\u00b0, little finger ~40\u201370\u00b0.",
+      "The little finger tolerates more because of greater carpometacarpal joint mobility.",
+    ],
+    links: [
+      { label: "Metacarpal angulation thresholds", url: PM("metacarpal neck fracture acceptable angulation threshold digit") },
+    ],
+  },
+  "hand-osteoarthritis": {
+    summary: "Current guidance supports education, activity modification, topical NSAIDs before oral, splinting and injection for a flaring joint. Several once-common treatments are now specifically discouraged.",
+    points: [
+      "Glucosamine/chondroitin, hydroxychloroquine, bisphosphonates and biologic agents are guideline-discouraged for hand OA.",
+      "Topical NSAIDs are preferred over oral where feasible.",
+    ],
+    links: [
+      { label: "ACR hand OA guideline", url: PM("American College of Rheumatology hand osteoarthritis guideline") },
+      { label: "OrthoGuidelines (AAOS)", url: ORTHOGUIDELINES },
+    ],
+  },
+  "coronoid-terrible-triad": {
+    summary: "Reconstruction follows O'Driscoll's sequence, restoring stability in a defined order and reassessing after each step.",
+    points: [
+      "Sequence: coronoid \u2192 radial head \u2192 assess stability \u2192 lateral collateral ligament \u2192 medial collateral ligament if still unstable.",
+      "Reassessing stability between steps avoids unnecessary medial-side surgery.",
+    ],
+    links: [
+      { label: "Terrible triad management sequence", url: PM("terrible triad elbow O'Driscoll coronoid radial head lateral collateral sequence") },
+    ],
+  },
+  "radial-head-fracture": {
+    summary: "For Mason II fractures, instability of the fracture matters more than displacement alone in deciding on fixation.",
+    points: [
+      "Commonly cited operative criteria: articular step greater than 2mm, fragment exceeding 30% of the articular surface, or angulation over 30\u00b0.",
+      "A mechanical block to rotation is an indication in its own right.",
+    ],
+    links: [
+      { label: "Mason II radial head management", url: PM("Mason type II radial head fracture operative indications displacement") },
+    ],
+  },
+  "bennett-rolando-fracture": {
+    summary: "The deforming pull of abductor pollicis longus makes these fractures prone to late displacement even when initially well aligned, so follow-up radiographs matter.",
+    points: [
+      "Non-operative management is generally reserved for under 1mm displacement with no carpometacarpal subluxation.",
+      "Most authors favour operative stabilisation once subluxation is present.",
+    ],
+    links: [
+      { label: "Bennett fracture management", url: PM("Bennett fracture thumb displacement threshold operative fixation") },
+    ],
+  },
+  "perilunate-injury": {
+    summary: "A commonly missed injury where median nerve status and chronicity both change management. Beyond roughly 6\u20138 weeks, closed reduction becomes progressively less reliable.",
+    points: [
+      "Chronic presentation makes open reduction or salvage options more likely.",
+      "Acute median nerve compromise requires urgent decompression alongside reduction.",
+    ],
+    links: [
+      { label: "Perilunate dislocation management", url: PM("perilunate dislocation chronic delayed presentation outcomes management") },
+    ],
+  },
+  "avn-humeral-head": {
+    summary: "As with glenohumeral osteoarthritis, an intact rotator cuff no longer automatically favours anatomic arthroplasty \u2014 cuff status is one factor among several.",
+    points: [
+      "Reverse TSA shows a lower reoperation rate even with an intact cuff in several groups: older patients, posterior glenoid wear, and limited preoperative elevation.",
+      "Stage and the presence of glenoid involvement remain central to the decision.",
+    ],
+    links: [
+      { label: "Anatomic vs reverse TSA selection", url: PM("anatomic versus reverse total shoulder arthroplasty intact rotator cuff reoperation") },
+    ],
+  },
+  "athletic-elbow-ocd-veo": {
+    summary: "Lesion stability drives management and is assessed on MRI rather than plain radiographs.",
+    points: [
+      "Features supporting a stable lesion: intact overlying cartilage, no loose body, and no fluid line between fragment and parent bone.",
+      "Absence of any of these points toward instability and a surgical track.",
+    ],
+    links: [
+      { label: "Capitellar OCD stability assessment", url: PM("capitellum osteochondritis dissecans MRI stability classification treatment") },
+    ],
+  },
+  "elbow-stiffness": {
+    summary: "Heterotopic ossification should be excised only once mature; excising early raises the risk of recurrence.",
+    points: [
+      "Maturity is typically confirmed around 6\u201312 months post-injury using serial imaging, with or without bone scan and a downward alkaline phosphatase trend.",
+    ],
+    links: [
+      { label: "Heterotopic ossification excision timing", url: PM("heterotopic ossification elbow excision timing maturation recurrence") },
+    ],
+  },
+  "rotator-cuff": {
+    summary: "Repair suitability depends on tear characteristics and patient factors together. Advanced retraction and fatty infiltration reduce the likelihood of a durable repair.",
+    points: [
+      "Key factors: tear size and retraction (Patte grade), fatty infiltration (Goutallier grade) and muscle atrophy, tear acuity, and patient age and functional demand.",
+      "Structured rehabilitation is first-line for most atraumatic tears, with imaging on failure.",
+    ],
+    links: [
+      { label: "AAOS rotator cuff guidance", url: ORTHOGUIDELINES },
+      { label: "Repair outcomes by tear characteristics", url: PM("rotator cuff repair Goutallier fatty infiltration retraction healing outcome") },
+    ],
+  },
+};
+
 const RELATED_CONDITIONS = {
   // General (undifferentiated) assessments link out to the likely specific
   // templates for that region, so once the picture clarifies the clinician
@@ -12911,10 +13369,21 @@ function computeNormalExamPatch(fields, state) {
         break;
       }
       case "testGrid": {
-        // A negative special test is by definition the normal finding.
+        // The normal finding depends on the grid's own option set: a
+        // negative special test, an intact cuff, a normal functional test.
+        // Hardcoding "negative" here would write a value that matches no
+        // button (so nothing appears selected) while still reading as a
+        // finding in the note - so the reassuring option is taken from the
+        // field's own options, and a grid with no clearly reassuring option
+        // is skipped rather than guessed at.
+        const optionsFor = (t) => (f.itemOptions && f.itemOptions[t]) || f.defaultOptions || ["Positive", "Negative"];
         const grid = {};
-        (f.options || []).forEach((t) => { grid[t] = "negative"; });
-        if (Object.keys(grid).length) { patch[f.key] = grid; count++; }
+        let anyResolved = false;
+        (f.options || []).forEach((t) => {
+          const reassuring = optionsFor(t).find((o) => TESTGRID_REASSURING.has(o.trim().toLowerCase()));
+          if (reassuring) { grid[t] = reassuring.trim().toLowerCase(); anyResolved = true; }
+        });
+        if (anyResolved) { patch[f.key] = grid; count++; }
         break;
       }
       case "strength": {
@@ -12961,7 +13430,7 @@ function CheckboxGroup({ options, selected, onChange }) {
       {options.map((opt) => {
         const active = selected.includes(opt);
         return (
-          <button key={opt} onClick={() => toggle(opt)} className="rounded-full px-3 py-2 text-[14px] font-medium flex items-center gap-1.5 active:scale-95 transition" style={{ minHeight: 40, background: active ? T.tealDark : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.tealDark : T.border}` }}>
+          <button key={opt} onClick={() => toggle(opt)} className="rounded-full px-3.5 py-2.5 text-[14px] font-medium flex items-center gap-1.5 active:scale-95 transition" style={{ minHeight: 44, background: active ? T.tealDark : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.tealDark : T.border}` }}>
             {active && <Check size={14} />}
             {opt}
           </button>
@@ -13021,8 +13490,8 @@ function TestGrid({ tests, values, onChange, itemOptions, defaultOptions }) {
                   <button
                     key={opt}
                     onClick={() => onChange(t, active ? null : optKey)}
-                    className="rounded-lg px-3 py-1.5 text-[12.5px] font-semibold active:scale-95 transition"
-                    style={{ minHeight: 32, background: active ? color : T.slateChip, color: active ? "#fff" : T.inkSoft, border: `1px solid ${active ? color : T.border}` }}
+                    className="rounded-lg px-3 py-2 text-[13px] font-semibold active:scale-95 transition"
+                    style={{ minHeight: 44, background: active ? color : T.slateChip, color: active ? "#fff" : T.inkSoft, border: `1px solid ${active ? color : T.border}` }}
                   >
                     {opt}
                   </button>
@@ -13063,7 +13532,7 @@ function VASSlider({ value, onChange }) {
         </span>
       </div>
       <input type="range" min={0} max={10} step={1} value={v} onChange={(e) => onChange(Number(e.target.value))} className="w-full" style={{ accentColor: color, height: 36 }} />
-      <div className="flex justify-between text-[11px] mt-0.5" style={{ color: T.inkSoft }}>
+      <div className="flex justify-between text-[12px] mt-0.5" style={{ color: T.inkSoft }}>
         <span>No pain</span><span>Worst pain</span>
       </div>
     </div>
@@ -13120,6 +13589,68 @@ const FIELD_SUGGESTIONS = {
   hobbies: ["None", "Gardening", "DIY", "Knitting/crafts", "Musical instrument", "Gaming/computer"],
 };
 
+// Dictation for free-text fields, using the browser's built-in speech
+// recognition. Deliberately narrow: this transcribes into one field the
+// clinician has focused, and nothing else. No audio is sent anywhere by
+// the app, no recording is retained, and the structured fields are
+// untouched - this is a faster way to type a finding, not an ambient
+// scribe. Browsers without support simply don't show the button.
+const SPEECH_SUPPORTED =
+  typeof window !== "undefined" &&
+  !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+function useDictation(onResult) {
+  const [listening, setListening] = useState(false);
+  const recRef = useRef(null);
+
+  const stop = useCallback(() => {
+    if (recRef.current) { try { recRef.current.stop(); } catch (e) { /* already stopped */ } }
+    setListening(false);
+  }, []);
+
+  const start = useCallback(() => {
+    if (!SPEECH_SUPPORTED) return;
+    const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new Rec();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = navigator.language || "en-GB";
+    rec.onresult = (e) => {
+      const text = Array.from(e.results).map((r) => r[0].transcript).join(" ").trim();
+      if (text) onResult(text);
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    recRef.current = rec;
+    try { rec.start(); setListening(true); } catch (e) { setListening(false); }
+  }, [onResult]);
+
+  useEffect(() => () => { if (recRef.current) { try { recRef.current.stop(); } catch (e) { /* noop */ } } }, []);
+
+  return { listening, start, stop, supported: SPEECH_SUPPORTED };
+}
+
+function DictateButton({ onResult }) {
+  const { listening, start, stop, supported } = useDictation(onResult);
+  if (!supported) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => (listening ? stop() : start())}
+      aria-label={listening ? "Stop dictation" : "Dictate into this field"}
+      className="shrink-0 rounded-lg px-3 active:scale-95 transition flex items-center justify-center"
+      style={{
+        minHeight: 44, minWidth: 48,
+        background: listening ? T.red : T.slateChip,
+        border: `1px solid ${listening ? T.red : T.border}`,
+        color: listening ? "#fff" : T.inkSoft,
+      }}
+    >
+      <Mic size={18} color={listening ? "#fff" : T.inkSoft} />
+    </button>
+  );
+}
+
 function TextField({ label, value, onChange, placeholder, suggestions, multiSelect }) {
   const selectedList = multiSelect ? String(value || "").split(",").map((v) => v.trim()).filter(Boolean) : [];
   const toggleMultiSelect = (s) => {
@@ -13148,12 +13679,12 @@ function TextField({ label, value, onChange, placeholder, suggestions, multiSele
               <button
                 key={s}
                 onClick={() => (multiSelect ? toggleMultiSelect(s) : onChange(active ? "" : s))}
-                className="rounded-full px-3 py-1.5 text-[12.5px] font-medium active:scale-95 transition"
+                className="rounded-full px-3.5 py-2 text-[13px] font-medium active:scale-95 transition"
                 style={{
                   background: active ? T.teal : T.slateChip,
                   color: active ? "#fff" : T.ink,
                   border: `1px solid ${active ? T.teal : T.border}`,
-                  minHeight: 34,
+                  minHeight: 44,
                 }}
               >
                 {s}
@@ -13162,7 +13693,10 @@ function TextField({ label, value, onChange, placeholder, suggestions, multiSele
           })}
         </div>
       )}
-      <input type="text" value={value || ""} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink }} />
+      <div className="flex items-center gap-2">
+        <input type="text" value={value || ""} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className="flex-1 min-w-0 rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink, minHeight: 44 }} />
+        <DictateButton onResult={(text) => onChange(value ? `${value} ${text}` : text)} />
+      </div>
     </div>
   );
 }
@@ -13282,7 +13816,7 @@ function romSliderMin(motion) {
 function ROMSlider({ label, value, onChange, max, min, color }) {
   return (
     <div className="flex items-center gap-2 py-1">
-      <span className="text-[11px] w-14 shrink-0" style={{ color: T.inkSoft }}>{label}</span>
+      <span className="text-[12px] w-16 shrink-0" style={{ color: T.inkSoft }}>{label}</span>
       <input type="range" min={min} max={max} step={5} value={value ?? 0} onChange={(e) => onChange(Number(e.target.value))} className="flex-1" style={{ accentColor: color, height: 32 }} />
       <div className="flex items-center gap-0.5 shrink-0">
         <input
@@ -13312,7 +13846,7 @@ function SpinalLevelSlider({ label, value, onChange, color }) {
   const sliderIdx = idx === -1 ? 0 : idx;
   return (
     <div className="flex items-center gap-2 py-1">
-      <span className="text-[11px] w-14 shrink-0" style={{ color: T.inkSoft }}>{label}</span>
+      <span className="text-[12px] w-16 shrink-0" style={{ color: T.inkSoft }}>{label}</span>
       <input
         type="range"
         min={0}
@@ -13323,7 +13857,7 @@ function SpinalLevelSlider({ label, value, onChange, color }) {
         className="flex-1"
         style={{ accentColor: color, height: 32 }}
       />
-      <span className="text-[12.5px] font-semibold shrink-0 text-right" style={{ width: 64, color }}>
+      <span className="text-[13px] font-semibold shrink-0 text-right" style={{ width: 64, color }}>
         {value || "\u2014"}
       </span>
     </div>
@@ -13347,14 +13881,14 @@ function ROMTable({ motions, values, onChange, region }) {
               <>
                 <SpinalLevelSlider label="Active" value={row.active} onChange={(v) => onChange(m, { ...row, active: v })} color={T.teal} />
                 <SpinalLevelSlider label="Passive" value={row.passive} onChange={(v) => onChange(m, { ...row, passive: v })} color={T.tealDark} />
-                <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Level the thumb reaches up the back, Buttock (lowest) to T7 or higher (best)</div>
+                <div className="text-[12px] mt-1" style={{ color: T.inkSoft }}>Level the thumb reaches up the back, Buttock (lowest) to T7 or higher (best)</div>
               </>
             ) : (
               <>
                 <ROMSlider label="Active" value={row.active} onChange={(v) => onChange(m, { ...row, active: v })} max={max} min={min} color={T.teal} />
                 <ROMSlider label="Passive" value={row.passive} onChange={(v) => onChange(m, { ...row, passive: v })} max={max} min={min} color={T.tealDark} />
-                {ref && <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
-                {min < 0 && <div className="text-[10.5px]" style={{ color: T.inkSoft }}>Drag below 0° to record a deficit/contracture.</div>}
+                {ref && <div className="text-[12px] mt-1" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
+                {min < 0 && <div className="text-[12px]" style={{ color: T.inkSoft }}>Drag below 0° to record a deficit/contracture.</div>}
               </>
             )}
           </div>
@@ -13378,7 +13912,7 @@ function NumberGroup({ items, values, onChange, suffix, region, slider, max, min
             <div key={m} className="px-3 py-2.5" style={{ background: i % 2 ? T.surface : "#FAFCFC", borderTop: i ? `1px solid ${T.border}` : "none" }}>
               <div className="text-[13px] font-semibold mb-1" style={{ color: T.ink }}>{m}</div>
               <ROMSlider label="" value={values[m]} onChange={(v) => onChange(m, v)} max={max ?? 90} min={min ?? 0} color={T.teal} />
-              {ref && <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
+              {ref && <div className="text-[12px] mt-1" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
             </div>
           );
         })}
@@ -13392,13 +13926,13 @@ function NumberGroup({ items, values, onChange, suffix, region, slider, max, min
         return (
           <div key={m} className="px-3 py-2.5" style={{ background: i % 2 ? T.surface : "#FAFCFC", borderTop: i ? `1px solid ${T.border}` : "none" }}>
             <div className="flex items-center justify-between">
-              <span className="text-[13.5px]" style={{ color: T.ink }}>{m}</span>
+              <span className="text-[14px]" style={{ color: T.ink }}>{m}</span>
               <div className="flex items-center gap-1">
                 <input type="number" inputMode="numeric" value={values[m] ?? ""} onChange={(e) => onChange(m, e.target.value === "" ? null : Number(e.target.value))} className="text-right rounded-lg px-2 py-1.5 text-[14px] font-medium" style={{ width: 64, border: `1px solid ${T.border}` }} />
                 {suffix && <span className="text-[13px]" style={{ color: T.inkSoft }}>{suffix}</span>}
               </div>
             </div>
-            {ref && <div className="text-[10.5px] mt-0.5" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
+            {ref && <div className="text-[12px] mt-0.5" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
           </div>
         );
       })}
@@ -13416,7 +13950,7 @@ function AngleSliderField({ label, value, onChange, max, min, referenceText }) {
       <SubLabel>{label}</SubLabel>
       <div className="rounded-xl overflow-hidden px-3 py-2.5" style={{ border: `1px solid ${T.border}` }}>
         <ROMSlider label="" value={value} onChange={onChange} max={max ?? 90} min={min ?? 0} color={T.teal} />
-        {referenceText && <div className="text-[10.5px] mt-1" style={{ color: T.inkSoft }}>Normal: {referenceText}</div>}
+        {referenceText && <div className="text-[12px] mt-1" style={{ color: T.inkSoft }}>Normal: {referenceText}</div>}
       </div>
     </div>
   );
@@ -13430,7 +13964,7 @@ function MeasurementGrid({ rows, columns, values, onChange, suffix }) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
       <div
-        className="grid text-[10.5px] font-semibold uppercase tracking-wide px-2 py-2"
+        className="grid text-[12px] font-semibold uppercase tracking-wide px-2 py-2"
         style={{ gridTemplateColumns: `1.1fr repeat(${columns.length}, 1fr)`, background: T.tealTint, color: T.tealDark }}
       >
         <span></span>
@@ -13446,7 +13980,7 @@ function MeasurementGrid({ rows, columns, values, onChange, suffix }) {
             className="grid items-center px-2 py-1.5"
             style={{ gridTemplateColumns: `1.1fr repeat(${columns.length}, 1fr)`, background: i % 2 ? T.surface : "#FAFCFC", borderTop: `1px solid ${T.border}` }}
           >
-            <span className="text-[12.5px]" style={{ color: T.ink }}>{r}</span>
+            <span className="text-[13px]" style={{ color: T.ink }}>{r}</span>
             {columns.map((c) => (
               <input
                 key={c}
@@ -13462,7 +13996,7 @@ function MeasurementGrid({ rows, columns, values, onChange, suffix }) {
         );
       })}
       {suffix && (
-        <div className="px-2 py-1.5 text-[11px]" style={{ color: T.inkSoft, borderTop: `1px solid ${T.border}` }}>
+        <div className="px-2 py-1.5 text-[12px]" style={{ color: T.inkSoft, borderTop: `1px solid ${T.border}` }}>
           Values in {suffix}
         </div>
       )}
@@ -13485,7 +14019,7 @@ function StrengthGrid({ muscles, values, onChange }) {
             {[0, 1, 2, 3, 4, 5].map((g) => {
               const active = values[m.key] === g;
               return (
-                <button key={g} onClick={() => onChange(m.key, active ? null : g)} className="rounded-lg py-2 text-[14px] font-semibold active:scale-95 transition" style={{ minHeight: 40, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>
+                <button key={g} onClick={() => onChange(m.key, active ? null : g)} className="rounded-lg py-2.5 text-[14px] font-semibold active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>
                   {g}
                 </button>
               );
@@ -13530,7 +14064,7 @@ function PathwayFlow({ schema, answers, onAnswer, priorTreatmentGiven }) {
         <div key={id} className="flex flex-col">
           <div className="rounded-xl px-4 py-3" style={{ background: node.type === "terminal" ? toneColors[node.tone]?.bg || T.slateChip : T.slateChip, border: `1px solid ${node.type === "terminal" ? toneColors[node.tone]?.border || T.border : T.border}` }}>
             <div className="text-[13px] font-semibold mb-0.5" style={{ color: node.type === "terminal" ? toneColors[node.tone]?.fg || T.ink : T.ink }}>{node.title}</div>
-            <div className="text-[13.5px]" style={{ color: T.inkSoft }}>{node.text}</div>
+            <div className="text-[14px]" style={{ color: T.inkSoft }}>{node.text}</div>
             {node.type === "question" && (
               <div className="flex gap-2 mt-3">
                 {node.options.map((o) => {
@@ -13581,7 +14115,7 @@ function RedFlagsClearedButton({ reviewed, onToggle }) {
     <>
       <div className="flex items-center gap-2 mt-5 mb-3">
         <div style={{ height: 1, background: T.border, flex: 1 }} />
-        <span className="text-[10.5px] font-bold uppercase tracking-wide" style={{ color: T.inkSoft }}>or confirm</span>
+        <span className="text-[12px] font-bold uppercase tracking-wide" style={{ color: T.inkSoft }}>or confirm</span>
         <div style={{ height: 1, background: T.border, flex: 1 }} />
       </div>
       <button
@@ -13602,7 +14136,7 @@ function RedFlagsClearedButton({ reviewed, onToggle }) {
           <div className="text-[14px] font-bold" style={{ color: reviewed ? T.green : T.ink }}>
             None of these are present
           </div>
-          <div className="text-[12.5px] mt-0.5" style={{ color: T.inkSoft }}>
+          <div className="text-[13px] mt-0.5" style={{ color: T.inkSoft }}>
             Records that red flags were reviewed and found clear
           </div>
         </span>
@@ -13686,7 +14220,7 @@ function Field({ field, state, setField, region }) {
       return (
         <>
           <SubLabel>{field.title}</SubLabel>
-          <ul className="text-[13.5px] pl-4 mb-1" style={{ color: T.inkSoft, listStyle: "disc" }}>
+          <ul className="text-[14px] pl-4 mb-1" style={{ color: T.inkSoft, listStyle: "disc" }}>
             {field.items.map((x) => <li key={x}>{x}</li>)}
           </ul>
         </>
@@ -13698,7 +14232,7 @@ function Field({ field, state, setField, region }) {
           {field.rows.map((r) => (
             <div key={r.left} className="flex gap-3 py-2" style={{ borderBottom: `1px solid ${T.border}` }}>
               <span className="text-[13px] font-semibold shrink-0" style={{ color: T.tealDark, width: 108 }}>{r.left}</span>
-              <span className="text-[13.5px]" style={{ color: T.ink }}>{r.right}</span>
+              <span className="text-[14px]" style={{ color: T.ink }}>{r.right}</span>
             </div>
           ))}
         </>
@@ -13803,7 +14337,7 @@ function Field({ field, state, setField, region }) {
       return (
         <>
           <SubLabel>{field.title}</SubLabel>
-          {field.introText && <div className="text-[12.5px] mb-3 italic" style={{ color: T.inkSoft }}>{field.introText}</div>}
+          {field.introText && <div className="text-[13px] mb-3 italic" style={{ color: T.inkSoft }}>{field.introText}</div>}
           <PathwayFlow
             schema={field.schema}
             answers={state[field.key] || {}}
@@ -15422,6 +15956,59 @@ const PHYSIO_PRECAUTIONS = [
 // automatically rather than depending on the clinician remembering to tick
 // them, since those are exactly the things that matter most to a therapist
 // starting treatment.
+// A plain-language summary for the patient to take away, built from data
+// already captured during the consultation - no extra clinician effort.
+// Deliberately NOT a copy of the clinical note: no examination findings,
+// no grading scales, no abbreviations. The red flags become "when to seek
+// help sooner", which is the most clinically useful thing a patient can
+// leave with.
+function buildPatientSummary(condition, state) {
+  const lines = ["YOUR VISIT SUMMARY", ""];
+
+  const side = sideWord(state);
+  lines.push("WHAT WE THINK IS GOING ON");
+  lines.push(side ? `${condition.name}, affecting your ${side.toLowerCase()} side.` : `${condition.name}.`);
+  lines.push("");
+
+  const mgmt = buildManagementPlan(condition, state);
+  if (mgmt) {
+    lines.push("THE PLAN");
+    lines.push(mgmt);
+    lines.push("");
+  }
+
+  const review = buildReviewPlan(condition, state);
+  if (review) {
+    lines.push("NEXT APPOINTMENT");
+    lines.push(review);
+    lines.push("");
+  }
+
+  // Red flags the clinician recorded as present are the patient's own
+  // safety-netting advice, phrased as things to act on rather than as a
+  // checklist of findings.
+  const urgent = getPresentUrgentFlags(condition, state);
+  if (urgent.length) {
+    lines.push("IMPORTANT \u2014 PLEASE READ");
+    lines.push("Your doctor has noted the following needs prompt attention:");
+    urgent.forEach((f) => lines.push(`\u2022 ${f.text}`));
+    lines.push("");
+  }
+
+  lines.push("WHEN TO SEEK HELP SOONER");
+  lines.push("Contact the clinic or seek urgent medical care if you develop:");
+  lines.push("\u2022 Severe or rapidly worsening pain");
+  lines.push("\u2022 New numbness, weakness, or loss of movement");
+  lines.push("\u2022 The limb becoming cold, pale, or discoloured");
+  lines.push("\u2022 Fever, redness, swelling, or spreading warmth");
+  lines.push("\u2022 Anything that worries you and is getting worse rather than better");
+  lines.push("");
+
+  lines.push("---");
+  lines.push("This summary is for your information and does not replace the advice given to you in clinic. Please bring it to your next appointment.");
+  return lines.join("\n");
+}
+
 function buildPhysioReferral(condition, state) {
   const ref = state.physioReferral || {};
   const lines = ["PHYSIOTHERAPY REFERRAL", ""];
@@ -16055,7 +16642,7 @@ function LimbHeader({ limb }) {
   const label = limb === "right" ? "Right side" : "Left side";
   return (
     <div className="flex items-center gap-2 mb-2 mt-4 first:mt-0">
-      <span className="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide shrink-0" style={{ background: T.tealTint, color: T.tealDark }}>{label}</span>
+      <span className="rounded-full px-2.5 py-1 text-[12px] font-bold uppercase tracking-wide shrink-0" style={{ background: T.tealTint, color: T.tealDark }}>{label}</span>
       <div className="flex-1 h-px" style={{ background: T.border }} />
     </div>
   );
@@ -16068,7 +16655,7 @@ function LimbHeader({ limb }) {
 function DigitHeader({ digit }) {
   return (
     <div className="flex items-center gap-2 mb-2 mt-4 first:mt-0">
-      <span className="rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide shrink-0" style={{ background: T.tealTint, color: T.tealDark }}>{digit}</span>
+      <span className="rounded-full px-2.5 py-1 text-[12px] font-bold uppercase tracking-wide shrink-0" style={{ background: T.tealTint, color: T.tealDark }}>{digit}</span>
       <div className="flex-1 h-px" style={{ background: T.border }} />
     </div>
   );
@@ -16155,7 +16742,7 @@ function RelatedConditionsBar({ conditionId, sessionOrder, onOpen }) {
   if (!items.length) return null;
   return (
     <div className="mb-3">
-      <div className="text-[11px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: T.inkSoft }}>Related conditions</div>
+      <div className="text-[12px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: T.inkSoft }}>Related conditions</div>
       <div className="flex flex-wrap gap-2">
         {items.map((c) => {
           const already = sessionOrder.includes(c.id);
@@ -16163,7 +16750,7 @@ function RelatedConditionsBar({ conditionId, sessionOrder, onOpen }) {
             <button
               key={c.id}
               onClick={() => onOpen(c)}
-              className="rounded-full px-3 py-1.5 text-[12.5px] font-medium flex items-center gap-1 active:scale-95 transition"
+              className="rounded-full px-3 py-1.5 text-[13px] font-medium flex items-center gap-1 active:scale-95 transition"
               style={{ background: already ? T.tealTint : T.slateChip, color: already ? T.tealDark : T.ink, border: `1px solid ${already ? T.teal : T.border}` }}
             >
               {already && <Check size={12} />}
@@ -16207,7 +16794,7 @@ function NormalExamButton({ fields, state, onApply }) {
     return (
       <div className="rounded-xl p-3 mb-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
         <div className="text-[13px] font-semibold mb-1" style={{ color: T.amber }}>Overwrite existing findings?</div>
-        <div className="text-[12.5px] mb-2.5" style={{ color: T.inkSoft }}>Some examination fields already have values. Marking everything normal will replace them.</div>
+        <div className="text-[13px] mb-2.5" style={{ color: T.inkSoft }}>Some examination fields already have values. Marking everything normal will replace them.</div>
         <div className="flex gap-2">
           <button onClick={apply} className="rounded-lg px-3 py-2 font-semibold text-[13px] active:scale-95" style={{ background: T.amber, color: "#fff" }}>Yes, mark all normal</button>
           <button onClick={() => setConfirming(false)} className="rounded-lg px-3 py-2 font-semibold text-[13px] active:scale-95" style={{ background: T.surface, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
@@ -16219,7 +16806,7 @@ function NormalExamButton({ fields, state, onApply }) {
   return (
     <button
       onClick={() => (wouldOverwrite ? setConfirming(true) : apply())}
-      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 mb-3 font-semibold text-[13.5px] active:scale-95 transition"
+      className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 mb-3 font-semibold text-[14px] active:scale-95 transition"
       style={{ background: justApplied ? T.greenTint : T.slateChip, border: `1px solid ${justApplied ? T.green : T.border}`, color: justApplied ? T.green : T.ink }}
     >
       {justApplied ? <Check size={16} /> : <CheckCircle2 size={16} />}
@@ -16271,17 +16858,20 @@ function PhysioReferralInputs({ value, onChange }) {
 
       <div className="mt-3">
         <SubLabel>Additional information</SubLabel>
-        <textarea
-          value={value.notes || ""}
-          onChange={(e) => onChange({ notes: e.target.value })}
-          placeholder="Anything else the therapist should know (optional)"
-          rows={2}
-          className="w-full rounded-lg px-3 py-2 text-[14px]"
-          style={{ border: `1px solid ${T.border}`, background: T.surface }}
-        />
+        <div className="flex items-start gap-2">
+          <textarea
+            value={value.notes || ""}
+            onChange={(e) => onChange({ notes: e.target.value })}
+            placeholder="Anything else the therapist should know (optional)"
+            rows={2}
+            className="flex-1 min-w-0 rounded-lg px-3 py-2 text-[14px]"
+            style={{ border: `1px solid ${T.border}`, background: T.surface }}
+          />
+          <DictateButton onResult={(text) => onChange({ notes: value.notes ? `${value.notes} ${text}` : text })} />
+        </div>
       </div>
 
-      <div className="text-[11.5px] mt-2.5" style={{ color: T.inkSoft }}>
+      <div className="text-[12px] mt-2.5" style={{ color: T.inkSoft }}>
         Pending surgery and any outstanding red flags are added to the letter's precautions automatically.
       </div>
     </div>
@@ -16301,7 +16891,7 @@ function OutcomeScores({ condition, state, onFieldChange }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-xl p-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
-        <div className="text-[12.5px]" style={{ color: T.inkSoft }}>
+        <div className="text-[13px]" style={{ color: T.inkSoft }}>
           Scores calculate live and are added to the clinic note. Record them at the same visit intervals each time so they stay comparable.
         </div>
       </div>
@@ -16356,8 +16946,8 @@ function OutcomeScores({ condition, state, onFieldChange }) {
                       <button
                         key={opt.value}
                         onClick={() => setAses(item.key, active ? null : opt.value)}
-                        className="rounded-lg py-1.5 text-[11.5px] font-semibold active:scale-95"
-                        style={{ background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.inkSoft, minHeight: 38 }}
+                        className="rounded-lg py-1.5 text-[12px] font-semibold active:scale-95"
+                        style={{ background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.inkSoft, minHeight: 44 }}
                       >
                         {opt.label}
                       </button>
@@ -16376,29 +16966,29 @@ function OutcomeScores({ condition, state, onFieldChange }) {
           <div className="flex items-baseline justify-between py-1">
             <span className="text-[13px]" style={{ color: T.ink }}>ASES</span>
             {asesResult.value != null ? (
-              <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{asesResult.value} <span className="text-[11px] font-normal" style={{ color: T.inkSoft }}>/100, higher better</span></span>
+              <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{asesResult.value} <span className="text-[12px] font-normal" style={{ color: T.inkSoft }}>/100, higher better</span></span>
             ) : (
-              <span className="text-[11.5px] text-right" style={{ color: T.inkSoft, maxWidth: "62%" }}>{asesResult.reason}</span>
+              <span className="text-[12px] text-right" style={{ color: T.inkSoft, maxWidth: "62%" }}>{asesResult.reason}</span>
             )}
           </div>
         )}
         <div className="flex items-baseline justify-between py-1">
           <span className="text-[13px]" style={{ color: T.ink }}>SANE</span>
           {saneResult.value != null ? (
-            <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{saneResult.value}% <span className="text-[11px] font-normal" style={{ color: T.inkSoft }}>higher better</span></span>
+            <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{saneResult.value}% <span className="text-[12px] font-normal" style={{ color: T.inkSoft }}>higher better</span></span>
           ) : (
-            <span className="text-[11.5px]" style={{ color: T.inkSoft }}>{saneResult.reason}</span>
+            <span className="text-[12px]" style={{ color: T.inkSoft }}>{saneResult.reason}</span>
           )}
         </div>
         {state.vas != null && (
           <div className="flex items-baseline justify-between py-1">
             <span className="text-[13px]" style={{ color: T.ink }}>Pain VAS</span>
-            <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{state.vas}/10 <span className="text-[11px] font-normal" style={{ color: T.inkSoft }}>higher worse</span></span>
+            <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{state.vas}/10 <span className="text-[12px] font-normal" style={{ color: T.inkSoft }}>higher worse</span></span>
           </div>
         )}
       </div>
 
-      <div className="text-[11.5px]" style={{ color: T.inkSoft }}>
+      <div className="text-[12px]" style={{ color: T.inkSoft }}>
         QuickDASH is not included: it is copyright the Institute for Work &amp; Health, must be used unmodified, and requires an Intent to Use submission (and a paid licence if this app is ever sold). The scoring engine is built and can be switched on once that is settled.
       </div>
     </div>
@@ -16458,7 +17048,7 @@ function CopyLimbButton({ fields, fromState, toState, onApply, fromLabel, toLabe
     return (
       <div className="rounded-xl p-3 mb-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
         <div className="text-[13px] font-semibold mb-1" style={{ color: T.amber }}>Overwrite the {toLabel} side?</div>
-        <div className="text-[12.5px] mb-2.5" style={{ color: T.inkSoft }}>Findings already recorded for this side will be replaced by the {fromLabel} side's.</div>
+        <div className="text-[13px] mb-2.5" style={{ color: T.inkSoft }}>Findings already recorded for this side will be replaced by the {fromLabel} side's.</div>
         <div className="flex gap-2">
           <button onClick={apply} className="rounded-lg px-3 py-2 font-semibold text-[13px] active:scale-95" style={{ background: T.amber, color: "#fff" }}>Yes, copy across</button>
           <button onClick={() => setConfirming(false)} className="rounded-lg px-3 py-2 font-semibold text-[13px] active:scale-95" style={{ background: T.surface, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
@@ -16554,7 +17144,7 @@ function DifferentialContinueButton({ condition, state, onOpenCondition }) {
   return (
     <button
       onClick={() => onOpenCondition(target)}
-      className="w-full flex items-center justify-between gap-2 rounded-xl px-4 py-3.5 mt-1 mb-3 font-semibold text-[14.5px] active:scale-95 transition"
+      className="w-full flex items-center justify-between gap-2 rounded-xl px-4 py-3.5 mt-1 mb-3 font-semibold text-[15px] active:scale-95 transition"
       style={{ background: T.gradientTeal, color: "#fff", minHeight: 52 }}
     >
       <span>Continue to {target.name}</span>
@@ -16654,11 +17244,219 @@ function computeSyncPatch(key, oldVal, newVal, allCheckboxFields, scopeState) {
   return patch;
 }
 
-function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome }) {
+
+// Evidence behind the pathway, shown inside the Management Pathway section
+// where the decision is actually being made rather than on a separate
+// screen the clinician would have to remember to visit. Collapsed by
+// default. Renders nothing at all for conditions without a reviewed
+// evidence entry, so an empty panel never implies "no evidence exists".
+function EvidencePanel({ conditionId }) {
+  const ev = CONDITION_EVIDENCE[conditionId];
+  const [open, setOpen] = useState(false);
+  if (!ev) return null;
+  return (
+    <div className="mb-3 rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left active:opacity-70"
+        style={{ minHeight: 44 }}
+        aria-expanded={open}
+      >
+        <span className="flex items-center gap-2 text-[13px] font-semibold" style={{ color: T.tealDark }}>
+          <FileText size={16} color={T.tealDark} />
+          Evidence behind this pathway
+        </span>
+        <ChevronDown size={18} color={T.inkSoft} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
+      </button>
+      {open && (
+        <div className="px-3 pb-3" style={{ borderTop: `1px solid ${T.border}` }}>
+          <div className="text-[13px] mt-3 mb-2" style={{ color: T.ink }}>{ev.summary}</div>
+          {ev.points && ev.points.length > 0 && (
+            <ul className="mb-3" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {ev.points.map((p, i) => (
+                <li key={i} className="text-[13px] flex gap-2 mb-1.5" style={{ color: T.inkSoft }}>
+                  <span style={{ color: T.teal }}>{"\u2022"}</span><span>{p}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {ev.links && ev.links.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              {ev.links.map((l, i) => (
+                <a
+                  key={i}
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg px-3 py-2.5 text-[13px] font-medium flex items-center justify-between gap-2 active:scale-95 transition"
+                  style={{ minHeight: 44, background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}`, textDecoration: "none" }}
+                >
+                  <span>{l.label}</span>
+                  <ChevronRight size={16} color={T.tealDark} />
+                </a>
+              ))}
+            </div>
+          )}
+          <div className="text-[12px] mt-3" style={{ color: T.inkSoft }}>
+            Summarised from a structured evidence review (September 2026). Links open a literature search for the cited trial or guideline — verify against the primary source before changing practice.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// Collapsible reference panel. Ordered by how often it is reached for in
+// clinic: recent notes and recent diagnoses (per-patient workflow) above
+// the reference material (evidence, outcome measures) that is consulted
+// occasionally. Slides in from the left over a scrim, matching the app's
+// existing modal treatment.
+function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote }) {
+  const [section, setSection] = useState(null);
+  const recents = (recentIds || []).map((id) => findConditionById(id)).filter(Boolean);
+  const evidenceIds = Object.keys(CONDITION_EVIDENCE);
+  if (!open) return null;
+
+  const Row = ({ id, title, count, children }) => (
+    <div className="mb-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+      <button
+        onClick={() => setSection(section === id ? null : id)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-3 text-left active:opacity-70"
+        style={{ minHeight: 48 }}
+        aria-expanded={section === id}
+      >
+        <span className="font-semibold text-[14px]" style={{ color: T.ink }}>
+          {title}
+          {count != null && <span className="ml-1.5 font-normal" style={{ color: T.inkSoft }}>({count})</span>}
+        </span>
+        <ChevronDown size={18} color={T.inkSoft} style={{ transform: section === id ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
+      </button>
+      {section === id && <div className="px-3 pb-3" style={{ borderTop: `1px solid ${T.border}` }}>{children}</div>}
+    </div>
+  );
+
+  const Empty = ({ children }) => <div className="text-[13px] mt-3" style={{ color: T.inkSoft }}>{children}</div>;
+
+  return (
+    <div className="fixed inset-0 z-50 flex" style={{ background: "rgba(16,30,43,0.5)" }} onClick={onClose}>
+      <div
+        className="h-full w-[86%] max-w-sm flex flex-col"
+        style={{ background: T.bg, boxShadow: "8px 0 28px rgba(16,30,43,0.18)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-2 px-4 py-3 shrink-0" style={{ background: T.tealDark }}>
+          <span className="font-bold text-[15px]" style={{ color: "#fff" }}>Quick reference</span>
+          <button onClick={onClose} aria-label="Close panel" className="p-2 -mr-1 rounded-lg active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+            <X size={20} color="#fff" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-3 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
+          <Row id="notes" title="Recent clinic notes" count={(recentNotes || []).length}>
+            {(recentNotes || []).length === 0 ? (
+              <Empty>Notes you preview or copy during this session appear here, newest first. They are held in memory only and clear when the app is closed.</Empty>
+            ) : (
+              <div className="flex flex-col gap-1.5 mt-3">
+                {recentNotes.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => { onOpenNote(n); onClose(); }}
+                    className="rounded-lg px-3 py-2.5 text-left active:scale-95 transition"
+                    style={{ minHeight: 48, background: T.slateChip, border: `1px solid ${T.border}` }}
+                  >
+                    <div className="text-[13px] font-semibold" style={{ color: T.ink }}>{n.title}</div>
+                    <div className="text-[12px]" style={{ color: T.inkSoft }}>{n.at}{n.kind && n.kind !== "note" ? ` \u00b7 ${n.kind === "physio" ? "physio referral" : "patient summary"}` : ""}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </Row>
+
+          <Row id="recent" title="Recent diagnoses" count={recents.length}>
+            {recents.length === 0 ? (
+              <Empty>Diagnoses you open appear here for quick access, newest first.</Empty>
+            ) : (
+              <div className="flex flex-col gap-1.5 mt-3">
+                {recents.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => { onOpenCondition(c); onClose(); }}
+                    className="rounded-lg px-3 py-2.5 text-left text-[13px] font-medium active:scale-95 transition"
+                    style={{ minHeight: 48, background: T.slateChip, border: `1px solid ${T.border}`, color: T.ink }}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </Row>
+
+          <Row id="evidence" title="Evidence library" count={evidenceIds.length}>
+            <div className="text-[12px] mt-3 mb-2" style={{ color: T.inkSoft }}>
+              The same evidence shown inside each pathway, gathered in one place. Entries with a DOI link directly to the paper; the rest open a literature search for the cited trial or guideline.
+            </div>
+            <div className="flex flex-col gap-2 mt-2">
+              {evidenceIds.map((id) => {
+                const cond = findConditionById(id);
+                const ev = CONDITION_EVIDENCE[id];
+                if (!cond) return null;
+                return (
+                  <div key={id} className="rounded-lg px-3 py-2.5" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+                    <div className="text-[13px] font-semibold mb-1" style={{ color: T.tealDark }}>{cond.name}</div>
+                    <div className="text-[12px] mb-2" style={{ color: T.inkSoft }}>{ev.summary}</div>
+                    <div className="flex flex-col gap-1">
+                      {(ev.links || []).map((l, i) => (
+                        <a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
+                           className="text-[12px] font-medium flex items-start gap-1.5 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 32 }}>
+                          <ChevronRight size={14} color={T.teal} style={{ flexShrink: 0, marginTop: 2 }} />
+                          <span>
+                            {l.label}
+                            {l.doi && <span className="block" style={{ color: T.inkSoft }}>DOI: {l.doi}{l.pmid ? ` \u00b7 PMID: ${l.pmid}` : ""}</span>}
+                          </span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Row>
+
+          <Row id="outcomes" title="Outcome measures" count={OUTCOME_MEASURES.length}>
+            <div className="text-[12px] mt-3 mb-2" style={{ color: T.inkSoft }}>
+              Scores referenced by the templates, with what each is for and where to obtain it.
+            </div>
+            <div className="flex flex-col gap-2">
+              {OUTCOME_MEASURES.map((m) => (
+                <div key={m.abbr} className="rounded-lg px-3 py-2.5" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+                  <div className="text-[13px] font-semibold" style={{ color: T.tealDark }}>{m.abbr}</div>
+                  <div className="text-[12px] font-medium mb-1" style={{ color: T.ink }}>{m.name}</div>
+                  <div className="text-[12px] mb-1" style={{ color: T.inkSoft }}>{m.use}</div>
+                  {m.note && <div className="text-[12px] mb-1" style={{ color: T.amber }}>{m.note}</div>}
+                  <a href={m.url} target="_blank" rel="noopener noreferrer"
+                     className="text-[12px] font-medium flex items-center gap-1 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 32 }}>
+                    Open reference <ChevronRight size={14} color={T.teal} />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </Row>
+        </div>
+
+        <div className="px-4 py-2.5 shrink-0 text-[12px] text-center" style={{ borderTop: `1px solid ${T.border}`, background: T.surface, color: T.inkSoft }}>
+          UpperTrack v{APP_VERSION}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome, onNoteSaved }) {
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
-  const [noteType, setNoteType] = useState("note"); // "note" | "physio"
+  const [noteType, setNoteType] = useState("note"); // "note" | "physio" | "patient"
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -16806,6 +17604,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const generatedNote = useMemo(
     () => {
       if (noteType === "physio") return buildPhysioReferral(condition, state);
+      if (noteType === "patient") return buildPatientSummary(condition, state);
       return hasMultipleActive ? buildCombinedNote(session) : buildNote(condition, state);
     },
     [condition, state, noteType, hasMultipleActive, session]
@@ -16842,6 +17641,17 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
       setCopied(true);
       setCopyError(false);
       setTimeout(() => setCopied(false), 1800);
+      // Copying is the signal the clinician actually used this note, so
+      // that is what gets kept for the session's recent-notes list.
+      if (onNoteSaved) {
+        onNoteSaved({
+          id: `${condition.id}:${noteType}`,
+          title: condition.name,
+          kind: noteType,
+          text: note,
+          at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        });
+      }
     } else {
       setCopied(false);
       setCopyError(true);
@@ -16895,7 +17705,12 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const BRIEF_SECTION_IDS = condition.isGeneralAssessment
     ? ["history", "exam", "imaging", "differential", "pathway", "followup"]
     : ["history", "exam", "imaging", "pathway", "followup"];
-  const [briefMode, setBriefMode] = useState(false);
+  // Brief Encounter is the default: a busy OPD consultation rarely needs
+  // all ten sections, and the reference-heavy ones (typical patient,
+  // differential as a checklist, outcome measures) are the ones most often
+  // scrolled past. "Full template" is one tap away directly above the
+  // section list, so nothing is hidden - only the starting point changes.
+  const [briefMode, setBriefMode] = useState(true);
   const visibleSections = briefMode
     ? condition.sections.filter((s) => BRIEF_SECTION_IDS.includes(s.id))
     : condition.sections;
@@ -16930,7 +17745,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         {state.__derivedFromGeneral && findConditionById(state.__derivedFromGeneral) && (
           <div className="rounded-xl px-3 py-2.5 mb-3 flex items-start gap-2" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
             <CheckCircle2 size={15} color={T.tealDark} style={{ marginTop: 2, flexShrink: 0 }} />
-            <div className="text-[12.5px]" style={{ color: T.tealDark }}>
+            <div className="text-[13px]" style={{ color: T.tealDark }}>
               Details carried over from {findConditionById(state.__derivedFromGeneral).name} — review and adjust as needed.
             </div>
           </div>
@@ -16938,23 +17753,23 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
 
         <div className="flex gap-2 mb-3">
           <button
-            onClick={() => setBriefMode(false)}
-            className="flex-1 rounded-lg py-2 text-[13px] font-semibold active:scale-95"
-            style={{ background: briefMode ? T.slateChip : T.teal, color: briefMode ? T.ink : "#fff" }}
-          >
-            Full template
-          </button>
-          <button
             onClick={() => setBriefMode(true)}
-            className="flex-1 rounded-lg py-2 text-[13px] font-semibold active:scale-95"
-            style={{ background: briefMode ? T.teal : T.slateChip, color: briefMode ? "#fff" : T.ink }}
+            className="flex-1 rounded-lg py-2.5 text-[13px] font-semibold active:scale-95"
+            style={{ background: briefMode ? T.teal : T.slateChip, color: briefMode ? "#fff" : T.ink, minHeight: 44 }}
           >
             Brief encounter
           </button>
+          <button
+            onClick={() => setBriefMode(false)}
+            className="flex-1 rounded-lg py-2.5 text-[13px] font-semibold active:scale-95"
+            style={{ background: briefMode ? T.slateChip : T.teal, color: briefMode ? T.ink : "#fff", minHeight: 44 }}
+          >
+            Full template
+          </button>
         </div>
         {briefMode && (
-          <div className="text-[11.5px] mb-3 px-1" style={{ color: T.inkSoft }}>
-            Showing history, examination, imaging, plan and review. Anything already entered elsewhere is kept and still appears in the note. Red flags remain available from the button above.
+          <div className="text-[12px] mb-3 px-1" style={{ color: T.inkSoft }}>
+            Showing history, examination, imaging,{condition.isGeneralAssessment ? " differential," : ""} plan and review. Anything already entered elsewhere is kept and still appears in the note. Red flags remain available from the button above.
           </div>
         )}
 
@@ -16974,7 +17789,8 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
           >
             {isPerDigitCondition && section.id === "pathway" ? (
               <>
-                <div className="text-[12.5px] mb-3 italic" style={{ color: T.inkSoft }}>
+                <EvidencePanel conditionId={condition.id} />
+                <div className="text-[13px] mb-3 italic" style={{ color: T.inkSoft }}>
                   Pathway suggests next steps for each affected digit independently, based on your answers — clinical judgement remains central.
                 </div>
                 {affectedDigitsList.length === 0 ? (
@@ -17013,7 +17829,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                             patientState={state}
                           />
                         )}
-                        <div className="text-[12.5px] mt-3 mb-2" style={{ color: T.inkSoft }}>Or choose a different plan for this digit</div>
+                        <div className="text-[13px] mt-3 mb-2" style={{ color: T.inkSoft }}>Or choose a different plan for this digit</div>
                         <CheckboxGroup options={PATHWAY_ALT_OPTIONS} selected={digitAlt.options || []} onChange={(v) => setDigitAltOptions(digit, "options", v)} />
                         {(digitAlt.options || []).includes("Other") && (
                           <TextField label="Specify alternative option" value={digitAlt.optionsOther} onChange={(v) => setDigitAltOptions(digit, "optionsOther", v)} />
@@ -17054,7 +17870,8 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               })()
             ) : section.id === "pathway" ? (
               <>
-                <div className="text-[12.5px] mb-3 italic" style={{ color: T.inkSoft }}>
+                <EvidencePanel conditionId={condition.id} />
+                <div className="text-[13px] mb-3 italic" style={{ color: T.inkSoft }}>
                   {isBilateral
                     ? "Pathway suggests next steps for each side independently, based on your answers \u2014 clinical judgement remains central."
                     : "Pathway suggests next steps based on your answers \u2014 clinical judgement remains central."}
@@ -17235,18 +18052,21 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
-              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : "Clinic note"}</span>
+              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : noteType === "patient" ? "Patient summary" : "Clinic note"}</span>
             </div>
-            <div className="flex gap-2 px-4 pt-3">
-              <button onClick={() => setNoteType("note")} className="flex-1 rounded-lg py-2 text-[13px] font-semibold" style={{ background: noteType === "note" ? T.teal : T.slateChip, color: noteType === "note" ? "#fff" : T.ink }}>
+            <div className="flex gap-1.5 px-4 pt-3">
+              <button onClick={() => setNoteType("note")} className="flex-1 rounded-lg px-1 py-2 text-[12px] font-semibold" style={{ background: noteType === "note" ? T.teal : T.slateChip, color: noteType === "note" ? "#fff" : T.ink, minHeight: 44 }}>
                 Clinic note
               </button>
-              <button onClick={() => setNoteType("physio")} className="flex-1 rounded-lg py-2 text-[13px] font-semibold" style={{ background: noteType === "physio" ? T.teal : T.slateChip, color: noteType === "physio" ? "#fff" : T.ink }}>
+              <button onClick={() => setNoteType("physio")} className="flex-1 rounded-lg px-1 py-2 text-[12px] font-semibold" style={{ background: noteType === "physio" ? T.teal : T.slateChip, color: noteType === "physio" ? "#fff" : T.ink, minHeight: 44 }}>
                 Physio referral
+              </button>
+              <button onClick={() => setNoteType("patient")} className="flex-1 rounded-lg px-1 py-2 text-[12px] font-semibold" style={{ background: noteType === "patient" ? T.teal : T.slateChip, color: noteType === "patient" ? "#fff" : T.ink, minHeight: 44 }}>
+                Patient summary
               </button>
             </div>
             {noteType === "note" && hasMultipleActive && (
-              <div className="mx-4 mt-2 rounded-lg px-3 py-2 text-[12.5px] font-medium text-center" style={{ background: T.tealTint, color: T.tealDark }}>
+              <div className="mx-4 mt-2 rounded-lg px-3 py-2 text-[13px] font-medium text-center" style={{ background: T.tealTint, color: T.tealDark }}>
                 Combined note for all {session.order.length - getSupersededGeneralIds(session).size} conditions in this session
               </div>
             )}
@@ -17261,8 +18081,8 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 <div className="rounded-xl px-3 py-2.5 mb-3 flex items-start gap-2" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
                   <AlertTriangle size={15} color={T.amber} style={{ marginTop: 2, flexShrink: 0 }} />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[12.5px] font-semibold" style={{ color: T.amber }}>Manually edited</div>
-                    <div className="text-[11.5px]" style={{ color: T.inkSoft }}>
+                    <div className="text-[13px] font-semibold" style={{ color: T.amber }}>Manually edited</div>
+                    <div className="text-[12px]" style={{ color: T.inkSoft }}>
                       This note no longer updates from the form. Revert to pick up any later changes.
                     </div>
                   </div>
@@ -17298,7 +18118,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 {copied ? "Copied" : "Copy to clipboard"}
               </button>
               {copyError && (
-                <div className="text-[12.5px] text-center" style={{ color: T.red }}>
+                <div className="text-[13px] text-center" style={{ color: T.red }}>
                   Couldn't copy automatically — tap and hold the note above to select and copy it manually.
                 </div>
               )}
@@ -17317,7 +18137,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <AlertTriangle size={20} color={T.amber} />
               <span className="font-bold text-[16px]" style={{ color: T.ink }}>Red flags not yet reviewed</span>
             </div>
-            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>
+            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>
               This note will not record whether red flags were considered. Review them now, or continue and the section will be left out.
             </div>
             <div className="flex flex-col gap-2">
@@ -17344,7 +18164,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
-            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with its history, examination, pathway progress and red flags — and returns to the home screen ready for the next patient. This cannot be undone.</div>
+            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with its history, examination, pathway progress and red flags — and returns to the home screen ready for the next patient. This cannot be undone.</div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmReset(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
               <button onClick={doReset} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.red, color: "#fff" }}>Start new patient</button>
@@ -17559,8 +18379,9 @@ function VisitTypeGate({ onSelect }) {
           </button>
         </div>
         <div className="text-center mt-8">
-          <div className="text-[12.5px] font-medium" style={{ color: T.inkSoft }}>Created by Dr. Muntasir Al-Naamani</div>
-          <div className="text-[12.5px]" style={{ color: T.inkSoft }}>Suggestions: namanimuntasir@gmail.com</div>
+          <div className="text-[13px] font-medium" style={{ color: T.inkSoft }}>Created by Dr. Muntasir Al-Naamani</div>
+          <div className="text-[13px]" style={{ color: T.inkSoft }}>Suggestions: namanimuntasir@gmail.com</div>
+          <div className="text-[12px] mt-2" style={{ color: T.inkSoft }}>Version {APP_VERSION}</div>
         </div>
       </div>
     </div>
@@ -17849,7 +18670,7 @@ function ConditionButton({ condition, active, onSelect, onRemove }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Remove this diagnosis?</div>
-            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>
+            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>
               {condition.name} will be removed from this session, along with anything entered for it. Other diagnoses are kept.
             </div>
             <div className="flex gap-2">
@@ -17872,8 +18693,8 @@ function ConditionButton({ condition, active, onSelect, onRemove }) {
 function EmptySubsection() {
   return (
     <div className="rounded-2xl p-5 text-center" style={{ background: T.surface, border: `1px dashed ${T.borderStrong}` }}>
-      <div className="text-[13.5px] font-medium mb-1" style={{ color: T.ink }}>No templates yet</div>
-      <div className="text-[12.5px]" style={{ color: T.inkSoft }}>Attach a template for this category and it will slot in here automatically.</div>
+      <div className="text-[14px] font-medium mb-1" style={{ color: T.ink }}>No templates yet</div>
+      <div className="text-[13px]" style={{ color: T.inkSoft }}>Attach a template for this category and it will slot in here automatically.</div>
     </div>
   );
 }
@@ -17900,7 +18721,7 @@ function ConditionList({ regionKey, session, onSelect, onBack, onRemove }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-bold text-[15px]" style={{ color: T.tealDark }}>Diagnosis not yet clear?</div>
-              <div className="text-[12.5px] mt-0.5" style={{ color: T.inkSoft }}>
+              <div className="text-[13px] mt-0.5" style={{ color: T.inkSoft }}>
                 Start a general {region.label.toLowerCase()} assessment — a structured screen to narrow the differential, with links straight into the specific template once it does.
               </div>
             </div>
@@ -17987,7 +18808,7 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
       <SubLabel>New plan of treatment</SubLabel>
       {condition.pathway ? (
         <>
-          <div className="text-[12.5px] mb-3 italic" style={{ color: T.inkSoft }}>Pathway suggests next steps based on today's answers — clinical judgement remains central.</div>
+          <div className="text-[13px] mb-3 italic" style={{ color: T.inkSoft }}>Pathway suggests next steps based on today's answers — clinical judgement remains central.</div>
           <PathwayFlow schema={condition.pathway} answers={fuState.pathwayAnswers || {}} onAnswer={(q, a) => set("pathwayAnswers", { ...(fuState.pathwayAnswers || {}), [q]: a })} priorTreatmentGiven={(fuState.treatmentOffered || []).length > 0} />
           {pathwayTrailInvolvesSurgery(condition.pathway, fuState.pathwayAnswers || {}) && (
             <>
@@ -18012,7 +18833,7 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
         <div className="text-[13px]" style={{ color: T.inkSoft }}>No structured pathway available for this condition.</div>
       )}
 
-      <div className="text-[12.5px] mt-4 mb-2" style={{ color: T.inkSoft }}>Or choose a different plan:</div>
+      <div className="text-[13px] mt-4 mb-2" style={{ color: T.inkSoft }}>Or choose a different plan:</div>
       <CheckboxGroup options={FOLLOWUP_PLAN_OPTIONS} selected={fuState.planOptions || []} onChange={(v) => set("planOptions", v)} />
       {(fuState.planOptions || []).includes("Other") && (
         <TextField label="Specify plan" value={fuState.planOptionsOther} onChange={(v) => set("planOptionsOther", v)} />
@@ -18043,7 +18864,8 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
 // Root screen for the Follow-up Visit flow: one FollowupConditionBlock per
 // diagnosis selected in FollowupConditionPicker, plus a note preview/copy
 // panel at the bottom matching the same UX as the initial-encounter note.
-function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoHome }) {
+function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoHome, onNewPatient, onNoteSaved }) {
+  const [confirmReset, setConfirmReset] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -18057,6 +18879,17 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
       setCopied(true);
       setCopyError(false);
       setTimeout(() => setCopied(false), 1800);
+      // Copying is the signal the clinician actually used this note, so
+      // that is what gets kept for the session's recent-notes list.
+      if (onNoteSaved) {
+        onNoteSaved({
+          id: "followup-visit",
+          title: "Follow-up visit",
+          kind: "note",
+          text: note,
+          at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        });
+      }
     } else {
       setCopied(false);
       setCopyError(true);
@@ -18067,7 +18900,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
   return (
     <div className="min-h-screen pb-28" style={{ background: T.bg }}>
       <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[13.5px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal }}>
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal }}>
           <ArrowLeft size={16} /> Change diagnoses
         </button>
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Follow-up Visit</div>
@@ -18093,14 +18926,32 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
 
       <div className="fixed bottom-0 left-0 right-0 z-30 px-3 py-3" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
         <div className="max-w-2xl lg:max-w-4xl mx-auto flex gap-2">
-          <button onClick={onGoHome} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-            Home
+          <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
+            <RotateCcw size={17} /> New patient
           </button>
+          {onGoHome && (
+            <button onClick={onGoHome} aria-label="Home" className="flex items-center justify-center rounded-xl active:scale-95" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 48, width: 48, flexShrink: 0 }}>
+              <Home size={19} color={T.ink} />
+            </button>
+          )}
           <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
             Preview follow-up note
           </button>
         </div>
       </div>
+
+      {confirmReset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
+            <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
+            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with everything recorded for it — and returns to the home screen ready for the next patient. This cannot be undone.</div>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmReset(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
+              <button onClick={() => { setConfirmReset(false); if (onNewPatient) onNewPatient(); }} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.red, color: "#fff" }}>Start new patient</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
@@ -18123,7 +18974,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
                 {copied ? "Copied" : "Copy to clipboard"}
               </button>
               {copyError && (
-                <div className="text-[12.5px] text-center" style={{ color: T.red }}>
+                <div className="text-[13px] text-center" style={{ color: T.red }}>
                   Couldn't copy automatically — tap and hold the note above to select and copy it manually.
                 </div>
               )}
@@ -18174,7 +19025,7 @@ function PostopConditionBlock({ index, condition, poState, onChange, defaultOpen
       <SubLabel>Procedure</SubLabel>
       <TextField label="Procedure performed" value={poState.procedureName} onChange={(v) => set("procedureName", v)} placeholder="e.g. Open rotator cuff repair" />
       <DateField label="Date of surgery" value={poState.surgeryDate} onChange={(v) => set("surgeryDate", v)} />
-      {sinceText && <div className="text-[12.5px] mt-1 mb-1" style={{ color: T.inkSoft }}>{sinceText} since surgery</div>}
+      {sinceText && <div className="text-[13px] mt-1 mb-1" style={{ color: T.inkSoft }}>{sinceText} since surgery</div>}
 
       <SubLabel>Reason for review</SubLabel>
       <CheckboxGroup options={POSTOP_REASON_OPTIONS} selected={poState.reason || []} onChange={(v) => set("reason", v)} />
@@ -18198,7 +19049,7 @@ function PostopConditionBlock({ index, condition, poState, onChange, defaultOpen
       )}
 
       <SubLabel>Follow-up plan</SubLabel>
-      <div className="text-[12.5px] mb-3" style={{ color: T.inkSoft }}>A post-operative plan is not the same decision as a first-presentation Management Pathway — select what applies now that surgery has already been done.</div>
+      <div className="text-[13px] mb-3" style={{ color: T.inkSoft }}>A post-operative plan is not the same decision as a first-presentation Management Pathway — select what applies now that surgery has already been done.</div>
       <CheckboxGroup options={POSTOP_PLAN_OPTIONS} selected={poState.planOptions || []} onChange={(v) => set("planOptions", v)} />
       {(poState.planOptions || []).includes("Other") && (
         <TextField label="Specify plan" value={poState.planOptionsOther} onChange={(v) => set("planOptionsOther", v)} />
@@ -18230,7 +19081,8 @@ function PostopConditionBlock({ index, condition, poState, onChange, defaultOpen
 // plus a note preview), reusing that same UX intentionally so the two
 // follow-up-style flows feel consistent to a clinician switching between
 // them.
-function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoHome }) {
+function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoHome, onNewPatient, onNoteSaved }) {
+  const [confirmReset, setConfirmReset] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -18244,6 +19096,17 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
       setCopied(true);
       setCopyError(false);
       setTimeout(() => setCopied(false), 1800);
+      // Copying is the signal the clinician actually used this note, so
+      // that is what gets kept for the session's recent-notes list.
+      if (onNoteSaved) {
+        onNoteSaved({
+          id: "postop-visit",
+          title: "Post-operative follow-up",
+          kind: "note",
+          text: note,
+          at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        });
+      }
     } else {
       setCopied(false);
       setCopyError(true);
@@ -18254,7 +19117,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
   return (
     <div className="min-h-screen pb-28" style={{ background: T.bg }}>
       <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[13.5px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal }}>
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal }}>
           <ArrowLeft size={16} /> Change diagnoses
         </button>
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Post-operative Follow-up</div>
@@ -18279,14 +19142,32 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 
       <div className="fixed bottom-0 left-0 right-0 z-30 px-3 py-3" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
         <div className="max-w-2xl lg:max-w-4xl mx-auto flex gap-2">
-          <button onClick={onGoHome} className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-            Home
+          <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
+            <RotateCcw size={17} /> New patient
           </button>
+          {onGoHome && (
+            <button onClick={onGoHome} aria-label="Home" className="flex items-center justify-center rounded-xl active:scale-95" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 48, width: 48, flexShrink: 0 }}>
+              <Home size={19} color={T.ink} />
+            </button>
+          )}
           <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
             Preview post-op note
           </button>
         </div>
       </div>
+
+      {confirmReset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
+            <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
+            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with everything recorded for it — and returns to the home screen ready for the next patient. This cannot be undone.</div>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmReset(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
+              <button onClick={() => { setConfirmReset(false); if (onNewPatient) onNewPatient(); }} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.red, color: "#fff" }}>Start new patient</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
@@ -18309,7 +19190,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
                 {copied ? "Copied" : "Copy to clipboard"}
               </button>
               {copyError && (
-                <div className="text-[12.5px] text-center" style={{ color: T.red }}>
+                <div className="text-[13px] text-center" style={{ color: T.red }}>
                   Couldn't copy automatically — tap and hold the note above to select and copy it manually.
                 </div>
               )}
@@ -18324,7 +19205,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 /* Persistent strip shown above every screen once a patient session has one
    or more active conditions: quick-switch tabs, one-tap access to the
    combined note across all active diagnoses, and ending the session. */
-function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, onGoHome, onRemoveCondition }) {
+function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, onGoHome, onRemoveCondition, onOpenPanel }) {
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(null);
   const items = session.order.map((id) => findConditionById(id)).filter(Boolean);
@@ -18333,13 +19214,19 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
       <button onClick={onGoHome} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Go to home">
         <Home size={16} color="#fff" />
       </button>
-      <button onClick={onOpenSearch} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="Search templates">
+      <button onClick={onOpenSearch} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="Search templates">
         <Search size={14} color="#fff" />
         <span>Search</span>
       </button>
+      {onOpenPanel && (
+        <button onClick={onOpenPanel} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="Open quick reference panel">
+          <FileText size={14} color="#fff" />
+          <span>Reference</span>
+        </button>
+      )}
       {items.length > 0 && (
         <>
-          <span className="text-[10.5px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "rgba(255,255,255,0.75)" }}>Session</span>
+          <span className="text-[12px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "rgba(255,255,255,0.75)" }}>Session</span>
           {items.map((c) => {
             const active = c.id === activeConditionId;
             return (
@@ -18350,7 +19237,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
               >
                 <button
                   onClick={() => onSwitch(c)}
-                  className="text-[12.5px] font-medium active:scale-95 py-0.5"
+                  className="text-[13px] font-medium active:scale-95 py-0.5"
                   style={{ color: active ? T.tealDark : "#fff" }}
                 >
                   {c.name.length > 24 ? c.name.slice(0, 22) + "\u2026" : c.name}
@@ -18367,7 +19254,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
               </span>
             );
           })}
-          <button onClick={onViewCombinedNote} className="shrink-0 ml-1 rounded-full px-3 py-1.5 text-[12.5px] font-semibold active:scale-95 transition" style={{ background: "#fff", color: T.tealDark }}>
+          <button onClick={onViewCombinedNote} className="shrink-0 ml-1 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "#fff", color: T.tealDark }}>
             Combined note
           </button>
           <button onClick={() => setConfirmEnd(true)} className="shrink-0 rounded-full p-1.5 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="End session">
@@ -18380,7 +19267,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Remove this diagnosis?</div>
-            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>
+            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>
               {confirmRemove.name} will be removed from this session, along with anything entered for it. Other diagnoses are kept.
             </div>
             <div className="flex gap-2">
@@ -18401,7 +19288,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>End patient session?</div>
-            <div className="text-[13.5px] mb-4" style={{ color: T.inkSoft }}>This clears every active condition and all entries for this session. It cannot be undone.</div>
+            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears every active condition and all entries for this session. It cannot be undone.</div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmEnd(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
               <button
@@ -18472,7 +19359,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
       </div>
       {toggleMode && (
         <div className="px-3 pt-3">
-          <div className="max-w-2xl lg:max-w-4xl mx-auto rounded-xl px-3 py-2.5 text-[12.5px]" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}` }}>
+          <div className="max-w-2xl lg:max-w-4xl mx-auto rounded-xl px-3 py-2.5 text-[13px]" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}` }}>
             Tap to add or remove from this visit — {selectedIds.length ? `${selectedIds.length} selected so far.` : "nothing selected yet."} Close this search to continue.
           </div>
         </div>
@@ -18606,7 +19493,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
           <div className="text-[12px] truncate lg:hidden" style={{ color: T.inkSoft }}>
             {showRegionPicker ? "Tap the region being reviewed" : `${REGIONS[regionKey].label} \u2014 select the diagnosis (or diagnoses)`}
           </div>
-          <div className="text-[13.5px] hidden lg:block" style={{ color: T.inkSoft }}>Tap a region, then select the diagnosis (or diagnoses) being reviewed</div>
+          <div className="text-[14px] hidden lg:block" style={{ color: T.inkSoft }}>Tap a region, then select the diagnosis (or diagnoses) being reviewed</div>
         </div>
       </div>
 
@@ -18620,10 +19507,10 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
             >
               <ArrowLeft size={17} color={T.tealDark} />
               <span className="flex-1 text-left min-w-0">
-                <span className="block text-[13.5px] font-bold truncate" style={{ color: T.tealDark }}>
+                <span className="block text-[14px] font-bold truncate" style={{ color: T.tealDark }}>
                   Choose a different region
                 </span>
-                <span className="block text-[11.5px] truncate" style={{ color: T.inkSoft }}>
+                <span className="block text-[12px] truncate" style={{ color: T.inkSoft }}>
                   Showing {REGIONS[regionKey].label}
                   {selectedIds.length ? ` \u00b7 ${selectedIds.length} selected so far (kept)` : ""}
                 </span>
@@ -18658,7 +19545,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
           <div className="flex-1 min-h-0" style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
             {showRegionPicker ? (
               <div className="h-full flex items-center justify-center min-h-[240px]">
-                <div className="text-[14.5px] text-center max-w-xs" style={{ color: T.inkSoft }}>Tap a region on the left to see its diagnoses.</div>
+                <div className="text-[15px] text-center max-w-xs" style={{ color: T.inkSoft }}>Tap a region on the left to see its diagnoses.</div>
               </div>
             ) : resultsList}
           </div>
@@ -18879,10 +19766,29 @@ export default function App() {
     setFollowupSelectedIds((ids) => (ids.includes(conditionId) ? ids.filter((id) => id !== conditionId) : [...ids, conditionId]));
   }, []);
 
+  // Recently used diagnoses, most-recent-first. A caseload concentrates on
+  // a handful of conditions, so surfacing them skips region-tap -> scroll
+  // -> condition-tap for most patients. Held in memory only, consistent
+  // with the app's no-storage design: it survives "New patient" (a clinic
+  // list is one app session) but resets if the app itself is reloaded.
+  const [recentIds, setRecentIds] = useState([]);
+  const [panelOpen, setPanelOpen] = useState(false);
+  // Notes previewed or copied this session, newest first. In memory only,
+  // like recentIds - a clinic list is one app session.
+  const [recentNotes, setRecentNotes] = useState([]);
+  const [viewNote, setViewNote] = useState(null);
+  const noteRecent2 = useCallback((entry) => {
+    setRecentNotes((prev) => [entry, ...prev.filter((n) => n.id !== entry.id)].slice(0, 12));
+  }, []);
+  const noteRecent = useCallback((conditionId) => {
+    setRecentIds((prev) => [conditionId, ...prev.filter((id) => id !== conditionId)].slice(0, 8));
+  }, []);
+
   const openCondition = useCallback((condition) => {
     setSession((s) => addConditionToSession(s, condition));
+    noteRecent(condition.id);
     setScreen({ view: "template", regionKey: condition.region, condition });
-  }, []);
+  }, [noteRecent]);
 
   // Context-aware: from most screens, picking a search result opens that
   // template directly (the original behaviour). But from inside the
@@ -18987,6 +19893,7 @@ export default function App() {
         onViewCombinedNote={() => setCombinedNoteOpen(true)}
         onEndSession={endSession}
         onOpenSearch={() => setSearchOpen(true)}
+        onOpenPanel={() => setPanelOpen(true)}
         onGoHome={goHome}
         onRemoveCondition={removeCondition}
       />
@@ -19030,6 +19937,8 @@ export default function App() {
           onFieldChange={updateConditionState}
           onBack={() => window.history.back()}
           onGoHome={goHome}
+          onNewPatient={endSession}
+          onNoteSaved={noteRecent2}
         />
       )}
 
@@ -19040,7 +19949,46 @@ export default function App() {
           onFieldChange={updateConditionState}
           onBack={() => window.history.back()}
           onGoHome={goHome}
+          onNewPatient={endSession}
+          onNoteSaved={noteRecent2}
         />
+      )}
+
+      <SidePanel
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        recentIds={recentIds}
+        recentNotes={recentNotes}
+        onOpenCondition={openCondition}
+        onOpenNote={(n) => setViewNote(n)}
+      />
+
+      {viewNote && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setViewNote(null)}>
+          <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{viewNote.title}</span>
+              <button onClick={() => setViewNote(null)} aria-label="Close" className="p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+                <X size={20} color={T.inkSoft} />
+              </button>
+            </div>
+            <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto" }}>
+              <pre className="text-[13px] whitespace-pre-wrap" style={{ color: T.ink, fontFamily: "ui-monospace, monospace" }}>{viewNote.text}</pre>
+            </div>
+            <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
+              <button
+                onClick={() => { try { navigator.clipboard.writeText(viewNote.text); } catch (e) { /* user can select manually */ } }}
+                className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
+                style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
+              >
+                Copy to clipboard
+              </button>
+              <div className="text-[12px] text-center" style={{ color: T.inkSoft }}>
+                Saved this session only — this is a snapshot from when it was generated, not a live copy.
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {screen.view === "regions" && <RegionPicker onSelect={(regionKey) => setScreen({ view: "conditions", regionKey })} onBack={goHome} />}
@@ -19060,6 +20008,7 @@ export default function App() {
           condition={screen.condition}
           state={session.statesByConditionId[screen.condition.id] || {}}
           onFieldChange={(patch) => updateConditionState(screen.condition.id, patch)}
+          onNoteSaved={noteRecent2}
           session={session}
           onOpenCondition={openCondition}
           onResetCondition={endSession}
@@ -19089,7 +20038,7 @@ export default function App() {
                 {combinedCopied ? "Copied" : "Copy to clipboard"}
               </button>
               {combinedCopyError && (
-                <div className="text-[12.5px] text-center mt-2" style={{ color: T.red }}>
+                <div className="text-[13px] text-center mt-2" style={{ color: T.red }}>
                   Couldn't copy automatically — tap and hold the note above to select and copy it manually.
                 </div>
               )}
