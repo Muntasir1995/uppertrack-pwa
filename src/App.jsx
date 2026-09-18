@@ -12618,6 +12618,12 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // fixes and content edits, MAJOR when a new capability lands.
 const APP_VERSION = "5.0.0";
 
+// Height of the persistent SessionBar at the top of every screen. Any
+// other sticky header has to sit BELOW it rather than at top:0, otherwise
+// both stick to the same line and the lower-z one slides underneath and is
+// clipped. SessionBar is py-2 (16px) around a 32px control row.
+const TOPBAR_H = 48;
+
 // Outcome measures referenced by the templates, with what each is for and
 // where to obtain it. QuickDASH and DASH are included as references only -
 // the scoring engine is deliberately not built into the app, since the
@@ -17751,7 +17757,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
 
   return (
     <div className="min-h-screen pb-32" style={{ background: T.bg }}>
-      <div className="sticky z-30" style={{ top: 48, background: T.surface, boxShadow: "0 1px 3px rgba(16,30,43,0.04)" }}>
+      <div className="sticky z-30" style={{ top: TOPBAR_H, background: T.surface, boxShadow: "0 1px 3px rgba(16,30,43,0.04)" }}>
         <div className="flex items-center gap-2 px-3 py-3">
           <button onClick={onBack} className="p-2 -ml-1 active:opacity-60"><ArrowLeft size={22} color={T.ink} /></button>
           <div className="flex-1 min-w-0">
@@ -18739,7 +18745,7 @@ function ConditionList({ regionKey, session, onSelect, onBack, onRemove }) {
       {/* Sticky so the way back is always reachable without scrolling to
           the top of a long condition list, and styled as a filled control
           rather than plain text so it reads as a button at a glance. */}
-      <div className="sticky top-0 z-30 px-4 pt-3 pb-3" style={{ background: T.bg, borderBottom: `1px solid ${T.border}` }}>
+      <div className="sticky z-30 px-4 pt-3 pb-3" style={{ top: TOPBAR_H, background: T.bg, borderBottom: `1px solid ${T.border}` }}>
         <div className="max-w-2xl lg:max-w-4xl mx-auto flex items-center gap-3">
           <button onClick={onBack} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 active:scale-95 transition" style={{ background: T.slateChip, border: `1px solid ${T.borderStrong}`, color: T.ink, minHeight: 44 }}>
             <ArrowLeft size={17} /><span className="text-[13px] font-semibold">All regions</span>
