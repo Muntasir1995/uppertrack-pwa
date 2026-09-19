@@ -15964,59 +15964,6 @@ const PHYSIO_PRECAUTIONS = [
 // automatically rather than depending on the clinician remembering to tick
 // them, since those are exactly the things that matter most to a therapist
 // starting treatment.
-// A plain-language summary for the patient to take away, built from data
-// already captured during the consultation - no extra clinician effort.
-// Deliberately NOT a copy of the clinical note: no examination findings,
-// no grading scales, no abbreviations. The red flags become "when to seek
-// help sooner", which is the most clinically useful thing a patient can
-// leave with.
-function buildPatientSummary(condition, state) {
-  const lines = ["YOUR VISIT SUMMARY", ""];
-
-  const side = sideWord(state);
-  lines.push("WHAT WE THINK IS GOING ON");
-  lines.push(side ? `${condition.name}, affecting your ${side.toLowerCase()} side.` : `${condition.name}.`);
-  lines.push("");
-
-  const mgmt = buildManagementPlan(condition, state);
-  if (mgmt) {
-    lines.push("THE PLAN");
-    lines.push(mgmt);
-    lines.push("");
-  }
-
-  const review = buildReviewPlan(condition, state);
-  if (review) {
-    lines.push("NEXT APPOINTMENT");
-    lines.push(review);
-    lines.push("");
-  }
-
-  // Red flags the clinician recorded as present are the patient's own
-  // safety-netting advice, phrased as things to act on rather than as a
-  // checklist of findings.
-  const urgent = getPresentUrgentFlags(condition, state);
-  if (urgent.length) {
-    lines.push("IMPORTANT \u2014 PLEASE READ");
-    lines.push("Your doctor has noted the following needs prompt attention:");
-    urgent.forEach((f) => lines.push(`\u2022 ${f.text}`));
-    lines.push("");
-  }
-
-  lines.push("WHEN TO SEEK HELP SOONER");
-  lines.push("Contact the clinic or seek urgent medical care if you develop:");
-  lines.push("\u2022 Severe or rapidly worsening pain");
-  lines.push("\u2022 New numbness, weakness, or loss of movement");
-  lines.push("\u2022 The limb becoming cold, pale, or discoloured");
-  lines.push("\u2022 Fever, redness, swelling, or spreading warmth");
-  lines.push("\u2022 Anything that worries you and is getting worse rather than better");
-  lines.push("");
-
-  lines.push("---");
-  lines.push("This summary is for your information and does not replace the advice given to you in clinic. Please bring it to your next appointment.");
-  return lines.join("\n");
-}
-
 function buildPhysioReferral(condition, state) {
   const ref = state.physioReferral || {};
   const lines = ["PHYSIOTHERAPY REFERRAL", ""];
@@ -16039,27 +15986,9 @@ function buildPhysioReferral(condition, state) {
   lines.push(impression || condition.name);
   lines.push("");
 
-  const history = buildHistory(condition, state);
-  if (history) {
-    lines.push("CLINICAL SUMMARY");
-    lines.push(history);
-    lines.push("");
-  }
-
-  const examination = buildExamination(condition, state);
-  if (examination) {
-    lines.push("EXAMINATION FINDINGS AT REFERRAL");
-    lines.push(examination);
-    lines.push("");
-  }
-
-  const imaging = buildImaging(condition, state);
-  if (imaging) {
-    lines.push("IMAGING");
-    lines.push(imaging);
-    lines.push("");
-  }
-
+  // Clinical summary, examination findings and imaging are deliberately
+  // omitted: the referral carries the diagnosis, the reason for referral,
+  // precautions and the onward plan, which is what the therapist acts on.
   const goals = [...(ref.goals || [])];
   if (ref.goalsOther && ref.goalsOther.trim()) goals.push(ref.goalsOther.trim());
   lines.push("REASON FOR REFERRAL");
@@ -17323,6 +17252,7 @@ function EvidencePanel({ conditionId }) {
 function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote }) {
   const [section, setSection] = useState(null);
   const [evQuery, setEvQuery] = useState("");
+  const [openEvRegion, setOpenEvRegion] = useState(null);
   const recents = (recentIds || []).map((id) => findConditionById(id)).filter(Boolean);
   const evidenceIds = Object.keys(CONDITION_EVIDENCE);
 
@@ -17435,31 +17365,52 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
             {evidenceByRegion.length === 0 ? (
               <Empty>No matches for that search.</Empty>
             ) : (
-              evidenceByRegion.map(({ regionKey, label, entries }) => (
-                <div key={regionKey} className="mb-3">
-                  <div className="text-[12px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: T.tealDark }}>{label}</div>
-                  <div className="flex flex-col gap-2">
-                    {entries.map(({ id, cond, ev }) => (
-                      <div key={id} className="rounded-lg px-3 py-2.5" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
-                        <div className="text-[13px] font-semibold mb-1" style={{ color: T.ink }}>{cond.name}</div>
-                        <div className="text-[12px] mb-2" style={{ color: T.inkSoft }}>{ev.summary}</div>
-                        <div className="flex flex-col gap-1">
-                          {(ev.links || []).map((l, i) => (
-                            <a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
-                               className="text-[12px] font-medium flex items-start gap-1.5 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 32 }}>
-                              <ChevronRight size={14} color={T.teal} style={{ flexShrink: 0, marginTop: 2 }} />
-                              <span>
-                                {l.label}
-                                {l.doi && <span className="block" style={{ color: T.inkSoft }}>DOI: {l.doi}{l.pmid ? ` \u00b7 PMID: ${l.pmid}` : ""}</span>}
-                              </span>
-                            </a>
+              <div className="flex flex-col gap-1.5">
+                {evidenceByRegion.map(({ regionKey, label, entries }) => {
+                  // While searching, regions with matches open automatically -
+                  // otherwise results would be hidden behind a collapsed
+                  // heading and the search would look broken.
+                  const isOpen = evQuery.trim() ? true : openEvRegion === regionKey;
+                  return (
+                    <div key={regionKey} className="rounded-lg overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+                      <button
+                        onClick={() => setOpenEvRegion(isOpen && !evQuery.trim() ? null : regionKey)}
+                        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left active:opacity-70"
+                        style={{ minHeight: 44 }}
+                        aria-expanded={isOpen}
+                      >
+                        <span className="text-[13px] font-semibold" style={{ color: T.tealDark }}>
+                          {label}
+                          <span className="ml-1.5 font-normal" style={{ color: T.inkSoft }}>({entries.length})</span>
+                        </span>
+                        <ChevronDown size={16} color={T.inkSoft} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
+                      </button>
+                      {isOpen && (
+                        <div className="px-3 pb-3 pt-1 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}`, background: T.bg }}>
+                          {entries.map(({ id, cond, ev }) => (
+                            <div key={id} className="rounded-lg px-3 py-2.5 mt-2" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+                              <div className="text-[13px] font-semibold mb-1" style={{ color: T.ink }}>{cond.name}</div>
+                              <div className="text-[12px] mb-2" style={{ color: T.inkSoft }}>{ev.summary}</div>
+                              <div className="flex flex-col gap-1">
+                                {(ev.links || []).map((l, i) => (
+                                  <a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
+                                     className="text-[12px] font-medium flex items-start gap-1.5 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 32 }}>
+                                    <ChevronRight size={14} color={T.teal} style={{ flexShrink: 0, marginTop: 2 }} />
+                                    <span>
+                                      {l.label}
+                                      {l.doi && <span className="block" style={{ color: T.inkSoft }}>DOI: {l.doi}{l.pmid ? ` \u00b7 PMID: ${l.pmid}` : ""}</span>}
+                                    </span>
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
                           ))}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </Row>
 
@@ -17493,7 +17444,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
-  const [noteType, setNoteType] = useState("note"); // "note" | "physio" | "patient"
+  const [noteType, setNoteType] = useState("note"); // "note" | "physio"
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -17641,7 +17592,6 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const generatedNote = useMemo(
     () => {
       if (noteType === "physio") return buildPhysioReferral(condition, state);
-      if (noteType === "patient") return buildPatientSummary(condition, state);
       return hasMultipleActive ? buildCombinedNote(session) : buildNote(condition, state);
     },
     [condition, state, noteType, hasMultipleActive, session]
@@ -18089,17 +18039,14 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
-              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : noteType === "patient" ? "Patient summary" : "Clinic note"}</span>
+              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : "Clinic note"}</span>
             </div>
-            <div className="flex gap-1.5 px-4 pt-3">
-              <button onClick={() => setNoteType("note")} className="flex-1 rounded-lg px-1 py-2 text-[12px] font-semibold" style={{ background: noteType === "note" ? T.teal : T.slateChip, color: noteType === "note" ? "#fff" : T.ink, minHeight: 44 }}>
+            <div className="flex gap-2 px-4 pt-3">
+              <button onClick={() => setNoteType("note")} className="flex-1 rounded-lg px-2 py-2 text-[13px] font-semibold" style={{ background: noteType === "note" ? T.teal : T.slateChip, color: noteType === "note" ? "#fff" : T.ink, minHeight: 44 }}>
                 Clinic note
               </button>
-              <button onClick={() => setNoteType("physio")} className="flex-1 rounded-lg px-1 py-2 text-[12px] font-semibold" style={{ background: noteType === "physio" ? T.teal : T.slateChip, color: noteType === "physio" ? "#fff" : T.ink, minHeight: 44 }}>
+              <button onClick={() => setNoteType("physio")} className="flex-1 rounded-lg px-2 py-2 text-[13px] font-semibold" style={{ background: noteType === "physio" ? T.teal : T.slateChip, color: noteType === "physio" ? "#fff" : T.ink, minHeight: 44 }}>
                 Physio referral
-              </button>
-              <button onClick={() => setNoteType("patient")} className="flex-1 rounded-lg px-1 py-2 text-[12px] font-semibold" style={{ background: noteType === "patient" ? T.teal : T.slateChip, color: noteType === "patient" ? "#fff" : T.ink, minHeight: 44 }}>
-                Patient summary
               </button>
             </div>
             {noteType === "note" && hasMultipleActive && (
