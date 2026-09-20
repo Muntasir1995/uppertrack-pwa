@@ -18404,12 +18404,17 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
   // Contiguous horizontal hit zones, so there are no dead gaps between
   // regions - a tap anywhere in a band's vertical slice selects it, which
   // is far more forgiving than requiring a hit on the muscle itself.
+  // `y`/`h` define the invisible full-width tap target for each region.
+  // `bar` is the geometry of that region's visible coloured label, which is
+  // what the active-region outline traces - the two are different shapes,
+  // and outlining the tap target instead of the label was what made the
+  // highlight look misaligned.
   const zones = [
-    { key: "shoulder", y: 0, h: 215, label: "Shoulder" },
-    { key: "elbow", y: 215, h: 125, label: "Elbow" },
-    { key: "wrist", y: 340, h: 105, label: "Wrist" },
-    { key: "hand", y: 445, h: 105, label: "Hand" },
-    { key: "peripheralNerve", y: 550, h: 60, label: "Peripheral nerve" },
+    { key: "shoulder", y: 0, h: 215, label: "Shoulder", bar: { x: 118, y: 52, w: 230, h: 112 } },
+    { key: "elbow", y: 215, h: 125, label: "Elbow", bar: { x: 0, y: 238, w: 228, h: 88 } },
+    { key: "wrist", y: 340, h: 105, label: "Wrist", bar: { x: 0, y: 356, w: 206, h: 80 } },
+    { key: "hand", y: 445, h: 105, label: "Hand", bar: { x: 0, y: 456, w: 188, h: 84 } },
+    { key: "peripheralNerve", y: 550, h: 60, label: "Peripheral nerve", bar: { x: 0, y: 556, w: 348, h: 46 } },
   ];
   const n = (k) => (counts && counts[k] != null ? counts[k] : 0);
   return (
@@ -18578,19 +18583,24 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
       <text x="286" y="584" fontSize="9" fill="#5A4B80">ulnar</text>
       <text x="286" y="598" fontSize="9" fill="#5A4B80">radial</text>
 
-      {activeRegion && zones.find((z) => z.key === activeRegion) && (
-        <rect
-          x="3"
-          y={zones.find((z) => z.key === activeRegion).y + 3}
-          width="342"
-          height={zones.find((z) => z.key === activeRegion).h - 6}
-          fill="none"
-          stroke={T.teal}
-          strokeWidth="1.5"
-          strokeOpacity="0.55"
-          rx="9"
-        />
-      )}
+      {activeRegion && zones.find((z) => z.key === activeRegion)?.bar && (() => {
+        const b = zones.find((z) => z.key === activeRegion).bar;
+        // Inset by 1 so the stroke sits just inside the label's own edge
+        // rather than straddling it, and matched to the label's rx.
+        return (
+          <rect
+            x={b.x + 1}
+            y={b.y + 1}
+            width={b.w - 2}
+            height={b.h - 2}
+            fill="none"
+            stroke={T.teal}
+            strokeWidth="1.5"
+            strokeOpacity="0.6"
+            rx="6"
+          />
+        );
+      })()}
 
       {zones.map((z) => (
         <rect
@@ -19250,7 +19260,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 /* Persistent strip shown above every screen once a patient session has one
    or more active conditions: quick-switch tabs, one-tap access to the
    combined note across all active diagnoses, and ending the session. */
-function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, onGoHome, onRemoveCondition, onOpenPanel }) {
+function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, onGoHome, onRemoveCondition, onOpenPanel, noteCount = 0 }) {
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(null);
   const items = session.order.map((id) => findConditionById(id)).filter(Boolean);
@@ -19260,8 +19270,26 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
         <Home size={16} color="#fff" />
       </button>
       {onOpenPanel && (
-        <button onClick={onOpenPanel} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Open reference panel">
+        <button
+          onClick={onOpenPanel}
+          className="shrink-0 relative flex items-center justify-center rounded-full p-2 active:scale-95 transition"
+          style={{ background: "rgba(255,255,255,0.16)" }}
+          aria-label={noteCount ? `Open reference panel, ${noteCount} saved ${noteCount === 1 ? "note" : "notes"}` : "Open reference panel"}
+        >
           <FileText size={16} color="#fff" />
+          {noteCount > 0 && (
+            <span
+              className="absolute flex items-center justify-center rounded-full text-[10px] font-bold"
+              style={{
+                top: -2, right: -2, minWidth: 16, height: 16, padding: "0 4px",
+                background: T.amber, color: "#fff",
+                border: `1.5px solid ${T.tealDark}`,
+                lineHeight: 1,
+              }}
+            >
+              {noteCount > 9 ? "9+" : noteCount}
+            </span>
+          )}
         </button>
       )}
       <button onClick={onOpenSearch} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="Search templates">
@@ -19386,7 +19414,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: T.bg }}>
       <div className="flex items-center gap-2 px-3 py-3 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button onClick={onClose} className="p-2 -ml-1 active:opacity-60"><ArrowLeft size={22} color={T.ink} /></button>
-        <div className="flex-1 flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
+        <div className="ut-searchbar flex-1 flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
           <Search size={17} color={T.inkSoft} />
           <input
             autoFocus
@@ -19574,7 +19602,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
       <div className="px-3 pt-3 pb-28 lg:hidden" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div className="max-w-2xl mx-auto">
           {showRegionPicker ? (
-            <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[400px] md:max-w-[560px]" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+            <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[400px] md:max-w-[560px]">
               <BodyMap onSelect={setRegionKey} counts={counts} uid="fpm" />
             </div>
           ) : resultsList}
@@ -19587,7 +19615,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
           the map just to browse diagnoses. */}
       <div className="hidden lg:flex gap-8 px-6 pt-5 pb-8" style={{ flex: "1 1 0%", minHeight: 0 }}>
         <div className="w-[400px] xl:w-[440px] shrink-0" style={{ overflowY: "auto" }}>
-          <div className="rounded-2xl overflow-hidden" style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+          <div className="rounded-2xl overflow-hidden">
             <BodyMap onSelect={setRegionKey} counts={counts} activeRegion={regionKey} uid="fpd" />
           </div>
         </div>
@@ -19849,6 +19877,13 @@ const DESIGN_SYSTEM_CSS = `
   input:focus, textarea:focus {
     border-color: rgba(14,124,134,0.35) !important;
   }
+  /* A search bar is one control made of an icon, a field and a clear
+     button. Indicating focus on the <input> alone outlines part of it and
+     leaves the rest outside the ring, which reads as a misfit. */
+  .ut-searchbar:focus-within {
+    border-color: rgba(14,124,134,0.35) !important;
+  }
+  .ut-searchbar input:focus { border-color: transparent !important; }
   /* Typing into a field should not also draw the keyboard ring. */
   input:focus:not(:focus-visible),
   textarea:focus:not(:focus-visible) {
@@ -20046,6 +20081,7 @@ export default function App() {
         onEndSession={endSession}
         onOpenSearch={() => setSearchOpen(true)}
         onOpenPanel={() => setPanelOpen(true)}
+        noteCount={recentNotes.length}
         onGoHome={goHome}
         onRemoveCondition={removeCondition}
       />
