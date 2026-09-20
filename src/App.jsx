@@ -18400,6 +18400,17 @@ function VisitTypeGate({ onSelect }) {
 // match their band, and the median/ulnar/radial nerves are traced down the
 // whole limb - which is also why Peripheral Nerve gets its own band rather
 // than a point on the arm, since it spans every region.
+// Each region's accent, taken from its label on the body map. Used to
+// carry that colour through to the diagnosis list, so the two panels read
+// as one selection rather than two independent lists.
+const REGION_ACCENT = {
+  shoulder: { bar: "#BEDDF0", ink: "#2C5468" },
+  elbow: { bar: "#F5DE96", ink: "#6B5410" },
+  wrist: { bar: "#F7C89A", ink: "#7A4A14" },
+  hand: { bar: "#F2AFAF", ink: "#7E2F2A" },
+  peripheralNerve: { bar: "#DCD3EC", ink: "#463A66" },
+};
+
 function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
   // Contiguous horizontal hit zones, so there are no dead gaps between
   // regions - a tap anywhere in a band's vertical slice selects it, which
@@ -18417,6 +18428,10 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
     { key: "peripheralNerve", y: 550, h: 60, label: "Peripheral nerve", bar: { x: 0, y: 556, w: 348, h: 46 } },
   ];
   const n = (k) => (counts && counts[k] != null ? counts[k] : 0);
+  // The band of the active region, used to clip the full-strength copy of
+  // the anatomy. Uses the tap-target band (not the label bar) so the whole
+  // limb segment lights up, which is the anatomical unit being selected.
+  const activeBand = activeRegion ? zones.find((z) => z.key === activeRegion) : null;
   return (
     <svg
       viewBox="0 0 348 610"
@@ -18445,6 +18460,11 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
         <pattern id={`${uid}-gr`} width="14" height="14" patternUnits="userSpaceOnUse">
           <path d="M14 0 L0 0 0 14" fill="none" stroke="#C9C7BE" strokeWidth="0.4" opacity="0.45"/>
         </pattern>
+        {activeBand && (
+          <clipPath id={`${uid}-rclip`}>
+            <rect x="0" y={activeBand.y} width="348" height={activeBand.h} />
+          </clipPath>
+        )}
       </defs>
 
       <rect width="348" height="610" fill="#FBF9F3"/>
@@ -18455,112 +18475,133 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
       <rect x="0" y="356" width="206" height="80" rx="7" fill="#F7C89A" opacity="0.7"/>
       <rect x="0" y="456" width="188" height="84" rx="7" fill="#F2AFAF" opacity="0.7"/>
 
-      <g stroke="#9AA6AE" strokeWidth="0.9" fill="none" opacity="0.35">
-        <path d="M30 20 h16 M30 36 h16 M30 52 h16 M30 68 h16 M30 84 h16 M30 100 h16 M30 116 h16"/>
-        <path d="M38 16 v112"/>
-        <path d="M46 32 q34 8 54 26 M46 50 q40 10 60 30 M46 68 q42 14 60 36 M46 86 q40 16 56 40 M46 104 q34 18 48 40 M46 122 q28 18 40 38"/>
+      {/* Anatomy, drawn once and referenced twice: the base copy dims when
+          a region is active, and a clipped copy of the same group is drawn
+          over the active band at full strength. This lets the illustration
+          itself indicate selection, instead of an outline imposed on top of
+          an organic drawing. */}
+      <g
+        style={{
+          filter: activeRegion ? "saturate(0.25) opacity(0.5)" : "none",
+          transition: "filter 240ms cubic-bezier(0.32,0.72,0,1)",
+        }}
+      >
+        <g id={`${uid}-anat`}>
+        <g stroke="#9AA6AE" strokeWidth="0.9" fill="none" opacity="0.35">
+          <path d="M30 20 h16 M30 36 h16 M30 52 h16 M30 68 h16 M30 84 h16 M30 100 h16 M30 116 h16"/>
+          <path d="M38 16 v112"/>
+          <path d="M46 32 q34 8 54 26 M46 50 q40 10 60 30 M46 68 q42 14 60 36 M46 86 q40 16 56 40 M46 104 q34 18 48 40 M46 122 q28 18 40 38"/>
+        </g>
+  
+        <path d="M148 116 q12 46 26 82 q10 26 18 44" stroke="#E8E0CE" strokeWidth="13" fill="none" strokeLinecap="round"/>
+        <path d="M148 116 q12 46 26 82 q10 26 18 44" stroke="#8A7B5F" strokeWidth="0.8" fill="none" opacity="0.65"/>
+        <path d="M110 88 q22 -14 42 2 q14 12 8 30 q-24 12 -46 -2 q-10 -16 -4 -30 z" fill="#E8E0CE" stroke="#8A7B5F" strokeWidth="0.9"/>
+  
+        <path d="M22 48 q14 -3 26 1 q60 18 100 55 q9 8 5 16 q-7 8 -19 5 q-48 -12 -86 -28 q-24 -11 -28 -30 q-4 -20 2 -19 z" fill={`url(#${uid}-pec)`} opacity="0.9"/>
+        <path d="M22 92 q14 -2 26 3 q54 20 88 46 q8 6 4 13 q-7 7 -18 4 q-44 -13 -76 -28 q-20 -10 -24 -26 q-3 -13 0 -12 z" fill={`url(#${uid}-pec)`} opacity="0.82"/>
+        <path d="M24 70 q56 14 116 54" stroke="#9F6A73" strokeWidth="0.9" fill="none" opacity="0.7"/>
+        <g stroke="#9F6A73" strokeWidth="0.6" fill="none" opacity="0.5">
+          <path d="M26 56 q58 14 116 52"/><path d="M24 84 q56 16 112 50"/><path d="M24 100 q52 18 106 48"/><path d="M26 116 q48 18 98 46"/><path d="M28 132 q42 18 88 42"/>
+        </g>
+  
+        <path d="M26 44 q48 6 100 26" stroke="#EFE6D6" strokeWidth="9" fill="none" strokeLinecap="round"/>
+        <path d="M26 44 q48 6 100 26" stroke="#8A7B5F" strokeWidth="1.1" fill="none"/>
+        <path d="M124 62 q16 2 22 12 q4 8 -2 14" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
+  
+        <path d="M120 64 q24 -12 44 6 q14 14 14 34 q-18 14 -38 6 q-16 -16 -22 -28 q-2 -12 2 -18 z" fill={`url(#${uid}-d1)`} stroke="#1F5A85" strokeWidth="0.9"/>
+        <path d="M148 58 q30 2 44 28 q12 24 4 52 q-6 14 -16 20 q-16 -4 -24 -18 q-10 -34 -12 -56 q0 -18 4 -26 z" fill={`url(#${uid}-d2)`} stroke="#1F5A85" strokeWidth="0.9"/>
+        <path d="M186 74 q20 14 20 42 q0 26 -14 42 q-12 0 -16 -14 q2 -34 6 -54 q2 -12 4 -16 z" fill={`url(#${uid}-d3)`} stroke="#1F5A85" strokeWidth="0.9"/>
+        <g stroke="#1F5A85" strokeWidth="0.65" fill="none" opacity="0.5">
+          <path d="M128 74 q14 40 26 72"/><path d="M150 66 q12 46 22 78"/><path d="M170 68 q8 46 12 76"/><path d="M190 82 q2 40 -2 64"/>
+        </g>
+  
+        <path d="M184 140 q22 6 30 22 q10 30 16 54 q6 22 8 44 q-16 12 -32 4 q-8 -34 -14 -60 q-6 -32 -8 -64 z" fill={`url(#${uid}-tri)`} stroke="#3E661F" strokeWidth="0.9"/>
+        <path d="M144 132 q34 18 66 4 q6 32 12 58 q6 26 10 48 q6 22 8 34 q-28 16 -56 2 q-8 -34 -16 -66 q-10 -40 -16 -62 q-6 -12 -8 -18 z" fill={`url(#${uid}-bi)`} stroke="#3E661F" strokeWidth="1"/>
+        <path d="M158 196 q32 14 56 -2 q8 30 14 52 q6 20 8 32 q-26 14 -50 0 q-10 -30 -18 -52 q-6 -18 -10 -30 z" fill={`url(#${uid}-brl)`} stroke="#3E661F" strokeWidth="0.85" opacity="0.9"/>
+        <g stroke="#3E661F" strokeWidth="0.7" fill="none" opacity="0.5">
+          <path d="M154 144 q14 56 30 104"/><path d="M174 146 q12 56 26 102"/><path d="M194 140 q10 54 22 98"/>
+        </g>
+  
+        <path d="M172 262 q20 -6 28 4 q6 8 2 16 q-18 8 -32 -2 q-4 -10 2 -18 z" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
+        <path d="M206 258 q14 -2 20 8 q4 8 -2 14 q-14 6 -22 -4 q-2 -10 4 -18 z" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
+  
+        <path d="M200 300 q12 34 22 58 q8 18 14 30" stroke="#E8E0CE" strokeWidth="6.5" fill="none" strokeLinecap="round"/>
+        <path d="M214 296 q12 34 22 58 q8 18 14 30" stroke="#E8E0CE" strokeWidth="6" fill="none" strokeLinecap="round"/>
+        <g stroke="#8A7B5F" strokeWidth="0.7" fill="none" opacity="0.55">
+          <path d="M200 300 q12 34 22 58 q8 18 14 30"/><path d="M214 296 q12 34 22 58 q8 18 14 30"/>
+        </g>
+  
+        <path d="M183 266 q22 14 42 0 q10 28 18 52 q9 26 14 46 q4 16 6 26 q-11 6 -23 2 q-4 -18 -9 -36 q-9 -30 -19 -52 q-12 -26 -23 -34 q-4 -2 -6 -4 z" fill={`url(#${uid}-fx)`} stroke="#9A5C17" strokeWidth="0.95"/>
+        <path d="M225 264 q14 8 21 -2 q8 24 14 46 q6 22 9 38 q3 14 4 23 q-9 6 -18 1 q-2 -14 -5 -28 q-7 -28 -14 -48 q-7 -22 -11 -30 z" fill={`url(#${uid}-ex)`} stroke="#9A5C17" strokeWidth="0.9"/>
+        <path d="M176 270 q-5 24 3 48 q8 24 18 43 q6 12 10 19 q9 -2 8 -12 q-6 -13 -13 -28 q-12 -28 -18 -48 q-6 -20 -8 -30 z" fill={`url(#${uid}-brd)`} stroke="#9A5C17" strokeWidth="0.9"/>
+        <g stroke="#9A5C17" strokeWidth="0.6" fill="none" opacity="0.5">
+          <path d="M194 280 q14 42 25 78"/><path d="M209 277 q12 42 21 76"/><path d="M226 273 q10 38 17 68"/>
+        </g>
+  
+        <g stroke="#F0EBDD" strokeWidth="2.2" fill="none" opacity="0.95">
+          <path d="M232 386 q5 14 10 24"/><path d="M239 384 q5 14 10 24"/><path d="M246 382 q5 14 10 24"/>
+        </g>
+        <path d="M238 408 q20 8 34 -2 q4 9 0 16 q-18 9 -38 0 q-2 -9 4 -14 z" fill="#E8E0CE" stroke="#8A7B5F" strokeWidth="0.9"/>
+        <g fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.75">
+          <path d="M242 426 q9 -4 15 2 q4 6 -2 9 q-9 4 -15 -2 q-2 -5 2 -9 z"/>
+          <path d="M260 424 q9 -4 15 2 q4 6 -2 9 q-9 4 -15 -2 q-2 -5 2 -9 z"/>
+        </g>
+  
+        <g stroke="#F0C9BE" strokeWidth="9" fill="none" strokeLinecap="round" opacity="0.85">
+          <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
+        </g>
+        <g stroke="#E8E0CE" strokeWidth="4" fill="none" strokeLinecap="round">
+          <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
+        </g>
+        <g stroke="#8A7B5F" strokeWidth="0.6" fill="none" opacity="0.55">
+          <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
+        </g>
+        <g stroke="#F0C9BE" strokeWidth="7.5" fill="none" strokeLinecap="round" opacity="0.8">
+          <path d="M248 478 l-4 28"/><path d="M264 482 l0 32"/><path d="M282 478 l6 30"/><path d="M300 468 l10 24"/>
+        </g>
+        <g stroke="#E8E0CE" strokeWidth="3.4" fill="none" strokeLinecap="round">
+          <path d="M248 478 l-4 28"/><path d="M264 482 l0 32"/><path d="M282 478 l6 30"/><path d="M300 468 l10 24"/>
+        </g>
+  
+        <path d="M292 430 q11 6 19 16" stroke="#F0C9BE" strokeWidth="12" fill="none" strokeLinecap="round" opacity="0.85"/>
+        <path d="M292 430 q11 6 19 16" stroke="#E8E0CE" strokeWidth="6" fill="none" strokeLinecap="round"/>
+        <path d="M292 430 q11 6 19 16" stroke="#8A7B5F" strokeWidth="0.6" fill="none" opacity="0.55"/>
+        <path d="M311 446 q8 7 14 14" stroke="#F0C9BE" strokeWidth="10" fill="none" strokeLinecap="round" opacity="0.82"/>
+        <path d="M311 446 q8 7 14 14" stroke="#E8E0CE" strokeWidth="5" fill="none" strokeLinecap="round"/>
+        <path d="M311 446 q8 7 14 14" stroke="#8A7B5F" strokeWidth="0.55" fill="none" opacity="0.55"/>
+        <path d="M325 460 q6 6 10 11" stroke="#F0C9BE" strokeWidth="8.4" fill="none" strokeLinecap="round" opacity="0.8"/>
+        <path d="M325 460 q6 6 10 11" stroke="#E8E0CE" strokeWidth="4.2" fill="none" strokeLinecap="round"/>
+        <path d="M325 460 q6 6 10 11" stroke="#8A7B5F" strokeWidth="0.5" fill="none" opacity="0.55"/>
+  
+        <path d="M284 418 q13 9 16 26 q3 17 -3 27 q-8 5 -13 -3 q6 -14 5 -26 q-2 -14 -8 -22 z" fill={`url(#${uid}-th)`} stroke="#9C3C31" strokeWidth="0.9"/>
+        <path d="M290 428 q10 5 17 15 q3 5 1 9 q-6 4 -10 -1 q-3 -8 -9 -14 q-3 -4 -1 -8 z" fill={`url(#${uid}-th)`} stroke="#9C3C31" strokeWidth="0.8"/>
+        <path d="M250 418 q-13 7 -16 23 q-3 16 3 26 q8 4 12 -5 q-4 -14 -2 -25 q2 -12 3 -19 z" fill={`url(#${uid}-hy)`} stroke="#9C3C31" strokeWidth="0.9"/>
+        <path d="M244 424 q26 11 46 -4 q7 17 5 32 q-27 13 -54 2 q-2 -17 3 -30 z" fill={`url(#${uid}-th)`} stroke="#9C3C31" strokeWidth="0.85" opacity="0.9"/>
+        <g stroke="#9C3C31" strokeWidth="0.6" fill="none" opacity="0.55">
+          <path d="M256 436 l-2 20"/><path d="M268 436 l0 22"/><path d="M280 434 l4 22"/>
+        </g>
+  
+        <g fill="none" strokeLinecap="round" className={activeRegion === "peripheralNerve" ? "ut-nerve-trace" : undefined}>
+          <path d="M48 24 q22 14 34 28 M48 40 q24 12 34 26 M48 56 q24 10 32 24 M48 72 q22 10 30 22" stroke="#F0C64A" strokeWidth="2" opacity="0.85"/>
+          <path d="M82 48 q18 10 26 24 q12 20 16 40" stroke="#F0C64A" strokeWidth="3.6" opacity="0.92"/>
+          <path d="M132 122 q16 42 30 82 q14 36 26 66 q11 26 20 44" stroke="#F0C64A" strokeWidth="3" opacity="0.9"/>
+          <path d="M192 320 q11 32 20 56 q6 14 11 22" stroke="#F0C64A" strokeWidth="2.4" opacity="0.85"/>
+          <path d="M232 404 q14 12 28 18 q16 6 28 6" stroke="#F0C64A" strokeWidth="2" opacity="0.8"/>
+          <path d="M128 118 q20 36 28 70 q8 28 6 48" stroke="#7FD4DC" strokeWidth="2.8" opacity="0.88"/>
+          <path d="M162 240 q14 36 23 64 q6 20 8 36" stroke="#7FD4DC" strokeWidth="2.4" opacity="0.82"/>
+          <path d="M200 346 q11 30 19 52 q6 14 20 18" stroke="#7FD4DC" strokeWidth="2" opacity="0.78"/>
+          <path d="M140 116 q24 30 32 64 q6 26 2 44" stroke="#C58ED8" strokeWidth="2.4" opacity="0.75"/>
+          <path d="M176 232 q15 32 22 60" stroke="#C58ED8" strokeWidth="2" opacity="0.7"/>
+        </g>
+        </g>
       </g>
-
-      <path d="M148 116 q12 46 26 82 q10 26 18 44" stroke="#E8E0CE" strokeWidth="13" fill="none" strokeLinecap="round"/>
-      <path d="M148 116 q12 46 26 82 q10 26 18 44" stroke="#8A7B5F" strokeWidth="0.8" fill="none" opacity="0.65"/>
-      <path d="M110 88 q22 -14 42 2 q14 12 8 30 q-24 12 -46 -2 q-10 -16 -4 -30 z" fill="#E8E0CE" stroke="#8A7B5F" strokeWidth="0.9"/>
-
-      <path d="M22 48 q14 -3 26 1 q60 18 100 55 q9 8 5 16 q-7 8 -19 5 q-48 -12 -86 -28 q-24 -11 -28 -30 q-4 -20 2 -19 z" fill={`url(#${uid}-pec)`} opacity="0.9"/>
-      <path d="M22 92 q14 -2 26 3 q54 20 88 46 q8 6 4 13 q-7 7 -18 4 q-44 -13 -76 -28 q-20 -10 -24 -26 q-3 -13 0 -12 z" fill={`url(#${uid}-pec)`} opacity="0.82"/>
-      <path d="M24 70 q56 14 116 54" stroke="#9F6A73" strokeWidth="0.9" fill="none" opacity="0.7"/>
-      <g stroke="#9F6A73" strokeWidth="0.6" fill="none" opacity="0.5">
-        <path d="M26 56 q58 14 116 52"/><path d="M24 84 q56 16 112 50"/><path d="M24 100 q52 18 106 48"/><path d="M26 116 q48 18 98 46"/><path d="M28 132 q42 18 88 42"/>
-      </g>
-
-      <path d="M26 44 q48 6 100 26" stroke="#EFE6D6" strokeWidth="9" fill="none" strokeLinecap="round"/>
-      <path d="M26 44 q48 6 100 26" stroke="#8A7B5F" strokeWidth="1.1" fill="none"/>
-      <path d="M124 62 q16 2 22 12 q4 8 -2 14" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
-
-      <path d="M120 64 q24 -12 44 6 q14 14 14 34 q-18 14 -38 6 q-16 -16 -22 -28 q-2 -12 2 -18 z" fill={`url(#${uid}-d1)`} stroke="#1F5A85" strokeWidth="0.9"/>
-      <path d="M148 58 q30 2 44 28 q12 24 4 52 q-6 14 -16 20 q-16 -4 -24 -18 q-10 -34 -12 -56 q0 -18 4 -26 z" fill={`url(#${uid}-d2)`} stroke="#1F5A85" strokeWidth="0.9"/>
-      <path d="M186 74 q20 14 20 42 q0 26 -14 42 q-12 0 -16 -14 q2 -34 6 -54 q2 -12 4 -16 z" fill={`url(#${uid}-d3)`} stroke="#1F5A85" strokeWidth="0.9"/>
-      <g stroke="#1F5A85" strokeWidth="0.65" fill="none" opacity="0.5">
-        <path d="M128 74 q14 40 26 72"/><path d="M150 66 q12 46 22 78"/><path d="M170 68 q8 46 12 76"/><path d="M190 82 q2 40 -2 64"/>
-      </g>
-
-      <path d="M184 140 q22 6 30 22 q10 30 16 54 q6 22 8 44 q-16 12 -32 4 q-8 -34 -14 -60 q-6 -32 -8 -64 z" fill={`url(#${uid}-tri)`} stroke="#3E661F" strokeWidth="0.9"/>
-      <path d="M144 132 q34 18 66 4 q6 32 12 58 q6 26 10 48 q6 22 8 34 q-28 16 -56 2 q-8 -34 -16 -66 q-10 -40 -16 -62 q-6 -12 -8 -18 z" fill={`url(#${uid}-bi)`} stroke="#3E661F" strokeWidth="1"/>
-      <path d="M158 196 q32 14 56 -2 q8 30 14 52 q6 20 8 32 q-26 14 -50 0 q-10 -30 -18 -52 q-6 -18 -10 -30 z" fill={`url(#${uid}-brl)`} stroke="#3E661F" strokeWidth="0.85" opacity="0.9"/>
-      <g stroke="#3E661F" strokeWidth="0.7" fill="none" opacity="0.5">
-        <path d="M154 144 q14 56 30 104"/><path d="M174 146 q12 56 26 102"/><path d="M194 140 q10 54 22 98"/>
-      </g>
-
-      <path d="M172 262 q20 -6 28 4 q6 8 2 16 q-18 8 -32 -2 q-4 -10 2 -18 z" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
-      <path d="M206 258 q14 -2 20 8 q4 8 -2 14 q-14 6 -22 -4 q-2 -10 4 -18 z" fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.9"/>
-
-      <path d="M200 300 q12 34 22 58 q8 18 14 30" stroke="#E8E0CE" strokeWidth="6.5" fill="none" strokeLinecap="round"/>
-      <path d="M214 296 q12 34 22 58 q8 18 14 30" stroke="#E8E0CE" strokeWidth="6" fill="none" strokeLinecap="round"/>
-      <g stroke="#8A7B5F" strokeWidth="0.7" fill="none" opacity="0.55">
-        <path d="M200 300 q12 34 22 58 q8 18 14 30"/><path d="M214 296 q12 34 22 58 q8 18 14 30"/>
-      </g>
-
-      <path d="M183 266 q22 14 42 0 q10 28 18 52 q9 26 14 46 q4 16 6 26 q-11 6 -23 2 q-4 -18 -9 -36 q-9 -30 -19 -52 q-12 -26 -23 -34 q-4 -2 -6 -4 z" fill={`url(#${uid}-fx)`} stroke="#9A5C17" strokeWidth="0.95"/>
-      <path d="M225 264 q14 8 21 -2 q8 24 14 46 q6 22 9 38 q3 14 4 23 q-9 6 -18 1 q-2 -14 -5 -28 q-7 -28 -14 -48 q-7 -22 -11 -30 z" fill={`url(#${uid}-ex)`} stroke="#9A5C17" strokeWidth="0.9"/>
-      <path d="M176 270 q-5 24 3 48 q8 24 18 43 q6 12 10 19 q9 -2 8 -12 q-6 -13 -13 -28 q-12 -28 -18 -48 q-6 -20 -8 -30 z" fill={`url(#${uid}-brd)`} stroke="#9A5C17" strokeWidth="0.9"/>
-      <g stroke="#9A5C17" strokeWidth="0.6" fill="none" opacity="0.5">
-        <path d="M194 280 q14 42 25 78"/><path d="M209 277 q12 42 21 76"/><path d="M226 273 q10 38 17 68"/>
-      </g>
-
-      <g stroke="#F0EBDD" strokeWidth="2.2" fill="none" opacity="0.95">
-        <path d="M232 386 q5 14 10 24"/><path d="M239 384 q5 14 10 24"/><path d="M246 382 q5 14 10 24"/>
-      </g>
-      <path d="M238 408 q20 8 34 -2 q4 9 0 16 q-18 9 -38 0 q-2 -9 4 -14 z" fill="#E8E0CE" stroke="#8A7B5F" strokeWidth="0.9"/>
-      <g fill="#EFE6D6" stroke="#8A7B5F" strokeWidth="0.75">
-        <path d="M242 426 q9 -4 15 2 q4 6 -2 9 q-9 4 -15 -2 q-2 -5 2 -9 z"/>
-        <path d="M260 424 q9 -4 15 2 q4 6 -2 9 q-9 4 -15 -2 q-2 -5 2 -9 z"/>
-      </g>
-
-      <g stroke="#F0C9BE" strokeWidth="9" fill="none" strokeLinecap="round" opacity="0.85">
-        <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
-      </g>
-      <g stroke="#E8E0CE" strokeWidth="4" fill="none" strokeLinecap="round">
-        <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
-      </g>
-      <g stroke="#8A7B5F" strokeWidth="0.6" fill="none" opacity="0.55">
-        <path d="M252 446 l-4 32"/><path d="M264 446 l0 36"/><path d="M276 444 l6 34"/><path d="M288 440 l12 28"/>
-      </g>
-      <g stroke="#F0C9BE" strokeWidth="7.5" fill="none" strokeLinecap="round" opacity="0.8">
-        <path d="M248 478 l-4 28"/><path d="M264 482 l0 32"/><path d="M282 478 l6 30"/><path d="M300 468 l10 24"/>
-      </g>
-      <g stroke="#E8E0CE" strokeWidth="3.4" fill="none" strokeLinecap="round">
-        <path d="M248 478 l-4 28"/><path d="M264 482 l0 32"/><path d="M282 478 l6 30"/><path d="M300 468 l10 24"/>
-      </g>
-
-      <path d="M292 430 q11 6 19 16" stroke="#F0C9BE" strokeWidth="12" fill="none" strokeLinecap="round" opacity="0.85"/>
-      <path d="M292 430 q11 6 19 16" stroke="#E8E0CE" strokeWidth="6" fill="none" strokeLinecap="round"/>
-      <path d="M292 430 q11 6 19 16" stroke="#8A7B5F" strokeWidth="0.6" fill="none" opacity="0.55"/>
-      <path d="M311 446 q8 7 14 14" stroke="#F0C9BE" strokeWidth="10" fill="none" strokeLinecap="round" opacity="0.82"/>
-      <path d="M311 446 q8 7 14 14" stroke="#E8E0CE" strokeWidth="5" fill="none" strokeLinecap="round"/>
-      <path d="M311 446 q8 7 14 14" stroke="#8A7B5F" strokeWidth="0.55" fill="none" opacity="0.55"/>
-      <path d="M325 460 q6 6 10 11" stroke="#F0C9BE" strokeWidth="8.4" fill="none" strokeLinecap="round" opacity="0.8"/>
-      <path d="M325 460 q6 6 10 11" stroke="#E8E0CE" strokeWidth="4.2" fill="none" strokeLinecap="round"/>
-      <path d="M325 460 q6 6 10 11" stroke="#8A7B5F" strokeWidth="0.5" fill="none" opacity="0.55"/>
-
-      <path d="M284 418 q13 9 16 26 q3 17 -3 27 q-8 5 -13 -3 q6 -14 5 -26 q-2 -14 -8 -22 z" fill={`url(#${uid}-th)`} stroke="#9C3C31" strokeWidth="0.9"/>
-      <path d="M290 428 q10 5 17 15 q3 5 1 9 q-6 4 -10 -1 q-3 -8 -9 -14 q-3 -4 -1 -8 z" fill={`url(#${uid}-th)`} stroke="#9C3C31" strokeWidth="0.8"/>
-      <path d="M250 418 q-13 7 -16 23 q-3 16 3 26 q8 4 12 -5 q-4 -14 -2 -25 q2 -12 3 -19 z" fill={`url(#${uid}-hy)`} stroke="#9C3C31" strokeWidth="0.9"/>
-      <path d="M244 424 q26 11 46 -4 q7 17 5 32 q-27 13 -54 2 q-2 -17 3 -30 z" fill={`url(#${uid}-th)`} stroke="#9C3C31" strokeWidth="0.85" opacity="0.9"/>
-      <g stroke="#9C3C31" strokeWidth="0.6" fill="none" opacity="0.55">
-        <path d="M256 436 l-2 20"/><path d="M268 436 l0 22"/><path d="M280 434 l4 22"/>
-      </g>
-
-      <g fill="none" strokeLinecap="round">
-        <path d="M48 24 q22 14 34 28 M48 40 q24 12 34 26 M48 56 q24 10 32 24 M48 72 q22 10 30 22" stroke="#F0C64A" strokeWidth="2" opacity="0.85"/>
-        <path d="M82 48 q18 10 26 24 q12 20 16 40" stroke="#F0C64A" strokeWidth="3.6" opacity="0.92"/>
-        <path d="M132 122 q16 42 30 82 q14 36 26 66 q11 26 20 44" stroke="#F0C64A" strokeWidth="3" opacity="0.9"/>
-        <path d="M192 320 q11 32 20 56 q6 14 11 22" stroke="#F0C64A" strokeWidth="2.4" opacity="0.85"/>
-        <path d="M232 404 q14 12 28 18 q16 6 28 6" stroke="#F0C64A" strokeWidth="2" opacity="0.8"/>
-        <path d="M128 118 q20 36 28 70 q8 28 6 48" stroke="#7FD4DC" strokeWidth="2.8" opacity="0.88"/>
-        <path d="M162 240 q14 36 23 64 q6 20 8 36" stroke="#7FD4DC" strokeWidth="2.4" opacity="0.82"/>
-        <path d="M200 346 q11 30 19 52 q6 14 20 18" stroke="#7FD4DC" strokeWidth="2" opacity="0.78"/>
-        <path d="M140 116 q24 30 32 64 q6 26 2 44" stroke="#C58ED8" strokeWidth="2.4" opacity="0.75"/>
-        <path d="M176 232 q15 32 22 60" stroke="#C58ED8" strokeWidth="2" opacity="0.7"/>
-      </g>
+      {activeBand && (
+        <use
+          href={`#${uid}-anat`}
+          clipPath={`url(#${uid}-rclip)`}
+          style={{ transition: "opacity 240ms cubic-bezier(0.32,0.72,0,1)" }}
+        />
+      )}
 
       <text x="208" y="96" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#2C5468">SHOULDER</text>
       <text x="208" y="118" fontSize="11" fill="#3F6D84">{n("shoulder")} templates</text>
@@ -18582,25 +18623,6 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
       <text x="286" y="570" fontSize="9" fill="#5A4B80">median</text>
       <text x="286" y="584" fontSize="9" fill="#5A4B80">ulnar</text>
       <text x="286" y="598" fontSize="9" fill="#5A4B80">radial</text>
-
-      {activeRegion && zones.find((z) => z.key === activeRegion)?.bar && (() => {
-        const b = zones.find((z) => z.key === activeRegion).bar;
-        // Inset by 1 so the stroke sits just inside the label's own edge
-        // rather than straddling it, and matched to the label's rx.
-        return (
-          <rect
-            x={b.x + 1}
-            y={b.y + 1}
-            width={b.w - 2}
-            height={b.h - 2}
-            fill="none"
-            stroke={T.teal}
-            strokeWidth="1.5"
-            strokeOpacity="0.6"
-            rx="6"
-          />
-        );
-      })()}
 
       {zones.map((z) => (
         <rect
@@ -18760,6 +18782,7 @@ function ConditionList({ regionKey, session, onSelect, onBack, onRemove }) {
           <button onClick={onBack} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 active:scale-95 transition" style={{ background: T.slateChip, border: `1px solid ${T.borderStrong}`, color: T.ink, minHeight: 44 }}>
             <ArrowLeft size={17} /><span className="text-[13px] font-semibold">All regions</span>
           </button>
+          <span className="rounded-full shrink-0" style={{ width: 3, height: 20, background: (REGION_ACCENT[regionKey] || {}).bar || T.teal }} aria-hidden="true" />
           <h1 className="text-[20px] font-bold truncate" style={{ color: T.ink }}>{region.label}</h1>
         </div>
       </div>
@@ -19529,7 +19552,14 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
     <div className="flex flex-col gap-5">
       {groupedResults.map((group) => (
         <div key={group.header}>
-          <div className="text-[12px] lg:text-[13px] font-bold uppercase tracking-wide mb-2 px-1" style={{ color: T.teal }}>{group.header}</div>
+          <div className="flex items-center gap-2 mb-2 px-1">
+            <span
+              className="rounded-full shrink-0"
+              style={{ width: 3, height: 14, background: (REGION_ACCENT[regionKey] || {}).bar || T.teal }}
+              aria-hidden="true"
+            />
+            <span className="text-[12px] lg:text-[13px] font-bold uppercase tracking-wide" style={{ color: (REGION_ACCENT[regionKey] || {}).ink || T.teal }}>{group.header}</span>
+          </div>
           <div className="flex flex-col gap-2.5">
             {group.items.map((condition) => {
               const active = selectedIds.includes(condition.id);
@@ -19907,6 +19937,25 @@ const DESIGN_SYSTEM_CSS = `
      section, where there is nothing above it to separate from. */
   .ut-group:first-child .ut-group-rule { display: none; }
 
+
+  /* Nerve tracing. Fires only when Peripheral Nerve is selected: the
+     median, ulnar and radial paths draw along their course from proximal
+     to distal, staggered so they read as three distinct nerves rather than
+     one effect. pathLength is not set on these paths, so the dash figure
+     is simply larger than any of them. */
+  @keyframes ut-trace {
+    from { stroke-dashoffset: 400; opacity: 0.25; }
+    to   { stroke-dashoffset: 0;   opacity: 1; }
+  }
+  .ut-nerve-trace path {
+    stroke-dasharray: 400;
+    animation: ut-trace 700ms cubic-bezier(0.32,0.72,0,1) both;
+  }
+  /* Median group first, then ulnar, then radial. */
+  .ut-nerve-trace path:nth-child(-n+5) { animation-delay: 0ms; }
+  .ut-nerve-trace path:nth-child(n+6):nth-child(-n+8) { animation-delay: 110ms; }
+  .ut-nerve-trace path:nth-child(n+9) { animation-delay: 220ms; }
+
   /* Respect reduced-motion preferences. */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
@@ -19914,6 +19963,7 @@ const DESIGN_SYSTEM_CSS = `
       animation-duration: 0.01ms !important;
     }
     .ut-card:hover { transform: none; }
+    .ut-nerve-trace path { animation: none; stroke-dasharray: none; opacity: 1; }
   }
 `;
 
