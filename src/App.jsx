@@ -19831,13 +19831,16 @@ const DESIGN_SYSTEM_CSS = `
     transition-timing-function: var(--ut-ease);
   }
 
-  /* Keyboard focus. Two-tone ring so it stays visible on both light
-     surfaces and the dark teal top bar. */
+  /* Keyboard focus ring - for controls that have no other focus cue.
+     Text inputs and textareas are deliberately EXCLUDED: per spec they
+     match :focus-visible even when focused by mouse or touch, so
+     including them drew a 2px ring on every field the moment it was
+     tapped. They already show focus through a caret plus a subtle border
+     change, which is enough. Selects keep the ring since they have no
+     caret. */
   button:focus-visible,
   a:focus-visible,
   [role="button"]:focus-visible,
-  input:focus-visible,
-  textarea:focus-visible,
   select:focus-visible {
     outline: 2px solid var(--ut-teal);
     outline-offset: 2px;
@@ -19878,12 +19881,22 @@ const DESIGN_SYSTEM_CSS = `
     border-color: rgba(14,124,134,0.35) !important;
   }
   /* A search bar is one control made of an icon, a field and a clear
-     button. Indicating focus on the <input> alone outlines part of it and
-     leaves the rest outside the ring, which reads as a misfit. */
-  .ut-searchbar:focus-within {
-    border-color: rgba(14,124,134,0.35) !important;
+     button. Any focus indication must wrap the whole thing - a ring drawn
+     on the <input> alone excludes the magnifier and reads as a misfit box
+     floating inside the bar.
+     Two separate rules were doing that: the generic :focus-visible outline
+     (which the auto-focused search field triggers on open) and the input
+     border rule. Both are suppressed inside a search bar, and the
+     indication is moved onto the wrapper instead. */
+  .ut-searchbar input:focus,
+  .ut-searchbar input:focus-visible {
+    outline: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
   }
-  .ut-searchbar input:focus { border-color: transparent !important; }
+  .ut-searchbar:focus-within {
+    border-color: rgba(14,124,134,0.45) !important;
+  }
   /* Typing into a field should not also draw the keyboard ring. */
   input:focus:not(:focus-visible),
   textarea:focus:not(:focus-visible) {
