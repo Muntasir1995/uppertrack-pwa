@@ -45,9 +45,9 @@ const T = {
   // elements - the region grid, the main "New Visit" action, and the
   // active section indicator - so it reads as purposeful accent rather
   // than decoration applied everywhere.
-  shadowCard: "0 1px 2px rgba(16,30,43,0.05), 0 4px 12px rgba(16,30,43,0.04)",
-  shadowElevated: "0 1px 2px rgba(16,30,43,0.05), 0 6px 16px rgba(16,30,43,0.06)",
-  shadowFloating: "0 8px 28px rgba(16,30,43,0.18)",
+  shadowCard: "0 1px 1px rgba(16,30,43,0.04), 0 2px 4px rgba(16,30,43,0.04), 0 8px 16px rgba(16,30,43,0.035)",
+  shadowElevated: "0 1px 1px rgba(16,30,43,0.05), 0 3px 6px rgba(16,30,43,0.05), 0 12px 24px rgba(16,30,43,0.05)",
+  shadowFloating: "0 2px 4px rgba(16,30,43,0.06), 0 12px 24px rgba(16,30,43,0.10), 0 24px 48px rgba(16,30,43,0.12)",
   gradientTeal: "linear-gradient(135deg, #0A5D65, #12907E)",
 };
 
@@ -13332,7 +13332,12 @@ function CollapsibleSection({ index, title, subtitle, isOpen, onToggle, hasConte
 
 function SubLabel({ children }) {
   if (!children) return null;
-  return <div className="text-[12px] font-semibold uppercase tracking-wide mb-2 mt-4 first:mt-0" style={{ color: T.inkSoft }}>{children}</div>;
+  return (
+    <div className="ut-group mt-6 mb-2.5 first:mt-0">
+      <div className="ut-group-rule h-px w-full mb-3" style={{ background: T.border }} aria-hidden="true" />
+      <div className="text-[12px] font-bold uppercase tracking-wide" style={{ color: T.ink, opacity: 0.72 }}>{children}</div>
+    </div>
+  );
 }
 
 // An option like "None", "None noted", or "Normal" asserts the absence of
@@ -17249,6 +17254,31 @@ function EvidencePanel({ conditionId }) {
 // the reference material (evidence, outcome measures) that is consulted
 // occasionally. Slides in from the left over a scrim, matching the app's
 // existing modal treatment.
+// Defined at module scope, NOT inside SidePanel. A component declared
+// inside another component is re-created on every parent render, which
+// makes React unmount and remount its whole subtree - which in turn
+// destroys focus in any input it contains. That is what previously limited
+// the evidence search box to one character at a time.
+function PanelRow({ title, count, isOpen, onToggle, children }) {
+  return (
+    <div className="mb-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between gap-2 px-3 py-3 text-left active:opacity-70"
+        style={{ minHeight: 48 }}
+        aria-expanded={isOpen}
+      >
+        <span className="font-semibold text-[14px]" style={{ color: T.ink }}>
+          {title}
+          {count != null && <span className="ml-1.5 font-normal" style={{ color: T.inkSoft }}>({count})</span>}
+        </span>
+        <ChevronDown size={18} color={T.inkSoft} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
+      </button>
+      {isOpen && <div className="px-3 pb-3" style={{ borderTop: `1px solid ${T.border}` }}>{children}</div>}
+    </div>
+  );
+}
+
 function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote }) {
   const [section, setSection] = useState(null);
   const [evQuery, setEvQuery] = useState("");
@@ -17277,25 +17307,6 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
 
   if (!open) return null;
 
-  const Row = ({ id, title, count, children }) => (
-    <div className="mb-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
-      <button
-        onClick={() => setSection(section === id ? null : id)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-3 text-left active:opacity-70"
-        style={{ minHeight: 48 }}
-        aria-expanded={section === id}
-      >
-        <span className="font-semibold text-[14px]" style={{ color: T.ink }}>
-          {title}
-          {count != null && <span className="ml-1.5 font-normal" style={{ color: T.inkSoft }}>({count})</span>}
-        </span>
-        <ChevronDown size={18} color={T.inkSoft} style={{ transform: section === id ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
-      </button>
-      {section === id && <div className="px-3 pb-3" style={{ borderTop: `1px solid ${T.border}` }}>{children}</div>}
-    </div>
-  );
-
-  const Empty = ({ children }) => <div className="text-[13px] mt-3" style={{ color: T.inkSoft }}>{children}</div>;
 
   return (
     <div className="fixed inset-0 z-50 flex" style={{ background: "rgba(16,30,43,0.4)" }} onClick={onClose}>
@@ -17312,9 +17323,9 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
-          <Row id="notes" title="Recent clinic notes" count={(recentNotes || []).length}>
+          <PanelRow title="Recent clinic notes" count={(recentNotes || []).length} isOpen={section === "notes"} onToggle={() => setSection(section === "notes" ? null : "notes")}>
             {(recentNotes || []).length === 0 ? (
-              <Empty>No notes yet this session.</Empty>
+              <div className="mt-3"><EmptyState compact icon={FileText} title="No notes yet" body="Notes appear here once you copy one. They are kept for this session only." /></div>
             ) : (
               <div className="flex flex-col gap-1.5 mt-3">
                 {recentNotes.map((n) => (
@@ -17330,11 +17341,11 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                 ))}
               </div>
             )}
-          </Row>
+          </PanelRow>
 
-          <Row id="recent" title="Recent diagnoses" count={recents.length}>
+          <PanelRow title="Recent diagnoses" count={recents.length} isOpen={section === "recent"} onToggle={() => setSection(section === "recent" ? null : "recent")}>
             {recents.length === 0 ? (
-              <Empty>No diagnoses opened yet this session.</Empty>
+              <div className="mt-3"><EmptyState compact icon={CheckCircle2} title="No diagnoses yet" body="Diagnoses you open appear here, so returning to one mid-clinic takes a single tap." /></div>
             ) : (
               <div className="flex flex-col gap-1.5 mt-3">
                 {recents.map((c) => (
@@ -17349,9 +17360,9 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                 ))}
               </div>
             )}
-          </Row>
+          </PanelRow>
 
-          <Row id="evidence" title="Evidence library" count={evidenceIds.length}>
+          <PanelRow title="Evidence library" count={evidenceIds.length} isOpen={section === "evidence"} onToggle={() => setSection(section === "evidence" ? null : "evidence")}>
             <div className="mt-3 mb-2">
               <input
                 type="text"
@@ -17363,7 +17374,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
               />
             </div>
             {evidenceByRegion.length === 0 ? (
-              <Empty>No matches for that search.</Empty>
+              <div className="mt-3"><EmptyState compact icon={Search} title="No matching evidence" body="Search runs over diagnosis names, summaries and trial names \u2014 try a shorter term." action="Clear search" onAction={() => setEvQuery("")} /></div>
             ) : (
               <div className="flex flex-col gap-1.5">
                 {evidenceByRegion.map(({ regionKey, label, entries }) => {
@@ -17412,9 +17423,9 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                 })}
               </div>
             )}
-          </Row>
+          </PanelRow>
 
-          <Row id="outcomes" title="Outcome measures" count={OUTCOME_MEASURES.length}>
+          <PanelRow title="Outcome measures" count={OUTCOME_MEASURES.length} isOpen={section === "outcomes"} onToggle={() => setSection(section === "outcomes" ? null : "outcomes")}>
             <div className="flex flex-col gap-2">
               {OUTCOME_MEASURES.map((m) => (
                 <div key={m.abbr} className="rounded-lg px-3 py-2.5" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
@@ -17429,7 +17440,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                 </div>
               ))}
             </div>
-          </Row>
+          </PanelRow>
         </div>
 
         <div className="px-4 py-2.5 shrink-0 text-[12px] text-center" style={{ borderTop: `1px solid ${T.border}`, background: T.surface, color: T.inkSoft }}>
@@ -18343,19 +18354,19 @@ function VisitTypeGate({ onSelect }) {
         <p className="text-[17px] mb-7 text-center" style={{ color: T.inkSoft }}>What kind of visit is this?</p>
         <InstallPrompt />
         <div className="flex flex-col gap-3">
-          <button onClick={() => onSelect("new")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
+          <button onClick={() => onSelect("new")} className="ut-card rounded-2xl p-5 text-left flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
             <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.gradientTeal }}>
               <FilePlus size={30} color="#fff" />
             </div>
             <div className="font-bold text-[21px]" style={{ color: T.ink }}>New Visit</div>
           </button>
-          <button onClick={() => onSelect("followup")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
+          <button onClick={() => onSelect("followup")} className="ut-card rounded-2xl p-5 text-left flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
             <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.tealTint }}>
               <CalendarClock size={30} color={T.tealDark} />
             </div>
             <div className="font-bold text-[21px]" style={{ color: T.ink }}>Follow-up Visit</div>
           </button>
-          <button onClick={() => onSelect("postop")} className="rounded-2xl p-5 text-left active:scale-95 transition flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
+          <button onClick={() => onSelect("postop")} className="ut-card rounded-2xl p-5 text-left flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
             <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.tealTint }}>
               <Slice size={30} color={T.tealDark} />
             </div>
@@ -18630,7 +18641,7 @@ function ConditionButton({ condition, active, onSelect, onRemove }) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   return (
     <>
-      <button onClick={() => onSelect(condition)} className="rounded-2xl px-4 py-4 flex items-center justify-between text-left active:scale-95 transition" style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 60 }}>
+      <button onClick={() => onSelect(condition)} className="ut-card rounded-2xl px-4 py-4 flex items-center justify-between text-left" style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 60 }}>
         <span className="flex items-center gap-2 font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>
           {active && <CheckCircle2 size={17} color={T.teal} />}
           {condition.name}
@@ -18675,12 +18686,54 @@ function ConditionButton({ condition, active, onSelect, onRemove }) {
   );
 }
 
+
+// Shared empty state. A good empty state answers three questions: what
+// would normally be here, why it is not, and what to do next. The previous
+// one-line messages answered only the second, which is the least useful of
+// the three - "No notes yet" tells the clinician nothing they did not
+// already know from looking at an empty list.
+//
+// The icon is deliberately low-contrast: an empty state should be calm and
+// legible, not an error. Actions are optional, because some empty states
+// are genuinely terminal (a search with no matches) while others have an
+// obvious next step (no diagnoses opened yet).
+function EmptyState({ icon: Icon, title, body, action, onAction, compact }) {
+  return (
+    <div
+      className={`rounded-2xl text-center ${compact ? "px-4 py-5" : "px-5 py-7"}`}
+      style={{ background: T.surface, border: `1px dashed ${T.borderStrong}` }}
+    >
+      {Icon && (
+        <div
+          className="mx-auto flex items-center justify-center rounded-full mb-3"
+          style={{ width: compact ? 40 : 48, height: compact ? 40 : 48, background: T.slateChip }}
+        >
+          <Icon size={compact ? 19 : 22} color={T.inkSoft} />
+        </div>
+      )}
+      <div className={`font-semibold ${compact ? "text-[14px]" : "text-[15px]"} mb-1`} style={{ color: T.ink }}>{title}</div>
+      {body && <div className="text-[13px] leading-relaxed mx-auto" style={{ color: T.inkSoft, maxWidth: 320 }}>{body}</div>}
+      {action && onAction && (
+        <button
+          onClick={onAction}
+          className="mt-4 rounded-xl px-4 py-2.5 font-semibold text-[14px]"
+          style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}`, minHeight: 44 }}
+        >
+          {action}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function EmptySubsection() {
   return (
-    <div className="rounded-2xl p-5 text-center" style={{ background: T.surface, border: `1px dashed ${T.borderStrong}` }}>
-      <div className="text-[14px] font-medium mb-1" style={{ color: T.ink }}>No templates yet</div>
-      <div className="text-[13px]" style={{ color: T.inkSoft }}>Attach a template for this category and it will slot in here automatically.</div>
-    </div>
+    <EmptyState
+      compact
+      icon={FilePlus}
+      title="No templates in this group yet"
+      body="New templates slot in here automatically as they are added \u2014 nothing needs configuring."
+    />
   );
 }
 
@@ -18822,7 +18875,7 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
           )}
         </>
       ) : (
-        <div className="text-[13px]" style={{ color: T.inkSoft }}>No structured pathway available for this condition.</div>
+        <EmptyState compact icon={AlertTriangle} title="No structured pathway here" body="This condition is documented from its history, examination and imaging sections; management is recorded in the note directly." />
       )}
 
       <div className="text-[13px] mt-4 mb-2" style={{ color: T.inkSoft }}>Or choose a different plan:</div>
@@ -19202,7 +19255,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
   const [confirmRemove, setConfirmRemove] = useState(null);
   const items = session.order.map((id) => findConditionById(id)).filter(Boolean);
   return (
-    <div className="sticky top-0 z-40 flex items-center gap-2 px-3 py-2 overflow-x-auto" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
+    <div className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 px-3 py-2 overflow-x-auto" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
       <button onClick={onGoHome} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Go to home">
         <Home size={16} color="#fff" />
       </button>
@@ -19359,8 +19412,14 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
       <div className="px-3 pt-3 pb-8" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div className="max-w-2xl lg:max-w-4xl mx-auto">
           {groupedResults.length === 0 ? (
-            <div className="rounded-2xl p-6 text-center mt-4" style={{ background: T.surface, border: `1px dashed ${T.borderStrong}` }}>
-              <div className="text-[14px] font-medium" style={{ color: T.ink }}>No templates match "{query}"</div>
+            <div className="mt-4">
+              <EmptyState
+                icon={Search}
+                title={`No templates match \u201c${query}\u201d`}
+                body="Try a shorter term, the anatomical site, or an abbreviation \u2014 templates are matched on name and region."
+                action="Clear search"
+                onAction={() => setQuery("")}
+              />
             </div>
           ) : (
             <div className="flex flex-col gap-5">
@@ -19374,7 +19433,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
                         <button
                           key={condition.id}
                           onClick={() => onSelect(condition)}
-                          className="rounded-2xl px-4 py-3.5 flex items-center justify-between text-left active:scale-95 transition"
+                          className="ut-card rounded-2xl px-4 py-3.5 flex items-center justify-between text-left"
                           style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 52 }}
                         >
                           <span className="font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>{condition.name}</span>
@@ -19450,7 +19509,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
                 <button
                   key={condition.id}
                   onClick={() => onToggle(condition.id)}
-                  className="rounded-2xl px-4 py-3.5 flex items-center justify-between text-left active:scale-95 transition"
+                  className="ut-card rounded-2xl px-4 py-3.5 flex items-center justify-between text-left"
                   style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 52, boxShadow: T.shadowCard }}
                 >
                   <span className="font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>{condition.name}</span>
@@ -19709,6 +19768,107 @@ function historyStateToScreen(histState) {
 /* ============================================================================
    ROOT APP
 ============================================================================ */
+
+// Design-system stylesheet. These are applied globally rather than patched
+// onto ~100 individual buttons, so the interaction language stays
+// consistent as new UI is added - and so a future change is one edit, not
+// a hundred.
+//
+// What this addresses, in order of visible impact:
+//  1. HOVER - the app is used on tablet and desktop, where nothing
+//     previously responded to a pointer. Absence of hover is the clearest
+//     signal that an interface was built without a pointer in mind.
+//  2. FOCUS - keyboard focus was effectively invisible. A visible focus
+//     ring is both an accessibility requirement and a craft signal.
+//     :focus-visible is used so it appears for keyboard users without
+//     drawing a ring on every touch tap.
+//  3. PRESS FEEDBACK PROPORTIONAL TO SIZE - a uniform 5% scale reads
+//     correct on a small chip and wrong on a large card, because the
+//     absolute displacement differs enormously. Large surfaces now
+//     compress less.
+//  4. TIMING - an unqualified `transition` defaults to a flat 150ms ease.
+//     Deliberate durations and a slight overshoot-free easing curve make
+//     interactions feel considered rather than default.
+const DESIGN_SYSTEM_CSS = `
+  :root {
+    --ut-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --ut-teal: #0E7C86;
+  }
+
+  /* Consistent, intentional motion. Short enough to feel immediate on a
+     tap, long enough to read as deliberate rather than abrupt. */
+  button, a, [role="button"], input, textarea, select {
+    transition-property: background-color, border-color, box-shadow, transform, opacity, color;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ut-ease);
+  }
+
+  /* Keyboard focus. Two-tone ring so it stays visible on both light
+     surfaces and the dark teal top bar. */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--ut-teal);
+    outline-offset: 2px;
+    border-radius: 10px;
+  }
+  /* On the dark header the teal ring has too little contrast, so invert. */
+  .ut-on-dark button:focus-visible,
+  .ut-on-dark [role="button"]:focus-visible {
+    outline-color: #FFFFFF;
+  }
+
+  /* Pointer-only affordances. Guarded by hover:hover so touch devices
+     never get a sticky hover state left behind after a tap. */
+  @media (hover: hover) and (pointer: fine) {
+    button:not(:disabled):hover,
+    a:hover,
+    [role="button"]:hover {
+      filter: brightness(0.97);
+    }
+    /* Cards and list rows lift slightly rather than darken - a surface
+       responding to proximity reads better than a colour change. */
+    .ut-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 1px 2px rgba(16,30,43,0.06), 0 8px 20px rgba(16,30,43,0.08), 0 2px 6px rgba(16,30,43,0.04);
+    }
+  }
+
+  /* Press feedback scaled to element size. A large card compressing 5%
+     travels far more pixels than a chip doing the same, which is why a
+     single value looks wrong across both. */
+  .ut-card:active { transform: scale(0.995); }
+
+  /* Inputs indicate focus with a border change only. An additional glow
+     ring around a field that already shows a caret is visual noise - the
+     ring is reserved for :focus-visible (keyboard navigation), where there
+     is no caret to rely on. */
+  input:focus, textarea:focus {
+    border-color: rgba(14,124,134,0.35) !important;
+  }
+  /* Typing into a field should not also draw the keyboard ring. */
+  input:focus:not(:focus-visible),
+  textarea:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* A field group's separator rule is suppressed on the first group in a
+     section, where there is nothing above it to separate from. */
+  .ut-group:first-child .ut-group-rule { display: none; }
+
+  /* Respect reduced-motion preferences. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+    .ut-card:hover { transform: none; }
+  }
+`;
+
 export default function App() {
   const [screen, setScreenRaw] = useState({ view: "visitType" });
   // Wraps every screen change with a matching history entry. `replace: true`
@@ -19877,6 +20037,7 @@ export default function App() {
 
   return (
     <div>
+      <style>{DESIGN_SYSTEM_CSS}</style>
       <SessionBar
         session={session}
         activeConditionId={screen.view === "template" ? screen.condition.id : null}
