@@ -14078,18 +14078,31 @@ function PathwayFlow({ schema, answers, onAnswer, priorTreatmentGiven }) {
           <div className="rounded-xl px-4 py-3" style={{ background: node.type === "terminal" ? toneColors[node.tone]?.bg || T.slateChip : T.slateChip, border: `1px solid ${node.type === "terminal" ? toneColors[node.tone]?.border || T.border : T.border}` }}>
             <div className="text-[13px] font-semibold mb-0.5" style={{ color: node.type === "terminal" ? toneColors[node.tone]?.fg || T.ink : T.ink }}>{node.title}</div>
             <div className="text-[14px]" style={{ color: T.inkSoft }}>{node.text}</div>
-            {node.type === "question" && (
-              <div className="flex gap-2 mt-3">
-                {node.options.map((o) => {
-                  const active = answers[id] === o.label;
-                  return (
-                    <button key={o.label} onClick={() => onAnswer(id, o.label)} className="flex-1 rounded-lg py-2.5 text-[14px] font-semibold active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.surface, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.borderStrong}` }}>
-                      {o.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            {node.type === "question" && (() => {
+              // Short binary answers (Yes/No, Improving/Not improving) read
+              // best side by side. Longer or more numerous options - e.g.
+              // four treatment choices - cannot fit a phone's width in one
+              // row, so they stack as a full-width list on mobile and wrap
+              // on wider screens instead of overflowing off the edge.
+              const compact = node.options.length <= 2 && node.options.every((o) => o.label.length <= 16);
+              return (
+                <div className={compact ? "flex gap-2 mt-3" : "grid grid-cols-1 gap-2 mt-3 sm:flex sm:flex-wrap"}>
+                  {node.options.map((o) => {
+                    const active = answers[id] === o.label;
+                    return (
+                      <button
+                        key={o.label}
+                        onClick={() => onAnswer(id, o.label)}
+                        className={`rounded-lg py-2.5 text-[14px] font-semibold active:scale-95 transition ${compact ? "flex-1" : "w-full text-left px-3.5 sm:w-auto sm:flex-1 sm:text-center sm:basis-[calc(50%-4px)]"}`}
+                        style={{ minHeight: 44, background: active ? T.teal : T.surface, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.borderStrong}` }}
+                      >
+                        {o.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
           {i < trail.length - 1 && <div className="flex justify-start pl-6"><div style={{ width: 2, height: 16, background: T.borderStrong }} /></div>}
         </div>
