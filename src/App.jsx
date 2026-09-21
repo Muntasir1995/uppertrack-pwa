@@ -14123,6 +14123,65 @@ function RedFlagChecklist({ items, checked, onToggle }) {
 // this asserts the opposite, so it sits below a divider in green with a
 // filled badge rather than the same red checklist circle. Shared by the
 // popup panel and the inline section so the two cannot drift apart.
+// The red-flag control shows its own state, so whether the safety check
+// has happened is visible rather than remembered. Three states, and the
+// order of visual emphasis is deliberate:
+//
+//   unreviewed  quiet    - a prompt on every diagnosis; if it shouted here
+//                          it would be ignored by the third patient
+//   clear       recedes  - the common ending; once done it should stop
+//                          competing for attention
+//   present     loud     - the rare case, and the only one that must be
+//                          impossible to walk past
+//
+// Each state also changes its LABEL, not just its colour, so it survives
+// greyscale and colour-vision deficiency.
+function getRedFlagState(condition, state) {
+  const checked = (state.redFlagsChecked || []).length + (state.urgentFlagsChecked || []).length;
+  if (checked > 0) return { kind: "present", count: checked };
+  if (state.redFlagsReviewed) return { kind: "clear", count: 0 };
+  return { kind: "unreviewed", count: 0 };
+}
+
+function RedFlagChip({ condition, state, onOpen }) {
+  const s = getRedFlagState(condition, state);
+  const look =
+    s.kind === "present"
+      ? { bg: T.red, border: T.red, ink: "#fff", dot: "#fff" }
+      : s.kind === "clear"
+      ? { bg: T.greenTint, border: T.green, ink: T.green, dot: T.green }
+      : { bg: T.amberTint, border: T.amber, ink: T.amber, dot: T.amber };
+  const label =
+    s.kind === "present"
+      ? `${s.count} red flag${s.count === 1 ? "" : "s"}`
+      : s.kind === "clear"
+      ? "Red flags clear"
+      : "Red flags";
+  return (
+    <button
+      onClick={onOpen}
+      className="flex items-center gap-1.5 rounded-full px-3 py-2 active:scale-95 shrink-0"
+      style={{ background: look.bg, border: `1px solid ${look.border}`, minHeight: 40 }}
+      aria-label={
+        s.kind === "present"
+          ? `${s.count} red flags recorded. Open red flags.`
+          : s.kind === "clear"
+          ? "Red flags reviewed, none present. Open red flags."
+          : "Red flags not yet reviewed. Open red flags."
+      }
+    >
+      {s.kind === "present" ? (
+        <AlertTriangle size={16} color={look.ink} />
+      ) : s.kind === "clear" ? (
+        <Check size={15} color={look.ink} />
+      ) : (
+        <AlertTriangle size={16} color={look.ink} />
+      )}
+      <span className="text-[13px] font-semibold whitespace-nowrap" style={{ color: look.ink }}>{label}</span>
+    </button>
+  );
+}
+
 function RedFlagsClearedButton({ reviewed, onToggle }) {
   return (
     <>
@@ -17305,13 +17364,35 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
     return { regionKey, label: REGION_LABELS[regionKey], entries };
   }).filter((g) => g.entries.length > 0);
 
-  if (!open) return null;
+  // Kept mounted through the exit so the close can be seen; `mounted`
+  // trails `open` by the animation duration.
+  const [mounted, setMounted] = useState(open);
+  const [closing, setClosing] = useState(false);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      setClosing(false);
+      return undefined;
+    }
+    if (!mounted) return undefined;
+    setClosing(true);
+    const t = setTimeout(() => {
+      setMounted(false);
+      setClosing(false);
+    }, 220);
+    return () => clearTimeout(t);
+  }, [open, mounted]);
 
+  if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex" style={{ background: "rgba(16,30,43,0.4)" }} onClick={onClose}>
+    <div
+      className={`fixed inset-0 z-50 flex ${closing ? "ut-scrim-out" : "ut-scrim-in"}`}
+      style={{ background: "rgba(16,30,43,0.4)" }}
+      onClick={onClose}
+    >
       <div
-        className="h-full w-[86%] max-w-sm flex flex-col"
+        className={`h-full w-[86%] max-w-sm flex flex-col ${closing ? "ut-sheet-out" : "ut-sheet-in"}`}
         style={{ background: T.bg, boxShadow: "8px 0 28px rgba(16,30,43,0.18)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -17727,10 +17808,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               {condition.region} · <span className="font-bold" style={{ color: T.tealDark }}>{sectionsDone}/{countableSections.length}</span> sections
             </div>
           </div>
-          <button onClick={() => setFlagsOpen(true)} className="flex items-center gap-1 rounded-full px-3 py-2 active:scale-95" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
-            <AlertTriangle size={16} color={T.amber} />
-            <span className="text-[13px] font-semibold" style={{ color: T.amber }}>{totalFlagsChecked > 0 ? totalFlagsChecked : ""} Red flags</span>
-          </button>
+          <RedFlagChip condition={condition} state={state} onOpen={() => setFlagsOpen(true)} />
         </div>
         <div style={{ height: 3, background: T.tealTint }} aria-label={`${sectionsDone} of ${countableSections.length} sections documented`}>
           <div style={{ height: "100%", width: `${Math.round(progressPct * 100)}%`, background: T.gradientTeal, transition: "width 0.3s ease" }} />
@@ -17749,21 +17827,36 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
           </div>
         )}
 
-        <div className="flex gap-2 mb-3">
-          <button
-            onClick={() => setBriefMode(true)}
-            className="flex-1 rounded-lg py-2.5 text-[13px] font-semibold active:scale-95"
-            style={{ background: briefMode ? T.teal : T.slateChip, color: briefMode ? "#fff" : T.ink, minHeight: 44 }}
-          >
-            Brief encounter
-          </button>
-          <button
-            onClick={() => setBriefMode(false)}
-            className="flex-1 rounded-lg py-2.5 text-[13px] font-semibold active:scale-95"
-            style={{ background: briefMode ? T.slateChip : T.teal, color: briefMode ? T.ink : "#fff", minHeight: 44 }}
-          >
-            Full template
-          </button>
+        <div
+          className="flex mb-3 rounded-xl p-1"
+          style={{ background: T.slateChip, border: `1px solid ${T.border}` }}
+          role="radiogroup"
+          aria-label="Template detail"
+        >
+          {[
+            { on: true, label: "Brief encounter" },
+            { on: false, label: "Full template" },
+          ].map((seg) => {
+            const selected = briefMode === seg.on;
+            return (
+              <button
+                key={seg.label}
+                role="radio"
+                aria-checked={selected}
+                onClick={() => setBriefMode(seg.on)}
+                className="flex-1 rounded-lg py-2 text-[13px] font-semibold"
+                style={{
+                  minHeight: 40,
+                  background: selected ? T.surface : "transparent",
+                  color: selected ? T.tealDark : T.inkSoft,
+                  boxShadow: selected ? "0 1px 1px rgba(16,30,43,0.04), 0 2px 4px rgba(16,30,43,0.06)" : "none",
+                  transition: "background 160ms cubic-bezier(0.32,0.72,0,1), color 160ms cubic-bezier(0.32,0.72,0,1), box-shadow 160ms cubic-bezier(0.32,0.72,0,1)",
+                }}
+              >
+                {seg.label}
+              </button>
+            );
+          })}
         </div>
         {briefMode && (
           <div className="text-[12px] mb-3 px-1" style={{ color: T.inkSoft }}>
@@ -18045,20 +18138,38 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+          <DragSheet onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+            <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : "Clinic note"}</span>
             </div>
-            <div className="flex gap-2 px-4 pt-3">
-              <button onClick={() => setNoteType("note")} className="flex-1 rounded-lg px-2 py-2 text-[13px] font-semibold" style={{ background: noteType === "note" ? T.teal : T.slateChip, color: noteType === "note" ? "#fff" : T.ink, minHeight: 44 }}>
-                Clinic note
-              </button>
-              <button onClick={() => setNoteType("physio")} className="flex-1 rounded-lg px-2 py-2 text-[13px] font-semibold" style={{ background: noteType === "physio" ? T.teal : T.slateChip, color: noteType === "physio" ? "#fff" : T.ink, minHeight: 44 }}>
-                Physio referral
-              </button>
+            <div className="mx-4 mt-3 flex rounded-xl p-1" style={{ background: T.slateChip, border: `1px solid ${T.border}` }} role="radiogroup" aria-label="Note type">
+              {[
+                { key: "note", label: "Clinic note" },
+                { key: "physio", label: "Physio referral" },
+              ].map((t) => {
+                const selected = noteType === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setNoteType(t.key)}
+                    className="flex-1 rounded-lg px-2 py-2 text-[13px] font-semibold"
+                    style={{
+                      minHeight: 40,
+                      background: selected ? T.surface : "transparent",
+                      color: selected ? T.tealDark : T.inkSoft,
+                      boxShadow: selected ? "0 1px 1px rgba(16,30,43,0.04), 0 2px 4px rgba(16,30,43,0.06)" : "none",
+                      transition: "background 160ms cubic-bezier(0.32,0.72,0,1), color 160ms cubic-bezier(0.32,0.72,0,1), box-shadow 160ms cubic-bezier(0.32,0.72,0,1)",
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
             </div>
             {noteType === "note" && hasMultipleActive && (
               <div className="mx-4 mt-2 rounded-lg px-3 py-2 text-[13px] font-medium text-center" style={{ background: T.tealTint, color: T.tealDark }}>
@@ -18094,7 +18205,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                   style={{ color: T.ink, fontFamily: "ui-monospace, monospace", border: `1px solid ${T.teal}`, background: T.surface, minHeight: 320, resize: "vertical" }}
                 />
               ) : (
-                <pre className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ color: T.ink, fontFamily: "ui-monospace, monospace", overflow: "visible", margin: 0 }}>{note}</pre>
+                <NoteBody text={note} />
               )}
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
@@ -18108,9 +18219,12 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <button onClick={() => { setEditingNote(false); setNoteOpen(false); }} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
                 <ArrowLeft size={17} /> Close preview
               </button>
+              <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
+                Print
+              </button>
               <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
-                {copied ? "Copied" : "Copy to clipboard"}
+                {copied ? <span className="ut-confirm">Copied</span> : "Copy to clipboard"}
               </button>
               {copyError && (
                 <div className="text-[13px] text-center" style={{ color: T.red }}>
@@ -18121,7 +18235,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 <RotateCcw size={17} /> New patient
               </button>
             </div>
-          </div>
+          </DragSheet>
         </div>
       )}
 
@@ -18581,7 +18695,7 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
           <path d="M256 436 l-2 20"/><path d="M268 436 l0 22"/><path d="M280 434 l4 22"/>
         </g>
   
-        <g fill="none" strokeLinecap="round" className={activeRegion === "peripheralNerve" ? "ut-nerve-trace" : undefined}>
+          <g id={`${uid}-nerves`} fill="none" strokeLinecap="round">
           <path d="M48 24 q22 14 34 28 M48 40 q24 12 34 26 M48 56 q24 10 32 24 M48 72 q22 10 30 22" stroke="#F0C64A" strokeWidth="2" opacity="0.85"/>
           <path d="M82 48 q18 10 26 24 q12 20 16 40" stroke="#F0C64A" strokeWidth="3.6" opacity="0.92"/>
           <path d="M132 122 q16 42 30 82 q14 36 26 66 q11 26 20 44" stroke="#F0C64A" strokeWidth="3" opacity="0.9"/>
@@ -18601,6 +18715,14 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
           clipPath={`url(#${uid}-rclip)`}
           style={{ transition: "opacity 240ms cubic-bezier(0.32,0.72,0,1)" }}
         />
+      )}
+      {/* Peripheral Nerve is the one region whose anatomy is not confined
+          to a band - the three nerves run the whole limb. Clipping them to
+          the legend strip at the bottom would hide exactly what was
+          selected, so instead they are redrawn unclipped at full strength
+          over the dimmed illustration, and traced along their course. */}
+      {activeRegion === "peripheralNerve" && (
+        <use href={`#${uid}-nerves`} className="ut-nerve-trace" />
       )}
 
       <text x="208" y="96" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#2C5468">SHOULDER</text>
@@ -18729,6 +18851,138 @@ function ConditionButton({ condition, active, onSelect, onRemove }) {
 // legible, not an error. Actions are optional, because some empty states
 // are genuinely terminal (a search with no matches) while others have an
 // obvious next step (no diagnoses opened yet).
+// Renders a generated note with its structure made visible: section
+// headings (ALL CAPS lines) in bold, and sub-headings (a line ending in a
+// colon, unindented) in semibold.
+//
+// This is a DISPLAY treatment only - the text placed on the clipboard is
+// unchanged plain text. Hospital record systems generally accept plain
+// text and would either strip or mangle markup, so emphasis is added where
+// it helps the clinician read and check the note, not in what gets pasted.
+// Bottom sheet for note previews: drag the top bar to resize, drag it far
+// enough down (or flick it down) to close.
+//
+// One gesture does both jobs, which is how sheets behave natively on
+// phones - there is no separate "resize mode" to discover. Height follows
+// the finger; on release, a sheet dragged below the close threshold or
+// flicked downward animates away and closes, otherwise it stays at the
+// size it was left at.
+//
+// Dragging only starts from the handle or the header (marked
+// data-sheet-drag), never from the note body - the body has to remain
+// freely scrollable - and never from a button inside the header, so the
+// back arrow still works as a tap.
+function DragSheet({ onClose, className, style, children }) {
+  const ref = useRef(null);
+  const drag = useRef(null);
+  const [heightPx, setHeightPx] = useState(null); // null = natural size
+  const [dragging, setDragging] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+
+  const vh = () => (typeof window !== "undefined" ? window.innerHeight : 800);
+  const MIN_FRAC = 0.3;   // smallest size it rests at
+  const MAX_FRAC = 0.96;  // tallest it can be pulled
+  const CLOSE_FRAC = 0.22; // released below this -> close
+
+  const close = () => {
+    if (leaving) return;
+    setLeaving(true);
+    setTimeout(() => onClose && onClose(), 180);
+  };
+
+  const onPointerDown = (e) => {
+    const t = e.target;
+    if (!t.closest || !t.closest("[data-sheet-drag]")) return;
+    if (t.closest("button, a, input, textarea, select")) return;
+    if (e.button != null && e.button !== 0) return;
+    const el = ref.current;
+    if (!el) return;
+    drag.current = { startY: e.clientY, startH: el.getBoundingClientRect().height, lastY: e.clientY, lastT: Date.now(), vy: 0 };
+    setDragging(true);
+    try { el.setPointerCapture(e.pointerId); } catch (err) { /* older browsers */ }
+  };
+
+  const onPointerMove = (e) => {
+    const d = drag.current;
+    if (!d) return;
+    const now = Date.now();
+    const dt = Math.max(1, now - d.lastT);
+    d.vy = (e.clientY - d.lastY) / dt; // px per ms, positive = downward
+    d.lastY = e.clientY;
+    d.lastT = now;
+    const h = d.startH - (e.clientY - d.startY);
+    // Allowed to shrink past the resting minimum while dragging, so the
+    // user can see it heading off-screen before letting go.
+    setHeightPx(Math.max(vh() * 0.08, Math.min(vh() * MAX_FRAC, h)));
+  };
+
+  const onPointerUp = () => {
+    const d = drag.current;
+    if (!d) return;
+    drag.current = null;
+    setDragging(false);
+    const h = heightPx == null ? d.startH : heightPx;
+    const flickedDown = d.vy > 0.9 && h < d.startH;
+    if (h < vh() * CLOSE_FRAC || flickedDown) {
+      close();
+      return;
+    }
+    // Rest no smaller than the minimum.
+    setHeightPx(Math.max(vh() * MIN_FRAC, h));
+  };
+
+  const sized = heightPx != null;
+  return (
+    <div
+      ref={ref}
+      className={`${className || ""} ${leaving ? "ut-sheet-leave" : ""}`}
+      style={{
+        ...style,
+        ...(sized ? { height: heightPx, maxHeight: `${MAX_FRAC * 100}vh` } : null),
+        transition: dragging ? "none" : "height 200ms cubic-bezier(0.32,0.72,0,1)",
+      }}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+    >
+      <div data-sheet-drag className="flex justify-center pt-2 pb-1" aria-hidden="true">
+        <span className="rounded-full" style={{ width: 36, height: 4, background: T.borderStrong }} />
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function NoteBody({ text }) {
+  const lines = String(text || "").split("\n");
+  return (
+    <pre
+      className="ut-note whitespace-pre-wrap text-[13px] leading-relaxed"
+      style={{ color: T.ink, fontFamily: "ui-monospace, monospace", overflow: "visible", margin: 0 }}
+    >
+      {lines.map((line, i) => {
+        const trimmed = line.trim();
+        const isHeading = trimmed.length > 2 && /^[A-Z0-9][A-Z0-9 &\u2014/()'-]*$/.test(trimmed) && /[A-Z]{3}/.test(trimmed);
+        const isSubHeading = !isHeading && /^[^\s].*:$/.test(line) && line.length < 60;
+        return (
+          <span
+            key={i}
+            style={{
+              display: "block",
+              fontWeight: isHeading ? 700 : isSubHeading ? 600 : 400,
+              marginTop: isHeading && i > 0 ? "0.75em" : 0,
+            }}
+          >
+            {line === "" ? "\u00a0" : line}
+          </span>
+        );
+      })}
+    </pre>
+  );
+}
+
 function EmptyState({ icon: Icon, title, body, action, onAction, compact }) {
   return (
     <div
@@ -19033,15 +19287,15 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+          <DragSheet onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+            <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Follow-up note</span>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-              <pre className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ color: T.ink, fontFamily: "ui-monospace, monospace", overflow: "visible", margin: 0 }}>{note}</pre>
+              <NoteBody text={note} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
@@ -19049,7 +19303,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
               </button>
               <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
-                {copied ? "Copied" : "Copy to clipboard"}
+                {copied ? <span className="ut-confirm">Copied</span> : "Copy to clipboard"}
               </button>
               {copyError && (
                 <div className="text-[13px] text-center" style={{ color: T.red }}>
@@ -19057,7 +19311,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
                 </div>
               )}
             </div>
-          </div>
+          </DragSheet>
         </div>
       )}
     </div>
@@ -19249,15 +19503,15 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+          <DragSheet onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+            <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Post-op follow-up note</span>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-              <pre className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ color: T.ink, fontFamily: "ui-monospace, monospace", overflow: "visible", margin: 0 }}>{note}</pre>
+              <NoteBody text={note} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
@@ -19265,7 +19519,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
               </button>
               <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
-                {copied ? "Copied" : "Copy to clipboard"}
+                {copied ? <span className="ut-confirm">Copied</span> : "Copy to clipboard"}
               </button>
               {copyError && (
                 <div className="text-[13px] text-center" style={{ color: T.red }}>
@@ -19273,7 +19527,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
                 </div>
               )}
             </div>
-          </div>
+          </DragSheet>
         </div>
       )}
     </div>
@@ -19333,9 +19587,25 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
               >
                 <button
                   onClick={() => onSwitch(c)}
-                  className="text-[13px] font-medium active:scale-95 py-0.5"
+                  className="text-[13px] font-medium active:scale-95 py-0.5 flex items-center gap-1.5"
                   style={{ color: active ? T.tealDark : "#fff" }}
                 >
+                  {(() => {
+                    const rf = getRedFlagState(c, (session.statesByConditionId || {})[c.id] || {});
+                    const dot = rf.kind === "present" ? T.red : rf.kind === "clear" ? T.green : T.amber;
+                    const title = rf.kind === "present" ? `${rf.count} red flags` : rf.kind === "clear" ? "Red flags clear" : "Red flags not yet reviewed";
+                    return (
+                      <span
+                        className="rounded-full shrink-0"
+                        style={{
+                          width: 7, height: 7, background: dot,
+                          boxShadow: active ? "none" : "0 0 0 1.5px rgba(255,255,255,0.45)",
+                        }}
+                        title={title}
+                        aria-label={title}
+                      />
+                    );
+                  })()}
                   {c.name.length > 24 ? c.name.slice(0, 22) + "\u2026" : c.name}
                 </button>
                 {onRemoveCondition && (
@@ -19662,7 +19932,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
               onClick={onContinue}
               disabled={!selectedIds.length}
               className="w-full rounded-xl px-4 py-3.5 font-semibold text-[15px] active:scale-95 transition"
-              style={{ background: selectedIds.length ? T.gradientTeal : T.slateChip, color: selectedIds.length ? "#fff" : T.inkSoft, minHeight: 50 }}
+              style={{ background: selectedIds.length ? T.gradientTeal : T.slateChip, color: selectedIds.length ? "#fff" : T.inkSoft, minHeight: 48 }}
             >
               {selectedIds.length ? `Continue with ${selectedIds.length} diagnos${selectedIds.length === 1 ? "is" : "es"}` : "Select at least one diagnosis"}
             </button>
@@ -19680,7 +19950,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
             onClick={onContinue}
             disabled={!selectedIds.length}
             className="w-full rounded-xl px-4 py-3.5 font-semibold text-[15px] active:scale-95 transition"
-            style={{ background: selectedIds.length ? T.gradientTeal : T.slateChip, color: selectedIds.length ? "#fff" : T.inkSoft, minHeight: 50 }}
+            style={{ background: selectedIds.length ? T.gradientTeal : T.slateChip, color: selectedIds.length ? "#fff" : T.inkSoft, minHeight: 48 }}
           >
             {selectedIds.length ? `Continue with ${selectedIds.length} diagnos${selectedIds.length === 1 ? "is" : "es"}` : "Select at least one diagnosis"}
           </button>
@@ -19938,23 +20208,117 @@ const DESIGN_SYSTEM_CSS = `
   .ut-group:first-child .ut-group-rule { display: none; }
 
 
-  /* Nerve tracing. Fires only when Peripheral Nerve is selected: the
-     median, ulnar and radial paths draw along their course from proximal
-     to distal, staggered so they read as three distinct nerves rather than
-     one effect. pathLength is not set on these paths, so the dash figure
-     is simply larger than any of them. */
+
+  /* Display typography. Optical spacing: the larger the type, the tighter
+     it should be set, because letterforms at size carry more apparent
+     space between them. Body text is deliberately untouched - tightening
+     it would cost legibility, which matters more than polish in clinic. */
+  .text-\\[20px\\], .text-\\[21px\\], .text-\\[22px\\] {
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .text-\\[26px\\], .text-\\[36px\\] {
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+  .text-\\[48px\\], .text-\\[56px\\] {
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+
+
+  /* Reference panel enter/exit. The sheet slides from its own edge while
+     the scrim fades, so the panel reads as arriving from off-screen rather
+     than appearing on top of the page. Exit is slightly quicker than
+     entry - a deliberate asymmetry, since waiting to leave feels slower
+     than waiting to arrive. */
+  @keyframes ut-sheet-in  { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes ut-sheet-out { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+  @keyframes ut-scrim-in  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes ut-scrim-out { from { opacity: 1; } to { opacity: 0; } }
+
+  .ut-sheet-in  { animation: ut-sheet-in  240ms cubic-bezier(0.32,0.72,0,1) both; }
+  .ut-sheet-out { animation: ut-sheet-out 200ms cubic-bezier(0.32,0.72,0,1) both; }
+  .ut-scrim-in  { animation: ut-scrim-in  240ms cubic-bezier(0.32,0.72,0,1) both; }
+  .ut-scrim-out { animation: ut-scrim-out 200ms cubic-bezier(0.32,0.72,0,1) both; }
+
+
+  /* Draggable note sheet. The drag zone opts out of native touch panning
+     so a downward drag resizes the sheet rather than scrolling the page or
+     triggering pull-to-refresh. Closing slides the sheet away rather than
+     letting it vanish mid-gesture. */
+  [data-sheet-drag] { touch-action: none; }
+  @keyframes ut-sheet-leave { to { transform: translateY(100%); opacity: 0.6; } }
+  .ut-sheet-leave { animation: ut-sheet-leave 180ms cubic-bezier(0.32,0.72,0,1) forwards; }
+
+  /* Copy confirmation. A short rise and settle, so the acknowledgement is
+     felt rather than merely read. Nothing is blocked while it plays. */
+  @keyframes ut-confirm {
+    0%   { transform: translateY(3px); opacity: 0; }
+    55%  { transform: translateY(-1px); opacity: 1; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .ut-confirm { animation: ut-confirm 260ms cubic-bezier(0.32,0.72,0,1) both; }
+
+  /* Nerve tracing. Fires only when Peripheral Nerve is selected.
+     The nerves are drawn via a use element, which produces a shadow
+     clone - and the animation property does NOT cascade into a shadow
+     tree, so animating the cloned paths directly would silently do
+     nothing. stroke-dasharray and stroke-dashoffset ARE inherited, so the
+     animation runs on the use element and the clone inherits the values.
+     The dash figure is simply larger than any single nerve path. */
   @keyframes ut-trace {
-    from { stroke-dashoffset: 400; opacity: 0.25; }
-    to   { stroke-dashoffset: 0;   opacity: 1; }
+    from { stroke-dashoffset: 520; }
+    to   { stroke-dashoffset: 0; }
   }
-  .ut-nerve-trace path {
-    stroke-dasharray: 400;
-    animation: ut-trace 700ms cubic-bezier(0.32,0.72,0,1) both;
+  .ut-nerve-trace {
+    stroke-dasharray: 520;
+    animation: ut-trace 900ms cubic-bezier(0.32,0.72,0,1) both;
   }
-  /* Median group first, then ulnar, then radial. */
-  .ut-nerve-trace path:nth-child(-n+5) { animation-delay: 0ms; }
-  .ut-nerve-trace path:nth-child(n+6):nth-child(-n+8) { animation-delay: 110ms; }
-  .ut-nerve-trace path:nth-child(n+9) { animation-delay: 220ms; }
+
+
+  /* Print. The app chrome exists to help enter a note; on paper only the
+     note itself matters, so everything else is hidden and the note is set
+     in a serif at a readable size with sensible page margins. Headings are
+     kept with the text beneath them so a section never breaks across a
+     page from its own title. */
+  @media print {
+    @page { margin: 18mm 16mm; }
+
+    body { background: #fff !important; }
+
+    /* Hide app chrome: bars, footers, modals' surrounding UI, controls. */
+    .ut-no-print,
+    nav, button, .ut-card,
+    [class*="fixed"], [class*="sticky"] {
+      display: none !important;
+    }
+
+    /* The note itself is promoted to the page. */
+    .ut-note {
+      display: block !important;
+      position: static !important;
+      font-family: Georgia, "Times New Roman", serif !important;
+      font-size: 11.5pt !important;
+      line-height: 1.5 !important;
+      color: #000 !important;
+      white-space: pre-wrap !important;
+      overflow: visible !important;
+      max-height: none !important;
+    }
+    .ut-note span { orphans: 3; widows: 3; }
+    .ut-note span[style*="700"] { page-break-after: avoid; break-after: avoid; }
+
+    /* Any container wrapping the note must not clip or scroll on paper. */
+    .ut-print-root, .ut-print-root * {
+      overflow: visible !important;
+      max-height: none !important;
+      box-shadow: none !important;
+      border: 0 !important;
+      background: transparent !important;
+    }
+  }
 
   /* Respect reduced-motion preferences. */
   @media (prefers-reduced-motion: reduce) {
@@ -19963,7 +20327,10 @@ const DESIGN_SYSTEM_CSS = `
       animation-duration: 0.01ms !important;
     }
     .ut-card:hover { transform: none; }
-    .ut-nerve-trace path { animation: none; stroke-dasharray: none; opacity: 1; }
+    .ut-nerve-trace { animation: none; stroke-dasharray: none; }
+    /* The panel still appears and disappears, just without travel. */
+    .ut-sheet-in, .ut-sheet-out, .ut-scrim-in, .ut-scrim-out, .ut-sheet-leave { animation: none !important; }
+    .ut-sheet-out, .ut-scrim-out { opacity: 0; }
   }
 `;
 
@@ -20216,17 +20583,24 @@ export default function App() {
 
       {viewNote && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setViewNote(null)}>
-          <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+          <DragSheet onClose={() => setViewNote(null)} className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }}>
+            <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{viewNote.title}</span>
               <button onClick={() => setViewNote(null)} aria-label="Close" className="p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
                 <X size={20} color={T.inkSoft} />
               </button>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto" }}>
-              <pre className="text-[13px] whitespace-pre-wrap" style={{ color: T.ink, fontFamily: "ui-monospace, monospace" }}>{viewNote.text}</pre>
+              <NoteBody text={viewNote.text} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
+              <button
+                onClick={() => window.print()}
+                className="rounded-xl px-4 py-3 font-semibold text-[14px]"
+                style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}
+              >
+                Print
+              </button>
               <button
                 onClick={() => { try { navigator.clipboard.writeText(viewNote.text); } catch (e) { /* user can select manually */ } }}
                 className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
@@ -20238,7 +20612,7 @@ export default function App() {
                 Saved this session only — this is a snapshot from when it was generated, not a live copy.
               </div>
             </div>
-          </div>
+          </DragSheet>
         </div>
       )}
 
@@ -20270,15 +20644,15 @@ export default function App() {
 
       {combinedNoteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setCombinedNoteOpen(false)}>
-          <div className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}` }}>
+          <DragSheet onClose={() => setCombinedNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+            <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Combined clinic note</span>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-              <pre className="whitespace-pre-wrap text-[13px] leading-relaxed" style={{ color: T.ink, fontFamily: "ui-monospace, monospace", overflow: "visible", margin: 0 }}>{combinedNote}</pre>
+              <NoteBody text={combinedNote} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
               <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
@@ -20294,7 +20668,7 @@ export default function App() {
                 </div>
               )}
             </div>
-          </div>
+          </DragSheet>
         </div>
       )}
 
