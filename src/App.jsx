@@ -18,6 +18,11 @@ import {
   Mic,
   FileText,
   ChevronLeft,
+  ClipboardList,
+  History,
+  Library,
+  Gauge,
+  Info,
 } from "lucide-react";
 
 /* ============================================================================
@@ -12616,7 +12621,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.0.0";
+const APP_VERSION = "5.8.0";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -13608,6 +13613,12 @@ const FIELD_SUGGESTIONS = {
 // the app, no recording is retained, and the structured fields are
 // untouched - this is a faster way to type a finding, not an ambient
 // scribe. Browsers without support simply don't show the button.
+//
+// Privacy note: the app itself sends nothing, but speech recognition is
+// performed by the browser, and some browsers (Chrome in particular) send
+// the audio to their provider's servers to transcribe it. It is therefore
+// NOT accurate to say audio never leaves the device. The About page states
+// this plainly.
 const SPEECH_SUPPORTED =
   typeof window !== "undefined" &&
   !!(window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -14236,13 +14247,16 @@ function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked,
   const noFlagsChecked = (checked || []).length === 0 && (urgentChecked || []).length === 0;
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.45)" }}>
-      <div className="w-full sm:max-w-md lg:max-w-xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, maxHeight: "85vh", overflowY: "auto", WebkitOverflowScrolling: "touch", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
-        <div className="flex items-center gap-2 px-4 py-4 sticky top-0" style={{ background: T.amberTint, borderBottom: `1px solid ${T.amber}` }}>
+      {/* Header and footer sit outside the scrolling list, so the Preview
+          button is always in view - previously it was the last item in the
+          scroll and only appeared after scrolling past every flag. */}
+      <div className="w-full sm:max-w-md lg:max-w-xl rounded-t-2xl sm:rounded-2xl flex flex-col" style={{ background: T.surface, maxHeight: "85vh", overflow: "hidden", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+        <div className="flex items-center gap-2 px-4 py-4 shrink-0" style={{ background: T.amberTint, borderBottom: `1px solid ${T.amber}` }}>
           <AlertTriangle size={20} color={T.amber} />
           <span className="font-bold text-[15px] flex-1" style={{ color: T.amber }}>Red Flags</span>
           <button onClick={onClose} className="p-1 active:opacity-60"><X size={20} color={T.amber} /></button>
         </div>
-        <div className="px-4 py-3">
+        <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
           {hasUrgent && (
             <>
               <div className="text-[12px] font-bold uppercase tracking-wide mb-2" style={{ color: T.red }}>Urgent — reassess immediately</div>
@@ -14254,16 +14268,18 @@ function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked,
           {noFlagsChecked && onToggleReviewed && (
             <RedFlagsClearedButton reviewed={reviewed} onToggle={onToggleReviewed} />
           )}
-          {onPreviewNote && (reviewed || !noFlagsChecked) && (
+        </div>
+        {onPreviewNote && (reviewed || !noFlagsChecked) && (
+          <div className="px-4 py-3 shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.surface }}>
             <button
               onClick={onPreviewNote}
-              className="w-full rounded-xl px-4 py-3 mt-4 font-semibold text-[15px] active:scale-95 transition"
+              className="w-full rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95 transition"
               style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
             >
               Preview clinic note
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -17331,7 +17347,7 @@ function EvidencePanel({ conditionId }) {
 // makes React unmount and remount its whole subtree - which in turn
 // destroys focus in any input it contains. That is what previously limited
 // the evidence search box to one character at a time.
-function PanelRow({ title, count, isOpen, onToggle, children }) {
+function PanelRow({ title, count, isOpen, onToggle, icon: Icon, children }) {
   return (
     <div className="mb-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
       <button
@@ -17340,9 +17356,20 @@ function PanelRow({ title, count, isOpen, onToggle, children }) {
         style={{ minHeight: 48 }}
         aria-expanded={isOpen}
       >
-        <span className="font-semibold text-[14px]" style={{ color: T.ink }}>
-          {title}
-          {count != null && <span className="ml-1.5 font-normal" style={{ color: T.inkSoft }}>({count})</span>}
+        <span className="flex items-center gap-2.5 min-w-0">
+          {Icon && (
+            <span
+              className="shrink-0 flex items-center justify-center rounded-lg"
+              style={{ width: 30, height: 30, background: T.tealTint }}
+              aria-hidden="true"
+            >
+              <Icon size={16} color={T.tealDark} />
+            </span>
+          )}
+          <span className="font-semibold text-[14px]" style={{ color: T.ink }}>
+            {title}
+            {count != null && <span className="ml-1.5 font-normal" style={{ color: T.inkSoft }}>({count})</span>}
+          </span>
         </span>
         <ChevronDown size={18} color={T.inkSoft} style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform .15s" }} />
       </button>
@@ -17351,8 +17378,10 @@ function PanelRow({ title, count, isOpen, onToggle, children }) {
   );
 }
 
-function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote }) {
+function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote, onOpenAbout, initialSection }) {
   const [section, setSection] = useState(null);
+  // Opening from a quick-access tile or icon lands on that section.
+  useEffect(() => { if (open) setSection(initialSection || null); }, [open, initialSection]);
   const [evQuery, setEvQuery] = useState("");
   const [openEvRegion, setOpenEvRegion] = useState(null);
   const recents = (recentIds || []).map((id) => findConditionById(id)).filter(Boolean);
@@ -17400,8 +17429,8 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex ${closing ? "ut-scrim-out" : "ut-scrim-in"}`}
-      style={{ background: "rgba(16,30,43,0.4)" }}
+      className={`fixed inset-0 flex ${closing ? "ut-scrim-out" : "ut-scrim-in"}`}
+      style={{ background: "rgba(16,30,43,0.4)", zIndex: 60 }}
       onClick={onClose}
     >
       <div
@@ -17417,7 +17446,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
-          <PanelRow title="Recent clinic notes" count={(recentNotes || []).length} isOpen={section === "notes"} onToggle={() => setSection(section === "notes" ? null : "notes")}>
+          <PanelRow icon={ClipboardList} title="Recent clinic notes" count={(recentNotes || []).length} isOpen={section === "notes"} onToggle={() => setSection(section === "notes" ? null : "notes")}>
             {(recentNotes || []).length === 0 ? (
               <div className="mt-3"><EmptyState compact icon={FileText} title="No notes yet" body="Notes appear here once you copy one. They are kept for this session only." /></div>
             ) : (
@@ -17437,7 +17466,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
             )}
           </PanelRow>
 
-          <PanelRow title="Recent diagnoses" count={recents.length} isOpen={section === "recent"} onToggle={() => setSection(section === "recent" ? null : "recent")}>
+          <PanelRow icon={History} title="Recent diagnoses" count={recents.length} isOpen={section === "recent"} onToggle={() => setSection(section === "recent" ? null : "recent")}>
             {recents.length === 0 ? (
               <div className="mt-3"><EmptyState compact icon={CheckCircle2} title="No diagnoses yet" body="Diagnoses you open appear here, so returning to one mid-clinic takes a single tap." /></div>
             ) : (
@@ -17456,7 +17485,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
             )}
           </PanelRow>
 
-          <PanelRow title="Evidence library" count={evidenceIds.length} isOpen={section === "evidence"} onToggle={() => setSection(section === "evidence" ? null : "evidence")}>
+          <PanelRow icon={Library} title="Evidence library" count={evidenceIds.length} isOpen={section === "evidence"} onToggle={() => setSection(section === "evidence" ? null : "evidence")}>
             <div className="mt-3 mb-2">
               <input
                 type="text"
@@ -17519,7 +17548,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
             )}
           </PanelRow>
 
-          <PanelRow title="Outcome measures" count={OUTCOME_MEASURES.length} isOpen={section === "outcomes"} onToggle={() => setSection(section === "outcomes" ? null : "outcomes")}>
+          <PanelRow icon={Gauge} title="Outcome measures" count={OUTCOME_MEASURES.length} isOpen={section === "outcomes"} onToggle={() => setSection(section === "outcomes" ? null : "outcomes")}>
             <div className="flex flex-col gap-2">
               {OUTCOME_MEASURES.map((m) => (
                 <div key={m.abbr} className="rounded-lg px-3 py-2.5" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
@@ -17537,8 +17566,16 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
           </PanelRow>
         </div>
 
-        <div className="px-4 py-2.5 shrink-0 text-[12px] text-center" style={{ borderTop: `1px solid ${T.border}`, background: T.surface, color: T.inkSoft }}>
-          UpperTrack v{APP_VERSION}
+        <div className="shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.surface }}>
+          <button
+            onClick={onOpenAbout}
+            className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-[12px]"
+            style={{ color: T.inkSoft, minHeight: 44 }}
+            aria-label={`About UpperTrack, version ${APP_VERSION}`}
+          >
+            <Info size={13} color={T.inkSoft} />
+            UpperTrack v{APP_VERSION}
+          </button>
         </div>
       </div>
     </div>
@@ -17550,6 +17587,12 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const [flagsOpen, setFlagsOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [noteType, setNoteType] = useState("note"); // "note" | "physio"
+  // Switching note type starts the new note at its top, rather than at the
+  // scroll position left over from the other one.
+  const noteScrollRef = useRef(null);
+  useEffect(() => {
+    if (noteScrollRef.current) noteScrollRef.current.scrollTop = 0;
+  }, [noteType]);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -18156,7 +18199,8 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
-              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : "Clinic note"}</span>
+              <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : "Clinic note"}</span>
+              <QuickRefIcons />
             </div>
             <div className="mx-4 mt-3 flex rounded-xl p-1" style={{ background: T.slateChip, border: `1px solid ${T.border}` }} role="radiogroup" aria-label="Note type">
               {[
@@ -18189,7 +18233,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 Combined note for all {session.order.length - getSupersededGeneralIds(session).size} conditions in this session
               </div>
             )}
-            <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+            <div ref={noteScrollRef} className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               {noteType === "physio" && (
                 <PhysioReferralInputs
                   value={state.physioReferral || {}}
@@ -18221,32 +18265,37 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 <NoteBody text={note} />
               )}
             </div>
+            {/* Two rows of paired actions instead of five stacked buttons, so
+                the note keeps most of the sheet. Close preview was dropped:
+                the back arrow, dragging the sheet down and tapping outside
+                all close it already. */}
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <button
-                onClick={() => { if (!editingNote && !isEdited) setOverride(generatedNote); setEditingNote((v) => !v); }}
-                className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
-                style={{ background: editingNote ? T.tealTint : T.slateChip, color: editingNote ? T.tealDark : T.ink, border: `1px solid ${editingNote ? T.teal : T.border}`, minHeight: 48 }}
-              >
-                {editingNote ? <><Check size={17} /> Done editing</> : <>Edit note text</>}
-              </button>
-              <button onClick={() => { setEditingNote(false); setNoteOpen(false); }} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                <ArrowLeft size={17} /> Close preview
-              </button>
-              <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                Print
-              </button>
-              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
-                {copied ? <Check size={17} /> : <Copy size={17} />}
-                {copied ? <span className="ut-confirm">Copied</span> : "Copy to clipboard"}
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => { if (!editingNote && !isEdited) setOverride(generatedNote); setEditingNote((v) => !v); }}
+                  className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95"
+                  style={{ background: editingNote ? T.tealTint : T.slateChip, color: editingNote ? T.tealDark : T.ink, border: `1px solid ${editingNote ? T.teal : T.border}`, minHeight: 48 }}
+                >
+                  {editingNote ? <><Check size={17} /> Done editing</> : <>Edit note text</>}
+                </button>
+                <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
+                  Print
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={copyNote} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+                  {copied ? <Check size={17} /> : <Copy size={17} />}
+                  {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
+                </button>
+                <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
+                  <RotateCcw size={17} /> New patient
+                </button>
+              </div>
               {copyError && (
                 <div className="text-[13px] text-center" style={{ color: T.red }}>
                   Couldn't copy automatically — tap and hold the note above to select and copy it manually.
                 </div>
               )}
-              <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
-                <RotateCcw size={17} /> New patient
-              </button>
             </div>
           </DragSheet>
         </div>
@@ -18472,6 +18521,23 @@ const DIFFERENTIAL_TO_CONDITION = {
   },
 };
 
+// The version line on the home screen doubles as the way into About, as it
+// does at the foot of the Reference panel.
+function AboutVersionLink() {
+  const ref = React.useContext(ReferenceCtx);
+  return (
+    <button
+      onClick={() => ref && ref.openAbout()}
+      className="mt-1 inline-flex items-center justify-center gap-1.5 px-3 text-[12px]"
+      style={{ color: T.inkSoft, minHeight: 44 }}
+      aria-label={`About UpperTrack, version ${APP_VERSION}`}
+    >
+      <Info size={13} color={T.inkSoft} />
+      v{APP_VERSION}
+    </button>
+  );
+}
+
 function VisitTypeGate({ onSelect }) {
   return (
     <div className="min-h-screen px-4 pt-10 pb-8 flex items-center" style={{ background: T.bg }}>
@@ -18501,9 +18567,10 @@ function VisitTypeGate({ onSelect }) {
           </button>
         </div>
         <div className="text-center mt-8">
+          <QuickRefTiles />
           <div className="text-[13px] font-medium" style={{ color: T.inkSoft }}>Created by Dr. Muntasir Al-Naamani</div>
           <div className="text-[13px]" style={{ color: T.inkSoft }}>Suggestions: namanimuntasir@gmail.com</div>
-          <div className="text-[12px] mt-2" style={{ color: T.inkSoft }}>v{APP_VERSION}</div>
+          <AboutVersionLink />
         </div>
       </div>
     </div>
@@ -18968,6 +19035,151 @@ function DragSheet({ onClose, className, style, children }) {
   );
 }
 
+// About page, opened from the version line in the Reference panel. Kept
+// deliberately short: what the app is, what it is for, how it treats data,
+// and the limits of what it should be relied on for. The disclaimers are
+// written to be accurate rather than reassuring - in particular about
+// voice dictation, whose audio handling is decided by the browser, not by
+// this app.
+function AboutSheet({ open, onClose }) {
+  if (!open) return null;
+  const H = ({ children }) => (
+    <div className="text-[12px] font-bold uppercase tracking-wide mt-5 mb-1.5" style={{ color: T.ink, opacity: 0.72 }}>{children}</div>
+  );
+  const P = ({ children }) => <p className="text-[14px] leading-relaxed mb-2" style={{ color: T.ink }}>{children}</p>;
+  const Li = ({ children }) => (
+    <li className="text-[14px] leading-relaxed mb-1.5 flex gap-2" style={{ color: T.ink }}>
+      <span style={{ color: T.teal }}>{"\u2022"}</span><span>{children}</span>
+    </li>
+  );
+  return (
+    <div className="fixed inset-0 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)", zIndex: 60 }} onClick={onClose}>
+      <DragSheet onClose={onClose} className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+        <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
+          <span className="shrink-0 flex items-center justify-center rounded-lg" style={{ width: 30, height: 30, background: T.tealTint }} aria-hidden="true">
+            <Info size={16} color={T.tealDark} />
+          </span>
+          <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>About UpperTrack</span>
+          <button onClick={onClose} aria-label="Close about" className="p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+            <X size={20} color={T.inkSoft} />
+          </button>
+        </div>
+        <div className="px-5 pb-6 pt-1" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+          <H>What it is</H>
+          <P>
+            UpperTrack is a structured documentation tool for upper extremity outpatient clinics. It covers 69 condition
+            templates across the shoulder, elbow, wrist, hand and peripheral nerves, plus 4 general assessments for
+            presentations where the diagnosis is not yet clear. Tapping through history, examination, imaging and a
+            management pathway produces a clinic note and a physiotherapy referral ready to copy into the record.
+          </P>
+
+          <H>Goals</H>
+          <ul className="mb-1">
+            <Li>Faster, consistent notes in a busy clinic, with the examination captured exactly as recorded rather than reconstructed afterwards.</Li>
+            <Li>Evidence at the point of decision: management pathways carry summaries of the literature that informs them.</Li>
+            <Li>Safety prompts that stay visible, such as red flags that show whether they have been reviewed.</Li>
+            <Li>A teaching aid for trainees, since the grading criteria and evidence sit alongside the documentation.</Li>
+          </ul>
+
+          <H>Your data</H>
+          <ul className="mb-1">
+            <Li>Nothing is stored. Everything entered is held in memory for the current session only, and is cleared by New patient or by closing the app.</Li>
+            <Li>The app sends no patient data anywhere and contains no analytics or tracking.</Li>
+            <Li>
+              Voice dictation uses your browser&apos;s built-in speech recognition. Depending on the browser, the audio may
+              be processed on the browser provider&apos;s servers (for example Google, in Chrome). Avoid dictating patient
+              identifiers.
+            </Li>
+            <Li>Copied notes are placed on your device&apos;s clipboard, where other apps may be able to read them.</Li>
+          </ul>
+
+          <H>Important disclaimers</H>
+          <ul className="mb-1">
+            <Li>UpperTrack is a documentation and structured-thinking aid for qualified clinicians. It does not diagnose, and it does not make treatment decisions.</Li>
+            <Li>Pathways suggest options. Clinical judgement remains central, and the clinician is responsible for the accuracy of every note and for all clinical decisions.</Li>
+            <Li>It has not been evaluated or approved as a medical device by any regulatory body.</Li>
+            <Li>Evidence summaries reflect a review completed in September 2026 and may become out of date. Verify against the primary source before changing practice.</Li>
+            <Li>It does not replace local protocols or institutional guidelines, which take precedence.</Li>
+            <Li>Outcome measure instruments remain the property of their copyright holders and should be obtained from the official sources linked in the Reference panel.</Li>
+          </ul>
+
+          <div className="mt-6 pt-4 text-[13px] leading-relaxed" style={{ borderTop: `1px solid ${T.border}`, color: T.inkSoft }}>
+            <div className="font-semibold" style={{ color: T.ink }}>UpperTrack v{APP_VERSION}</div>
+            <div>Created by Dr. Muntasir Al-Naamani</div>
+            <div>Suggestions: namanimuntasir@gmail.com</div>
+          </div>
+        </div>
+      </DragSheet>
+    </div>
+  );
+}
+
+// Quick access to the Reference panel from anywhere, via context so the
+// home screen and every note preview can open a specific section without
+// threading props through each screen.
+const ReferenceCtx = React.createContext(null);
+const QUICK_REF = [
+  { section: "notes", label: "Recent notes", icon: ClipboardList },
+  { section: "recent", label: "Recent diagnoses", icon: History },
+  { section: "evidence", label: "Evidence library", icon: Library },
+  { section: "outcomes", label: "Outcome measures", icon: Gauge },
+];
+
+// Home screen: four tiles under the visit cards. Recent items show their
+// count so an empty list is visible before tapping into it.
+function QuickRefTiles() {
+  const ref = React.useContext(ReferenceCtx);
+  if (!ref) return null;
+  const count = { notes: ref.noteCount, recent: ref.recentCount, evidence: Object.keys(CONDITION_EVIDENCE).length, outcomes: OUTCOME_MEASURES.length };
+  return (
+    <div className="mt-6">
+      <div className="text-[12px] font-bold uppercase tracking-wide mb-2 text-center" style={{ color: T.ink, opacity: 0.72 }}>Reference</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {QUICK_REF.map(({ section, label, icon: Icon }) => (
+          <button
+            key={section}
+            onClick={() => ref.openPanel(section)}
+            className="ut-card rounded-xl px-3 py-3 flex items-center gap-2.5 text-left"
+            style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowCard, minHeight: 56 }}
+          >
+            <span className="shrink-0 flex items-center justify-center rounded-lg" style={{ width: 32, height: 32, background: T.tealTint }} aria-hidden="true">
+              <Icon size={17} color={T.tealDark} />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold leading-tight" style={{ color: T.ink }}>{label}</span>
+              <span className="block text-[12px]" style={{ color: T.inkSoft }}>{count[section]}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Note preview header: the same four as compact icon buttons, so evidence
+// or an outcome measure can be checked without leaving the note. The panel
+// opens above the preview and closing it returns to the note.
+function QuickRefIcons() {
+  const ref = React.useContext(ReferenceCtx);
+  if (!ref) return null;
+  return (
+    <div className="flex items-center gap-1 shrink-0">
+      {QUICK_REF.map(({ section, label, icon: Icon }) => (
+        <button
+          key={section}
+          onClick={() => ref.openPanel(section)}
+          className="flex items-center justify-center rounded-lg active:scale-95"
+          style={{ width: 36, height: 36, background: T.tealTint }}
+          aria-label={`Open ${label.toLowerCase()}`}
+          title={label}
+        >
+          <Icon size={17} color={T.tealDark} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function NoteBody({ text }) {
   const lines = String(text || "").split("\n");
   return (
@@ -19305,19 +19517,22 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
-              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Follow-up note</span>
+              <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Follow-up note</span>
+              <QuickRefIcons />
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={note} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                <ArrowLeft size={17} /> Close preview
-              </button>
-              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
+                  Print
+                </button>
+                <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
-                {copied ? <span className="ut-confirm">Copied</span> : "Copy to clipboard"}
+                {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
               </button>
+              </div>
               {copyError && (
                 <div className="text-[13px] text-center" style={{ color: T.red }}>
                   Couldn't copy automatically — tap and hold the note above to select and copy it manually.
@@ -19521,19 +19736,22 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
-              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Post-op follow-up note</span>
+              <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Post-op follow-up note</span>
+              <QuickRefIcons />
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={note} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <button onClick={() => setNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                <ArrowLeft size={17} /> Close preview
-              </button>
-              <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
+                  Print
+                </button>
+                <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
-                {copied ? <span className="ut-confirm">Copied</span> : "Copy to clipboard"}
+                {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
               </button>
+              </div>
               {copyError && (
                 <div className="text-[13px] text-center" style={{ color: T.red }}>
                   Couldn't copy automatically — tap and hold the note above to select and copy it manually.
@@ -20402,6 +20620,14 @@ export default function App() {
   // list is one app session) but resets if the app itself is reloaded.
   const [recentIds, setRecentIds] = useState([]);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [panelSection, setPanelSection] = useState(null);
+  const referenceValue = {
+    openPanel: (section) => { setPanelSection(section || null); setPanelOpen(true); },
+    openAbout: () => { setPanelOpen(false); setAboutOpen(true); },
+    noteCount: 0,
+    recentCount: 0,
+  };
   // Notes previewed or copied this session, newest first. In memory only,
   // like recentIds - a clinic list is one app session.
   const [recentNotes, setRecentNotes] = useState([]);
@@ -20513,7 +20739,10 @@ export default function App() {
     }
   };
 
+  referenceValue.noteCount = recentNotes.length;
+  referenceValue.recentCount = recentIds.length;
   return (
+    <ReferenceCtx.Provider value={referenceValue}>
     <div>
       <style>{DESIGN_SYSTEM_CSS}</style>
       <SessionBar
@@ -20523,7 +20752,7 @@ export default function App() {
         onViewCombinedNote={() => setCombinedNoteOpen(true)}
         onEndSession={endSession}
         onOpenSearch={() => setSearchOpen(true)}
-        onOpenPanel={() => setPanelOpen(true)}
+        onOpenPanel={() => { setPanelSection(null); setPanelOpen(true); }}
         noteCount={recentNotes.length}
         onGoHome={goHome}
         onRemoveCondition={removeCondition}
@@ -20592,21 +20821,26 @@ export default function App() {
         recentNotes={recentNotes}
         onOpenCondition={openCondition}
         onOpenNote={(n) => setViewNote(n)}
+        initialSection={panelSection}
+        onOpenAbout={referenceValue.openAbout}
       />
+      <AboutSheet open={aboutOpen} onClose={() => setAboutOpen(false)} />
 
       {viewNote && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setViewNote(null)}>
           <DragSheet onClose={() => setViewNote(null)} className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
-              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>{viewNote.title}</span>
+              <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>{viewNote.title}</span>
               <button onClick={() => setViewNote(null)} aria-label="Close" className="p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
                 <X size={20} color={T.inkSoft} />
               </button>
+              <QuickRefIcons />
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto" }}>
               <NoteBody text={viewNote.text} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
+              <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => window.print()}
                 className="rounded-xl px-4 py-3 font-semibold text-[14px]"
@@ -20619,8 +20853,9 @@ export default function App() {
                 className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
                 style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
               >
-                Copy to clipboard
+                Copy
               </button>
+              </div>
               <div className="text-[12px] text-center" style={{ color: T.inkSoft }}>
                 Saved this session only — this is a snapshot from when it was generated, not a live copy.
               </div>
@@ -20662,19 +20897,22 @@ export default function App() {
               <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
-              <span className="font-bold text-[15px] flex-1" style={{ color: T.ink }}>Combined clinic note</span>
+              <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Combined clinic note</span>
+              <QuickRefIcons />
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={combinedNote} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                <ArrowLeft size={17} /> Close preview
-              </button>
-              <button onClick={copyCombinedNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
+                  Print
+                </button>
+                <button onClick={copyCombinedNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {combinedCopied ? <Check size={17} /> : <Copy size={17} />}
-                {combinedCopied ? "Copied" : "Copy to clipboard"}
+                {combinedCopied ? "Copied" : "Copy"}
               </button>
+              </div>
               {combinedCopyError && (
                 <div className="text-[13px] text-center mt-2" style={{ color: T.red }}>
                   Couldn't copy automatically — tap and hold the note above to select and copy it manually.
@@ -20687,5 +20925,6 @@ export default function App() {
 
       {searchOpen && <TemplateSearch onSelect={selectFromSearch} onClose={() => setSearchOpen(false)} selectedIds={inFollowupSelection ? followupSelectedIds : undefined} />}
     </div>
+    </ReferenceCtx.Provider>
   );
 }
