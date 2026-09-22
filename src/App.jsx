@@ -12622,7 +12622,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.9.2";
+const APP_VERSION = "5.9.3";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -14247,15 +14247,15 @@ function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked,
   const hasUrgent = urgentFlags && urgentFlags.length > 0;
   const noFlagsChecked = (checked || []).length === 0 && (urgentChecked || []).length === 0;
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.45)" }}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.45)" }} onClick={onClose}>
       {/* Header and footer sit outside the scrolling list, so the Preview
           button is always in view - previously it was the last item in the
           scroll and only appeared after scrolling past every flag. */}
-      <div className="w-full sm:max-w-md lg:max-w-xl rounded-t-2xl sm:rounded-2xl flex flex-col" style={{ background: T.surface, maxHeight: "85vh", overflow: "hidden", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
-        <div className="flex items-center gap-2 px-4 py-4 shrink-0" style={{ background: T.amberTint, borderBottom: `1px solid ${T.amber}` }}>
+      <DragSheet onClose={onClose} className="w-full sm:max-w-md lg:max-w-xl rounded-t-2xl sm:rounded-2xl flex flex-col" style={{ background: T.surface, maxHeight: "85vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+        <div data-sheet-drag className="flex items-center gap-2 px-4 py-3 shrink-0" style={{ background: T.amberTint, borderBottom: `1px solid ${T.amber}`, touchAction: "none", cursor: "grab" }}>
           <AlertTriangle size={20} color={T.amber} />
           <span className="font-bold text-[15px] flex-1" style={{ color: T.amber }}>Red Flags</span>
-          <button onClick={onClose} className="p-1 active:opacity-60"><X size={20} color={T.amber} /></button>
+          <button onClick={onClose} aria-label="Close red flags" className="shrink-0 flex items-center justify-center p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}><X size={20} color={T.amber} /></button>
         </div>
         <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
           {hasUrgent && (
@@ -14281,7 +14281,7 @@ function RedFlagPanel({ redFlags, checked, onToggle, urgentFlags, urgentChecked,
             </button>
           </div>
         )}
-      </div>
+      </DragSheet>
     </div>
   );
 }
@@ -17603,7 +17603,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
         <div className="flex items-center justify-between gap-2 px-3 py-2 shrink-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
           <span className="font-bold text-[15px] pl-1" style={{ color: "#fff" }}>Reference</span>
           <button onClick={onClose} aria-label="Close reference panel" className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }}>
-            <ChevronLeft size={16} color="#fff" />
+            <X size={16} color="#fff" />
           </button>
         </div>
 
@@ -18234,11 +18234,6 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
           <RotateCcw size={17} /> New patient
         </button>
-        {onGoHome && (
-          <button onClick={onGoHome} aria-label="Home" className="flex items-center justify-center rounded-xl active:scale-95" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 48, width: 48, flexShrink: 0 }}>
-            <Home size={19} color={T.ink} />
-          </button>
-        )}
         <button
           onClick={() => {
             if (!redFlagsSettled && !flagPromptDismissed) { setFlagPromptOpen(true); return; }
@@ -18255,10 +18250,10 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
           <DragSheet quickRef onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
-              <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
-                <ArrowLeft size={20} color={T.ink} />
-              </button>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : "Clinic note"}</span>
+              <button onClick={() => setNoteOpen(false)} aria-label="Close preview" className="shrink-0 flex items-center justify-center p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+                <X size={20} color={T.inkSoft} />
+              </button>
             </div>
             <div className="mx-4 mt-3 flex rounded-xl p-1" style={{ background: T.slateChip, border: `1px solid ${T.border}` }} role="radiogroup" aria-label="Note type">
               {[
@@ -18317,7 +18312,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                   value={note}
                   onChange={(e) => setOverride(e.target.value)}
                   className="w-full text-[13px] leading-relaxed rounded-xl px-3 py-3"
-                  style={{ color: T.ink, fontFamily: "ui-monospace, monospace", border: `1px solid ${T.teal}`, background: T.surface, minHeight: 320, resize: "vertical" }}
+                  style={{ color: T.ink, fontFamily: "inherit", fontSize: 14, border: `1px solid ${T.teal}`, background: T.surface, minHeight: 320, resize: "vertical" }}
                 />
               ) : (
                 <NoteBody text={note} />
@@ -19249,8 +19244,8 @@ function NoteBody({ text }) {
   const lines = String(text || "").split("\n");
   return (
     <pre
-      className="ut-note whitespace-pre-wrap text-[13px] leading-relaxed"
-      style={{ color: T.ink, fontFamily: "ui-monospace, monospace", overflow: "visible", margin: 0 }}
+      className="ut-note whitespace-pre-wrap text-[14px] leading-relaxed"
+      style={{ color: T.ink, fontFamily: "inherit", overflow: "visible", margin: 0 }}
     >
       {lines.map((line, i) => {
         const trimmed = line.trim();
@@ -19551,11 +19546,6 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
           <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
             <RotateCcw size={17} /> New patient
           </button>
-          {onGoHome && (
-            <button onClick={onGoHome} aria-label="Home" className="flex items-center justify-center rounded-xl active:scale-95" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 48, width: 48, flexShrink: 0 }}>
-              <Home size={19} color={T.ink} />
-            </button>
-          )}
           <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
             Preview follow-up note
           </button>
@@ -19579,10 +19569,10 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
           <DragSheet quickRef onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
-              <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
-                <ArrowLeft size={20} color={T.ink} />
-              </button>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Follow-up note</span>
+              <button onClick={() => setNoteOpen(false)} aria-label="Close preview" className="shrink-0 flex items-center justify-center p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+                <X size={20} color={T.inkSoft} />
+              </button>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={note} />
@@ -19766,11 +19756,6 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
           <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
             <RotateCcw size={17} /> New patient
           </button>
-          {onGoHome && (
-            <button onClick={onGoHome} aria-label="Home" className="flex items-center justify-center rounded-xl active:scale-95" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 48, width: 48, flexShrink: 0 }}>
-              <Home size={19} color={T.ink} />
-            </button>
-          )}
           <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
             Preview post-op note
           </button>
@@ -19794,10 +19779,10 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
           <DragSheet quickRef onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
-              <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
-                <ArrowLeft size={20} color={T.ink} />
-              </button>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Post-op follow-up note</span>
+              <button onClick={() => setNoteOpen(false)} aria-label="Close preview" className="shrink-0 flex items-center justify-center p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+                <X size={20} color={T.inkSoft} />
+              </button>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={note} />
@@ -19911,8 +19896,11 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
           <button onClick={onViewCombinedNote} className="shrink-0 ml-1 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "#fff", color: T.tealDark }}>
             Combined note
           </button>
-          <button onClick={() => setConfirmEnd(true)} className="shrink-0 rounded-full p-1.5 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="End session">
-            <X size={14} color="#fff" />
+          {/* Previously an X labelled "End session". X now means "close this
+              sheet" everywhere, so a clearing action gets the same name and
+              icon as the other New patient buttons. */}
+          <button onClick={() => setConfirmEnd(true)} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="New patient">
+            <RotateCcw size={14} color="#fff" /> New patient
           </button>
         </>
       )}
@@ -19941,8 +19929,8 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
       {confirmEnd && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
-            <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>End patient session?</div>
-            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears every active condition and all entries for this session. It cannot be undone.</div>
+            <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
+            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with everything recorded for it — and returns to the home screen ready for the next patient. This cannot be undone.</div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmEnd(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
               <button
@@ -19953,7 +19941,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
                 className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]"
                 style={{ background: T.red, color: "#fff" }}
               >
-                End session
+                Start new patient
               </button>
             </div>
           </div>
@@ -21013,10 +21001,10 @@ export default function App() {
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setCombinedNoteOpen(false)}>
           <DragSheet quickRef onClose={() => setCombinedNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
-              <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
-                <ArrowLeft size={20} color={T.ink} />
-              </button>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Combined clinic note</span>
+              <button onClick={() => setCombinedNoteOpen(false)} aria-label="Close preview" className="shrink-0 flex items-center justify-center p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+                <X size={20} color={T.inkSoft} />
+              </button>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={combinedNote} />
