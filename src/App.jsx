@@ -12622,7 +12622,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.9.3";
+const APP_VERSION = "5.9.4";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -14313,6 +14313,12 @@ function isFilled(field, state) {
 }
 
 function Field({ field, state, setField, region }) {
+  // Once surgery is agreed the review-period question no longer applies.
+  if (patientScheduledForSurgery(state)) {
+    if (field.key === "followUpInterval") return <SurgeryScheduledNotice />;
+    if (field.key === "followUpReason") return null;
+    if (field.type === "conditional" && (field.fields || []).some((f) => f.key === "followUpIntervalOther")) return null;
+  }
   if (field.type === "conditional") {
     if (!field.when(state)) return null;
     return <>{field.fields.map((f, i) => <Field key={i} field={f} state={state} setField={setField} region={region} />)}</>;
@@ -15923,23 +15929,39 @@ function buildManagementPlan(condition, state) {
 // content (a static table, not tied to any state field), so this section is
 // derived from the condition's own nearest review row rather than from
 // clinician-entered data — every note should still end with a review plan.
-// True once the patient has both agreed to surgery and a specific plan has
-// been chosen or written (not just the bare agreement) - at that point a
-// routine follow-up interval no longer makes sense as "the plan"; what's
-// actually next is scheduling the operation. Checks every context this can
-// happen in: the main pathway (unilateral and bilateral, per side) and
-// trigger finger's per-digit pathway.
+// True as soon as the patient has agreed to surgery. From that point a
+// routine follow-up interval is not the plan - scheduling the operation is -
+// so the note says "The patient will be scheduled for surgery" and the form
+// stops asking for a review period. (This previously also required a
+// specific procedure to be chosen; agreement alone now decides it, so the
+// review question never reappears just because the procedure is still to be
+// picked.) Checks every context this can happen in: the main pathway
+// (unilateral and bilateral, per side) and trigger finger's per-digit
+// pathway.
 function patientScheduledForSurgery(state) {
-  const hasPlan = (discussion) => ((discussion && discussion.selected) || []).length > 0;
-  if (state.pathwaySurgeryAgreement === "Agreed" && hasPlan(state.surgicalDiscussion)) return true;
-  if (state.pathwaySurgeryAgreementRight === "Agreed" && hasPlan(state.surgicalDiscussionRight)) return true;
-  if (state.pathwaySurgeryAgreementLeft === "Agreed" && hasPlan(state.surgicalDiscussionLeft)) return true;
+  if (!state) return false;
+  if (state.pathwaySurgeryAgreement === "Agreed") return true;
+  if (state.pathwaySurgeryAgreementRight === "Agreed") return true;
+  if (state.pathwaySurgeryAgreementLeft === "Agreed") return true;
   if (state.pathwaySurgeryAgreementByDigit) {
     for (const digit of Object.keys(state.pathwaySurgeryAgreementByDigit)) {
-      if (state.pathwaySurgeryAgreementByDigit[digit] === "Agreed" && hasPlan(state.surgicalDiscussionByDigit?.[digit])) return true;
+      if (state.pathwaySurgeryAgreementByDigit[digit] === "Agreed") return true;
     }
   }
   return false;
+}
+
+// Shown where the review-period question would otherwise be, so it is clear
+// why it has gone and what the note will say instead.
+function SurgeryScheduledNotice() {
+  return (
+    <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 mb-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+      <CheckCircle2 size={16} color={T.tealDark} style={{ marginTop: 2, flexShrink: 0 }} />
+      <div className="text-[13px] leading-relaxed" style={{ color: T.tealDark }}>
+        Surgery agreed, so no review period is needed. The note will say: <span className="font-semibold">The patient will be scheduled for surgery.</span>
+      </div>
+    </div>
+  );
 }
 
 // Follow-up intervals are a mix of true durations ("6 weeks", "3-6 months")
@@ -16640,6 +16662,9 @@ function buildCombinedPostopNote(session, conditionIds) {
 }
 
 function sectionHasContent(section, state, conditionId) {
+  // The review section is complete once surgery is agreed - its question is
+  // replaced by "The patient will be scheduled for surgery".
+  if (section.id === "followup" && patientScheduledForSurgery(state)) return true;
   const bilateral = state.side === "Bilateral";
   const isPerDigit = conditionId === "trigger-finger";
   if (section.id === "pathway") {
@@ -18571,9 +18596,12 @@ const DIFFERENTIAL_TO_CONDITION = {
 
 function VisitTypeGate({ onSelect }) {
   return (
-    <div className="px-4 pt-10 pb-4 flex flex-col" style={{ background: T.bg, minHeight: `calc(100vh - ${TOPBAR_H}px)` }}>
-      <div className="flex-1 flex items-center w-full">
-      <div className="max-w-md md:max-w-xl mx-auto w-full">
+    <div className="ut-home flex flex-col" style={{ background: T.bg }}>
+      {/* Two stacked areas: the cards and credits scroll on their own above,
+          and the icon bar keeps its own strip at the bottom. The bar is
+          always fully visible, and nothing ever scrolls underneath it. */}
+      <div className="flex-1 flex flex-col px-4 pt-10 pb-4" style={{ minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div className="max-w-md md:max-w-xl mx-auto w-full" style={{ marginTop: "auto", marginBottom: "auto" }}>
         <div className="text-[14px] font-semibold uppercase tracking-widest mb-2 text-center" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
         <h1 className="text-[36px] font-bold mb-2 text-center" style={{ color: T.ink }}>UpperTrack</h1>
         <p className="text-[17px] mb-7 text-center" style={{ color: T.inkSoft }}>What kind of visit is this?</p>
@@ -19159,35 +19187,42 @@ function AboutSheet({ open, onClose }) {
 // threading props through each screen.
 const ReferenceCtx = React.createContext(null);
 const QUICK_REF = [
-  { section: "notes", label: "Recent notes", icon: ClipboardList },
-  { section: "recent", label: "Recent diagnoses", icon: History },
-  { section: "evidence", label: "Evidence library", icon: Library },
-  { section: "outcomes", label: "Outcome measures", icon: Gauge },
+  { section: "notes", label: "Recent notes", short: "Notes", icon: ClipboardList },
+  { section: "recent", label: "Recent diagnoses", short: "Diagnoses", icon: History },
+  { section: "evidence", label: "Evidence library", short: "Evidence", icon: Library },
+  { section: "outcomes", label: "Outcome measures", short: "Measures", icon: Gauge },
 ];
 
 // One reference shortcut: icon tile plus, for the two "recent" lists, a
 // count badge in the corner so it is visible how much is there before
 // opening it.
-function RefIconButton({ section, label, icon: Icon, tone }) {
+function RefIconButton({ section, label, short, icon: Icon, tone, showLabel }) {
   const ref = React.useContext(ReferenceCtx);
   if (!ref) return null;
   const count = section === "notes" ? ref.noteCount : section === "recent" ? ref.recentCount : 0;
   return (
     <button
       onClick={() => ref.openPanel(section)}
-      className="relative flex items-center justify-center rounded-xl shrink-0"
-      style={{ width: 44, height: 44, background: tone === "glass" ? "rgba(14,124,134,0.10)" : T.tealTint }}
+      className={`relative flex flex-col items-center shrink-0 ${showLabel ? "gap-1 px-1" : ""}`}
+      style={{ minWidth: showLabel ? 60 : 44 }}
       aria-label={count ? `Open ${label.toLowerCase()}, ${count}` : `Open ${label.toLowerCase()}`}
       title={label}
     >
-      <Icon size={19} color={T.tealDark} />
-      {count > 0 && (
-        <span
-          className="absolute flex items-center justify-center rounded-full text-[10px] font-bold"
-          style={{ top: -4, right: -4, minWidth: 17, height: 17, padding: "0 4px", background: T.amber, color: "#fff", border: `1.5px solid ${T.surface}`, lineHeight: 1 }}
-        >
-          {count > 9 ? "9+" : count}
-        </span>
+      <span className="relative flex items-center justify-center rounded-xl" style={{ width: 44, height: 44, background: tone === "glass" ? "rgba(14,124,134,0.10)" : T.tealTint }}>
+        <Icon size={19} color={T.tealDark} />
+        {count > 0 && (
+          // Teal, not amber: the count is information about what is there,
+          // not something that still needs the clinician's attention.
+          <span
+            className="absolute flex items-center justify-center rounded-full text-[10px] font-bold"
+            style={{ top: -4, right: -4, minWidth: 17, height: 17, padding: "0 4px", background: T.teal, color: "#fff", border: `1.5px solid ${T.surface}`, lineHeight: 1 }}
+          >
+            {count > 9 ? "9+" : count}
+          </span>
+        )}
+      </span>
+      {showLabel && (
+        <span className="text-[12px] font-medium leading-none" style={{ color: T.inkSoft }}>{short}</span>
       )}
     </button>
   );
@@ -19211,13 +19246,13 @@ function QuickRefBar() {
 function HomeFooter() {
   const [a, b, c, d] = QUICK_REF;
   return (
-    <div className="flex justify-center mt-8" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+    <div className="shrink-0 flex justify-center pt-2 px-4" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
       <nav className="ut-glass flex items-center gap-1.5 rounded-2xl p-2" aria-label="Reference shortcuts">
-        <RefIconButton {...a} tone="glass" />
-        <RefIconButton {...b} tone="glass" />
+        <RefIconButton {...a} tone="glass" showLabel />
+        <RefIconButton {...b} tone="glass" showLabel />
         <span aria-hidden="true" className="mx-1.5" style={{ width: 1, height: 24, background: "rgba(16,30,43,0.14)" }} />
-        <RefIconButton {...c} tone="glass" />
-        <RefIconButton {...d} tone="glass" />
+        <RefIconButton {...c} tone="glass" showLabel />
+        <RefIconButton {...d} tone="glass" showLabel />
       </nav>
     </div>
   );
@@ -19402,7 +19437,8 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
     (fuState.planOptions || []).length > 0 ||
     !!(fuState.planManualText && fuState.planManualText.trim()) ||
     !!fuState.followUpInterval ||
-    (fuState.nextReviewReason || []).length > 0;
+    (fuState.nextReviewReason || []).length > 0 ||
+    patientScheduledForSurgery(fuState);
 
   return (
     <CollapsibleSection index={index} title={condition.name} subtitle="Reason, treatment given, outcome, new plan" isOpen={isOpen} onToggle={() => setIsOpen((v) => !v)} hasContent={hasContent}>
@@ -19461,6 +19497,7 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
       )}
 
       <SubLabel>Next review</SubLabel>
+      {patientScheduledForSurgery(fuState) ? <SurgeryScheduledNotice /> : (<>
       <ButtonSelect options={intervalOptions} value={fuState.followUpInterval || null} onChange={(v) => set("followUpInterval", v)} columns={2} />
       {fuState.followUpInterval === "Other" && (
         <TextField label="Specify follow-up timing" value={fuState.followUpIntervalOther} onChange={(v) => set("followUpIntervalOther", v)} />
@@ -19474,6 +19511,7 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
           )}
         </>
       )}
+      </>)}
     </CollapsibleSection>
   );
 }
@@ -19832,7 +19870,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
               className="absolute flex items-center justify-center rounded-full text-[10px] font-bold"
               style={{
                 top: -2, right: -2, minWidth: 16, height: 16, padding: "0 4px",
-                background: T.amber, color: "#fff",
+                background: "#fff", color: T.tealDark,
                 border: `1.5px solid ${T.tealDark}`,
                 lineHeight: 1,
               }}
@@ -20576,6 +20614,10 @@ const DESIGN_SYSTEM_CSS = `
   @media (prefers-reduced-transparency: reduce) {
     .ut-glass { background: rgba(255,255,255,0.97); -webkit-backdrop-filter: none; backdrop-filter: none; }
   }
+
+  /* Home screen fills exactly the space below the app bar; dvh tracks the
+     mobile browser's collapsing toolbars where supported. */
+  .ut-home { height: calc(100vh - 48px); height: calc(100dvh - 48px); }
 
   [data-sheet-drag] { touch-action: none; }
   @keyframes ut-sheet-leave { to { transform: translateY(100%); opacity: 0.6; } }
