@@ -23,6 +23,7 @@ import {
   Library,
   Gauge,
   Info,
+  Pencil,
 } from "lucide-react";
 
 /* ============================================================================
@@ -12621,7 +12622,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.8.0";
+const APP_VERSION = "5.9.2";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -17378,7 +17379,7 @@ function PanelRow({ title, count, isOpen, onToggle, icon: Icon, children }) {
   );
 }
 
-function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote, onOpenAbout, initialSection }) {
+function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote, onOpenAbout, initialSection, variant = "panel" }) {
   const [section, setSection] = useState(null);
   // Opening from a quick-access tile or icon lands on that section.
   useEffect(() => { if (open) setSection(initialSection || null); }, [open, initialSection]);
@@ -17427,26 +17428,9 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
 
   if (!mounted) return null;
 
-  return (
-    <div
-      className={`fixed inset-0 flex ${closing ? "ut-scrim-out" : "ut-scrim-in"}`}
-      style={{ background: "rgba(16,30,43,0.4)", zIndex: 60 }}
-      onClick={onClose}
-    >
-      <div
-        className={`h-full w-[86%] max-w-sm flex flex-col ${closing ? "ut-sheet-out" : "ut-sheet-in"}`}
-        style={{ background: T.bg, boxShadow: "8px 0 28px rgba(16,30,43,0.18)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between gap-2 px-3 py-2 shrink-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
-          <span className="font-bold text-[15px] pl-1" style={{ color: "#fff" }}>Reference</span>
-          <button onClick={onClose} aria-label="Close reference panel" className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }}>
-            <ChevronLeft size={16} color="#fff" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-3 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
-          <PanelRow icon={ClipboardList} title="Recent clinic notes" count={(recentNotes || []).length} isOpen={section === "notes"} onToggle={() => setSection(section === "notes" ? null : "notes")}>
+  // Each section's content, shared by both presentations below.
+  const sectionContent = {
+    notes: (<>
             {(recentNotes || []).length === 0 ? (
               <div className="mt-3"><EmptyState compact icon={FileText} title="No notes yet" body="Notes appear here once you copy one. They are kept for this session only." /></div>
             ) : (
@@ -17464,9 +17448,8 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                 ))}
               </div>
             )}
-          </PanelRow>
-
-          <PanelRow icon={History} title="Recent diagnoses" count={recents.length} isOpen={section === "recent"} onToggle={() => setSection(section === "recent" ? null : "recent")}>
+          </>),
+    recent: (<>
             {recents.length === 0 ? (
               <div className="mt-3"><EmptyState compact icon={CheckCircle2} title="No diagnoses yet" body="Diagnoses you open appear here, so returning to one mid-clinic takes a single tap." /></div>
             ) : (
@@ -17483,9 +17466,8 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                 ))}
               </div>
             )}
-          </PanelRow>
-
-          <PanelRow icon={Library} title="Evidence library" count={evidenceIds.length} isOpen={section === "evidence"} onToggle={() => setSection(section === "evidence" ? null : "evidence")}>
+          </>),
+    evidence: (<>
             <div className="mt-3 mb-2">
               <input
                 type="text"
@@ -17546,9 +17528,8 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                 })}
               </div>
             )}
-          </PanelRow>
-
-          <PanelRow icon={Gauge} title="Outcome measures" count={OUTCOME_MEASURES.length} isOpen={section === "outcomes"} onToggle={() => setSection(section === "outcomes" ? null : "outcomes")}>
+          </>),
+    outcomes: (<>
             <div className="flex flex-col gap-2">
               {OUTCOME_MEASURES.map((m) => (
                 <div key={m.abbr} className="rounded-lg px-3 py-2.5" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
@@ -17563,6 +17544,84 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                 </div>
               ))}
             </div>
+          </>),
+  };
+
+  // From a shortcut (home footer or note preview), a single section rises
+  // from the bottom as a sheet - it answers the tap where it happened,
+  // instead of the whole panel sliding in from the side.
+  if (variant === "sheet" && initialSection) {
+    const meta = {
+      notes: { title: "Recent clinic notes", icon: ClipboardList, count: (recentNotes || []).length },
+      recent: { title: "Recent diagnoses", icon: History, count: recents.length },
+      evidence: { title: "Evidence library", icon: Library, count: evidenceIds.length },
+      outcomes: { title: "Outcome measures", icon: Gauge, count: OUTCOME_MEASURES.length },
+    }[initialSection];
+    const Icon = meta.icon;
+    return (
+      <div
+        className={`fixed inset-0 flex items-end sm:items-center justify-center ${closing ? "ut-scrim-out" : "ut-scrim-in"}`}
+        style={{ background: "rgba(16,30,43,0.45)", zIndex: 60 }}
+        onClick={onClose}
+      >
+        <DragSheet
+          onClose={onClose}
+          className={`w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl ${closing ? "ut-drop-out" : "ut-spring-up"}`}
+          style={{ background: T.bg, display: "flex", flexDirection: "column", maxHeight: "85vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}
+        >
+          <div data-sheet-drag className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, background: T.surface, touchAction: "none", cursor: "grab" }}>
+            <span className="shrink-0 flex items-center justify-center rounded-lg" style={{ width: 30, height: 30, background: T.tealTint }} aria-hidden="true">
+              <Icon size={16} color={T.tealDark} />
+            </span>
+            <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>
+              {meta.title}
+              <span className="ml-1.5 font-normal" style={{ color: T.inkSoft }}>({meta.count})</span>
+            </span>
+            <button onClick={onClose} aria-label="Close" className="p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+              <X size={20} color={T.inkSoft} />
+            </button>
+          </div>
+          <div className="px-4 pb-5" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+            {sectionContent[initialSection]}
+          </div>
+        </DragSheet>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`fixed inset-0 flex ${closing ? "ut-scrim-out" : "ut-scrim-in"}`}
+      style={{ background: "rgba(16,30,43,0.4)", zIndex: 60 }}
+      onClick={onClose}
+    >
+      <div
+        className={`h-full w-[86%] max-w-sm flex flex-col ${closing ? "ut-sheet-out" : "ut-sheet-in"}`}
+        style={{ background: T.bg, boxShadow: "8px 0 28px rgba(16,30,43,0.18)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-2 px-3 py-2 shrink-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
+          <span className="font-bold text-[15px] pl-1" style={{ color: "#fff" }}>Reference</span>
+          <button onClick={onClose} aria-label="Close reference panel" className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }}>
+            <ChevronLeft size={16} color="#fff" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-3 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
+          <PanelRow icon={ClipboardList} title="Recent clinic notes" count={(recentNotes || []).length} isOpen={section === "notes"} onToggle={() => setSection(section === "notes" ? null : "notes")}>
+            {sectionContent.notes}
+          </PanelRow>
+
+          <PanelRow icon={History} title="Recent diagnoses" count={recents.length} isOpen={section === "recent"} onToggle={() => setSection(section === "recent" ? null : "recent")}>
+            {sectionContent.recent}
+          </PanelRow>
+
+          <PanelRow icon={Library} title="Evidence library" count={evidenceIds.length} isOpen={section === "evidence"} onToggle={() => setSection(section === "evidence" ? null : "evidence")}>
+            {sectionContent.evidence}
+          </PanelRow>
+
+          <PanelRow icon={Gauge} title="Outcome measures" count={OUTCOME_MEASURES.length} isOpen={section === "outcomes"} onToggle={() => setSection(section === "outcomes" ? null : "outcomes")}>
+            {sectionContent.outcomes}
           </PanelRow>
         </div>
 
@@ -18194,13 +18253,12 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <DragSheet onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+          <DragSheet quickRef onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>{noteType === "physio" ? "Physiotherapy referral" : "Clinic note"}</span>
-              <QuickRefIcons />
             </div>
             <div className="mx-4 mt-3 flex rounded-xl p-1" style={{ background: T.slateChip, border: `1px solid ${T.border}` }} role="radiogroup" aria-label="Note type">
               {[
@@ -18265,29 +18323,24 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 <NoteBody text={note} />
               )}
             </div>
-            {/* Two rows of paired actions instead of five stacked buttons, so
-                the note keeps most of the sheet. Close preview was dropped:
-                the back arrow, dragging the sheet down and tapping outside
-                all close it already. */}
+            {/* One row of actions, so the note keeps most of the sheet: a compact
+                Edit, then Copy and New patient side by side. */}
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid gap-2" style={{ gridTemplateColumns: "auto 1fr 1fr" }}>
                 <button
                   onClick={() => { if (!editingNote && !isEdited) setOverride(generatedNote); setEditingNote((v) => !v); }}
-                  className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95"
+                  className="flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-3 font-semibold text-[14px]"
                   style={{ background: editingNote ? T.tealTint : T.slateChip, color: editingNote ? T.tealDark : T.ink, border: `1px solid ${editingNote ? T.teal : T.border}`, minHeight: 48 }}
+                  aria-label={editingNote ? "Done editing" : "Edit note text"}
                 >
-                  {editingNote ? <><Check size={17} /> Done editing</> : <>Edit note text</>}
+                  {editingNote ? <Check size={17} /> : <Pencil size={16} />}
+                  <span>{editingNote ? "Done" : "Edit"}</span>
                 </button>
-                <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Print
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={copyNote} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+                <button onClick={copyNote} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px]" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                   {copied ? <Check size={17} /> : <Copy size={17} />}
                   {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
                 </button>
-                <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
+                <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px]" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
                   <RotateCcw size={17} /> New patient
                 </button>
               </div>
@@ -18521,26 +18574,10 @@ const DIFFERENTIAL_TO_CONDITION = {
   },
 };
 
-// The version line on the home screen doubles as the way into About, as it
-// does at the foot of the Reference panel.
-function AboutVersionLink() {
-  const ref = React.useContext(ReferenceCtx);
-  return (
-    <button
-      onClick={() => ref && ref.openAbout()}
-      className="mt-1 inline-flex items-center justify-center gap-1.5 px-3 text-[12px]"
-      style={{ color: T.inkSoft, minHeight: 44 }}
-      aria-label={`About UpperTrack, version ${APP_VERSION}`}
-    >
-      <Info size={13} color={T.inkSoft} />
-      v{APP_VERSION}
-    </button>
-  );
-}
-
 function VisitTypeGate({ onSelect }) {
   return (
-    <div className="min-h-screen px-4 pt-10 pb-8 flex items-center" style={{ background: T.bg }}>
+    <div className="px-4 pt-10 pb-4 flex flex-col" style={{ background: T.bg, minHeight: `calc(100vh - ${TOPBAR_H}px)` }}>
+      <div className="flex-1 flex items-center w-full">
       <div className="max-w-md md:max-w-xl mx-auto w-full">
         <div className="text-[14px] font-semibold uppercase tracking-widest mb-2 text-center" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
         <h1 className="text-[36px] font-bold mb-2 text-center" style={{ color: T.ink }}>UpperTrack</h1>
@@ -18567,12 +18604,13 @@ function VisitTypeGate({ onSelect }) {
           </button>
         </div>
         <div className="text-center mt-8">
-          <QuickRefTiles />
           <div className="text-[13px] font-medium" style={{ color: T.inkSoft }}>Created by Dr. Muntasir Al-Naamani</div>
           <div className="text-[13px]" style={{ color: T.inkSoft }}>Suggestions: namanimuntasir@gmail.com</div>
           <AboutVersionLink />
         </div>
       </div>
+      </div>
+      <HomeFooter />
     </div>
   );
 }
@@ -18952,7 +18990,7 @@ function ConditionButton({ condition, active, onSelect, onRemove }) {
 // data-sheet-drag), never from the note body - the body has to remain
 // freely scrollable - and never from a button inside the header, so the
 // back arrow still works as a tap.
-function DragSheet({ onClose, className, style, children }) {
+function DragSheet({ onClose, className, style, children, quickRef }) {
   const ref = useRef(null);
   const drag = useRef(null);
   const [heightPx, setHeightPx] = useState(null); // null = natural size
@@ -19008,7 +19046,9 @@ function DragSheet({ onClose, className, style, children }) {
       return;
     }
     // Rest no smaller than the minimum.
-    setHeightPx(Math.max(vh() * MIN_FRAC, h));
+    // Never rest so small that the header and action buttons no longer fit.
+    const restMin = Math.min(Math.max(vh() * MIN_FRAC, 340), vh() * 0.9);
+    setHeightPx(Math.max(restMin, h));
   };
 
   const sized = heightPx != null;
@@ -19018,6 +19058,10 @@ function DragSheet({ onClose, className, style, children }) {
       className={`${className || ""} ${leaving ? "ut-sheet-leave" : ""}`}
       style={{
         ...style,
+        // Clip to the sheet's own edges: while it is dragged small, the
+        // action buttons must shrink out of view inside the sheet rather
+        // than hang below it.
+        overflow: "hidden",
         ...(sized ? { height: heightPx, maxHeight: `${MAX_FRAC * 100}vh` } : null),
         transition: dragging ? "none" : "height 200ms cubic-bezier(0.32,0.72,0,1)",
       }}
@@ -19031,6 +19075,7 @@ function DragSheet({ onClose, className, style, children }) {
         <span className="rounded-full" style={{ width: 36, height: 4, background: T.borderStrong }} />
       </div>
       {children}
+      {quickRef && <QuickRefBar />}
     </div>
   );
 }
@@ -19125,60 +19170,80 @@ const QUICK_REF = [
   { section: "outcomes", label: "Outcome measures", icon: Gauge },
 ];
 
-// Home screen: four tiles under the visit cards. Recent items show their
-// count so an empty list is visible before tapping into it.
-function QuickRefTiles() {
+// One reference shortcut: icon tile plus, for the two "recent" lists, a
+// count badge in the corner so it is visible how much is there before
+// opening it.
+function RefIconButton({ section, label, icon: Icon, tone }) {
   const ref = React.useContext(ReferenceCtx);
   if (!ref) return null;
-  const count = { notes: ref.noteCount, recent: ref.recentCount, evidence: Object.keys(CONDITION_EVIDENCE).length, outcomes: OUTCOME_MEASURES.length };
+  const count = section === "notes" ? ref.noteCount : section === "recent" ? ref.recentCount : 0;
   return (
-    <div className="mt-6">
-      <div className="text-[12px] font-bold uppercase tracking-wide mb-2 text-center" style={{ color: T.ink, opacity: 0.72 }}>Reference</div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-        {QUICK_REF.map(({ section, label, icon: Icon }) => (
-          <button
-            key={section}
-            onClick={() => ref.openPanel(section)}
-            className="ut-card rounded-xl px-3 py-3 flex items-center gap-2.5 text-left"
-            style={{ background: T.surface, border: `1px solid ${T.border}`, boxShadow: T.shadowCard, minHeight: 56 }}
-          >
-            <span className="shrink-0 flex items-center justify-center rounded-lg" style={{ width: 32, height: 32, background: T.tealTint }} aria-hidden="true">
-              <Icon size={17} color={T.tealDark} />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[13px] font-semibold leading-tight" style={{ color: T.ink }}>{label}</span>
-              <span className="block text-[12px]" style={{ color: T.inkSoft }}>{count[section]}</span>
-            </span>
-          </button>
-        ))}
-      </div>
+    <button
+      onClick={() => ref.openPanel(section)}
+      className="relative flex items-center justify-center rounded-xl shrink-0"
+      style={{ width: 44, height: 44, background: tone === "glass" ? "rgba(14,124,134,0.10)" : T.tealTint }}
+      aria-label={count ? `Open ${label.toLowerCase()}, ${count}` : `Open ${label.toLowerCase()}`}
+      title={label}
+    >
+      <Icon size={19} color={T.tealDark} />
+      {count > 0 && (
+        <span
+          className="absolute flex items-center justify-center rounded-full text-[10px] font-bold"
+          style={{ top: -4, right: -4, minWidth: 17, height: 17, padding: "0 4px", background: T.amber, color: "#fff", border: `1.5px solid ${T.surface}`, lineHeight: 1 }}
+        >
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </button>
+  );
+}
+
+// Bottom of every note preview: the four shortcuts, evenly spaced. Each
+// opens its section as a sheet over the note; closing it returns here.
+function QuickRefBar() {
+  return (
+    <div className="flex items-center justify-around px-4 py-2 shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.surface }}>
+      {QUICK_REF.map((q) => <RefIconButton key={q.section} {...q} />)}
     </div>
   );
 }
 
-// Note preview header: the same four as compact icon buttons, so evidence
-// or an outcome measure can be checked without leaving the note. The panel
-// opens above the preview and closing it returns to the note.
-function QuickRefIcons() {
-  const ref = React.useContext(ReferenceCtx);
-  if (!ref) return null;
+// Home screen footer: a compact pill at the foot of the page. It sits in the
+// page flow rather than fixed over it, so it never floats across the visit
+// cards - it rests at the bottom of the screen when the page fits, and is
+// reached by scrolling when it doesn't. A hairline divider separates the
+// two "recent" lists from the two reference sections.
+function HomeFooter() {
+  const [a, b, c, d] = QUICK_REF;
   return (
-    <div className="flex items-center gap-1 shrink-0">
-      {QUICK_REF.map(({ section, label, icon: Icon }) => (
-        <button
-          key={section}
-          onClick={() => ref.openPanel(section)}
-          className="flex items-center justify-center rounded-lg active:scale-95"
-          style={{ width: 36, height: 36, background: T.tealTint }}
-          aria-label={`Open ${label.toLowerCase()}`}
-          title={label}
-        >
-          <Icon size={17} color={T.tealDark} />
-        </button>
-      ))}
+    <div className="flex justify-center mt-8" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <nav className="ut-glass flex items-center gap-1.5 rounded-2xl p-2" aria-label="Reference shortcuts">
+        <RefIconButton {...a} tone="glass" />
+        <RefIconButton {...b} tone="glass" />
+        <span aria-hidden="true" className="mx-1.5" style={{ width: 1, height: 24, background: "rgba(16,30,43,0.14)" }} />
+        <RefIconButton {...c} tone="glass" />
+        <RefIconButton {...d} tone="glass" />
+      </nav>
     </div>
   );
 }
+
+// Version and About link, back in the page body under the credits.
+function AboutVersionLink() {
+  const ref = React.useContext(ReferenceCtx);
+  return (
+    <button
+      onClick={() => ref && ref.openAbout()}
+      className="mt-1 inline-flex items-center justify-center gap-1.5 px-3 text-[12px]"
+      style={{ color: T.inkSoft, minHeight: 44 }}
+      aria-label={`About UpperTrack, version ${APP_VERSION}`}
+    >
+      <Info size={13} color={T.inkSoft} />
+      v{APP_VERSION}
+    </button>
+  );
+}
+
 
 function NoteBody({ text }) {
   const lines = String(text || "").split("\n");
@@ -19512,22 +19577,18 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <DragSheet onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+          <DragSheet quickRef onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Follow-up note</span>
-              <QuickRefIcons />
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={note} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Print
-                </button>
+              <div className="grid grid-cols-1 gap-2">
                 <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
                 {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
@@ -19731,22 +19792,18 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 
       {noteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
-          <DragSheet onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+          <DragSheet quickRef onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <button onClick={() => setNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Post-op follow-up note</span>
-              <QuickRefIcons />
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={note} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Print
-                </button>
+              <div className="grid grid-cols-1 gap-2">
                 <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
                 {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
@@ -20479,6 +20536,59 @@ const DESIGN_SYSTEM_CSS = `
      so a downward drag resizes the sheet rather than scrolling the page or
      triggering pull-to-refresh. Closing slides the sheet away rather than
      letting it vanish mid-gesture. */
+  /* Press feedback with spring. A button compresses quickly while held,
+     then settles back with a slight overshoot on release - the overshoot
+     is what makes it feel physical rather than merely animated. Large
+     cards keep their own gentler press (.ut-card). The :not() also lifts
+     specificity above Tailwind's .transition utility, so every button
+     gets the same spring rather than only the unstyled ones. */
+  button:not([data-no-spring]) {
+    transition-property: background-color, border-color, box-shadow, transform, opacity, color;
+    transition-duration: 160ms, 160ms, 160ms, 420ms, 160ms, 160ms;
+    transition-timing-function: var(--ut-ease), var(--ut-ease), var(--ut-ease), cubic-bezier(0.34,1.56,0.64,1), var(--ut-ease), var(--ut-ease);
+  }
+  button:not([data-no-spring]):not(.ut-card):not(:disabled):active {
+    transform: scale(0.96);
+    transition-duration: 160ms, 160ms, 160ms, 70ms, 160ms, 160ms;
+  }
+
+  /* Page change: a short fade only. "backwards" fill means nothing is
+     left applied once it finishes, so it can never hold a stacking
+     context over the fixed bars and sheets inside each screen. */
+  @keyframes ut-page-in { from { opacity: 0; } to { opacity: 1; } }
+  .ut-page { animation: ut-page-in 200ms ease-out backwards; }
+
+  /* Reference sheet opened from a shortcut: rises from the bottom with a
+     small spring overshoot, and drops back out on close. */
+  @keyframes ut-spring-up {
+    0%   { transform: translateY(100%); }
+    72%  { transform: translateY(-1.2%); }
+    100% { transform: translateY(0); }
+  }
+  .ut-spring-up { animation: ut-spring-up 460ms cubic-bezier(0.22,1,0.36,1) backwards; }
+  @keyframes ut-drop-out { to { transform: translateY(100%); } }
+  .ut-drop-out { animation: ut-drop-out 200ms cubic-bezier(0.32,0.72,0,1) forwards; }
+
+  /* Frosted glass for the floating home footer. The white inner highlight
+     and hairline outer ring keep its edge crisp on a pale page, where a
+     translucent panel can otherwise dissolve into the background. Where
+     backdrop blur is unsupported, or the device asks for reduced
+     transparency, it falls back to a near-opaque surface so the icons
+     never sit over unblurred content. */
+  .ut-glass {
+    background: rgba(255,255,255,0.58);
+    -webkit-backdrop-filter: blur(18px) saturate(170%);
+    backdrop-filter: blur(18px) saturate(170%);
+    border: 1px solid rgba(255,255,255,0.75);
+    box-shadow: 0 0 0 1px rgba(16,30,43,0.07), 0 10px 28px rgba(16,30,43,0.14), inset 0 1px 0 rgba(255,255,255,0.85);
+  }
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .ut-glass { background: rgba(255,255,255,0.95); }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .ut-glass { background: rgba(255,255,255,0.97); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+
   [data-sheet-drag] { touch-action: none; }
   @keyframes ut-sheet-leave { to { transform: translateY(100%); opacity: 0.6; } }
   .ut-sheet-leave { animation: ut-sheet-leave 180ms cubic-bezier(0.32,0.72,0,1) forwards; }
@@ -20560,7 +20670,8 @@ const DESIGN_SYSTEM_CSS = `
     .ut-card:hover { transform: none; }
     .ut-nerve-trace { animation: none; stroke-dasharray: none; }
     /* The panel still appears and disappears, just without travel. */
-    .ut-sheet-in, .ut-sheet-out, .ut-scrim-in, .ut-scrim-out, .ut-sheet-leave { animation: none !important; }
+    .ut-sheet-in, .ut-sheet-out, .ut-scrim-in, .ut-scrim-out, .ut-sheet-leave, .ut-page, .ut-spring-up, .ut-drop-out { animation: none !important; }
+    button:not([data-no-spring]):not(.ut-card):not(:disabled):active { transform: none; }
     .ut-sheet-out, .ut-scrim-out { opacity: 0; }
   }
 `;
@@ -20622,8 +20733,9 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [panelSection, setPanelSection] = useState(null);
+  const [panelVariant, setPanelVariant] = useState("panel");
   const referenceValue = {
-    openPanel: (section) => { setPanelSection(section || null); setPanelOpen(true); },
+    openPanel: (section) => { setPanelSection(section || null); setPanelVariant(section ? "sheet" : "panel"); setPanelOpen(true); },
     openAbout: () => { setPanelOpen(false); setAboutOpen(true); },
     noteCount: 0,
     recentCount: 0,
@@ -20752,13 +20864,14 @@ export default function App() {
         onViewCombinedNote={() => setCombinedNoteOpen(true)}
         onEndSession={endSession}
         onOpenSearch={() => setSearchOpen(true)}
-        onOpenPanel={() => { setPanelSection(null); setPanelOpen(true); }}
+        onOpenPanel={() => { setPanelSection(null); setPanelVariant("panel"); setPanelOpen(true); }}
         noteCount={recentNotes.length}
         onGoHome={goHome}
         onRemoveCondition={removeCondition}
       />
 
       {screen.view === "visitType" && (
+        <div className="ut-page">
         <VisitTypeGate
           onSelect={(type) => {
             if (type === "new") setScreen({ view: "regions" });
@@ -20768,9 +20881,11 @@ export default function App() {
             }
           }}
         />
+        </div>
       )}
 
       {screen.view === "followupSelect" && (
+        <div className="ut-page">
         <FollowupConditionPicker
           title="Follow-up Visit"
           selectedIds={followupSelectedIds}
@@ -20778,9 +20893,11 @@ export default function App() {
           onContinue={continueToFollowupVisit}
           onBack={goHome}
         />
+        </div>
       )}
 
       {screen.view === "postopSelect" && (
+        <div className="ut-page">
         <FollowupConditionPicker
           title="Post-operative Follow-up"
           selectedIds={followupSelectedIds}
@@ -20788,9 +20905,11 @@ export default function App() {
           onContinue={continueToPostopVisit}
           onBack={goHome}
         />
+        </div>
       )}
 
       {screen.view === "followupVisit" && (
+        <div className="ut-page">
         <FollowupVisitScreen
           conditionIds={screen.conditionIds}
           session={session}
@@ -20800,9 +20919,11 @@ export default function App() {
           onNewPatient={endSession}
           onNoteSaved={noteRecent2}
         />
+        </div>
       )}
 
       {screen.view === "postopVisit" && (
+        <div className="ut-page">
         <PostopVisitScreen
           conditionIds={screen.conditionIds}
           session={session}
@@ -20812,6 +20933,7 @@ export default function App() {
           onNewPatient={endSession}
           onNoteSaved={noteRecent2}
         />
+        </div>
       )}
 
       <SidePanel
@@ -20822,32 +20944,25 @@ export default function App() {
         onOpenCondition={openCondition}
         onOpenNote={(n) => setViewNote(n)}
         initialSection={panelSection}
+        variant={panelVariant}
         onOpenAbout={referenceValue.openAbout}
       />
       <AboutSheet open={aboutOpen} onClose={() => setAboutOpen(false)} />
 
       {viewNote && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setViewNote(null)}>
-          <DragSheet onClose={() => setViewNote(null)} className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }}>
+          <DragSheet quickRef onClose={() => setViewNote(null)} className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>{viewNote.title}</span>
               <button onClick={() => setViewNote(null)} aria-label="Close" className="p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
                 <X size={20} color={T.inkSoft} />
               </button>
-              <QuickRefIcons />
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto" }}>
               <NoteBody text={viewNote.text} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => window.print()}
-                className="rounded-xl px-4 py-3 font-semibold text-[14px]"
-                style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}
-              >
-                Print
-              </button>
+              <div className="grid grid-cols-1 gap-2">
               <button
                 onClick={() => { try { navigator.clipboard.writeText(viewNote.text); } catch (e) { /* user can select manually */ } }}
                 className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
@@ -20864,9 +20979,10 @@ export default function App() {
         </div>
       )}
 
-      {screen.view === "regions" && <RegionPicker onSelect={(regionKey) => setScreen({ view: "conditions", regionKey })} onBack={goHome} />}
+      {screen.view === "regions" && <div className="ut-page"><RegionPicker onSelect={(regionKey) => setScreen({ view: "conditions", regionKey })} onBack={goHome} /></div>}
 
       {screen.view === "conditions" && (
+        <div className="ut-page">
         <ConditionList
           regionKey={screen.regionKey}
           session={session}
@@ -20874,9 +20990,11 @@ export default function App() {
           onBack={() => window.history.back()}
           onRemove={removeCondition}
         />
+        </div>
       )}
 
       {screen.view === "template" && (
+        <div className="ut-page">
         <ConditionTemplate
           condition={screen.condition}
           state={session.statesByConditionId[screen.condition.id] || {}}
@@ -20888,26 +21006,23 @@ export default function App() {
           onBack={() => window.history.back()}
           onGoHome={goHome}
         />
+        </div>
       )}
 
       {combinedNoteOpen && (
         <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setCombinedNoteOpen(false)}>
-          <DragSheet onClose={() => setCombinedNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+          <DragSheet quickRef onClose={() => setCombinedNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <button onClick={() => setCombinedNoteOpen(false)} className="flex items-center gap-1 -ml-1 p-1 active:opacity-60" aria-label="Close preview">
                 <ArrowLeft size={20} color={T.ink} />
               </button>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Combined clinic note</span>
-              <QuickRefIcons />
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={combinedNote} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-2 gap-2">
-                <button onClick={() => window.print()} className="flex items-center justify-center gap-1.5 rounded-xl px-3 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                  Print
-                </button>
+              <div className="grid grid-cols-1 gap-2">
                 <button onClick={copyCombinedNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {combinedCopied ? <Check size={17} /> : <Copy size={17} />}
                 {combinedCopied ? "Copied" : "Copy"}
