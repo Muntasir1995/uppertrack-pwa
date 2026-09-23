@@ -12784,7 +12784,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.12.1";
+const APP_VERSION = "5.13.0";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -16933,6 +16933,40 @@ function postopComplicationOptions(procedureName) {
 const POSTOP_RETURN_WORK_OPTIONS = ["Not yet", "Light duties", "Full duties", "Already returned"];
 const POSTOP_RETURN_SPORT_OPTIONS = ["Not yet", "Restricted", "Cleared"];
 
+// When several procedures are reviewed at one visit they were almost always
+// done on the same day and are being seen for the same reason, so the first
+// procedure's answers apply to the rest until the clinician changes one.
+// Only what genuinely travels together is shared: the procedure itself, any
+// injection given and the free-text findings stay per-procedure.
+const POSTOP_SHARED_KEYS = [
+  "surgeryDate", "reason", "reasonOther", "woundStatus", "functionalProgress", "vas",
+  "complications", "complicationsOther", "planOptions", "planOptionsOther",
+  "followUpInterval", "followUpIntervalOther", "nextReviewReason", "nextReviewReasonOther",
+  "returnToWork", "returnToSport",
+];
+const POSTOP_SHARED_SUMMARY = "date of surgery, reason for review, progress, complications, pain score and plan";
+
+function postopSharedDefaults(primaryPoState) {
+  const out = {};
+  if (!primaryPoState) return out;
+  POSTOP_SHARED_KEYS.forEach((k) => {
+    const v = primaryPoState[k];
+    if (v !== undefined && v !== null && v !== "" && !(Array.isArray(v) && v.length === 0)) out[k] = v;
+  });
+  return out;
+}
+
+// A value set on THIS procedure wins over the inherited one; the presence of
+// the key is what marks it as changed here.
+function postopEffectiveState(poState, inherited) {
+  return inherited ? { ...inherited, ...(poState || {}) } : (poState || {});
+}
+
+function postopOverriddenKeys(poState, inherited) {
+  if (!inherited) return [];
+  return POSTOP_SHARED_KEYS.filter((k) => poState && poState[k] !== undefined && JSON.stringify(poState[k]) !== JSON.stringify(inherited[k]));
+}
+
 function buildPostopNoteParts(condition, poState) {
   const parts = [];
 
@@ -16990,21 +17024,60 @@ function buildPostopNoteParts(condition, poState) {
 function buildCombinedPostopNote(session, conditionIds) {
   const items = conditionIds.map((id) => findConditionById(id)).filter(Boolean);
   const lines = ["POST-OPERATIVE FOLLOW-UP NOTE", `${items.length} procedure${items.length === 1 ? "" : "s"} reviewed this visit`, ""];
-  items.forEach((condition) => {
-    const state = session.statesByConditionId[condition.id] || {};
-    const poState = state.postop || {};
-    const parts = buildPostopNoteParts(condition, poState);
-    lines.push(`\u2550\u2550 ${condition.name.toUpperCase()} \u2550\u2550`, "");
-    if (!parts.length) {
-      lines.push("(No post-operative findings recorded for this diagnosis.)", "");
-    } else {
-      parts.forEach((p) => {
-        lines.push(p.heading.toUpperCase());
-        lines.push(p.text);
-        lines.push("");
-      });
-    }
+
+  const primaryPo = items.length ? ((session.statesByConditionId[items[0].id] || {}).postop || {}) : {};
+  const inherited = items.length > 1 ? postopSharedDefaults(primaryPo) : null;
+
+  const entries = items.map((condition, i) => {
+    const own = (session.statesByConditionId[condition.id] || {}).postop || {};
+    return { condition, parts: buildPostopNoteParts(condition, i === 0 ? own : postopEffectiveState(own, inherited)) };
   });
+
+  if (entries.length === 1) {
+    const { condition, parts } = entries[0];
+    lines.push(`\u2550\u2550 ${condition.name.toUpperCase()} \u2550\u2550`, "");
+    if (!parts.length) lines.push("(No post-operative findings recorded for this diagnosis.)", "");
+    else parts.forEach((p) => { lines.push(p.heading.toUpperCase(), p.text, ""); });
+  } else {
+    // One note, not one note per procedure: a section that came out the same
+    // for every procedure is written once; where it differs, the section is
+    // still written once with a line per procedure beneath it.
+    const order = [];
+    entries.forEach(({ parts }) => parts.forEach((p) => { if (!order.includes(p.heading)) order.push(p.heading); }));
+    const empty = entries.filter((e) => !e.parts.length).map((e) => e.condition.name);
+
+    order.forEach((heading) => {
+      // Every procedure is named under PROCEDURES even if nothing has been
+      // entered for it yet, so the list can never disagree with the "N
+      // procedures reviewed" line at the top of the note.
+      const present = heading === "Procedure"
+        ? entries.map((e) => ({
+            name: e.condition.name,
+            part: e.parts.find((p) => p.heading === heading) || { heading, text: "Procedure not recorded." },
+          }))
+        : entries
+            .map((e) => ({ name: e.condition.name, part: e.parts.find((p) => p.heading === heading) }))
+            .filter((x) => x.part);
+      const shared = present.length === entries.length && present.every((x) => x.part.text === present[0].part.text);
+      lines.push(heading === "Procedure" ? "PROCEDURES" : heading.toUpperCase());
+      if (shared) {
+        lines.push(present[0].part.text);
+      } else {
+        present.forEach((x) => {
+          if (x.part.text.includes("\n")) {
+            lines.push(`${x.name}:`);
+            lines.push(x.part.text);
+          } else {
+            lines.push(`\u2022 ${x.name}: ${lowerFirst(x.part.text)}`);
+          }
+        });
+      }
+      lines.push("");
+    });
+
+    if (empty.length) lines.push(`No post-operative findings were recorded for ${humanizeList(empty)}.`, "");
+  }
+
   lines.push("---");
   lines.push("Generated with UpperTrack. For clinician review; not a diagnostic or treatment recommendation.");
   return lines.join("\n");
@@ -20031,9 +20104,19 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
 // when, why we're seeing them today, how they're doing, whether anything's
 // gone wrong, then what happens next. "Time since surgery" is derived from
 // the date rather than asked separately (see timeSinceSurgery above).
-function PostopConditionBlock({ index, condition, poState, onChange, defaultOpen }) {
+function PostopConditionBlock({ index, condition, poState: ownState, onChange, defaultOpen, inherited, primaryName }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const set = (key, val) => onChange({ ...poState, [key]: val });
+  // Everything below reads the effective value - this procedure's own answer
+  // where one was given, otherwise the first procedure's - while edits are
+  // always written to this procedure alone.
+  const poState = postopEffectiveState(ownState, inherited);
+  const overridden = postopOverriddenKeys(ownState, inherited);
+  const set = (key, val) => onChange({ ...ownState, [key]: val });
+  const matchAgain = () => {
+    const next = { ...ownState };
+    POSTOP_SHARED_KEYS.forEach((k) => delete next[k]);
+    onChange(next);
+  };
 
   // "None noted" and any actual complication are mutually exclusive - a
   // note should never be able to say both "no complications" and "wound
@@ -20070,6 +20153,22 @@ function PostopConditionBlock({ index, condition, poState, onChange, defaultOpen
       {/* The procedures this diagnosis is actually operated on for, as
           tap-to-fill chips - the same list offered when surgery is agreed in
           clinic. Typing stays available for anything not listed. */}
+      {inherited && Object.keys(inherited).length > 0 && (
+        <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 mb-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+          <CheckCircle2 size={16} color={T.tealDark} style={{ marginTop: 2, flexShrink: 0 }} />
+          <div className="text-[13px] leading-relaxed flex-1" style={{ color: T.tealDark }}>
+            {overridden.length === 0 ? (
+              <>Same {POSTOP_SHARED_SUMMARY} as {primaryName}. Change anything here to make it different for this procedure.</>
+            ) : (
+              <>
+                {overridden.length} detail{overridden.length === 1 ? "" : "s"} changed for this procedure; the rest follows {primaryName}.{" "}
+                <button onClick={matchAgain} className="font-semibold underline" style={{ color: T.tealDark }}>Match {primaryName} again</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <TextField
         label="Procedure performed"
         value={poState.procedureName}
@@ -20165,6 +20264,11 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
   const [copyError, setCopyError] = useState(false);
 
   const conditions = conditionIds.map((id) => findConditionById(id)).filter(Boolean);
+  // Several procedures at one visit: the first one's shared answers become
+  // the starting point for the others.
+  const sharedPostopDefaults = conditions.length > 1
+    ? postopSharedDefaults((session.statesByConditionId[conditions[0].id] || {}).postop || {})
+    : null;
   const note = useMemo(() => buildCombinedPostopNote(session, conditionIds), [session, conditionIds]);
 
   const copyNote = async () => {
@@ -20212,6 +20316,8 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
               poState={poState}
               onChange={(next) => onFieldChange(condition.id, { postop: next })}
               defaultOpen={i === 0}
+              inherited={i > 0 ? sharedPostopDefaults : null}
+              primaryName={i > 0 ? conditions[0].name : null}
             />
           );
         })}
