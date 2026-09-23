@@ -24,6 +24,7 @@ import {
   Gauge,
   Info,
   Pencil,
+  Dumbbell,
 } from "lucide-react";
 
 /* ============================================================================
@@ -12784,7 +12785,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.13.0";
+const APP_VERSION = "5.14.2";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -17828,6 +17829,33 @@ function PanelRow({ title, count, isOpen, onToggle, icon: Icon, children }) {
   );
 }
 
+// A clinic note and its physiotherapy referral come from the same template,
+// so they are listed together under one diagnosis heading - but they remain
+// two separate notes, each opened and copied on its own. Grouping here is
+// presentation only: no note's text is merged with another's.
+const NOTE_KIND_ORDER = { note: 0, physio: 1 };
+const NOTE_KIND_LABEL = { note: "Clinic note", physio: "Physio referral" };
+
+function groupRecentNotes(recentNotes) {
+  const order = [];
+  const byDiagnosis = new Map();
+  (recentNotes || []).forEach((n) => {
+    const key = n.id && n.id.includes(":") ? n.id.split(":")[0] : n.id;
+    if (!byDiagnosis.has(key)) {
+      byDiagnosis.set(key, { id: key, title: n.title, at: n.at, parts: [] });
+      order.push(key);
+    }
+    const group = byDiagnosis.get(key);
+    if (!group.parts.some((part) => part.kind === n.kind)) group.parts.push(n);
+  });
+  return order.map((key) => {
+    const group = byDiagnosis.get(key);
+    group.parts.sort((a, b) => (NOTE_KIND_ORDER[a.kind] ?? 9) - (NOTE_KIND_ORDER[b.kind] ?? 9));
+    return group;
+  });
+}
+
+
 function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote, onOpenAbout, initialSection, variant = "panel" }) {
   const [section, setSection] = useState(null);
   // Opening from a quick-access tile or icon lands on that section.
@@ -17878,22 +17906,36 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
   if (!mounted) return null;
 
   // Each section's content, shared by both presentations below.
+  // recentNotes is grouped by diagnosis; the header counts the notes.
+  const noteCount = (recentNotes || []).reduce((sum, g) => sum + (g.parts ? g.parts.length : 1), 0);
+
   const sectionContent = {
     notes: (<>
             {(recentNotes || []).length === 0 ? (
               <div className="mt-3"><EmptyState compact icon={FileText} title="No notes yet" body="Notes appear here once you copy one. They are kept for this session only." /></div>
             ) : (
-              <div className="flex flex-col gap-1.5 mt-3">
-                {recentNotes.map((n) => (
-                  <button
-                    key={n.id}
-                    onClick={() => { onOpenNote(n); onClose(); }}
-                    className="rounded-lg px-3 py-2.5 text-left active:scale-95 transition"
-                    style={{ minHeight: 48, background: T.slateChip, border: `1px solid ${T.border}` }}
-                  >
-                    <div className="text-[13px] font-semibold" style={{ color: T.ink }}>{n.title}</div>
-                    <div className="text-[12px]" style={{ color: T.inkSoft }}>{n.at}{n.kind && n.kind !== "note" ? ` \u00b7 ${n.kind === "physio" ? "physio referral" : "patient summary"}` : ""}</div>
-                  </button>
+              <div className="flex flex-col gap-2 mt-3">
+                {recentNotes.map((group) => (
+                  <div key={group.id} className="rounded-lg overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+                    <div className="px-3 pt-2.5 pb-1.5">
+                      <div className="text-[13px] font-semibold" style={{ color: T.ink }}>{group.title}</div>
+                      <div className="text-[12px]" style={{ color: T.inkSoft }}>{group.at}</div>
+                    </div>
+                    <div className="px-2 pb-2 flex flex-col gap-1">
+                      {group.parts.map((part) => (
+                        <button
+                          key={part.id}
+                          onClick={() => { onOpenNote(part); onClose(); }}
+                          className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-left active:scale-95 transition"
+                          style={{ minHeight: 44, background: T.slateChip }}
+                        >
+                          {part.kind === "physio" ? <Dumbbell size={15} color={T.tealDark} /> : <ClipboardList size={15} color={T.tealDark} />}
+                          <span className="text-[13px] font-medium flex-1" style={{ color: T.ink }}>{NOTE_KIND_LABEL[part.kind] || "Clinic note"}</span>
+                          <ChevronRight size={15} color={T.inkSoft} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -18001,7 +18043,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
   // instead of the whole panel sliding in from the side.
   if (variant === "sheet" && initialSection) {
     const meta = {
-      notes: { title: "Recent clinic notes", icon: ClipboardList, count: (recentNotes || []).length },
+      notes: { title: "Recent clinic notes", icon: ClipboardList, count: noteCount },
       recent: { title: "Recent diagnoses", icon: History, count: recents.length },
       evidence: { title: "Evidence library", icon: Library, count: evidenceIds.length },
       outcomes: { title: "Outcome measures", icon: Gauge, count: OUTCOME_MEASURES.length },
@@ -18057,7 +18099,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
-          <PanelRow icon={ClipboardList} title="Recent clinic notes" count={(recentNotes || []).length} isOpen={section === "notes"} onToggle={() => setSection(section === "notes" ? null : "notes")}>
+          <PanelRow icon={ClipboardList} title="Recent clinic notes" count={noteCount} isOpen={section === "notes"} onToggle={() => setSection(section === "notes" ? null : "notes")}>
             {sectionContent.notes}
           </PanelRow>
 
@@ -19627,29 +19669,35 @@ function RefIconButton({ section, label, short, icon: Icon, tone, showLabel }) {
   const ref = React.useContext(ReferenceCtx);
   if (!ref) return null;
   const count = section === "notes" ? ref.noteCount : section === "recent" ? ref.recentCount : 0;
+  // Filled while its sheet is open, so the bar shows where you are; the
+  // press itself fills too (see .ut-ref-icon:active in the stylesheet), so a
+  // tap is acknowledged even before the sheet has risen.
+  const isOpen = ref.activeSection === section;
   return (
     <button
       onClick={() => ref.openPanel(section)}
-      className={`relative flex flex-col items-center shrink-0 ${showLabel ? "gap-1 px-1" : ""}`}
+      className={`ut-ref-icon relative flex flex-col items-center shrink-0 ${showLabel ? "gap-1 px-1" : ""}`}
       style={{ minWidth: showLabel ? 60 : 44 }}
       aria-label={count ? `Open ${label.toLowerCase()}, ${count}` : `Open ${label.toLowerCase()}`}
+      aria-current={isOpen ? "true" : undefined}
       title={label}
     >
-      <span className="relative flex items-center justify-center rounded-xl" style={{ width: 44, height: 44, background: tone === "glass" ? "rgba(14,124,134,0.10)" : T.tealTint }}>
-        <Icon size={19} color={T.tealDark} />
+      <span
+        className="ut-ref-tile relative flex items-center justify-center rounded-xl"
+        style={{ width: 44, height: 44, background: isOpen ? T.teal : tone === "glass" ? "rgba(14,124,134,0.10)" : T.tealTint, transition: "background 160ms var(--ut-ease)" }}
+      >
+        <Icon size={19} color={isOpen ? "#fff" : T.tealDark} />
         {count > 0 && (
-          // Teal, not amber: the count is information about what is there,
-          // not something that still needs the clinician's attention.
           <span
             className="absolute flex items-center justify-center rounded-full text-[10px] font-bold"
-            style={{ top: -4, right: -4, minWidth: 17, height: 17, padding: "0 4px", background: T.teal, color: "#fff", border: `1.5px solid ${T.surface}`, lineHeight: 1 }}
+            style={{ top: -4, right: -4, minWidth: 17, height: 17, padding: "0 4px", background: isOpen ? "#fff" : T.teal, color: isOpen ? T.tealDark : "#fff", border: `1.5px solid ${T.surface}`, lineHeight: 1 }}
           >
             {count > 9 ? "9+" : count}
           </span>
         )}
       </span>
       {showLabel && (
-        <span className="text-[12px] font-medium leading-none" style={{ color: T.inkSoft }}>{short}</span>
+        <span className="text-[12px] font-medium leading-none" style={{ color: isOpen ? T.tealDark : T.inkSoft }}>{short}</span>
       )}
     </button>
   );
@@ -21158,6 +21206,14 @@ const DESIGN_SYSTEM_CSS = `
   /* The visit-card glyphs scale with their tile, which is itself sized from
      viewport height, so the cards shrink evenly on a short screen. */
   .ut-visit-icon svg { width: 52%; height: 52%; }
+
+  /* Reference shortcuts fill while held, so the tap is acknowledged at once
+     rather than only when the sheet appears. The icon is stroked, so its
+     colour is overridden here rather than on the element. */
+  /* !important because the tile's resting background is an inline style,
+     which would otherwise win over this rule. */
+  button.ut-ref-icon:active .ut-ref-tile { background: var(--ut-teal) !important; }
+  button.ut-ref-icon:active .ut-ref-tile svg { stroke: #fff; }
   /* On a very short window the credit lines are dropped so the cards and the
      icon bar still fit without scrolling; the same details stay one tap away
      under the version number. */
@@ -21313,11 +21369,15 @@ export default function App() {
     openAbout: () => { setPanelOpen(false); setAboutOpen(true); },
     noteCount: 0,
     recentCount: 0,
+    // Which shortcut is currently showing, so its icon stays filled.
+    activeSection: panelOpen ? panelSection : null,
   };
   // Notes previewed or copied this session, newest first. In memory only,
   // like recentIds - a clinic list is one app session.
   const [recentNotes, setRecentNotes] = useState([]);
   const [viewNote, setViewNote] = useState(null);
+  // A diagnosis's clinic note and physio referral are shown as one entry.
+  const groupedNotes = useMemo(() => groupRecentNotes(recentNotes), [recentNotes]);
   const noteRecent2 = useCallback((entry) => {
     setRecentNotes((prev) => [entry, ...prev.filter((n) => n.id !== entry.id)].slice(0, 12));
   }, []);
@@ -21514,9 +21574,9 @@ export default function App() {
         open={panelOpen}
         onClose={() => setPanelOpen(false)}
         recentIds={recentIds}
-        recentNotes={recentNotes}
+        recentNotes={groupedNotes}
         onOpenCondition={openCondition}
-        onOpenNote={(n) => setViewNote(n)}
+        onOpenNote={(n) => setViewNote({ ...n, title: `${n.title} \u2014 ${NOTE_KIND_LABEL[n.kind] || "Clinic note"}` })}
         initialSection={panelSection}
         variant={panelVariant}
         onOpenAbout={referenceValue.openAbout}
