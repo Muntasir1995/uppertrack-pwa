@@ -11614,6 +11614,168 @@ const pipDislocationData = {
   ],
 };
 
+const glomusTumourData = {
+  id: "glomus-tumour",
+  name: "Glomus Tumour",
+  region: "hand",
+  urgentFlags: [
+    { text: "Irregular, widening or changing nail pigmentation, or pigment extending onto the nail fold", consider: "Urgent assessment to exclude subungual melanoma before treating as a glomus tumour." },
+    { text: "Rapidly enlarging or ulcerating lesion", consider: "Urgent assessment and imaging to exclude malignancy." },
+    { text: "Erythema, swelling, warmth or discharge", consider: "Treat as possible infection and review urgently." },
+  ],
+  redFlags: [
+    { text: "Classic symptoms but no lesion seen on imaging", consider: "Re-examine carefully; high-resolution MRI can identify small lesions, and a clinical diagnosis may still be reasonable when examination is typical." },
+    { text: "Symptoms persist or return after excision", consider: "Consider incomplete excision or a second, previously unrecognised lesion; image before re-exploring." },
+    { text: "Multiple lesions or a family history of similar lesions", consider: "Consider an association with neurofibromatosis type 1 or familial glomuvenous malformation." },
+    { text: "Large, deep or atypically located lesion", consider: "Obtain imaging and histology, and consider specialist review; malignant glomus tumours are rare." },
+    { text: "Pain is diffuse rather than pinpoint, or cold sensitivity is absent", consider: "Reconsider the diagnosis, including neuroma, mucous cyst and DIP joint arthritis." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Clinical diagnosis (pinpoint pain, cold sensitivity) \u2192 Love's pin test and Hildreth's test \u2192 Imaging to confirm and localise (ultrasound or MRI) \u2192 Discuss management", next: "diagnosisQ" },
+      diagnosisQ: {
+        type: "question",
+        title: "Diagnosis supported by examination or imaging?",
+        text: "Pathway suggests this decision once the clinical tests and imaging have been reviewed.",
+        options: [
+          { label: "Yes", next: "presentationQ" },
+          { label: "Uncertain", next: "uncertainTerminal" },
+        ],
+      },
+      uncertainTerminal: { type: "terminal", tone: "amber", title: "Clarify the diagnosis", text: "Pathway suggests MRI or high-frequency ultrasound to confirm and localise the lesion, and revisiting the differential diagnosis, particularly subungual melanoma where there is pigment." },
+      presentationQ: {
+        type: "question",
+        title: "Which presentation?",
+        text: "Pathway suggests distinguishing a first presentation from recurrence after previous excision.",
+        options: [
+          { label: "First presentation", next: "symptomsQ" },
+          { label: "Recurrent after excision", next: "recurrentTerminal" },
+        ],
+      },
+      symptomsQ: {
+        type: "question",
+        title: "Symptoms affecting function or quality of life?",
+        text: "Pathway suggests this decision after discussing the natural history: symptoms usually persist, and excision is the only definitive treatment.",
+        options: [
+          { label: "Yes", next: "excisionTerminal" },
+          { label: "No", next: "observeTerminal" },
+        ],
+      },
+      observeTerminal: { type: "terminal", tone: "green", title: "Observation", text: "Pathway suggests observation is reasonable while symptoms are tolerable, with review if they progress. Symptoms rarely settle without treatment." },
+      excisionTerminal: { type: "terminal", tone: "amber", title: "Surgical excision", text: "Pathway suggests complete surgical excision under magnification: a transungual (nail bed) approach for subungual lesions, or a lateral subperiosteal approach where suitable to reduce the risk of nail deformity. Send the specimen for histology, and counsel about the risks of recurrence and nail deformity." },
+      recurrentTerminal: { type: "terminal", tone: "amber", title: "Localise, then re-excise", text: "Pathway suggests MRI to localise residual or additional lesions before surgical re-excision, with histology." },
+    },
+  },
+  sections: [{
+      id: "typical",
+      index: 1,
+      title: "Typical Patient",
+      subtitle: "Typical presentation + risk factors",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Adult, commonly 30\u201350 years", "Subungual lesion (most common site)", "Severe pinpoint pain", "Cold sensitivity", "Paroxysmal pain", "Bluish or reddish discolouration under the nail", "Long delay before diagnosis"] },
+        { type: "checkbox", key: "riskFactors", label: "Associations present", options: ["Neurofibromatosis type 1", "Family history of similar lesions", "Previous excision"] },
+        { type: "info", title: null, items: ["The classic triad is pinpoint pain, cold sensitivity and severe tenderness over a small area."] },
+      ],
+    },
+    {
+      id: "history",
+      index: 2,
+      title: "Focused History",
+      subtitle: "Digit, symptoms, cold sensitivity, function",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Affected hand", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant hand", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 2 years" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pinpoint pain", "Cold sensitivity", "Paroxysmal pain", "Pain on light touch", "Nail changes", "Visible discolouration", "Pain at night"] },{ type: "vas", key: "vas" },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Typing or keyboard", "Fine manipulation", "Cold exposure", "Gripping", "Work tasks", "Sleep"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesia", "Previous excision", "Other"] },{
+          type: "conditional",
+          when: (s) => (s.prevTreatment || []).includes("Other"),
+          fields: [{ type: "text", key: "prevTreatmentOther", label: "Specify other previous treatment" }],
+        },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Diabetes", "Hypertension", "Cardiac disease", "Respiratory disease", "Anticoagulation", "Smoking", "Other"] },],
+    },
+    {
+      id: "exam",
+      index: 3,
+      title: "Focused Examination",
+      subtitle: "Inspection, localisation, special tests",
+      fields: [
+        { type: "select", key: "lesionDigit", label: "Digit", options: ["Thumb", "Index", "Middle", "Ring", "Little", "Palm / other"], columns: 3 },
+        { type: "select", key: "lesionSite", label: "Site", options: ["Subungual", "Pulp", "Periungual", "Other"], columns: 2 },
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["No visible abnormality", "Bluish discolouration under the nail", "Reddish discolouration under the nail", "Nail ridging or deformity", "Visible nodule", "Other"] },
+        { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Love's pin test (pinpoint tenderness)", "Hildreth's test (pain abolished by tourniquet)", "Cold sensitivity test", "Transillumination"] },
+        { type: "select", key: "digitalSensationIntact", label: "Neurovascular \u2014 digital sensation intact", options: ["Yes", "No"], columns: 2 },
+      ],
+    },
+    {
+      id: "imaging",
+      index: 4,
+      title: "Imaging",
+      subtitle: "Radiographs, ultrasound, MRI",
+      fields: [
+        { type: "info", title: "Essential", items: ["Radiographs of the digit to look for bony scalloping and exclude other bony lesions.", "Ultrasound with Doppler or MRI to confirm and localise the lesion, particularly when small, unclear or recurrent."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["No bony abnormality", "Scalloping of the distal phalanx", "Cortical erosion", "Other bony lesion"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound \u2014 findings", options: ["Well-defined hypoechoic nodule", "Internal vascularity on Doppler", "Bony scalloping", "No lesion identified"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound \u2014 additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI \u2014 findings", options: ["T2 hyperintense lesion", "Avid contrast enhancement", "Bony erosion", "Multiple lesions", "No lesion identified"] },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 additional detail" },
+      ],
+    },
+    {
+      id: "differential",
+      index: 5,
+      title: "Differential Diagnosis",
+      subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Subungual melanoma", "Mucous cyst", "Subungual exostosis", "Neuroma", "Haemangioma or vascular malformation", "Enchondroma", "Epidermal inclusion cyst", "Paronychia or infection", "DIP joint arthritis"] }],
+    },
+    {
+      id: "diagnosis",
+      index: 6,
+      title: "Diagnosis Classification",
+      subtitle: "Site, number, presentation",
+      fields: [
+        { type: "select", key: "glomusPresentation", label: "Presentation", options: ["First presentation", "Recurrent"], columns: 2 },
+        { type: "select", key: "glomusNumber", label: "Number of lesions", options: ["Solitary", "Multiple"], columns: 2 },
+        { type: "select", key: "glomusHistology", label: "Histology", options: ["Awaiting", "Confirmed glomus tumour", "Other diagnosis"], columns: 2 },
+      ],
+    },
+    {
+      id: "redflags",
+      index: 7,
+      title: "When to Stop and Reconsider",
+      subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button",
+      fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }],
+    },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    {
+      id: "followup",
+      index: 9,
+      title: "Standard Follow-up",
+      subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "2 weeks", right: "Wound check, suture removal" }, { left: "6 weeks", right: "Pain, cold sensitivity" }, { left: "3 months", right: "Nail growth, symptom resolution" }, { left: "6\u201312 months", right: "Recurrence" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["2 weeks", "6 weeks", "3 months", "6 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [
+          { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
+        ] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Review histology", "Pre-operative planning", "Monitor for recurrence", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [
+          { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
+        ] }],
+    },
+    {
+      id: "outcomes",
+      index: 10,
+      title: "Outcome Measures",
+      subtitle: "Validated scores, glomus pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS + QuickDASH" }, { left: "Follow-up", right: "VAS + cold sensitivity" }, { left: "Final", right: "VAS + QuickDASH" }] },
+        { type: "info", title: "Additional documentation", items: ["Cold sensitivity", "Nail appearance", "Symptom recurrence"] },
+        { type: "info", title: "Glomus pearls", items: ["Pinpoint pain, cold sensitivity and severe tenderness together make the diagnosis likely.", "Pain abolished by a proximal tourniquet (Hildreth's test) supports the diagnosis.", "Diagnosis is often delayed for years; consider it in any severe, localised fingertip pain."] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Incomplete excision", "Multiple or unrecognised lesions", "Nail bed injury at surgery"] },
+        { type: "info", title: "Consultant tips", items: ["Mark the point of maximal tenderness before the tourniquet and anaesthetic go on; the lesion can be very small.", "Excise completely under magnification and always send the specimen for histology.", "Any pigmented nail lesion needs subungual melanoma excluded before being treated as a glomus tumour."] },
+      ],
+    }],
+};
+
 const handOAData = {
   pathway: {
     start: "diagnosis",
@@ -12526,8 +12688,8 @@ const generalHandData = {
       id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
       fields: [
         { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen."] },
-        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Trigger finger", "Dupuytren\'s disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
-        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Trigger finger", "Dupuytren\'s disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
+        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Trigger finger", "Dupuytren\'s disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Glomus tumour", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
+        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Trigger finger", "Dupuytren\'s disease", "Mallet finger", "Jersey finger", "Boutonniere deformity", "Sagittal band injury", "Extensor tendon injury", "Flexor tendon laceration", "PIP dislocation / volar plate injury", "Thumb UCL injury", "Metacarpal fracture", "Phalangeal fracture", "Bennett / Rolando fracture", "Fingertip injury", "Hand osteoarthritis", "Glomus tumour", "Flexor tenosynovitis (infection)", "Carpal tunnel syndrome"] },
       ],
     },
     {
@@ -12566,7 +12728,7 @@ const REGIONS = {
   hand: {
     label: "Hand",
     subsections: [
-      { id: "general-hand", label: "General Hand", conditions: [triggerFingerData, dupuytrenDiseaseData, malletFingerData, jerseyFingerData, sagittalBandInjuryData, extensorTendonInjuriesData, boutonniereDeformityData, pipDislocationData, handOAData, flexorTenosynovitisData] },
+      { id: "general-hand", label: "General Hand", conditions: [triggerFingerData, dupuytrenDiseaseData, malletFingerData, jerseyFingerData, sagittalBandInjuryData, extensorTendonInjuriesData, boutonniereDeformityData, pipDislocationData, handOAData, flexorTenosynovitisData, glomusTumourData] },
       { id: "hand-wrist-trauma", label: "Hand & Wrist Trauma", conditions: [distalRadiusFxData, scaphoidFxData, thumbUCLInjuryData, metacarpalFxData, phalangealFxData, bennettRolandoFxData, perilunateInjuryData, hookOfHamateFxData, fingertipInjuryData, tendonLacerationData] },
     ],
   },
@@ -12622,7 +12784,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.9.4";
+const APP_VERSION = "5.12.0";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -14312,6 +14474,29 @@ function isFilled(field, state) {
   }
 }
 
+// Imaging free text ("Radiographs - additional detail" etc.) stays directly
+// under its own modality's findings. It shows as a small "Add detail" link
+// until needed, so four empty boxes don't lengthen every imaging section,
+// and opens by itself whenever it already holds text.
+function InlineDetailField({ field, state, setField }) {
+  const value = state[field.key];
+  const filled = !!(value && String(value).trim());
+  const [open, setOpen] = useState(false);
+  if (filled || open) {
+    return <TextField label={field.label} value={value} onChange={(v) => setField(field.key, v)} placeholder={field.placeholder} />;
+  }
+  return (
+    <button
+      onClick={() => setOpen(true)}
+      className="flex items-center gap-1.5 -mt-1 mb-2 px-1 text-[13px] font-semibold"
+      style={{ color: T.teal, minHeight: 36 }}
+      aria-label={`Add ${field.label}`}
+    >
+      <FilePlus size={15} color={T.teal} /> Add detail
+    </button>
+  );
+}
+
 function Field({ field, state, setField, region }) {
   // Once surgery is agreed the review-period question no longer applies.
   if (patientScheduledForSurgery(state)) {
@@ -14371,6 +14556,7 @@ function Field({ field, state, setField, region }) {
         </>
       );
     case "text":
+      if (/Finding$/.test(field.key)) return <InlineDetailField field={field} state={state} setField={setField} />;
       return <TextField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} placeholder={field.placeholder} suggestions={field.suggestions || FIELD_SUGGESTIONS[field.key]} multiSelect={field.key === "sport"} />;
     case "date":
       return <DateField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} />;
@@ -15499,6 +15685,7 @@ const SURGICAL_OPTIONS_BY_CONDITION = {
   // Hand - General
   "trigger-finger": ["Open A1 pulley release", "Percutaneous A1 pulley release"],
   "dupuytren-disease": ["Limited/regional fasciectomy", "Dermofasciectomy", "Percutaneous needle aponeurotomy", "Collagenase injection (enzymatic fasciotomy)"],
+  "glomus-tumour": ["Excision via transungual (nail bed) approach", "Excision via lateral subperiosteal approach", "Excision of pulp or soft-tissue lesion"],
   "mallet-finger": ["Extension block pinning", "ORIF (large bony fragment)", "Tendon repair (chronic)"],
   "jersey-finger": ["Primary tendon repair / reinsertion", "Staged tendon reconstruction (chronic)"],
   "sagittal-band-injury": ["Primary repair", "Reconstruction (chronic)"],
@@ -15787,6 +15974,36 @@ function buildInjectionSentence(detail) {
 // discussed and consent given; "Not agreed" records the alternate outcome
 // plainly; leaving it unanswered omits the sentence entirely rather than
 // guessing.
+// Pre-operative preparation line, added to the plan once surgery is agreed
+// when ANY of these applies: a major procedure, age above 40, or an
+// anaesthetic-relevant condition recorded in the history. The procedure
+// split is keyword-based over the procedure's own name, so it covers every
+// template's option list; minor terms are checked first so, for example, a
+// carpal tunnel "release" is never counted as major. Thoracic outlet
+// procedures (first rib resection, scalenectomy) are named explicitly as
+// major: they carry none of the generic major keywords but are chest-wall
+// operations under general anaesthesia.
+const PREOP_MINOR_RE = /(\brelease\b|trigger|ganglion|mucous cyst|nail bed|transungual|subungual|pulp|fingertip|biopsy|injection|aponeurotomy|needle|collagenase|excision of pulp|soft-tissue lesion|lateral subperiosteal)/i;
+const PREOP_MAJOR_RE = /(arthroplasty|replacement|reconstruct|fixation|\bORIF\b|open reduction|plat(e|ing)\b|intramedullary|arthrodesis|fusion|osteotom|\btransfer|transposition|\bgraft|latarjet|bankart|stabilis|arthroscop|tenodesis|trapeziectomy|\bflap\b|replant|\brepair\b|first rib|scalenectom|thoracic outlet)/i;
+const PREOP_RISK_RE = /(diabet|hypertens|cardiac|heart|ischaem|angina|arrhythm|atrial fibrillation|pacemaker|asthma|copd|respiratory|lung|renal|kidney|anticoag|warfarin|antiplatelet|obes|smok|stroke|sleep apn|liver|anaemi|bleeding|thyroid|rheumatoid)/i;
+
+function isMajorProcedure(name) {
+  if (!name) return false;
+  if (PREOP_MINOR_RE.test(name)) return false;
+  return PREOP_MAJOR_RE.test(name);
+}
+
+function needsPreoperativeReferral(procedures, state) {
+  const st = state || {};
+  if ((procedures || []).some(isMajorProcedure)) return true;
+  const age = Number(st.age);
+  if (Number.isFinite(age) && age >= 40) return true;
+  const history = [].concat(st.medHistory || [], st.riskFactors || [], st.relevantHistory || []);
+  return history.some((h) => typeof h === "string" && PREOP_RISK_RE.test(h));
+}
+
+const PREOP_SENTENCE = "Pre-operative plan: referral to the pre-anaesthesia clinic and pre-operative investigations (blood tests, and ECG as indicated).";
+
 function trailToBullets(trail, surgeryAgreement, surgicalDiscussion, state) {
   const stepTexts = trail.filter((t) => t.node.type === "info" || t.node.type === "terminal").map((t) => t.node.text);
   if (!stepTexts.length) return [];
@@ -15823,6 +16040,7 @@ function trailToBullets(trail, surgeryAgreement, surgicalDiscussion, state) {
       bullets.push(
         `The risks and benefits of surgery, including common complications associated with the proposed procedure, and alternative treatment options, were discussed with the patient, who agreed to ${procedureClause}.`
       );
+      if (needsPreoperativeReferral(procedures, state)) bullets.push(PREOP_SENTENCE);
     } else if (surgeryAgreement === "Not agreed") {
       bullets.push("The patient was not keen for surgery at this time.");
     }
@@ -16438,12 +16656,58 @@ const FOLLOWUP_PLAN_OPTIONS = [
 // condition can carry both an initial workup and follow-up documentation in
 // the same session without either overwriting the other's fields (e.g. both
 // use a pathway walk, but as separate answer sets).
+// Same date arithmetic as the post-operative screen, named for general use.
+function timeSinceDate(dateStr) {
+  return timeSinceSurgery(dateStr);
+}
+
+// What the clinician is most likely to do next depends on how the patient
+// responded, so the plan list is ordered by the outcome already recorded.
+// Nothing is removed - every option stays available, just reordered.
+const FOLLOWUP_PLAN_PRIORITY_BY_OUTCOME = {
+  Resolved: ["Discharge from follow-up", "Modify or step down treatment"],
+  Improved: ["Continue current management as planned", "Progress treatment (e.g. advance rehabilitation, increase activity)"],
+  Unchanged: ["Trial of injection", "Further imaging or investigations", "Refer for surgical opinion"],
+  Worse: ["Further imaging or investigations", "Refer for surgical opinion", "Trial of injection"],
+};
+
+function followupProgressStalled(fuState) {
+  return fuState.outcome === "Unchanged" || fuState.outcome === "Worse";
+}
+
+// An injection already given that did not help should not sit at the top of
+// the list as though it were an untried option - most templates carry a red
+// flag about repeating injections without benefit.
+function injectionAlreadyTried(fuState) {
+  return (fuState.treatmentOffered || []).some((t) => /injection/i.test(t));
+}
+
+function followupPlanOptions(fuState) {
+  const all = FOLLOWUP_PLAN_OPTIONS;
+  const priority = (FOLLOWUP_PLAN_PRIORITY_BY_OUTCOME[fuState.outcome] || []).filter((o) => all.includes(o));
+  let ordered = priority.length ? [...priority, ...all.filter((o) => !priority.includes(o))] : [...all];
+  if (injectionAlreadyTried(fuState) && followupProgressStalled(fuState)) {
+    const repeat = ordered.filter((o) => /injection/i.test(o));
+    ordered = [...ordered.filter((o) => !repeat.includes(o)), ...repeat];
+  }
+  return ordered;
+}
+
+// Discharging the patient and booking a review are mutually exclusive; the
+// form and the note follow the discharge decision rather than allowing both.
+function patientDischargedAtFollowup(fuState) {
+  return (fuState.planOptions || []).includes("Discharge from follow-up");
+}
+
 function buildFollowupNoteParts(condition, fuState, fullState) {
   const parts = [];
 
   const reasons = (fuState.reason || []).filter((r) => r !== "Other");
   if ((fuState.reason || []).includes("Other") && fuState.reasonOther && fuState.reasonOther.trim()) reasons.push(fuState.reasonOther.trim());
-  if (reasons.length) parts.push({ heading: "Reason for Review", text: `The patient was reviewed today for ${lowerFirst(humanizeList(reasons))}.` });
+  const sinceLastVisit = fuState.lastVisitDate ? timeSinceDate(fuState.lastVisitDate) : null;
+  const sinceClause = sinceLastVisit && sinceLastVisit !== "date is in the future" ? ` The last review was ${sinceLastVisit} ago.` : "";
+  if (reasons.length) parts.push({ heading: "Reason for Review", text: `The patient was reviewed today for ${lowerFirst(humanizeList(reasons))}.${sinceClause}` });
+  else if (sinceClause) parts.push({ heading: "Reason for Review", text: sinceClause.trim() });
 
   const treatments = (fuState.treatmentOffered || []).filter((t) => t !== "Other");
   if ((fuState.treatmentOffered || []).includes("Other") && fuState.treatmentOfferedOther && fuState.treatmentOfferedOther.trim()) treatments.push(fuState.treatmentOfferedOther.trim());
@@ -16476,6 +16740,8 @@ function buildFollowupNoteParts(condition, fuState, fullState) {
   const selectedInterval = fuState.followUpInterval === "Other" ? fuState.followUpIntervalOther : fuState.followUpInterval;
   if (patientScheduledForSurgery(fuState)) {
     parts.push({ heading: "Review Plan", text: "The patient will be scheduled for surgery." });
+  } else if (patientDischargedAtFollowup(fuState)) {
+    parts.push({ heading: "Review Plan", text: "The patient was discharged from the clinic." });
   } else if (fuState.followUpInterval === "Final") {
     parts.push({ heading: "Review Plan", text: "This is the final visit for the patient. They can be discharged from the clinic." });
   } else if (selectedInterval && selectedInterval.trim()) {
@@ -16589,6 +16855,84 @@ function timeSinceSurgery(dateStr) {
   return `${months} month${months === 1 ? "" : "s"}`;
 }
 
+// Days since surgery, for the stage-aware prompts below. Kept separate from
+// timeSinceSurgery (which formats text) so the stage logic works on a number.
+function daysSinceSurgery(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + "T00:00:00");
+  if (isNaN(d.getTime())) return null;
+  const days = Math.round((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
+  return days < 0 ? null : days;
+}
+
+// What a post-operative visit is actually about changes with time, so the
+// form follows the date of surgery rather than asking the same flat list at
+// every visit: the reasons most likely at this stage are offered first, and
+// the red-flag line names what matters now. Nothing is removed - every
+// option is still in the list, just ordered.
+const POSTOP_STAGES = [
+  {
+    maxDays: 20,
+    label: "early",
+    typical: "wound check and suture removal",
+    priority: ["Wound check", "Suture removal", "Scheduled post-operative review", "Complication assessment"],
+    watchFor: "spreading redness, discharge, fever, or pain that is increasing rather than settling \u2014 consider infection.",
+  },
+  {
+    maxDays: 89,
+    label: "intermediate",
+    typical: "removing immobilisation and starting or progressing motion",
+    priority: ["Scheduled post-operative review", "Cast removal", "Pin removal", "Complication assessment"],
+    watchFor: "motion not improving as expected, loss of position or fixation on imaging, or a new neurological deficit.",
+  },
+  {
+    maxDays: Infinity,
+    label: "late",
+    typical: "strengthening and return to work or sport",
+    priority: ["Scheduled post-operative review", "Return to work/sport assessment", "Complication assessment"],
+    watchFor: "pain or weakness that is not settling, nonunion or failure of fixation, or recurrence of the original problem.",
+  },
+];
+
+function postopStage(dateStr) {
+  const days = daysSinceSurgery(dateStr);
+  if (days == null) return null;
+  return POSTOP_STAGES.find((st) => days <= st.maxDays) || null;
+}
+
+// Reasons for review, with the ones that fit this stage brought to the front.
+function postopReasonOptions(dateStr) {
+  const stage = postopStage(dateStr);
+  if (!stage) return POSTOP_REASON_OPTIONS;
+  const first = stage.priority.filter((r) => POSTOP_REASON_OPTIONS.includes(r));
+  return [...first, ...POSTOP_REASON_OPTIONS.filter((r) => !first.includes(r))];
+}
+
+// Complications actually worth looking for after THIS operation, taken from
+// the same procedure-complication data used for consent in clinic. Consent-
+// only entries are dropped (they describe a risk of agreeing to surgery,
+// not something observable at review), as are duplicates of the general
+// list below.
+const POSTOP_CONSENT_ONLY_RE = /anaesthetic risk|need for revision/i;
+
+function postopComplicationOptions(procedureName) {
+  const base = POSTOP_COMPLICATION_OPTIONS;
+  if (!procedureName || !procedureName.trim()) return base;
+  const seen = base.map((b) => b.toLowerCase());
+  const covers = (item) => seen.some((b) => {
+    const a = item.toLowerCase();
+    return b === a || b.includes(a) || a.includes(b.split("/")[0].trim());
+  });
+  const specific = complicationsForProcedure(procedureName.trim())
+    .filter((c) => !POSTOP_CONSENT_ONLY_RE.test(c))
+    .filter((c) => !covers(c));
+  if (!specific.length) return base;
+  return ["None noted", ...specific, ...base.filter((b) => b !== "None noted")];
+}
+
+const POSTOP_RETURN_WORK_OPTIONS = ["Not yet", "Light duties", "Full duties", "Already returned"];
+const POSTOP_RETURN_SPORT_OPTIONS = ["Not yet", "Restricted", "Cleared"];
+
 function buildPostopNoteParts(condition, poState) {
   const parts = [];
 
@@ -16609,6 +16953,11 @@ function buildPostopNoteParts(condition, poState) {
   if (poState.functionalProgress) statusClauses.push(`functional progress was ${lowerFirst(poState.functionalProgress)}`);
   if (poState.statusNotes && poState.statusNotes.trim()) statusClauses.push(poState.statusNotes.trim());
   if (statusClauses.length) parts.push({ heading: "Current Status", text: `${statusClauses.join("; ")}.`.replace(/^./, (c) => c.toUpperCase()) });
+
+  const activity = [];
+  if (poState.returnToWork) activity.push(`return to work: ${lowerFirst(poState.returnToWork)}`);
+  if (poState.returnToSport) activity.push(`return to sport or driving: ${lowerFirst(poState.returnToSport)}`);
+  if (activity.length) parts.push({ heading: "Return to Activity", text: `${activity.join("; ")}.`.replace(/^./, (c) => c.toUpperCase()) });
 
   const complications = (poState.complications || []).filter((c) => c !== "None noted" && c !== "Other");
   if ((poState.complications || []).includes("Other") && poState.complicationsOther && poState.complicationsOther.trim()) complications.push(poState.complicationsOther.trim());
@@ -17143,9 +17492,11 @@ const DETAIL_FIELD_RE = new RegExp([
   // Prior care - relevant but rarely the focus of the current encounter
   "^(prevTreatment|treatmentResponse|injectionCount|injectionResponse|prevSurgery|previousSurgery)$",
   "^(medHistory|relevantHistory|riskFactors)$",
-  // Free-text companions: "specify other ..." and imaging "additional detail"
+  // Free-text "specify other ..." companions. (Imaging "additional detail"
+  // boxes used to be collapsed here too, which moved all of them to the end
+  // of the section; they now stay under their own modality - see
+  // InlineDetailField.)
   "Other$",
-  "Finding$",
 ].join("|"));
 
 function isDetailField(field) {
@@ -18589,6 +18940,7 @@ const DIFFERENTIAL_TO_CONDITION = {
     "Bennett / Rolando fracture": "bennett-rolando-fracture",
     "Fingertip injury": "fingertip-injury",
     "Hand osteoarthritis": "hand-osteoarthritis",
+    "Glomus tumour": "glomus-tumour",
     "Flexor tenosynovitis (infection)": "flexor-tenosynovitis",
     "Carpal tunnel syndrome": "carpal-tunnel-syndrome",
   },
@@ -18693,7 +19045,7 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
       preserveAspectRatio="xMidYMid meet"
       style={
         fillHeight
-          ? { display: "block", height: "min(80vh, 980px)", width: "auto", maxWidth: "100%" }
+          ? { display: "block", height: "min(calc(100vh - 230px), 980px)", width: "auto", maxWidth: "100%" }
           : { display: "block", width: "100%", height: "auto", maxHeight: "min(78vh, 900px)" }
       }
       role="group"
@@ -19429,7 +19781,13 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
   const tableField = followupSection && (followupSection.fields || []).find((f) => f.type === "table");
   const intervalOptions = tableField ? [...tableField.rows.map((r) => r.left), "Final", "Other"] : ["Final", "Other"];
 
+  const sinceLastVisit = fuState.lastVisitDate ? timeSinceDate(fuState.lastVisitDate) : null;
+  const stalled = followupProgressStalled(fuState);
+  const discharged = patientDischargedAtFollowup(fuState);
+  const repeatInjectionFlagged = injectionAlreadyTried(fuState) && stalled;
+
   const hasContent =
+    !!fuState.lastVisitDate ||
     (fuState.reason || []).length > 0 ||
     (fuState.treatmentOffered || []).length > 0 ||
     !!fuState.outcome ||
@@ -19443,6 +19801,8 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
   return (
     <CollapsibleSection index={index} title={condition.name} subtitle="Reason, treatment given, outcome, new plan" isOpen={isOpen} onToggle={() => setIsOpen((v) => !v)} hasContent={hasContent}>
       <SubLabel>Reason for review</SubLabel>
+      <DateField label="Date of last visit (optional)" value={fuState.lastVisitDate} onChange={(v) => set("lastVisitDate", v)} />
+      {sinceLastVisit && <div className="text-[13px] mt-1 mb-2" style={{ color: T.inkSoft }}>{sinceLastVisit} since the last visit</div>}
       <CheckboxGroup options={FOLLOWUP_REASON_OPTIONS} selected={fuState.reason || []} onChange={(v) => set("reason", v)} />
       {(fuState.reason || []).includes("Other") && (
         <TextField label="Specify reason" value={fuState.reasonOther} onChange={(v) => set("reasonOther", v)} />
@@ -19457,6 +19817,23 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
       <SubLabel>Outcome of treatment</SubLabel>
       <ButtonSelect options={FOLLOWUP_OUTCOME_OPTIONS} value={fuState.outcome || null} onChange={(v) => set("outcome", v)} columns={4} />
       <TextField label="Notes on current symptoms / findings" value={fuState.outcomeNotes} onChange={(v) => set("outcomeNotes", v)} placeholder="Optional" />
+
+      {/* Progress has stalled, so this condition's own "when to stop and
+          reconsider" prompts are surfaced here, where the next decision is
+          being made, rather than only in the template's red-flag section. */}
+      {stalled && (condition.redFlags || []).length > 0 && (
+        <div className="rounded-xl px-3 py-2.5 mb-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <AlertTriangle size={16} color={T.amber} />
+            <span className="text-[13px] font-semibold" style={{ color: T.amber }}>Not improving — worth reconsidering</span>
+          </div>
+          {(condition.redFlags || []).slice(0, 2).map((f, i) => (
+            <div key={i} className="text-[13px] leading-relaxed mb-1" style={{ color: T.amber }}>
+              {"\u2022"} {f.text}{f.consider ? ` \u2014 ${lowerFirst(f.consider)}` : ""}
+            </div>
+          ))}
+        </div>
+      )}
 
       <SubLabel>New plan of treatment</SubLabel>
       {condition.pathway ? (
@@ -19487,7 +19864,12 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
       )}
 
       <div className="text-[13px] mt-4 mb-2" style={{ color: T.inkSoft }}>Or choose a different plan:</div>
-      <CheckboxGroup options={FOLLOWUP_PLAN_OPTIONS} selected={fuState.planOptions || []} onChange={(v) => set("planOptions", v)} />
+      {repeatInjectionFlagged && (
+        <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>
+          An injection has already been given without benefit, so repeating it has been moved down the list.
+        </div>
+      )}
+      <CheckboxGroup options={followupPlanOptions(fuState)} selected={fuState.planOptions || []} onChange={(v) => set("planOptions", v)} />
       {(fuState.planOptions || []).includes("Other") && (
         <TextField label="Specify plan" value={fuState.planOptionsOther} onChange={(v) => set("planOptionsOther", v)} />
       )}
@@ -19497,7 +19879,14 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
       )}
 
       <SubLabel>Next review</SubLabel>
-      {patientScheduledForSurgery(fuState) ? <SurgeryScheduledNotice /> : (<>
+      {patientScheduledForSurgery(fuState) ? <SurgeryScheduledNotice /> : discharged ? (
+        <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 mb-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+          <CheckCircle2 size={16} color={T.tealDark} style={{ marginTop: 2, flexShrink: 0 }} />
+          <div className="text-[13px] leading-relaxed" style={{ color: T.tealDark }}>
+            Discharge selected, so no review is needed. The note will say: <span className="font-semibold">The patient was discharged from the clinic.</span>
+          </div>
+        </div>
+      ) : (<>
       <ButtonSelect options={intervalOptions} value={fuState.followUpInterval || null} onChange={(v) => set("followUpInterval", v)} columns={2} />
       {fuState.followUpInterval === "Other" && (
         <TextField label="Specify follow-up timing" value={fuState.followUpIntervalOther} onChange={(v) => set("followUpIntervalOther", v)} />
@@ -19659,6 +20048,10 @@ function PostopConditionBlock({ index, condition, poState, onChange, defaultOpen
   const tableField = followupSection && (followupSection.fields || []).find((f) => f.type === "table");
   const intervalOptions = tableField ? [...tableField.rows.map((r) => r.left), "Final", "Other"] : ["Final", "Other"];
   const sinceText = poState.surgeryDate ? timeSinceSurgery(poState.surgeryDate) : null;
+  // Drives the stage-aware prompts: which reasons come first, what the
+  // red-flag line says, and whether return-to-activity is asked yet.
+  const stage = postopStage(poState.surgeryDate);
+  const daysSince = daysSinceSurgery(poState.surgeryDate);
 
   const hasContent =
     !!(poState.procedureName && poState.procedureName.trim()) ||
@@ -19672,12 +20065,26 @@ function PostopConditionBlock({ index, condition, poState, onChange, defaultOpen
   return (
     <CollapsibleSection index={index} title={condition.name} subtitle="Procedure, current status, complications, plan" isOpen={isOpen} onToggle={() => setIsOpen((v) => !v)} hasContent={hasContent}>
       <SubLabel>Procedure</SubLabel>
-      <TextField label="Procedure performed" value={poState.procedureName} onChange={(v) => set("procedureName", v)} placeholder="e.g. Open rotator cuff repair" />
+      {/* The procedures this diagnosis is actually operated on for, as
+          tap-to-fill chips - the same list offered when surgery is agreed in
+          clinic. Typing stays available for anything not listed. */}
+      <TextField
+        label="Procedure performed"
+        value={poState.procedureName}
+        onChange={(v) => set("procedureName", v)}
+        placeholder="e.g. Open rotator cuff repair"
+        suggestions={surgicalOptionsFor(condition.id)}
+      />
       <DateField label="Date of surgery" value={poState.surgeryDate} onChange={(v) => set("surgeryDate", v)} />
       {sinceText && <div className="text-[13px] mt-1 mb-1" style={{ color: T.inkSoft }}>{sinceText} since surgery</div>}
 
       <SubLabel>Reason for review</SubLabel>
-      <CheckboxGroup options={POSTOP_REASON_OPTIONS} selected={poState.reason || []} onChange={(v) => set("reason", v)} />
+      {stage && (
+        <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>
+          Usually at this stage: {stage.typical}.
+        </div>
+      )}
+      <CheckboxGroup options={postopReasonOptions(poState.surgeryDate)} selected={poState.reason || []} onChange={(v) => set("reason", v)} />
       {(poState.reason || []).includes("Other") && (
         <TextField label="Specify reason" value={poState.reasonOther} onChange={(v) => set("reasonOther", v)} />
       )}
@@ -19691,8 +20098,27 @@ function PostopConditionBlock({ index, condition, poState, onChange, defaultOpen
       <ButtonSelect options={POSTOP_PROGRESS_OPTIONS} value={poState.functionalProgress || null} onChange={(v) => set("functionalProgress", v)} columns={1} />
       <TextField label="Additional notes on current status" value={poState.statusNotes} onChange={(v) => set("statusNotes", v)} placeholder="Optional" />
 
+      {stage && (
+        <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 mb-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+          <AlertTriangle size={16} color={T.amber} style={{ marginTop: 2, flexShrink: 0 }} />
+          <div className="text-[13px] leading-relaxed" style={{ color: T.amber }}>
+            Watch for: {stage.watchFor}
+          </div>
+        </div>
+      )}
+
+      {daysSince != null && daysSince >= 42 && (
+        <>
+          <SubLabel>Return to activity</SubLabel>
+          <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>Work</div>
+          <ButtonSelect options={POSTOP_RETURN_WORK_OPTIONS} value={poState.returnToWork || null} onChange={(v) => set("returnToWork", v)} columns={2} />
+          <div className="text-[13px] mb-2 mt-3" style={{ color: T.inkSoft }}>Sport or driving</div>
+          <ButtonSelect options={POSTOP_RETURN_SPORT_OPTIONS} value={poState.returnToSport || null} onChange={(v) => set("returnToSport", v)} columns={3} />
+        </>
+      )}
+
       <SubLabel>Complications</SubLabel>
-      <CheckboxGroup options={POSTOP_COMPLICATION_OPTIONS} selected={poState.complications || []} onChange={setComplications} />
+      <CheckboxGroup options={postopComplicationOptions(poState.procedureName)} selected={poState.complications || []} onChange={setComplications} />
       {(poState.complications || []).includes("Other") && (
         <TextField label="Specify complication" value={poState.complicationsOther} onChange={(v) => set("complicationsOther", v)} />
       )}
@@ -20216,7 +20642,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
       <div className="px-3 pt-3 pb-28 lg:hidden" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div className="max-w-2xl mx-auto">
           {showRegionPicker ? (
-            <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[400px] md:max-w-[560px]">
+            <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[400px] md:max-w-[560px]" style={{ background: "#FBF9F3", border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
               <BodyMap onSelect={setRegionKey} counts={counts} uid="fpm" />
             </div>
           ) : resultsList}
@@ -20228,9 +20654,12 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
           on the right. Avoids the mobile pattern of navigating away from
           the map just to browse diagnoses. */}
       <div className="hidden lg:flex gap-8 px-6 pt-5 pb-8" style={{ flex: "1 1 0%", minHeight: 0 }}>
-        <div className="w-[400px] xl:w-[440px] shrink-0" style={{ overflowY: "auto" }}>
-          <div className="rounded-2xl overflow-hidden">
-            <BodyMap onSelect={setRegionKey} counts={counts} activeRegion={regionKey} uid="fpd" />
+        {/* The map takes the full page height and derives its width from
+            the drawing's own proportions, so it never needs to scroll and
+            the card hugs the drawing with no empty margin around it. */}
+        <div className="shrink-0 flex flex-col" style={{ minHeight: 0 }}>
+          <div className="rounded-2xl overflow-hidden" style={{ background: "#FBF9F3", border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+            <BodyMap onSelect={setRegionKey} counts={counts} activeRegion={regionKey} fillHeight uid="fpd" />
           </div>
         </div>
         <div className="flex-1 min-w-0 flex flex-col" style={{ minHeight: 0 }}>
