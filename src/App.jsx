@@ -12784,7 +12784,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.12.0";
+const APP_VERSION = "5.12.1";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -18949,38 +18949,40 @@ const DIFFERENTIAL_TO_CONDITION = {
 function VisitTypeGate({ onSelect }) {
   return (
     <div className="ut-home flex flex-col" style={{ background: T.bg }}>
-      {/* Two stacked areas: the cards and credits scroll on their own above,
-          and the icon bar keeps its own strip at the bottom. The bar is
-          always fully visible, and nothing ever scrolls underneath it. */}
-      <div className="flex-1 flex flex-col px-4 pt-10 pb-4" style={{ minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+      {/* The home screen is sized to fit the window: spacing, the title and
+          the cards all scale with viewport height, so on a normal phone
+          everything is on screen at once and there is nothing to scroll.
+          Scrolling is left available purely as a safety net for unusually
+          short windows - clipping instead would hide the third card. */}
+      <div className="flex-1 flex flex-col px-4" style={{ minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", paddingTop: "clamp(8px, 3.5vh, 40px)", paddingBottom: "clamp(8px, 1.5vh, 16px)" }}>
       <div className="max-w-md md:max-w-xl mx-auto w-full" style={{ marginTop: "auto", marginBottom: "auto" }}>
-        <div className="text-[14px] font-semibold uppercase tracking-widest mb-2 text-center" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
-        <h1 className="text-[36px] font-bold mb-2 text-center" style={{ color: T.ink }}>UpperTrack</h1>
-        <p className="text-[17px] mb-7 text-center" style={{ color: T.inkSoft }}>What kind of visit is this?</p>
+        <div className="font-semibold uppercase tracking-widest text-center" style={{ color: T.teal, fontSize: "clamp(11px, 1.7vh, 14px)", marginBottom: "clamp(4px, 0.8vh, 8px)" }}>Upper Extremity Clinic Documentation</div>
+        <h1 className="font-bold text-center" style={{ color: T.ink, fontSize: "clamp(22px, 4.6vh, 36px)", marginBottom: "clamp(2px, 0.6vh, 8px)" }}>UpperTrack</h1>
+        <p className="text-center" style={{ color: T.inkSoft, fontSize: "clamp(14px, 2.1vh, 17px)", marginBottom: "clamp(8px, 3vh, 28px)" }}>What kind of visit is this?</p>
         <InstallPrompt />
-        <div className="flex flex-col gap-3">
-          <button onClick={() => onSelect("new")} className="ut-card rounded-2xl p-5 text-left flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
-            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.gradientTeal }}>
+        <div className="flex flex-col" style={{ gap: "clamp(6px, 1.5vh, 12px)" }}>
+          <button onClick={() => onSelect("new")} className="ut-card rounded-2xl text-left flex items-center" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: "clamp(54px, 10.5vh, 88px)", padding: "clamp(10px, 2vh, 20px)", gap: "clamp(12px, 2vh, 16px)", boxShadow: T.shadowElevated }}>
+            <div className="ut-visit-icon flex items-center justify-center rounded-xl shrink-0" style={{ width: "clamp(38px, 7.2vh, 60px)", height: "clamp(38px, 7.2vh, 60px)", background: T.gradientTeal }}>
               <FilePlus size={30} color="#fff" />
             </div>
-            <div className="font-bold text-[21px]" style={{ color: T.ink }}>New Visit</div>
+            <div className="font-bold" style={{ color: T.ink, fontSize: "clamp(16px, 2.7vh, 21px)" }}>New Visit</div>
           </button>
-          <button onClick={() => onSelect("followup")} className="ut-card rounded-2xl p-5 text-left flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
-            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.tealTint }}>
+          <button onClick={() => onSelect("followup")} className="ut-card rounded-2xl text-left flex items-center" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: "clamp(54px, 10.5vh, 88px)", padding: "clamp(10px, 2vh, 20px)", gap: "clamp(12px, 2vh, 16px)", boxShadow: T.shadowElevated }}>
+            <div className="ut-visit-icon flex items-center justify-center rounded-xl shrink-0" style={{ width: "clamp(38px, 7.2vh, 60px)", height: "clamp(38px, 7.2vh, 60px)", background: T.tealTint }}>
               <CalendarClock size={30} color={T.tealDark} />
             </div>
-            <div className="font-bold text-[21px]" style={{ color: T.ink }}>Follow-up Visit</div>
+            <div className="font-bold" style={{ color: T.ink, fontSize: "clamp(16px, 2.7vh, 21px)" }}>Follow-up Visit</div>
           </button>
-          <button onClick={() => onSelect("postop")} className="ut-card rounded-2xl p-5 text-left flex items-center gap-4" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 88, boxShadow: T.shadowElevated }}>
-            <div className="flex items-center justify-center rounded-xl shrink-0" style={{ width: 60, height: 60, background: T.tealTint }}>
+          <button onClick={() => onSelect("postop")} className="ut-card rounded-2xl text-left flex items-center" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: "clamp(54px, 10.5vh, 88px)", padding: "clamp(10px, 2vh, 20px)", gap: "clamp(12px, 2vh, 16px)", boxShadow: T.shadowElevated }}>
+            <div className="ut-visit-icon flex items-center justify-center rounded-xl shrink-0" style={{ width: "clamp(38px, 7.2vh, 60px)", height: "clamp(38px, 7.2vh, 60px)", background: T.tealTint }}>
               <Slice size={30} color={T.tealDark} />
             </div>
-            <div className="font-bold text-[21px]" style={{ color: T.ink }}>Post-operative Follow-up</div>
+            <div className="font-bold" style={{ color: T.ink, fontSize: "clamp(16px, 2.7vh, 21px)" }}>Post-operative Follow-up</div>
           </button>
         </div>
-        <div className="text-center mt-8">
-          <div className="text-[13px] font-medium" style={{ color: T.inkSoft }}>Created by Dr. Muntasir Al-Naamani</div>
-          <div className="text-[13px]" style={{ color: T.inkSoft }}>Suggestions: namanimuntasir@gmail.com</div>
+        <div className="text-center" style={{ marginTop: "clamp(8px, 3vh, 32px)" }}>
+          <div className="ut-credits font-medium" style={{ color: T.inkSoft, fontSize: "clamp(11px, 1.6vh, 13px)" }}>Created by Dr. Muntasir Al-Naamani</div>
+          <div className="ut-credits" style={{ color: T.inkSoft, fontSize: "clamp(11px, 1.6vh, 13px)" }}>Suggestions: namanimuntasir@gmail.com</div>
           <AboutVersionLink />
         </div>
       </div>
@@ -21047,6 +21049,13 @@ const DESIGN_SYSTEM_CSS = `
   /* Home screen fills exactly the space below the app bar; dvh tracks the
      mobile browser's collapsing toolbars where supported. */
   .ut-home { height: calc(100vh - 48px); height: calc(100dvh - 48px); }
+  /* The visit-card glyphs scale with their tile, which is itself sized from
+     viewport height, so the cards shrink evenly on a short screen. */
+  .ut-visit-icon svg { width: 52%; height: 52%; }
+  /* On a very short window the credit lines are dropped so the cards and the
+     icon bar still fit without scrolling; the same details stay one tap away
+     under the version number. */
+  @media (max-height: 600px) { .ut-credits { display: none; } }
 
   [data-sheet-drag] { touch-action: none; }
   @keyframes ut-sheet-leave { to { transform: translateY(100%); opacity: 0.6; } }
