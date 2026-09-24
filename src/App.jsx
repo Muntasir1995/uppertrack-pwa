@@ -631,7 +631,43 @@ const instabilityData = {
       },
       earlySurgicalConsult: { type: "terminal", tone: "amber", title: "Early surgical consultation", text: "Pathway suggests early surgical consultation given high recurrence risk." },
       continueRehabFt: { type: "terminal", tone: "green", title: "Continue rehabilitation", text: "Pathway suggests continuing rehabilitation." },
-      recurrentExam: { type: "info", title: "Recurrent Instability", text: "Clinical examination \u2192 MRI \u00b1 CT \u2192 Bone loss assessment \u2192 On-track / Off-track evaluation \u2192 Shared decision-making", next: "recurrentTerminal" },
+      gtimQ: {
+        type: "question",
+        title: "GTIM score?",
+        text: "Pathway suggests scoring after 3D CT: age under 20 (2), competitive sport (2), contact or overhead sport (1), hyperlaxity (1), off-track Hill-Sachs (4).",
+        options: [
+          { label: "Below 4", next: "gtimLowQ" },
+          { label: "4 or above", next: "gtimHighQ" },
+          { label: "Not scored", next: "recurrentTerminal" },
+        ],
+      },
+      gtimLowQ: {
+        type: "question",
+        title: "Any factor favouring an added procedure?",
+        text: "Pathway suggests a soft-tissue procedure at this score, with an adjunct where a specific factor calls for one.",
+        options: [
+          { label: "No \u2014 Bankart alone", next: "gtimBankartTerminal" },
+          { label: "Peripheral-track or recurrent", next: "gtimRemplissageTerminal" },
+          { label: "Constitutional hyperlaxity", next: "gtimAsaTerminal" },
+          { label: "Subcritical glenoid bone loss", next: "gtimBoneBlockTerminal" },
+        ],
+      },
+      gtimBankartTerminal: { type: "terminal", tone: "green", title: "Bankart repair", text: "Pathway suggests an arthroscopic Bankart repair is sufficient at a GTIM score below 4." },
+      gtimRemplissageTerminal: { type: "terminal", tone: "amber", title: "Bankart with remplissage", text: "Pathway suggests adding remplissage to the Bankart repair, which is indicated for recurrent instability or a peripheral-track Hill-Sachs lesion." },
+      gtimAsaTerminal: { type: "terminal", tone: "amber", title: "Bankart with subscapularis augmentation", text: "Pathway suggests adding arthroscopic subscapularis augmentation to the Bankart repair for constitutional hyperlaxity." },
+      gtimBoneBlockTerminal: { type: "terminal", tone: "amber", title: "Bankart with bone block", text: "Pathway suggests adding a bone block to the Bankart repair for subcritical glenoid bone loss." },
+      gtimHighQ: {
+        type: "question",
+        title: "Bipolar bone loss present?",
+        text: "Pathway suggests separating a high score driven by bone loss from one driven by clinical risk factors alone.",
+        options: [
+          { label: "Off-track Hill-Sachs / significant bone loss", next: "gtimLatarjetTerminal" },
+          { label: "High-risk factors without significant bone loss", next: "gtimNoBoneLossTerminal" },
+        ],
+      },
+      gtimLatarjetTerminal: { type: "terminal", tone: "red", title: "Latarjet", text: "Pathway suggests the Latarjet procedure, which is the usual recommendation for an off-track lesion at a GTIM score of 4 or above. Measure the glenoid track and coracoid pre-operatively: a Hill-Sachs interval more than 7.45 mm wider than the track is a risk factor for a residual off-track lesion, where bone grafting of the lesion, remplissage or a larger bone block may be needed. Some surgeons instead combine capsulolabral repair with a bone block and remplissage, reserving Latarjet for revision." },
+      gtimNoBoneLossTerminal: { type: "terminal", tone: "amber", title: "High score without significant bone loss", text: "Pathway suggests this group remains debated and the choice is individualised. Options include open Bankart repair (for example a male collision athlete under 20, 10\u201320% glenoid bone loss, more than five dislocations, poor capsulolabral tissue, instability during daily activity or sleep, or a failed well-performed arthroscopic repair), Bankart with a bone block, Bankart with remplissage, or Latarjet." },
+      recurrentExam: { type: "info", title: "Recurrent Instability", text: "Clinical examination \u2192 MRI \u00b1 CT \u2192 Bone loss assessment \u2192 On-track / Off-track evaluation \u2192 Shared decision-making", next: "gtimQ" },
       recurrentTerminal: { type: "terminal", tone: "teal", title: "Arthroscopic stabilization or bone augmentation", text: "Pathway suggests arthroscopic stabilization, or a bone augmentation procedure if indicated, following shared decision-making." },
       mdiEducation: { type: "info", title: "Multidirectional Instability", text: "Education \u2192 Structured physiotherapy \u2192 Scapular control \u2192 Rotator cuff strengthening \u2192 Core stability", next: "mdiTerminal" },
       mdiTerminal: { type: "terminal", tone: "amber", title: "Surgery only for carefully selected patients", text: "Pathway suggests surgery only for carefully selected patients after failure of comprehensive rehabilitation." },
@@ -715,6 +751,22 @@ const instabilityData = {
       fields: [
         { type: "select", key: "diagPrimary", label: "Primary diagnosis", options: ["First-time traumatic anterior instability", "Recurrent anterior instability", "Posterior instability", "Multidirectional instability", "Voluntary instability"], columns: 1, noteLabel: "Diagnosis" },
         { type: "checkbox", key: "diagAssociated", label: "Associated pathology", options: ["Bankart lesion", "Bony Bankart", "Hill-Sachs lesion", "Glenoid bone loss", "HAGL lesion", "Rotator cuff tear"] },
+        // Glenoid Track Instability Management score: the ISIS clinical risk
+        // factors with the glenoid track replacing the radiographic items
+        // (Di Giacomo et al., Arthroscopy 2020). Each item is scored
+        // separately here rather than asking for a total, so the note records
+        // what the score was actually built from.
+        { type: "select", key: "gtimAge", label: "GTIM \u2014 age under 20 at surgery (2 points)", options: ["Yes", "No"], columns: 2, noteLabel: "GTIM age under 20" },
+        { type: "select", key: "gtimCompetitive", label: "GTIM \u2014 competitive sport (2 points)", options: ["Yes", "No"], columns: 2, noteLabel: "GTIM competitive sport" },
+        { type: "select", key: "gtimContactOverhead", label: "GTIM \u2014 contact or overhead sport (1 point)", options: ["Yes", "No"], columns: 2, noteLabel: "GTIM contact or overhead sport" },
+        { type: "select", key: "gtimHyperlaxity", label: "GTIM \u2014 shoulder hyperlaxity (1 point)", options: ["Yes", "No"], columns: 2, noteLabel: "GTIM hyperlaxity" },
+        { type: "select", key: "gtimTrack", label: "GTIM \u2014 Hill-Sachs lesion on 3D CT (off-track 4 points)", options: ["On-track", "Off-track"], columns: 2, noteLabel: "Glenoid track" },
+        { type: "number", key: "gtimTotal", label: "GTIM total score", suffix: "/ 10" },
+        { type: "info", title: "GTIM scoring", items: [
+          "Age under 20 at surgery: 2. Competitive sport: 2. Contact or overhead sport: 1. Hyperlaxity: 1. Off-track Hill-Sachs on 3D CT: 4 (on-track 0). Maximum 10.",
+          "A score below 4 points towards a soft-tissue procedure; 4 or above towards the Latarjet.",
+          "The glenoid track is assessed on 3D CT, which is the only radiographic parameter the score uses.",
+        ] },
       ],
     },
     { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags \u2014 also pinned via header button", fields: [{ type: "redflag", key: "redFlagsChecked" }] },
@@ -3435,6 +3487,10 @@ const radialHeadFxData = {
         { type: "select", key: "masonClass", label: "Mason classification", options: ["Type I", "Type II", "Type III", "Type IV"], columns: 4, noteLabel: "Mason classification" },
         { type: "info", title: "Mason classification reference", items: ["Type I: Undisplaced.", "Type II: Partial articular displacement.", "Type III: Comminuted.", "Type IV: Associated dislocation."] },
         { type: "checkbox", key: "associatedInjuries", label: "Associated injuries", options: ["Coronoid fracture", "LCL injury", "MCL injury", "Essex-Lopresti lesion", "DRUJ injury"] },
+        { type: "info", title: "Fracture-dislocation spectrum", items: [
+          "A multifragmentary radial head fracture implies a higher-energy injury with lateral ligament complex involvement, and is classified as Wrightington type C \u2014 see Coronoid / Terrible Triad for the algorithm.",
+          "Where the coronoid is also fractured, establish on CT whether the anteromedial facet is involved: anterolateral facet only is type C, both facets is type B+.",
+        ] },
       ],
     },
     {
@@ -3504,17 +3560,37 @@ const coronoidTerribleTriadData = {
   pathway: {
     start: "initial",
     nodes: {
-      initial: { type: "info", title: "Initial Assessment", text: "Diagnosis \u2192 CT \u2192 Stable Elbow Checklist", next: "stableQ" },
+      initial: { type: "info", title: "Initial Assessment", text: "Diagnosis \u2192 CT (with 3D reconstruction where available) \u2192 Wrightington classification \u2192 Stable Elbow Checklist", next: "stableQ" },
       stableQ: {
         type: "question",
         title: "Stable after reduction?",
         text: "Pathway suggests this decision once the Stable Elbow Checklist has been completed.",
         options: [
           { label: "Yes", next: "protectedMotionTerminal" },
-          { label: "No", next: "coronoidQ" },
+          { label: "No", next: "wrightingtonQ" },
         ],
       },
       protectedMotionTerminal: { type: "terminal", tone: "green", title: "Protected early motion", text: "Pathway suggests protected early motion \u2192 physiotherapy \u2192 review." },
+      wrightingtonQ: {
+        type: "question",
+        title: "Wrightington type?",
+        text: "Pathway suggests classifying on CT (ideally with 3D reconstruction) before planning, since each type has its own reconstruction sequence.",
+        options: [
+          { label: "A", next: "wrightingtonA" },
+          { label: "B", next: "wrightingtonB" },
+          { label: "B+", next: "wrightingtonBplus" },
+          { label: "C", next: "wrightingtonC" },
+          { label: "D", next: "wrightingtonD" },
+          { label: "D+", next: "wrightingtonDplus" },
+          { label: "Not classified", next: "coronoidQ" },
+        ],
+      },
+      wrightingtonA: { type: "terminal", tone: "amber", title: "Type A \u2014 medial column", text: "Pathway suggests the lateral ligament complex is the key structure to repair, since it is commonly avulsed even when the anteromedial facet fragment looks small. Fix the anteromedial facet where it contributes to instability \u2014 screw, threaded wire or buttress plate for multifragmentary fractures, directing the dorsal screw or wire distal to proximal to allow for coronoid recurvatum \u2014 through a Hotchkiss approach or arthroscopically assisted. If instability persists after both, address the posterior band of the MCL. A small, minimally displaced fracture in a demonstrably stable elbow may be managed non-operatively with close monitoring, serial imaging and, where needed, examination under anaesthesia." },
+      wrightingtonB: { type: "terminal", tone: "amber", title: "Type B \u2014 medial and middle columns", text: "Pathway suggests the coronoid is the key structure, having lost its buttress against the humerus. Fix the coronoid first with independent lag screws (buttress plate if multifragmentary), then repair the lateral ligament complex. Where the proximal ulna is fractured, reduce and fix the coronoid before plating the ulna \u2014 fixing it through the plate risks malreduction and recurrent instability \u2014 and restore the patient's proximal ulna dorsal angulation. Approach through Hotchkiss with an intact olecranon, or midline posterior with or without a Taylor-Scham approach for Monteggia and variants." },
+      wrightingtonBplus: { type: "terminal", tone: "red", title: "Type B+ \u2014 all three columns", text: "Pathway suggests this is the most unstable pattern. Reduce and fix the coronoid first, through the ulna fracture, a Taylor-Scham or a lateral approach, using independent lag screws. Restore the lesser sigmoid notch to guide radial head prosthesis sizing, then fix or replace the radial head; where the head is unsalvageable, fix the coronoid before replacing it so radial length is set correctly. Repair the lateral ligament complex and reassess; repair the MCL only if instability persists. Fix the ulna last, restoring the proximal ulna dorsal angle." },
+      wrightingtonC: { type: "terminal", tone: "amber", title: "Type C \u2014 lateral and middle columns", text: "Pathway suggests restoring the lateral column by radial head fixation or replacement, then repairing the lateral ligament complex and reassessing; repair the MCL only if the elbow remains unstable. Fixation of the anterolateral facet is not required for stability provided the anteromedial facet is intact \u2014 if the fracture extends into the anteromedial facet the injury is type B+. Use a lateral approach (Kaplan, EDC split or modified Kocher). An isolated multifragmentary radial head fracture belongs in this group, as it implies a significant soft-tissue injury." },
+      wrightingtonD: { type: "terminal", tone: "amber", title: "Type D \u2014 ulna fracture distal to the coronoid", text: "Pathway suggests no coronoid fixation is needed, as the coronoid remains in continuity with the olecranon. Reduce the radial head and fix the ulna anatomically first to restore the radio-ulnar relationship, then repair the lateral ligament complex, which is the key step for stability. Use a midline posterior approach." },
+      wrightingtonDplus: { type: "terminal", tone: "red", title: "Type D+ \u2014 as D, with a radial head fracture", text: "Pathway suggests fixing the ulna first to restore length and the proximal ulna dorsal angle, since this determines the correct radial head replacement length and prevents overstuffing. The radial head fracture is usually multifragmentary and generally requires replacement. Check on the lateral fluoroscopic view that the radial neck points at the centre of the capitellum: ventral means the ulna is fixed in too much extension, dorsal in too much flexion. Use a midline posterior approach with a lateral approach." },
       coronoidQ: {
         type: "question",
         title: "Coronoid deficient?",
@@ -3639,6 +3715,20 @@ const coronoidTerribleTriadData = {
         // component) is clinically relevant here - added for completeness.
         { type: "select", key: "masonClass", label: "Radial head \u2014 Mason classification", options: ["Type I", "Type II", "Type III", "Type IV"], columns: 4, noteLabel: "Mason classification" },
         { type: "select", key: "terribleTriadStatus", label: "Terrible triad status", options: ["Stable after reduction", "Persistent instability", "Chronic instability"], columns: 1, noteLabel: "Terrible triad status" },
+        // The Wrightington classification groups every fracture-dislocation
+        // pattern by which coronoid facet is involved and whether the radial
+        // head is fractured, and carries a surgical algorithm for each type
+        // (Hamoodi & Watts, JSES Int 2023). It drives the pathway below.
+        { type: "select", key: "wrightingtonType", label: "Wrightington classification (elbow fracture-dislocation)", options: ["A", "B", "B+", "C", "D", "D+"], columns: 6, noteLabel: "Wrightington type" },
+        { type: "info", title: "Wrightington types", items: [
+          "A \u2014 anteromedial facet fracture (medial column).",
+          "B \u2014 bifacet coronoid fracture (medial and middle columns).",
+          "B+ \u2014 bifacet coronoid fracture with radial head fracture (all three columns).",
+          "C \u2014 comminuted radial head, or radial head with anterolateral facet (terrible triad).",
+          "D \u2014 proximal ulna fracture distal to the coronoid, coronoid in continuity with olecranon.",
+          "D+ \u2014 as D, with a radial head fracture.",
+          "Classification is more accurate and more reliable on CT, particularly with 3D reconstruction, than on radiographs alone.",
+        ] },
       ],
     },
     {
@@ -3675,6 +3765,166 @@ const coronoidTerribleTriadData = {
         { type: "info", title: "Stability pearls", items: ["The coronoid is the anterior buttress of the elbow.", "The radial head is a secondary valgus stabilizer.", "The LCL is almost always injured in terrible triad injuries.", "Stability should be reassessed after every reconstructive step."] },
         { type: "info", title: "Predictors of poor outcome", items: ["Residual instability", "Delayed motion", "Heterotopic ossification (HO)", "Coronoid deficiency", "Radial head excision without appropriate indication"] },
         { type: "info", title: "Consultant tips", items: ["Treat the injury as a failure of the stabilizing ring, not as three independent injuries.", "Restoration of stability takes priority over anatomical perfection of every fragment.", "The coronoid, radial head, and lateral collateral ligament function as a unit \u2014 evaluate and restore them systematically.", "Reassess stability after each surgical step \u2014 fixation alone may not be sufficient.", "Successful treatment is defined by a stable elbow with early protected motion, not by a perfect postoperative radiograph."] },
+      ],
+    }],
+};
+
+const distalHumerusFxData = {
+  id: "distal-humerus-fracture",
+  name: "Distal Humerus Fractures",
+  region: "elbow",
+  urgentFlags: [
+    { text: "Absent or asymmetric distal pulses, or a cold hand", consider: "Urgent vascular assessment; brachial artery injury can accompany a displaced distal humerus fracture." },
+    { text: "Open fracture", consider: "Urgent debridement and stabilisation with antibiotics and tetanus cover." },
+    { text: "Tense, painful swelling with pain on passive finger extension", consider: "Exclude compartment syndrome of the forearm." },
+    { text: "New or progressive ulnar or radial nerve deficit", consider: "Document carefully and discuss urgent exploration at the time of fixation." },
+  ],
+  redFlags: [
+    { text: "Articular fragments too small or too osteopenic to hold fixation", consider: "Reconsider the reconstruction: total elbow arthroplasty is an option in a low-demand elderly patient." },
+    { text: "Stiffness not improving by 6\u201312 weeks despite therapy", consider: "Assess for heterotopic ossification and review the rehabilitation plan; see Elbow Stiffness." },
+    { text: "Persistent ulnar symptoms after fixation", consider: "Assess for nerve irritation against hardware or scarring, and consider decompression." },
+    { text: "Progressive loss of fixation or articular collapse on serial imaging", consider: "Plan revision fixation or arthroplasty before secondary deformity is established." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Neurovascular examination \u2192 radiographs \u2192 CT (with 3D reconstruction) \u2192 AO/OTA classification \u2192 assess bone quality and demand", next: "displacedQ" },
+      displacedQ: {
+        type: "question",
+        title: "Displaced fracture?",
+        text: "Pathway suggests this decision once CT has defined the articular pattern.",
+        options: [
+          { label: "Yes", next: "aoQ" },
+          { label: "No / undisplaced", next: "nonOpTerminal" },
+        ],
+      },
+      nonOpTerminal: { type: "terminal", tone: "green", title: "Non-operative", text: "Pathway suggests a short period of immobilisation followed by early protected motion, with radiographs at 1 and 2 weeks to confirm the fracture has not displaced. The same applies where a patient is unfit for surgery, accepting that function may be limited." },
+      aoQ: {
+        type: "question",
+        title: "AO/OTA type?",
+        text: "Pathway suggests classifying the articular involvement, which is what determines the exposure and the fixation.",
+        options: [
+          { label: "13A \u2014 extra-articular", next: "typeATerminal" },
+          { label: "13B \u2014 partial articular", next: "typeBTerminal" },
+          { label: "13C \u2014 complete articular", next: "reconstructableQ" },
+        ],
+      },
+      typeATerminal: { type: "terminal", tone: "amber", title: "13A \u2014 extra-articular", text: "Pathway suggests open reduction and internal fixation with dual-column plating, parallel or orthogonal, through a triceps-sparing or paratricipital approach; an olecranon osteotomy is not needed when the articular surface is intact. Identify and protect the ulnar nerve, and begin early motion once fixation is stable." },
+      typeBTerminal: { type: "terminal", tone: "amber", title: "13B \u2014 partial articular", text: "Pathway suggests fixation of the involved column or articular fragment: a lateral or medial approach for sagittal patterns, and an anterolateral approach for coronal shear fractures of the capitellum and trochlea, which are usually fixed with countersunk headless compression screws placed anterior to posterior. CT defines the posterior extent of a coronal shear fragment and whether it is a simple or complex pattern." },
+      reconstructableQ: {
+        type: "question",
+        title: "Is the articular surface reconstructable, in a patient who can withstand fixation?",
+        text: "Pathway suggests weighing articular comminution, bone quality, age and functional demand together, rather than any one of them alone.",
+        options: [
+          { label: "Yes", next: "orifTerminal" },
+          { label: "No \u2014 unreconstructable in a low-demand elderly patient", next: "teaTerminal" },
+        ],
+      },
+      orifTerminal: { type: "terminal", tone: "amber", title: "13C \u2014 open reduction and internal fixation", text: "Pathway suggests restoring the articular surface first, then fixing it to the shaft with dual-column plating, parallel or orthogonal, aiming for fixation stable enough for immediate motion. An olecranon osteotomy gives the best articular exposure for complete articular fractures. Identify and protect the ulnar nerve, decide explicitly whether to transpose it and record that decision, and begin supervised motion early." },
+      teaTerminal: { type: "terminal", tone: "red", title: "13C \u2014 arthroplasty for an unreconstructable fracture", text: "Pathway suggests total elbow arthroplasty in an elderly, low-demand patient with an unreconstructable articular surface: a randomised trial found better early function and fewer reoperations than attempted fixation in this group. Counsel about the permanent lifting restriction that follows. Distal humerus hemiarthroplasty is an alternative in selected patients where the columns and ligaments can be preserved." },
+    },
+  },
+  sections: [{
+      id: "typical",
+      index: 1,
+      title: "Typical Patient",
+      subtitle: "Bimodal injury: high-energy in the young, low-energy falls in the elderly",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Elderly patient after a fall from standing", "Young patient after high-energy trauma", "Painful, swollen, deformed elbow", "Unable to move the elbow", "Open injury"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors", options: ["Osteoporosis", "Previous fragility fracture", "Falls", "Smoking", "Diabetes", "Long-term corticosteroids"] },
+      ],
+    },
+    {
+      id: "history",
+      index: 2,
+      title: "Focused History",
+      subtitle: "Mechanism, hand dominance, demand, comorbidity",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Time since injury", placeholder: "e.g. 6 hours" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall from standing", "Fall from height", "Road traffic collision", "Sporting injury", "Direct blow"], columns: 2 },{ type: "select", key: "openInjury", label: "Open injury", options: ["No", "Yes"], columns: 2 },{ type: "select", key: "functionalDemand", label: "Functional demand", options: ["Independent, high demand", "Independent, low demand", "Assisted / dependent"], columns: 1 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Osteoporosis", "Diabetes", "Cardiac disease", "Respiratory disease", "Anticoagulation", "Smoking", "Rheumatoid arthritis", "Other"] },{ type: "conditional", when: (s) => (s.medHistory || []).includes("Other"), fields: [{ type: "text", key: "medHistoryOther", label: "Specify other medical history" }] },],
+    },
+    {
+      id: "exam",
+      index: 3,
+      title: "Focused Examination",
+      subtitle: "Skin, neurovascular status, compartments",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Swelling", "Deformity", "Bruising", "Skin tenting", "Open wound", "Blistering"] },
+        { type: "testGrid", key: "neuroTests", label: "Nerve examination", options: ["Ulnar nerve", "Radial nerve", "Median nerve", "Anterior interosseous nerve", "Posterior interosseous nerve"], defaultOptions: ["Normal", "Reduced", "Absent"] },
+        { type: "testGrid", key: "vascularTests", label: "Vascular examination", options: ["Radial pulse", "Ulnar pulse", "Capillary refill", "Hand temperature"], defaultOptions: ["Normal", "Abnormal"] },
+        { type: "select", key: "compartments", label: "Forearm compartments", options: ["Soft", "Tense"], columns: 2 },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    {
+      id: "imaging",
+      index: 4,
+      title: "Imaging",
+      subtitle: "Radiographs and CT",
+      fields: [
+        { type: "info", title: "Essential", items: ["AP and lateral radiographs of the elbow; traction views can help where the fracture is very displaced.", "CT with 3D reconstruction for any intra-articular fracture, to define the articular pattern and plan the approach."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Extra-articular fracture", "Partial articular fracture", "Complete articular fracture", "Comminution", "Osteopenia", "Associated olecranon fracture", "Associated radial head fracture", "Dislocation"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT \u2014 findings", options: ["Articular comminution", "Coronal shear fragment", "Separate capitellum fragment", "Separate trochlea fragment", "Metaphyseal comminution", "Impaction", "Bone loss"] },
+        { type: "text", key: "ctFinding", label: "CT \u2014 additional detail" },
+      ],
+    },
+    {
+      id: "differential",
+      index: 5,
+      title: "Differential Diagnosis",
+      subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Elbow dislocation without fracture", "Olecranon fracture", "Radial head fracture", "Coronoid fracture / terrible triad", "Pathological fracture", "Periprosthetic fracture", "Capitellar shear fracture alone"] }],
+    },
+    {
+      id: "diagnosis",
+      index: 6,
+      title: "Diagnosis Classification",
+      subtitle: "AO/OTA 13, articular pattern, bone quality",
+      fields: [
+        { type: "select", key: "aoOtaType", label: "AO/OTA 13 type", options: ["13A \u2014 extra-articular", "13B \u2014 partial articular", "13C \u2014 complete articular"], columns: 1, noteLabel: "AO/OTA type" },
+        { type: "select", key: "aoOtaGroup", label: "AO/OTA group", options: ["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"], columns: 5, noteLabel: "AO/OTA group" },
+        { type: "info", title: "AO/OTA 13 reference", items: [
+          "13A extra-articular: A1 apophyseal avulsion, A2 simple metaphyseal, A3 multifragmentary metaphyseal.",
+          "13B partial articular: B1 lateral sagittal, B2 medial sagittal, B3 frontal / coronal shear (capitellum and trochlea).",
+          "13C complete articular: C1 simple articular and simple metaphyseal, C2 simple articular and multifragmentary metaphyseal, C3 multifragmentary articular.",
+        ] },
+        { type: "select", key: "boneQuality", label: "Bone quality", options: ["Good", "Osteopenic", "Severely osteoporotic"], columns: 3, noteLabel: "Bone quality" },
+        { type: "select", key: "openGrade", label: "Gustilo-Anderson grade (if open)", options: ["Not open", "I", "II", "IIIA", "IIIB", "IIIC"], columns: 3, noteLabel: "Open fracture grade" },
+      ],
+    },
+    {
+      id: "redflags",
+      index: 7,
+      title: "When to Stop and Reconsider",
+      subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button",
+      fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }],
+    },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    {
+      id: "followup",
+      index: 9,
+      title: "Standard Follow-up",
+      subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "2 weeks", right: "Wound, radiographs, start supervised motion" }, { left: "6 weeks", right: "Radiographs, range of motion, ulnar nerve" }, { left: "3 months", right: "Union, strengthening" }, { left: "6\u201312 months", right: "Function, hardware symptoms, arthroplasty surveillance" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["2 weeks", "6 weeks", "3 months", "6 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Monitor union", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    {
+      id: "outcomes",
+      index: 10,
+      title: "Outcome Measures",
+      subtitle: "Validated scores and operative pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS" }, { left: "3 months", right: "MEPS + range of motion" }, { left: "12 months", right: "MEPS + QuickDASH" }] },
+        { type: "info", title: "Additional documentation", items: ["Flexion-extension arc", "Forearm rotation", "Ulnar nerve status", "Union on radiographs"] },
+        { type: "info", title: "Operative pearls", items: [
+          "Fixation should be stable enough to allow motion the same week; a stiff elbow is the usual bad outcome.",
+          "Reconstruct the articular surface first, then fix the block to the shaft.",
+          "Record the ulnar nerve decision explicitly: identified, decompressed, or transposed.",
+          "An olecranon osteotomy gives the best articular view for complete articular fractures, at the cost of a second site to heal.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Articular comminution", "Poor bone quality", "Delay to definitive fixation", "Prolonged immobilisation", "Smoking"] },
       ],
     }],
 };
@@ -6940,7 +7190,7 @@ const cubitalTunnelData = {
         text: "Pathway suggests this decision once intrinsic function and severity have been assessed.",
         options: [
           { label: "Yes", next: "mildDiseaseTrack" },
-          { label: "No (motor involvement present, Decision Point 2)", next: "operativeTerminal" },
+          { label: "No (motor involvement present, Decision Point 2)", next: "mcgowanQ" },
         ],
       },
       mildDiseaseTrack: { type: "info", title: "Mild disease", text: "Education \u2192 Avoid prolonged elbow flexion \u2192 Night extension splint \u2192 Review", next: "persistentQ" },
@@ -6954,6 +7204,21 @@ const cubitalTunnelData = {
         ],
       },
       continueConservative: { type: "terminal", tone: "green", title: "Continue conservative management", text: "Pathway suggests continuing conservative management." },
+      mcgowanQ: {
+        type: "question",
+        title: "McGowan grade?",
+        text: "Pathway suggests grading before advising on surgery, since the grade at presentation is what predicts how much recovery to expect.",
+        options: [
+          { label: "I", next: "mcgowanITerminal" },
+          { label: "IIA", next: "mcgowanIITerminal" },
+          { label: "IIB", next: "mcgowanIITerminal" },
+          { label: "III", next: "mcgowanIIITerminal" },
+          { label: "Not graded", next: "operativeTerminal" },
+        ],
+      },
+      mcgowanITerminal: { type: "terminal", tone: "green", title: "Grade I \u2014 sensory only", text: "Pathway suggests non-operative care first: activity modification, avoiding sustained elbow flexion and direct pressure on the nerve, and night extension splinting, with review. Decompression is suggested where symptoms persist despite a fair trial or motor signs appear." },
+      mcgowanIITerminal: { type: "terminal", tone: "amber", title: "Grade II \u2014 weakness present", text: "Pathway suggests decompression, since weakness has developed. In situ decompression (open or endoscopic) is suggested where the nerve is stable through flexion; transposition is suggested where the nerve subluxes or dislocates over the epicondyle, or where there is a deforming elbow or previous surgery. Counsel that sensory recovery is usually better than motor recovery." },
+      mcgowanIIITerminal: { type: "terminal", tone: "red", title: "Grade III \u2014 wasting and intrinsic paralysis", text: "Pathway suggests decompression without further delay, with the same in situ versus transposition decision based on nerve stability. Counsel realistically: at this grade the aim is to arrest progression, and recovery of intrinsic bulk and power is often incomplete. Consider tendon transfer for established clawing where function remains poor." },
       operativeTerminal: { type: "terminal", tone: "amber", title: "Discuss operative decompression", text: "Pathway suggests shared decision-making, electrodiagnostic studies if indicated, then discussing operative decompression (with or without anterior transposition based on individual pathology and surgeon judgment), hand therapy, progressive strengthening, and return to function. Dynamic nerve instability should be considered during operative planning if present (Decision Point 3). Meta-analyses (including a 2025 update) show no consistent outcome difference between simple decompression and anterior transposition for most cases \u2014 simple decompression is generally favoured first-line given lower morbidity and shorter surgery, with transposition reserved for nerve subluxation/instability, significant elbow deformity or prior fracture, or revision surgery." },
     },
   },
@@ -7043,6 +7308,18 @@ const cubitalTunnelData = {
       title: "Diagnosis Classification",
       subtitle: "Clinical, functional, and dynamic severity",
       fields: [
+        // McGowan grading (with the Goldberg modification of grade II) is the
+        // severity scale most often quoted for cubital tunnel and separates
+        // the patients in whom non-operative care is still reasonable from
+        // those in whom recovery after decompression is limited.
+        { type: "select", key: "mcgowanGrade", label: "McGowan grade", options: ["I", "IIA", "IIB", "III"], columns: 4, noteLabel: "McGowan grade" },
+        { type: "info", title: "McGowan grades", items: [
+          "I \u2014 sensory symptoms only, no measurable weakness or wasting.",
+          "IIA \u2014 sensory symptoms with weakness but no measurable intrinsic wasting.",
+          "IIB \u2014 sensory symptoms with weakness and measurable intrinsic wasting.",
+          "III \u2014 sensory loss with intrinsic paralysis and marked wasting.",
+          "Grade at presentation is the strongest guide to how much recovery to expect after decompression.",
+        ] },
         { type: "select", key: "clinicalSeverity", label: "Clinical severity", options: ["Mild", "Moderate", "Severe"], columns: 3 },
         { type: "select", key: "functionalSeverity", label: "Functional severity", options: ["Sensory", "Sensory + Motor", "Motor predominant"], columns: 1, noteLabel: "Functional severity" },
         { type: "select", key: "dynamicAssessmentClass", label: "Dynamic assessment", options: ["Stable nerve", "Subluxing nerve", "Dislocating nerve"], columns: 1, noteLabel: "Dynamic assessment" },
@@ -8669,7 +8946,7 @@ const scaphoidFxData = {
         text: "Pathway suggests this decision once fracture location and stability have been assessed.",
         options: [
           { label: "Yes", next: "stableTreatmentChoice" },
-          { label: "No (unstable, proximal pole, displaced, or nonunion)", next: "operativeTerminal" },
+          { label: "No (unstable, proximal pole, displaced, or nonunion)", next: "herbertQ" },
         ],
       },
       stableTreatmentChoice: {
@@ -8682,6 +8959,26 @@ const scaphoidFxData = {
         ],
       },
       percutaneousTerminal: { type: "terminal", tone: "teal", title: "Percutaneous screw fixation", text: "Pathway suggests percutaneous screw fixation given patient preference for earlier return to function \u2192 progressive rehabilitation \u2192 return to work/sport." },
+      herbertQ: {
+        type: "question",
+        title: "Herbert type?",
+        text: "Pathway suggests separating unstable acute fractures from delayed and established non-union, since the fixation and the need for grafting differ.",
+        options: [
+          { label: "B1/B2 \u2014 unstable acute", next: "herbertBTerminal" },
+          { label: "B3 \u2014 proximal pole", next: "herbertB3Terminal" },
+          { label: "B4 \u2014 trans-scaphoid perilunate", next: "herbertB4Terminal" },
+          { label: "B5 \u2014 comminuted", next: "herbertB5Terminal" },
+          { label: "C \u2014 delayed union", next: "herbertCTerminal" },
+          { label: "D1/D2 \u2014 established non-union", next: "herbertDTerminal" },
+          { label: "Not classified", next: "operativeTerminal" },
+        ],
+      },
+      herbertBTerminal: { type: "terminal", tone: "amber", title: "B1/B2 \u2014 unstable acute", text: "Pathway suggests screw fixation, percutaneous where the fracture reduces and is undisplaced, open where reduction is needed. Confirm reduction and screw position on intra-operative imaging along the central axis of the scaphoid." },
+      herbertB3Terminal: { type: "terminal", tone: "amber", title: "B3 \u2014 proximal pole", text: "Pathway suggests fixation for all proximal pole fractures, given the retrograde blood supply and high non-union rate. Assess proximal fragment vascularity, and consider a vascularised graft where there is established avascularity." },
+      herbertB4Terminal: { type: "terminal", tone: "red", title: "B4 \u2014 trans-scaphoid perilunate", text: "Pathway suggests urgent reduction of the perilunate dislocation, then fixation of the scaphoid with repair of the intercarpal ligaments, checking carpal alignment on post-reduction imaging. Assess for median nerve compromise." },
+      herbertB5Terminal: { type: "terminal", tone: "amber", title: "B5 \u2014 comminuted", text: "Pathway suggests open reduction and fixation, planning for bone graft where comminution leaves a defect, and restoring scaphoid length and alignment rather than accepting a flexed (humpback) position." },
+      herbertCTerminal: { type: "terminal", tone: "amber", title: "C \u2014 delayed union", text: "Pathway suggests reassessing biology and stability: fixation, with grafting where there is a gap or resorption at the fracture, and reviewing any modifiable factors such as smoking." },
+      herbertDTerminal: { type: "terminal", tone: "amber", title: "D1/D2 \u2014 established non-union", text: "Pathway suggests fixation with bone grafting, correcting any humpback deformity and restoring length. A vascularised graft is suggested where the proximal pole is avascular; assess vascularity on MRI or at operation before deciding." },
       operativeTerminal: { type: "terminal", tone: "amber", title: "Discuss operative fixation (Decision Point 3)", text: "Pathway suggests shared decision-making, discussing operative fixation (\u00b1 bone grafting when indicated), then serial CT assessment, rehabilitation, and return to function." },
       conservativeTrack: { type: "info", title: "Conservative management", text: "Immobilization \u2192 Serial imaging \u2192 Progressive rehabilitation", next: "delayedUnionQ" },
       delayedUnionQ: {
@@ -8777,6 +9074,17 @@ const scaphoidFxData = {
       title: "Diagnosis Classification",
       subtitle: "Location, displacement, union status, stability, vascular assessment",
       fields: [
+        // Herbert's classification separates stable acute (A) from unstable
+        // acute (B) fractures and from delayed (C) and established non-union
+        // (D), which is what drives cast-versus-fixation and whether grafting
+        // is needed. It sits alongside the anatomical fields below.
+        { type: "select", key: "herbertClass", label: "Herbert classification", options: ["A1", "A2", "B1", "B2", "B3", "B4", "B5", "C", "D1", "D2"], columns: 5, noteLabel: "Herbert classification" },
+        { type: "info", title: "Herbert types", items: [
+          "A \u2014 stable acute: A1 tubercle, A2 incomplete waist.",
+          "B \u2014 unstable acute: B1 distal oblique, B2 complete waist, B3 proximal pole, B4 trans-scaphoid perilunate fracture-dislocation, B5 comminuted.",
+          "C \u2014 delayed union.",
+          "D \u2014 established non-union: D1 fibrous union, D2 sclerotic pseudarthrosis.",
+        ] },
         { type: "select", key: "fractureLocation", label: "Fracture location", options: ["Distal pole", "Waist", "Proximal pole"], columns: 3 },
         { type: "select", key: "displacementClass", label: "Displacement", options: ["Stable", "Unstable"], columns: 2 },
         { type: "select", key: "acuteClass", label: "Acute", options: ["Yes", "No"], columns: 2 },
@@ -10884,6 +11192,10 @@ const olecranonFxData = {
       fields: [
         { type: "select", key: "diagMayoType", label: "Mayo classification", options: ["Type I (undisplaced/minimally displaced, stable)", "Type II (displaced, stable \u2014 collateral ligaments intact)", "Type III (displaced, unstable \u2014 associated instability)"], noteLabel: "Mayo classification" },
         { type: "checkbox", key: "diagAssociated", label: "Associated features", options: ["Comminution", "Articular involvement", "Associated elbow instability"] },
+        { type: "info", title: "Fracture-dislocation spectrum", items: [
+          "Where the proximal ulna fracture is distal to the coronoid and the coronoid stays in continuity with the olecranon, the injury is Wrightington type D (radial head intact) or D+ (radial head fractured) \u2014 see Coronoid / Terrible Triad for the algorithm.",
+          "Fix the ulna first to restore length and the proximal ulna dorsal angle before addressing the radial head.",
+        ] },
       ],
     },
     {
@@ -12718,7 +13030,7 @@ const generalHandData = {
 
 const REGIONS = {
   shoulder: { label: "Shoulder", conditions: [rotatorCuffData, sapsData, adhesiveCapsulitisData, instabilityData, bicepsData, acJointData, gleroarthritisData, avnData, calcificTendinitisData, proximalHumerusFxData, scapularDyskinesisData, slapData, pecMajorRuptureData, clavicleFxData, parsonageTurnerData] },
-  elbow: { label: "Elbow", conditions: [lateralEpicondylopathyData, medialEpicondylopathyData, distalBicepsRuptureData, elbowOAData, distalTricepsRuptureData, radialHeadFxData, coronoidTerribleTriadData, elbowInstabilityData, elbowStiffnessData, athleticElbowData, olecranonFxData, olecranonBursitisData] },
+  elbow: { label: "Elbow", conditions: [distalHumerusFxData, lateralEpicondylopathyData, medialEpicondylopathyData, distalBicepsRuptureData, elbowOAData, distalTricepsRuptureData, radialHeadFxData, coronoidTerribleTriadData, elbowInstabilityData, elbowStiffnessData, athleticElbowData, olecranonFxData, olecranonBursitisData] },
   wrist: { label: "Wrist", conditions: [deQuervainData, thumbCMCOAData, wristOAData, tfccInjuryData, scapholunateInjuryData, kienbockDiseaseData, ulnarImpactionData, wristGanglionData, intersectionSyndromeData, ecuTendinopathyData, drujInstabilityData] },
   // Hand is organized into subsections rather than one flat list, since the
   // remaining condition set still spans distinct clinical categories
@@ -12785,7 +13097,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.14.2";
+const APP_VERSION = "5.16.0";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -12961,10 +13273,16 @@ const CONDITION_EVIDENCE = {
   "glenohumeral-instability": {
     summary: "Current evidence increasingly favours early surgical stabilisation over a rehabilitation-first approach in young, high-risk patients after a first-time anterior dislocation.",
     points: [
+      "GTIM scores the ISIS clinical risk factors \u2014 age under 20 at surgery (2), competitive sport (2), contact or overhead sport (1), hyperlaxity (1) \u2014 and adds the glenoid track on 3D CT as the only radiographic item (off-track 4, on-track 0).",
+      "Below 4 points towards a soft-tissue procedure; 4 or above towards the Latarjet.",
+      "Adjuncts to a Bankart at a low score: remplissage for a peripheral-track lesion or recurrence, subscapularis augmentation for hyperlaxity, bone block for subcritical glenoid bone loss.",
+      "Where Latarjet is planned for an off-track lesion, a Hill-Sachs interval more than 7.45 mm wider than the glenoid track risks a residual off-track lesion.",
       "Age under 30 is the strongest risk factor, highest between 14\u201320 years; recurrence after conservative treatment is reported up to 47% in this group versus roughly 17% at ages 30\u201340.",
       "Male sex and contact/collision or overhead sport participation further raise recurrence risk.",
     ],
     links: [
+      { label: "Therapeutic algorithm based on bipolar bone loss and the GTIM score (ISAKOS 2025)", url: "https://isakos.com/GlobalLink/Newsletter/2025-Volume-1/Recurrent-Anterior-Shoulder-Instability" },
+      { label: "Glenoid Track Instability Management Score (Di Giacomo et al., Arthroscopy 2020)", url: PM("Glenoid Track Instability Management Score radiographic modification instability severity index"), doi: "10.1016/j.arthro.2019.07.020", pmid: "31864596" },
       { label: "First-time dislocation: surgery vs rehabilitation", url: PM("first time anterior shoulder dislocation early surgical stabilisation recurrence young") },
     ],
   },
@@ -13141,13 +13459,37 @@ const CONDITION_EVIDENCE = {
       { label: "OrthoGuidelines (AAOS)", url: ORTHOGUIDELINES },
     ],
   },
+  "distal-humerus-fracture": {
+    summary: "AO/OTA 13 separates extra-articular, partial articular and complete articular fractures, which determines the exposure and the fixation. In an elderly patient with an unreconstructable articular surface, total elbow arthroplasty is an evidence-supported alternative to attempted fixation.",
+    points: [
+      "Aim for fixation stable enough to move the elbow within days: stiffness, not non-union, is the usual poor outcome.",
+      "Reconstruct the articular surface first, then fix that block to the shaft with dual-column plating, parallel or orthogonal.",
+      "An olecranon osteotomy gives the best articular exposure for complete articular (13C) fractures.",
+      "Coronal shear (13B3) fractures are usually fixed with countersunk headless compression screws placed anterior to posterior; CT defines the posterior extent.",
+      "A randomised trial in elderly patients with comminuted intra-articular fractures found better early function and fewer reoperations with total elbow arthroplasty than with attempted open reduction and internal fixation; the trade-off is a permanent lifting restriction.",
+      "Record the ulnar nerve decision explicitly \\u2014 identified, decompressed, or transposed.",
+    ],
+    links: [
+      { label: "TEA versus ORIF for comminuted intra-articular distal humerus fractures in the elderly (randomised trial)", url: PM("total elbow arthroplasty versus open reduction internal fixation distal humerus fracture elderly randomized") },
+      { label: "AO/OTA fracture classification, humerus distal segment", url: PM("AO OTA classification distal humerus 13A 13B 13C") },
+      { label: "Parallel versus orthogonal plating for distal humerus fractures", url: PM("parallel versus orthogonal plating distal humerus fracture outcomes") },
+    ],
+  },
   "coronoid-terrible-triad": {
-    summary: "Reconstruction follows O'Driscoll's sequence, restoring stability in a defined order and reassessing after each step.",
+    summary: "Reconstruction follows a defined order, reassessing stability after each step. The Wrightington classification groups every fracture-dislocation pattern by coronoid facet involvement and radial head fracture, and gives an algorithm for each.",
     points: [
       "Sequence: coronoid \u2192 radial head \u2192 assess stability \u2192 lateral collateral ligament \u2192 medial collateral ligament if still unstable.",
       "Reassessing stability between steps avoids unnecessary medial-side surgery.",
+      "Three-column concept: medial column (anteromedial facet and sublime tubercle), middle column (anterolateral facet), lateral column (radial head and lateral ligament complex). Stability needs one intact column either side of the fulcrum between the two facets.",
+      "The anteromedial facet is the only bony varus restraint, which is why type A injuries matter despite often looking small on imaging.",
+      "In type C the anterolateral facet does not need fixing provided the anteromedial facet is intact; if it is involved, the injury is type B+.",
+      "Classification is substantially more reliable and accurate on CT than radiographs (2D CT kappa 0.70; adding 3D 0.71-0.73), so CT with 3D reconstruction is advised before planning.",
+      "A consecutive series of 58 patients managed by these algorithms reported a median Mayo Elbow Performance Score of 100 (IQR 85-100) and a flexion/extension arc of 123\u00b0 (IQR 101-130\u00b0), from the originating unit.",
     ],
     links: [
+      { label: "Wrightington classification and treatment algorithms (Hamoodi & Watts, JSES Int 2023)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10638552/", doi: "10.1016/j.jseint.2022.12.002", pmid: "37969533" },
+      { label: "Reliability and validity of the Wrightington classification (Bone Joint J 2020)", url: PM("Wrightington classification elbow fracture dislocation reliability validity"), doi: "10.1302/0301-620X.102B8.BJJ-2020-0013.R1", pmid: "32731824" },
+      { label: "Functional outcomes using the Wrightington algorithms (Shoulder Elbow 2022)", url: PM("functional outcomes Wrightington classification elbow fracture dislocation"), doi: "10.1177/17585732221113534", pmid: "36895597" },
       { label: "Terrible triad management sequence", url: PM("terrible triad elbow O'Driscoll coronoid radial head lateral collateral sequence") },
     ],
   },
@@ -13265,6 +13607,7 @@ const RELATED_CONDITIONS = {
   "elbow-osteoarthritis": ["cubital-tunnel-syndrome", "radial-head-fracture", "coronoid-terrible-triad", "elbow-instability", "elbow-stiffness"],
   "radial-head-fracture": ["elbow-osteoarthritis", "coronoid-terrible-triad", "elbow-instability", "elbow-stiffness"],
   "coronoid-terrible-triad": ["radial-head-fracture", "elbow-osteoarthritis", "elbow-instability", "elbow-stiffness"],
+  "distal-humerus-fracture": ["olecranon-fracture", "radial-head-fracture", "coronoid-terrible-triad", "elbow-stiffness"],
   "elbow-instability": ["coronoid-terrible-triad", "radial-head-fracture", "elbow-osteoarthritis", "elbow-stiffness", "athletic-elbow-ocd-veo"],
   "elbow-stiffness": ["elbow-osteoarthritis", "coronoid-terrible-triad", "radial-head-fracture", "elbow-instability"],
   "athletic-elbow-ocd-veo": ["medial-epicondylopathy", "cubital-tunnel-syndrome", "elbow-instability"],
@@ -15660,7 +16003,10 @@ const SURGICAL_OPTIONS_BY_CONDITION = {
   "elbow-osteoarthritis": ["Arthroscopic debridement", "Open debridement (Outerbridge-Kashiwagi)", "Total elbow arthroplasty", "Ulnohumeral arthroplasty"],
   "distal-triceps-rupture": ["Primary repair", "Reconstruction with graft (chronic)"],
   "radial-head-fracture": ["ORIF", "Radial head excision", "Radial head arthroplasty"],
-  "coronoid-terrible-triad": ["ORIF of coronoid", "ORIF or arthroplasty of radial head", "Lateral collateral ligament repair", "Hinged external fixation"],
+  // Named to match the Wrightington surgical algorithms, so the procedure
+  // recorded in clinic matches the one offered at post-operative review.
+  "distal-humerus-fracture": ["ORIF with dual-column plating (parallel)", "ORIF with dual-column plating (orthogonal)", "ORIF via olecranon osteotomy", "Headless compression screw fixation (coronal shear)", "Total elbow arthroplasty", "Distal humerus hemiarthroplasty", "Ulnar nerve decompression", "Ulnar nerve transposition"],
+  "coronoid-terrible-triad": ["ORIF of coronoid (independent lag screws)", "Coronoid buttress plate osteosynthesis", "Arthroscopically assisted coronoid fixation", "ORIF of radial head", "Radial head arthroplasty", "Lateral collateral ligament repair", "Medial collateral ligament repair", "ORIF of proximal ulna", "Hinged external fixation"],
   "elbow-instability": ["Ligament repair (LUCL/MCL)", "Ligament reconstruction", "Hinged external fixation"],
   "elbow-stiffness": ["Arthroscopic capsular release", "Open capsular release (column procedure)"],
   "athletic-elbow-ocd-veo": ["Arthroscopic debridement / microfracture (OCD)", "Osteochondral autograft/allograft transplantation", "UCL reconstruction", "Loose body removal"],
