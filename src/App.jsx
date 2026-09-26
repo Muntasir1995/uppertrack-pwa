@@ -1244,6 +1244,273 @@ const avnPathway = {
   },
 };
 
+const scJointData = {
+  id: "sc-joint",
+  name: "Sternoclavicular Joint Disorders",
+  region: "shoulder",
+  urgentFlags: [
+    { text: "Posterior sternoclavicular dislocation", consider: "A surgical emergency: the medial clavicle can compress the trachea, oesophagus or great vessels. Arrange urgent CT with contrast and reduction in theatre with cardiothoracic surgery available." },
+    { text: "Breathlessness, stridor, dysphagia, hoarseness or venous congestion of the arm or neck", consider: "Assume mediastinal compression from a posterior displacement until imaging proves otherwise." },
+    { text: "Hot, swollen sternoclavicular joint with fever", consider: "Exclude septic arthritis; it is uncommon but occurs in intravenous drug users and the immunosuppressed, and needs urgent aspiration or washout." },
+    { text: "Medial clavicle physeal injury in a patient under 25", consider: "The medial physis fuses late; what looks like a dislocation is often a physeal injury, which behaves and remodels differently." },
+  ],
+  redFlags: [
+    { text: "Progressive swelling without trauma", consider: "Consider infection, inflammatory arthropathy or tumour; image before attributing it to degenerative change." },
+    { text: "Bilateral or multifocal joint involvement", consider: "Consider a seronegative or SAPHO-type arthropathy and involve rheumatology." },
+    { text: "Persistent instability after a first-time anterior dislocation", consider: "Most settle with non-operative care; reconstruction is considered only for persistent, disabling instability, and carries risks from the structures behind the joint." },
+    { text: "Pain out of keeping with the radiographic changes", consider: "Reimage with CT and reconsider infection or a medial clavicle lesion." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Establish whether this is traumatic or atraumatic \u2192 exclude posterior displacement and infection \u2192 CT with contrast where displacement is suspected", next: "presentationQ" },
+      presentationQ: {
+        type: "question",
+        title: "Which presentation?",
+        text: "Pathway suggests separating acute trauma from an atraumatic swollen or painful joint, since the urgency differs entirely.",
+        options: [
+          { label: "Acute traumatic displacement", next: "directionQ" },
+          { label: "Atraumatic pain or swelling", next: "atraumaticQ" },
+          { label: "Instability without displacement", next: "instabilityTerminal" },
+        ],
+      },
+      directionQ: {
+        type: "question",
+        title: "Direction of displacement on CT?",
+        text: "Pathway suggests CT with contrast to define direction and the relationship to the mediastinal structures.",
+        options: [
+          { label: "Posterior", next: "posteriorTerminal" },
+          { label: "Anterior", next: "anteriorTerminal" },
+        ],
+      },
+      posteriorTerminal: { type: "terminal", tone: "red", title: "Posterior dislocation \u2014 urgent", text: "Pathway suggests urgent closed reduction under general anaesthesia in theatre with cardiothoracic surgery on standby, because the great vessels lie immediately behind the joint and can be injured during reduction or by the displaced clavicle. Open reduction and stabilisation is suggested where closed reduction fails or the joint redisplaces. In a patient under 25 this is usually a physeal injury." },
+      anteriorTerminal: { type: "terminal", tone: "amber", title: "Anterior dislocation", text: "Pathway suggests closed reduction where it is comfortable to attempt, accepting that redisplacement is common and generally well tolerated. Sling, analgesia and early motion as pain allows, with a good functional result expected even if the joint stays displaced. Surgery is reserved for persistent, disabling symptoms." },
+      atraumaticQ: {
+        type: "question",
+        title: "Any features of infection or inflammation?",
+        text: "Pathway suggests actively excluding infection before treating this as degenerative.",
+        options: [
+          { label: "Yes", next: "infectionTerminal" },
+          { label: "No \u2014 degenerative or idiopathic", next: "degenerativeTerminal" },
+        ],
+      },
+      infectionTerminal: { type: "terminal", tone: "red", title: "Exclude infection", text: "Pathway suggests inflammatory markers, blood cultures and cross-sectional imaging, with aspiration or open washout where septic arthritis is suspected. Consider osteomyelitis of the medial clavicle and involve microbiology. In the absence of infection, consider an inflammatory arthropathy, including SAPHO and condensing osteitis of the clavicle." },
+      degenerativeTerminal: { type: "terminal", tone: "green", title: "Degenerative sternoclavicular arthritis", text: "Pathway suggests non-operative management: analgesia, activity modification and physiotherapy, with an image-guided corticosteroid injection where symptoms persist. Medial clavicle excision, preserving the costoclavicular ligament, is reserved for refractory symptoms with confirmed joint pathology." },
+      instabilityTerminal: { type: "terminal", tone: "amber", title: "Sternoclavicular instability", text: "Pathway suggests a period of physiotherapy focused on scapular and periscapular control, which is effective for most atraumatic instability. Reconstruction, usually with a figure-of-eight tendon graft, is reserved for persistent disabling instability, and is discussed alongside the risk from the structures behind the joint." },
+    },
+  },
+  sections: [{
+      id: "typical",
+      index: 1,
+      title: "Typical Patient",
+      subtitle: "Medial-end clavicle pain, swelling or displacement",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Pain over the medial clavicle", "Visible or palpable prominence", "Pain on cross-body movement", "After a fall onto the shoulder", "After a road traffic collision", "Atraumatic swelling", "Clicking or instability"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors", options: ["Contact sport", "High-energy trauma", "Generalised joint laxity", "Inflammatory arthropathy", "Intravenous drug use", "Immunosuppression", "Previous dislocation"] },
+      ],
+    },
+    {
+      id: "history",
+      index: 2,
+      title: "Focused History",
+      subtitle: "Mechanism, mediastinal symptoms, systemic features",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms" },{ type: "vas", key: "vas" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Atraumatic", "Direct blow to the medial clavicle", "Indirect force through the shoulder", "Road traffic collision", "Sporting injury"], columns: 1 },{ type: "checkbox", key: "mediastinalSymptoms", label: "Mediastinal symptoms", options: ["None", "Breathlessness", "Stridor", "Dysphagia", "Hoarseness", "Arm or neck swelling", "Paraesthesia in the arm"] },{ type: "checkbox", key: "systemic", label: "Systemic features", options: ["None", "Fever", "Night sweats", "Weight loss", "Other joints involved", "Skin or nail psoriasis"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Overhead reach", "Carrying", "Lying on the side", "Driving", "Work tasks", "Sport"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "Physiotherapy", "Injection", "Previous reduction", "Previous surgery"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Diabetes", "Rheumatoid or seronegative arthritis", "Immunosuppression", "Intravenous drug use", "Smoking", "Other"] },],
+    },
+    {
+      id: "exam",
+      index: 3,
+      title: "Focused Examination",
+      subtitle: "Joint, airway and vascular assessment",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Normal contour", "Anterior prominence", "Loss of the normal prominence (posterior displacement)", "Swelling", "Erythema", "Venous engorgement"] },
+        { type: "testGrid", key: "scTests", label: "Joint examination", options: ["Tenderness over the joint", "Pain on cross-body adduction", "Palpable instability", "Crepitus"], defaultOptions: ["Positive", "Negative"] },
+        { type: "testGrid", key: "airwayVascular", label: "Airway and vascular", options: ["Stridor or respiratory distress", "Asymmetric arm pulses", "Arm or neck venous congestion", "Voice change"], defaultOptions: ["Present", "Absent"] },
+        { type: "rom", key: "rom", label: "Shoulder range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    {
+      id: "imaging",
+      index: 4,
+      title: "Imaging",
+      subtitle: "CT is the investigation of choice",
+      fields: [
+        { type: "info", title: "Essential", items: ["Radiographs are difficult to interpret at this joint; a serendipity view may help but should not delay CT.", "CT with intravenous contrast where any displacement is suspected, to define direction and the relationship to the great vessels.", "MRI is useful for the physeal injury in the young patient and for soft-tissue or inflammatory pathology."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "Asymmetry of the medial clavicles", "Degenerative change", "Sclerosis of the medial clavicle", "Fracture"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT \u2014 findings", options: ["Normal appearances", "Anterior displacement", "Posterior displacement", "Medial clavicle physeal injury", "Degenerative change", "Erosion or bony destruction", "Compression of mediastinal structures", "Fracture"] },
+        { type: "text", key: "ctFinding", label: "CT \u2014 additional detail" },
+      ],
+    },
+    {
+      id: "differential",
+      index: 5,
+      title: "Differential Diagnosis",
+      subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Septic arthritis", "Medial clavicle fracture", "Medial clavicle physeal injury", "Condensing osteitis of the clavicle", "SAPHO or inflammatory arthropathy", "Tumour", "Referred cervical pain"] }],
+    },
+    {
+      id: "diagnosis",
+      index: 6,
+      title: "Diagnosis Classification",
+      subtitle: "Pathology, direction, physeal status",
+      fields: [
+        { type: "select", key: "scDiagnosis", label: "Diagnosis", options: ["Anterior dislocation", "Posterior dislocation", "Subluxation / instability", "Degenerative arthritis", "Septic arthritis", "Inflammatory arthropathy", "Condensing osteitis", "Medial clavicle physeal injury"], columns: 1, noteLabel: "Sternoclavicular diagnosis" },
+        { type: "select", key: "scChronicity", label: "Chronicity", options: ["Acute (under 3 weeks)", "Subacute", "Chronic"], columns: 3, noteLabel: "Chronicity" },
+        { type: "select", key: "physisOpen", label: "Medial physis likely open (under 25)", options: ["Yes", "No", "Unknown"], columns: 3 },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    {
+      id: "followup",
+      index: 9,
+      title: "Standard Follow-up",
+      subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "2 weeks", right: "Pain, position, mediastinal symptoms" }, { left: "6 weeks", right: "Motion, stability" }, { left: "3 months", right: "Function, return to sport" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["2 weeks", "6 weeks", "3 months", "6 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review imaging", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    {
+      id: "outcomes",
+      index: 10,
+      title: "Outcome Measures",
+      subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS + QuickDASH" }, { left: "3 months", right: "VAS + range of motion" }, { left: "12 months", right: "QuickDASH" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "Loss of the normal medial clavicular prominence after trauma suggests posterior displacement, which is the one that can kill.",
+          "Radiographs are unreliable here; go to CT with contrast.",
+          "Under 25, the medial physis has usually not fused, so the injury is often physeal rather than a true dislocation.",
+          "An anterior dislocation that redisplaces usually functions well; resist the urge to operate.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Missed posterior displacement", "Infection", "Recurrent instability after reconstruction", "Unrecognised inflammatory arthropathy"] },
+      ],
+    }],
+};
+
+const shoulderArthroplastyReviewData = {
+  id: "shoulder-arthroplasty-review",
+  name: "Shoulder Arthroplasty Review",
+  region: "shoulder",
+  urgentFlags: [
+    { text: "Unexplained pain in a previously comfortable arthroplasty", consider: "Assume infection until proven otherwise: inflammatory markers are often normal with Cutibacterium acnes, so proceed to aspiration or biopsy with prolonged culture rather than reassurance." },
+    { text: "Sinus, wound discharge or systemic sepsis", consider: "Urgent referral for debridement and tissue sampling before antibiotics." },
+    { text: "Acute loss of function after a fall, or sudden deformity", consider: "Exclude periprosthetic fracture, component dislocation and acromial or scapular spine fracture." },
+    { text: "New neurological deficit in the limb", consider: "Exclude axillary or brachial plexus injury and refer urgently." },
+  ],
+  redFlags: [
+    { text: "Progressive radiolucency or component migration on serial radiographs", consider: "Assess for loosening and for infection; the two look alike and are distinguished by sampling, not by imaging." },
+    { text: "Rising pain with loss of active elevation after anatomic replacement", consider: "Assess for rotator cuff failure, which is a common late cause of failure and may prompt revision to a reverse configuration." },
+    { text: "Scapular notching on radiographs after reverse replacement", consider: "Record the grade and follow it; progressive notching is associated with polyethylene wear and loosening." },
+    { text: "Persistent pain with normal radiographs", consider: "Reconsider the cervical spine, suprascapular neuropathy and low-grade infection before attributing pain to the implant." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Establish the implant type and date \u2192 compare with the previous review \u2192 examine motion, strength and stability \u2192 serial radiographs", next: "painQ" },
+      painQ: {
+        type: "question",
+        title: "Is the arthroplasty painful?",
+        text: "Pathway suggests separating routine surveillance from a painful arthroplasty, which always needs a cause.",
+        options: [
+          { label: "No \u2014 routine surveillance", next: "surveillanceTerminal" },
+          { label: "Yes", next: "infectionQ" },
+        ],
+      },
+      surveillanceTerminal: { type: "terminal", tone: "green", title: "Routine surveillance", text: "Pathway suggests continuing periodic clinical and radiographic review, recording range of motion, function and any lucency, notching or migration so that change over time can be seen. Reinforce activity advice and the need to report new pain promptly." },
+      infectionQ: {
+        type: "question",
+        title: "Any features of infection?",
+        text: "Pathway suggests excluding infection first in every painful shoulder arthroplasty, because the commonest organism causes little inflammatory response.",
+        options: [
+          { label: "Yes, or unexplained pain", next: "infectionTerminal" },
+          { label: "No \u2014 clear mechanical cause", next: "mechanicalQ" },
+        ],
+      },
+      infectionTerminal: { type: "terminal", tone: "red", title: "Investigate for infection", text: "Pathway suggests inflammatory markers, radiographs and referral for aspiration or image-guided biopsy with multiple samples held for prolonged culture, since Cutibacterium acnes may take one to two weeks to grow and often produces normal blood results. Avoid empirical antibiotics before sampling." },
+      mechanicalQ: {
+        type: "question",
+        title: "Which mechanical problem?",
+        text: "Pathway suggests identifying the failure mode, which determines whether revision is needed and to what.",
+        options: [
+          { label: "Loosening", next: "looseningTerminal" },
+          { label: "Instability", next: "instabilityTerminal" },
+          { label: "Rotator cuff failure after anatomic replacement", next: "cuffFailureTerminal" },
+          { label: "Periprosthetic or acromial fracture", next: "fractureTerminal" },
+          { label: "Stiffness only", next: "stiffnessTerminal" },
+        ],
+      },
+      looseningTerminal: { type: "terminal", tone: "red", title: "Component loosening", text: "Pathway suggests CT to assess bone stock and component position, sampling to exclude infection, and revision planning with the availability of bone graft or augments discussed in advance." },
+      instabilityTerminal: { type: "terminal", tone: "amber", title: "Instability", text: "Pathway suggests defining the direction and the cause \u2014 component position, soft-tissue tension, subscapularis failure after anatomic replacement, or insufficient deltoid tension after reverse replacement \u2014 with CT to assess version before deciding between soft-tissue and component revision." },
+      cuffFailureTerminal: { type: "terminal", tone: "amber", title: "Rotator cuff failure", text: "Pathway suggests assessing glenoid bone stock and deltoid function, and discussing conversion to a reverse configuration where pain and loss of elevation are the dominant problems." },
+      fractureTerminal: { type: "terminal", tone: "red", title: "Periprosthetic or acromial fracture", text: "Pathway suggests classifying the fracture relative to the stem and assessing whether the component is loose, which determines fixation versus revision. Acromial and scapular spine fractures after reverse replacement are often managed non-operatively but predict a poorer functional result, and should be counselled as such." },
+      stiffnessTerminal: { type: "terminal", tone: "amber", title: "Stiffness", text: "Pathway suggests a structured therapy programme first, having excluded infection and component malposition, with reassessment before considering any surgical release." },
+    },
+  },
+  sections: [{
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Routine or problem review after shoulder replacement",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Presentation", options: ["Routine surveillance", "New pain", "Loss of function", "Instability", "After a fall", "Wound problem", "Referred from elsewhere"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors for failure", options: ["Male sex (C. acnes)", "Previous shoulder surgery", "Rheumatoid or inflammatory arthritis", "Diabetes", "Smoking", "Poor glenoid bone stock", "Rotator cuff deficiency"] },
+      ],
+    },
+    { id: "history", index: 2, title: "Focused History", subtitle: "Implant details, symptom change, function",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Time since injury or surgery" },{ type: "vas", key: "vas" },{ type: "select", key: "implantType", label: "Implant type", options: ["Anatomic total shoulder replacement", "Reverse total shoulder replacement", "Hemiarthroplasty", "Resurfacing", "Revision arthroplasty"], columns: 1, noteLabel: "Implant" },{ type: "date", key: "surgeryDate", label: "Date of the index arthroplasty" },{ type: "select", key: "indexIndication", label: "Original indication", options: ["Osteoarthritis", "Cuff tear arthropathy", "Fracture", "Inflammatory arthritis", "Avascular necrosis", "Revision"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Current symptoms", options: ["No symptoms", "Pain with activity", "Pain at rest", "Night pain", "Loss of elevation", "Weakness", "Instability or clunking", "Stiffness"] },{ type: "select", key: "symptomChange", label: "Change since last review", options: ["Improved", "Unchanged", "Worse", "New symptom"], columns: 2, noteLabel: "Change since last review" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Diabetes", "Inflammatory arthritis", "Immunosuppression", "Anticoagulation", "Smoking", "Other"] },],
+    },
+    { id: "exam", index: 3, title: "Focused Examination", subtitle: "Motion, strength, stability, wound",
+      fields: [
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
+        { type: "strength", key: "strength", label: "Strength (0\u20135)", muscles: [{ key: "deltoid", label: "Deltoid" }, { key: "supraspinatus", label: "Supraspinatus" }, { key: "externalRotators", label: "External rotators" }, { key: "subscapularis", label: "Subscapularis" }] },
+        { type: "testGrid", key: "arthroplastyTests", label: "Examination", options: ["Wound healed", "Sinus or discharge", "Tenderness", "Apprehension or instability", "Palpable clunk", "Acromial tenderness", "Belly press (subscapularis)"], defaultOptions: ["Positive", "Negative"] },
+        { type: "testGrid", key: "neuroTests", label: "Neurovascular", options: ["Axillary nerve sensation", "Distal motor function", "Distal pulses"], defaultOptions: ["Normal", "Abnormal"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    { id: "imaging", index: 4, title: "Imaging", subtitle: "Serial radiographs, CT where concerned",
+      fields: [
+        { type: "info", title: "Essential", items: ["Standardised AP and axillary radiographs, compared directly with the previous films rather than reported in isolation.", "CT where loosening, malposition or bone loss is suspected.", "Aspiration or biopsy with prolonged culture where infection is possible; imaging cannot exclude it."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Satisfactory component position", "Radiolucent lines", "Component migration", "Scapular notching", "Stress shielding", "Periprosthetic fracture", "Acromial or scapular spine fracture", "Tuberosity resorption", "Heterotopic ossification", "Glenoid wear"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT \u2014 findings", options: ["Normal appearances", "Component loosening", "Glenoid bone loss", "Component malposition", "Periprosthetic fracture", "Rotator cuff atrophy"] },
+        { type: "text", key: "ctFinding", label: "CT \u2014 additional detail" },
+      ],
+    },
+    { id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Causes of a painful arthroplasty",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Periprosthetic infection", "Aseptic loosening", "Rotator cuff failure", "Instability", "Periprosthetic fracture", "Acromial or scapular spine fracture", "Cervical radiculopathy", "Suprascapular neuropathy", "Complex regional pain syndrome"] }],
+    },
+    { id: "diagnosis", index: 6, title: "Diagnosis Classification", subtitle: "Status and failure mode",
+      fields: [
+        { type: "select", key: "arthroplastyStatus", label: "Status", options: ["Well-functioning", "Painful arthroplasty \u2014 cause unclear", "Confirmed failure"], columns: 1, noteLabel: "Arthroplasty status" },
+        { type: "select", key: "failureMode", label: "Failure mode", options: ["None", "Infection", "Aseptic loosening", "Instability", "Rotator cuff failure", "Periprosthetic fracture", "Acromial or scapular spine fracture", "Stiffness"], columns: 1, noteLabel: "Failure mode" },
+        { type: "select", key: "notchingGrade", label: "Scapular notching grade (reverse)", options: ["None", "1", "2", "3", "4", "Not applicable"], columns: 3, noteLabel: "Scapular notching" },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    { id: "followup", index: 9, title: "Standard Follow-up", subtitle: "Surveillance schedule",
+      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Wound, early motion" }, { left: "3 months", right: "Motion, strength, radiographs" }, { left: "12 months", right: "Function, radiographs" }, { left: "Every 2\u20135 years", right: "Radiographic surveillance" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["6 weeks", "3 months", "12 months", "2 years", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Wound or healing check", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    { id: "outcomes", index: 10, title: "Outcome Measures", subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Pre-operative", right: "ASES + VAS" }, { left: "12 months", right: "ASES + QuickDASH" }, { left: "Surveillance", right: "ASES + radiographs" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "Unexplained pain in a shoulder arthroplasty is infection until sampling says otherwise; normal inflammatory markers do not exclude Cutibacterium acnes.",
+          "Hold samples for prolonged culture and warn the laboratory what you are looking for.",
+          "Compare radiographs directly with previous films; a single film rarely shows loosening.",
+          "Loss of active elevation after anatomic replacement suggests cuff failure rather than loosening.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Infection", "Poor glenoid bone stock", "Rotator cuff deficiency with an anatomic implant", "Acromial fracture after reverse replacement", "Multiple previous procedures"] },
+      ],
+    }],
+};
+
 const gleroarthritisData = {
   id: "gh-osteoarthritis",
   name: "Glenohumeral Osteoarthritis",
@@ -3929,6 +4196,152 @@ const distalHumerusFxData = {
     }],
 };
 
+const elbowUCLData = {
+  id: "elbow-ucl-injury",
+  name: "Elbow Ulnar Collateral Ligament Injury",
+  region: "elbow",
+  urgentFlags: [
+    { text: "Acute valgus injury with gross instability or a dislocated elbow", consider: "Treat as an acute elbow instability: reduce, assess the whole ring, and image before planning." },
+    { text: "New ulnar nerve deficit after the injury", consider: "Document carefully and discuss urgent decompression; ulnar neuritis is common with valgus overload but a deficit is not." },
+    { text: "Skeletally immature thrower with medial pain", consider: "Exclude medial epicondyle apophysitis or avulsion rather than a ligament tear; radiographs including comparison views." },
+  ],
+  redFlags: [
+    { text: "Medial pain persisting despite an adequate rest and rehabilitation period", consider: "Reimage; a partial tear may have progressed, or the diagnosis may be valgus extension overload or ulnar neuritis." },
+    { text: "Pain at the posteromedial olecranon rather than the ligament", consider: "Consider valgus extension overload with a posteromedial osteophyte \u2014 see Athletic Elbow." },
+    { text: "Numbness in the ring and little fingers during throwing", consider: "Assess for ulnar nerve subluxation or compression, which changes the operation." },
+    { text: "Poor throwing mechanics or kinetic chain deficits", consider: "Address these in rehabilitation; recurrence is common where mechanics are unchanged." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Clinical examination including moving valgus stress and milking manoeuvre \u2192 radiographs \u2192 MRI or MR arthrography \u2192 define partial versus complete tear and the athlete's demands", next: "tearQ" },
+      tearQ: {
+        type: "question",
+        title: "Tear pattern on imaging?",
+        text: "Pathway suggests separating a partial tear, which often settles with rehabilitation, from a complete tear in a throwing athlete.",
+        options: [
+          { label: "Partial tear", next: "demandQ" },
+          { label: "Complete tear", next: "completeQ" },
+          { label: "No structural tear", next: "noTearTerminal" },
+        ],
+      },
+      noTearTerminal: { type: "terminal", tone: "green", title: "No structural tear", text: "Pathway suggests treating this as medial elbow overload: relative rest from throwing, a structured rehabilitation programme addressing the shoulder, trunk and lower limb kinetic chain, and a graded return-to-throwing programme. Reconsider valgus extension overload and ulnar neuritis if pain persists." },
+      demandQ: {
+        type: "question",
+        title: "Throwing or overhead athlete?",
+        text: "Pathway suggests this decision because a partial tear rarely limits a non-throwing patient.",
+        options: [
+          { label: "Yes", next: "partialAthleteTerminal" },
+          { label: "No", next: "nonThrowerTerminal" },
+        ],
+      },
+      nonThrowerTerminal: { type: "terminal", tone: "green", title: "Non-throwing patient", text: "Pathway suggests non-operative management: activity modification, physiotherapy and review. The ulnar collateral ligament is rarely symptomatic outside repetitive valgus loading, and reconstruction is seldom indicated." },
+      partialAthleteTerminal: { type: "terminal", tone: "amber", title: "Partial tear in a thrower", text: "Pathway suggests a period of about three months without throwing, with a rehabilitation programme covering the whole kinetic chain, followed by a graded return-to-throwing programme. Reconstruction is suggested where symptoms return on resuming throwing, with repeat imaging before deciding." },
+      completeQ: {
+        type: "question",
+        title: "Acute proximal or distal avulsion in a young athlete, with good tissue?",
+        text: "Pathway suggests distinguishing an avulsion that can be repaired from mid-substance or attritional damage that needs reconstruction.",
+        options: [
+          { label: "Yes \u2014 avulsion with good tissue", next: "repairTerminal" },
+          { label: "No \u2014 mid-substance or poor tissue", next: "reconstructionTerminal" },
+        ],
+      },
+      repairTerminal: { type: "terminal", tone: "amber", title: "Repair with internal brace", text: "Pathway suggests ligament repair with internal bracing in a young athlete with an acute avulsion and good tissue quality, which allows an earlier return to throwing than reconstruction. Address ulnar nerve symptoms at the same sitting if present." },
+      reconstructionTerminal: { type: "terminal", tone: "red", title: "Reconstruction", text: "Pathway suggests ulnar collateral ligament reconstruction with a tendon graft for a complete tear in a throwing athlete who wishes to return to the same level. Counsel that return to throwing typically takes around a year and is not guaranteed, and plan a staged return-to-throwing programme. Transpose or decompress the ulnar nerve where it is symptomatic." },
+    },
+  },
+  sections: [{
+      id: "typical",
+      index: 1,
+      title: "Typical Patient",
+      subtitle: "Overhead athlete with medial elbow pain on acceleration",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Throwing or overhead athlete", "Medial elbow pain during late cocking or acceleration", "Loss of velocity or control", "Sudden pop during throwing", "Ulnar nerve symptoms with throwing", "Pain settles with rest and returns on throwing"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors", options: ["High throwing volume", "Poor mechanics", "Year-round single-sport participation", "Previous medial elbow pain", "Pitching while fatigued"] },
+      ],
+    },
+    {
+      id: "history",
+      index: 2,
+      title: "Focused History",
+      subtitle: "Sport, mechanism, throwing history",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms" },{ type: "vas", key: "vas" },{ type: "text", key: "sport", label: "Sport and position", suggestions: ["Baseball", "Javelin", "Handball", "Tennis", "Cricket", "Volleyball"] },{ type: "select", key: "mechanism", label: "Onset", options: ["Sudden during throwing", "Gradual with throwing", "After a fall or dislocation"], columns: 1 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Medial elbow pain", "Pop or tearing sensation", "Loss of velocity", "Loss of control", "Ulnar nerve symptoms", "Locking or catching"] },{ type: "select", key: "competitionLevel", label: "Level of play", options: ["Recreational", "Competitive amateur", "Professional"], columns: 3 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Rest from throwing", "Physiotherapy", "Injection", "Previous elbow surgery"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Diabetes", "Smoking", "Previous elbow injury", "Other"] },],
+    },
+    {
+      id: "exam",
+      index: 3,
+      title: "Focused Examination",
+      subtitle: "Valgus stability, ulnar nerve, posteromedial impingement",
+      fields: [
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination"] },
+        { type: "testGrid", key: "valgusTests", label: "Valgus stability", options: ["Moving valgus stress test", "Milking manoeuvre", "Valgus stress at 30\u00b0", "Tenderness over the ligament"], defaultOptions: ["Positive", "Negative"] },
+        { type: "testGrid", key: "adjunctTests", label: "Associated tests", options: ["Posteromedial impingement (valgus extension overload)", "Ulnar nerve Tinel", "Ulnar nerve subluxation", "Flexor-pronator tenderness"], defaultOptions: ["Positive", "Negative"] },
+        { type: "testGrid", key: "nerveTests", label: "Ulnar nerve function", options: ["Sensation ring and little finger", "First dorsal interosseous power"], defaultOptions: ["Normal", "Reduced", "Absent"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    {
+      id: "imaging",
+      index: 4,
+      title: "Imaging",
+      subtitle: "Radiographs, MRI or MR arthrography",
+      fields: [
+        { type: "info", title: "Essential", items: ["Radiographs including an axial view to look for a posteromedial olecranon osteophyte and loose bodies.", "MRI, or MR arthrography where a partial undersurface tear is suspected, which is easily missed on standard MRI.", "Stress ultrasound can demonstrate dynamic medial joint opening where available."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "Medial epicondyle avulsion", "Ligament calcification", "Posteromedial olecranon osteophyte", "Loose body", "Physeal changes"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI \u2014 findings", options: ["Normal appearances", "Partial undersurface tear", "Complete tear", "Proximal avulsion", "Distal avulsion", "Ligament thickening or scarring", "Flexor-pronator injury", "Bone marrow oedema", "Loose body"] },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 additional detail" },
+      ],
+    },
+    {
+      id: "differential",
+      index: 5,
+      title: "Differential Diagnosis",
+      subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Medial epicondylopathy", "Valgus extension overload", "Ulnar neuritis or cubital tunnel syndrome", "Medial epicondyle apophysitis or avulsion", "Flexor-pronator strain", "Osteochondritis dissecans of the capitellum", "Loose body"] }],
+    },
+    {
+      id: "diagnosis",
+      index: 6,
+      title: "Diagnosis Classification",
+      subtitle: "Tear pattern and associated pathology",
+      fields: [
+        { type: "select", key: "uclTearType", label: "Tear pattern", options: ["No structural tear", "Partial tear", "Complete tear"], columns: 1, noteLabel: "UCL tear" },
+        { type: "select", key: "uclTearSite", label: "Site", options: ["Proximal avulsion", "Mid-substance", "Distal avulsion"], columns: 3, noteLabel: "Tear site" },
+        { type: "checkbox", key: "associatedPathology", label: "Associated pathology", options: ["Ulnar neuritis", "Ulnar nerve subluxation", "Valgus extension overload", "Loose body", "Flexor-pronator injury", "Osteochondral lesion"] },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    {
+      id: "followup",
+      index: 9,
+      title: "Standard Follow-up",
+      subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Pain, motion, rehabilitation progress" }, { left: "3 months", right: "Readiness to begin throwing programme" }, { left: "6 months", right: "Throwing progression" }, { left: "12 months", right: "Return to competition" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["6 weeks", "3 months", "6 months", "12 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Rehabilitation progress", "Reassess symptoms and function", "Review imaging", "Return-to-throwing assessment", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    {
+      id: "outcomes",
+      index: 10,
+      title: "Outcome Measures",
+      subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS + MEPS" }, { left: "6 months", right: "MEPS + throwing status" }, { left: "12 months", right: "MEPS + return to play" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "The moving valgus stress test reproduces pain over the arc in which the ligament is loaded, and is more useful than static valgus stress.",
+          "A partial undersurface tear is easily missed without MR arthrography.",
+          "Treat the kinetic chain, not just the elbow; mechanics and volume drive recurrence.",
+          "Ulnar nerve symptoms change the operation \u2014 look for them specifically.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Return to throwing before rehabilitation is complete", "Unaddressed mechanics or workload", "Associated valgus extension overload", "Poor tissue quality at surgery"] },
+      ],
+    }],
+};
+
 const elbowInstabilityData = {
   id: "elbow-instability",
   name: "Simple Elbow Dislocation & Chronic Elbow Instability",
@@ -4092,6 +4505,124 @@ const elbowInstabilityData = {
         { type: "info", title: "Stability pearls", items: ["A reduced elbow is not necessarily a stable elbow.", "The first priority is restoration of stability.", "Motion follows stability."] },
         { type: "info", title: "Predictors of poor outcome", items: ["Delayed motion", "PLRI", "Coronoid deficiency", "Radial head loss", "Recurrent instability"] },
         { type: "info", title: "Consultant tips", items: ["The reduction is only the beginning of treatment \u2014 determining whether the elbow is stable afterwards is the real clinical challenge.", "Always review the radial head and coronoid carefully \u2014 small fractures may indicate major ligament disruption.", "Avoid prolonged immobilization whenever stability permits \u2014 stiffness is the most common long-term complication.", "Chronic instability is often a consequence of an incompletely recognized acute injury \u2014 document stability carefully from the first visit.", "The Stable Elbow Checklist should become a routine part of every elbow trauma assessment, regardless of the injury pattern."] },
+      ],
+    }],
+};
+
+const elbowArthroplastyReviewData = {
+  id: "elbow-arthroplasty-review",
+  name: "Elbow Arthroplasty Review",
+  region: "elbow",
+  urgentFlags: [
+    { text: "Unexplained pain, wound discharge or a sinus", consider: "Treat as periprosthetic infection until sampling proves otherwise; the elbow has thin soft-tissue cover and a high infection rate relative to other joints." },
+    { text: "Acute loss of function after a fall", consider: "Exclude periprosthetic fracture and component failure; radiograph the whole implant including the humeral and ulnar stems." },
+    { text: "New ulnar nerve deficit", consider: "Exclude ulnar neuropathy from scarring, component position or haematoma, and refer urgently." },
+    { text: "Sudden inability to extend against gravity", consider: "Assess for triceps insufficiency, which is a recognised and disabling complication after total elbow replacement." },
+  ],
+  redFlags: [
+    { text: "Patient lifting more than the advised limit", consider: "Reinforce the lifting restriction: it is the main determinant of implant survival, and breaches predict loosening and bushing wear." },
+    { text: "Progressive cement lucency on serial radiographs", consider: "Assess for aseptic loosening and exclude infection by sampling; lucency alone does not distinguish the two." },
+    { text: "Bushing wear on radiographs", consider: "Follow it; symptomatic wear may be addressed by bushing exchange before bone stock is lost." },
+    { text: "Persistent pain with normal radiographs", consider: "Reconsider ulnar neuropathy, triceps insufficiency and low-grade infection." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Establish the implant type and date \u2192 confirm the lifting restriction is understood \u2192 examine motion, triceps and ulnar nerve \u2192 serial radiographs", next: "painQ" },
+      painQ: {
+        type: "question",
+        title: "Is the arthroplasty painful or failing?",
+        text: "Pathway suggests separating routine surveillance from a problem arthroplasty.",
+        options: [
+          { label: "No \u2014 routine surveillance", next: "surveillanceTerminal" },
+          { label: "Yes", next: "infectionQ" },
+        ],
+      },
+      surveillanceTerminal: { type: "terminal", tone: "green", title: "Routine surveillance", text: "Pathway suggests periodic clinical and radiographic review recording motion, triceps function, ulnar nerve status and any cement lucency or bushing wear, together with explicit reinforcement of the lifting restriction at every visit." },
+      infectionQ: {
+        type: "question",
+        title: "Any features of infection?",
+        text: "Pathway suggests excluding infection first, given the thin soft-tissue cover at the elbow.",
+        options: [
+          { label: "Yes, or unexplained pain", next: "infectionTerminal" },
+          { label: "No", next: "mechanicalQ" },
+        ],
+      },
+      infectionTerminal: { type: "terminal", tone: "red", title: "Investigate for infection", text: "Pathway suggests inflammatory markers, radiographs and referral for aspiration or biopsy with multiple samples before any antibiotics. Debridement with component retention may be considered for an early infection with a stable implant; established infection usually requires staged revision or excision arthroplasty." },
+      mechanicalQ: {
+        type: "question",
+        title: "Which mechanical problem?",
+        text: "Pathway suggests naming the failure mode, which determines the operation.",
+        options: [
+          { label: "Aseptic loosening", next: "looseningTerminal" },
+          { label: "Bushing wear", next: "bushingTerminal" },
+          { label: "Triceps insufficiency", next: "tricepsTerminal" },
+          { label: "Ulnar neuropathy", next: "ulnarTerminal" },
+          { label: "Periprosthetic fracture", next: "fractureTerminal" },
+        ],
+      },
+      looseningTerminal: { type: "terminal", tone: "red", title: "Aseptic loosening", text: "Pathway suggests CT to assess bone stock, sampling to exclude infection, and revision planning including the possibility of allograft or an augmented implant. Revision at the elbow is demanding and bone stock deteriorates with delay." },
+      bushingTerminal: { type: "terminal", tone: "amber", title: "Bushing wear", text: "Pathway suggests that isolated symptomatic bushing wear with well-fixed components can be treated by bushing exchange, which is far less destructive than full revision \u2014 provided infection has been excluded and the stems are sound." },
+      tricepsTerminal: { type: "terminal", tone: "amber", title: "Triceps insufficiency", text: "Pathway suggests confirming the deficit against gravity and discussing repair or reconstruction, usually with an anconeus rotation or tendon allograft. Counsel that results are variable and that some patients manage well with a brace and activity modification." },
+      ulnarTerminal: { type: "terminal", tone: "amber", title: "Ulnar neuropathy", text: "Pathway suggests nerve conduction studies and assessment of component position, with decompression or transposition where the deficit is progressive." },
+      fractureTerminal: { type: "terminal", tone: "red", title: "Periprosthetic fracture", text: "Pathway suggests classifying the fracture by its position relative to the stem and whether the component is loose, which determines fixation versus revision. Bone is often poor and fixation should be planned with revision implants available." },
+    },
+  },
+  sections: [{
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Routine or problem review after elbow replacement",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Presentation", options: ["Routine surveillance", "New pain", "Loss of motion", "Weak extension", "Ulnar nerve symptoms", "After a fall", "Wound problem"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors for failure", options: ["Rheumatoid arthritis", "Previous elbow surgery", "Post-traumatic arthritis", "Diabetes", "Immunosuppression", "Smoking", "Non-compliance with lifting restriction"] },
+      ],
+    },
+    { id: "history", index: 2, title: "Focused History", subtitle: "Implant details, restriction compliance, function",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Time since injury or surgery" },{ type: "vas", key: "vas" },{ type: "select", key: "implantType", label: "Implant type", options: ["Linked total elbow replacement", "Unlinked total elbow replacement", "Radial head arthroplasty", "Distal humerus hemiarthroplasty", "Revision arthroplasty"], columns: 1, noteLabel: "Implant" },{ type: "date", key: "surgeryDate", label: "Date of the index arthroplasty" },{ type: "select", key: "indexIndication", label: "Original indication", options: ["Rheumatoid arthritis", "Post-traumatic arthritis", "Acute distal humerus fracture", "Primary osteoarthritis", "Revision"], columns: 2 },{ type: "select", key: "liftingCompliance", label: "Adherence to lifting restriction", options: ["Understood and followed", "Understood but not followed", "Not previously advised"], columns: 1, noteLabel: "Lifting restriction" },{ type: "checkbox", key: "symptoms", label: "Current symptoms", options: ["No symptoms", "Pain with activity", "Pain at rest", "Weak extension", "Instability", "Ulnar nerve symptoms", "Stiffness", "Clunking"] },{ type: "select", key: "symptomChange", label: "Change since last review", options: ["Improved", "Unchanged", "Worse", "New symptom"], columns: 2, noteLabel: "Change since last review" },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Rheumatoid arthritis", "Diabetes", "Immunosuppression", "Anticoagulation", "Smoking", "Other"] },],
+    },
+    { id: "exam", index: 3, title: "Focused Examination", subtitle: "Motion, triceps, ulnar nerve, stability",
+      fields: [
+        { type: "rom", key: "rom", label: "Range of motion", motions: ["Flexion", "Extension", "Pronation", "Supination"] },
+        { type: "testGrid", key: "elbowArthroTests", label: "Examination", options: ["Wound healed", "Sinus or discharge", "Triceps extension against gravity", "Varus-valgus stability", "Crepitus", "Tenderness over the stems"], defaultOptions: ["Normal", "Abnormal"] },
+        { type: "testGrid", key: "nerveTests", label: "Ulnar nerve", options: ["Sensation ring and little finger", "First dorsal interosseous power", "Tinel at the cubital tunnel"], defaultOptions: ["Normal", "Abnormal"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    { id: "imaging", index: 4, title: "Imaging", subtitle: "Serial radiographs, CT where concerned",
+      fields: [
+        { type: "info", title: "Essential", items: ["AP and lateral radiographs including the whole of both stems, compared directly with previous films.", "Look specifically for cement lucency, bushing wear, osteolysis and periprosthetic fracture.", "CT where loosening or bone loss is suspected; sampling where infection is possible."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Satisfactory component position", "Cement lucency", "Component migration", "Bushing wear", "Osteolysis", "Periprosthetic fracture", "Heterotopic ossification", "Component fracture"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT \u2014 findings", options: ["Normal appearances", "Component loosening", "Bone loss", "Periprosthetic fracture", "Osteolysis"] },
+        { type: "text", key: "ctFinding", label: "CT \u2014 additional detail" },
+      ],
+    },
+    { id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Causes of a painful elbow arthroplasty",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Periprosthetic infection", "Aseptic loosening", "Bushing wear", "Triceps insufficiency", "Ulnar neuropathy", "Periprosthetic fracture", "Heterotopic ossification", "Cervical radiculopathy"] }],
+    },
+    { id: "diagnosis", index: 6, title: "Diagnosis Classification", subtitle: "Status and failure mode",
+      fields: [
+        { type: "select", key: "arthroplastyStatus", label: "Status", options: ["Well-functioning", "Painful arthroplasty \u2014 cause unclear", "Confirmed failure"], columns: 1, noteLabel: "Arthroplasty status" },
+        { type: "select", key: "failureMode", label: "Failure mode", options: ["None", "Infection", "Aseptic loosening", "Bushing wear", "Triceps insufficiency", "Ulnar neuropathy", "Periprosthetic fracture"], columns: 1, noteLabel: "Failure mode" },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    { id: "followup", index: 9, title: "Standard Follow-up", subtitle: "Surveillance schedule",
+      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Wound, motion, triceps" }, { left: "3 months", right: "Motion, radiographs, restriction advice" }, { left: "12 months", right: "Function, radiographs" }, { left: "Every 2\u20135 years", right: "Radiographic surveillance" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["6 weeks", "3 months", "12 months", "2 years", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Wound or healing check", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    { id: "outcomes", index: 10, title: "Outcome Measures", subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Pre-operative", right: "MEPS + VAS" }, { left: "12 months", right: "MEPS + QuickDASH" }, { left: "Surveillance", right: "MEPS + radiographs" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "The lifting restriction is the single most important thing the patient controls; reinforce it at every visit.",
+          "Unexplained pain is infection until sampling says otherwise.",
+          "Isolated bushing wear with sound stems can be treated by exchange rather than full revision \u2014 catch it before bone stock is lost.",
+          "Test triceps extension against gravity specifically; insufficiency is easily missed on a casual examination.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Infection", "Breach of the lifting restriction", "Poor bone stock", "Multiple previous procedures", "Post-traumatic rather than inflammatory indication"] },
       ],
     }],
 };
@@ -5723,6 +6254,352 @@ const ulnarImpactionData = {
         { type: "info", title: "Load distribution pearls", items: ["Positive ulnar variance is a risk factor, not a diagnosis.", "Treat the cause of overload rather than the MRI appearance alone.", "Distal radius malunion may be the true driver of ulnocarpal overload."] },
         { type: "info", title: "Predictors of poor outcome", items: ["Persistent overload", "Heavy manual occupation", "Distal radius malunion", "Advanced TFCC degeneration", "DRUJ arthritis"] },
         { type: "info", title: "Consultant tips", items: ["Ulnar impaction syndrome is fundamentally a biomechanical overload disorder; successful treatment depends on correcting the underlying load distribution rather than simply addressing secondary tissue damage.", "Positive ulnar variance should always be interpreted in the context of symptoms, wrist mechanics, and previous trauma.", "Evaluate the distal radius, TFCC, and DRUJ as a functional unit because pathology in one component often affects the others.", "Distinguish degenerative TFCC changes from symptomatic overload \u2014 many imaging findings are incidental.", "Objective improvement should include restored grip strength, endurance, and confidence with weight-bearing activities."] },
+      ],
+    }],
+};
+
+const sttArthritisData = {
+  id: "stt-arthritis",
+  name: "Scaphotrapeziotrapezoid (STT) Arthritis",
+  region: "wrist",
+  urgentFlags: [
+    { text: "Hot swollen joint with fever or systemic upset", consider: "Exclude septic arthritis or crystal arthropathy before treating as degenerative." },
+    { text: "Acute wrist pain after a fall with radial-sided tenderness", consider: "Exclude a scaphoid fracture; degenerative change on imaging does not exclude a new fracture." },
+    { text: "Progressive numbness in the median nerve distribution", consider: "Assess for carpal tunnel syndrome, which often coexists with degenerative wrist disease." },
+  ],
+  redFlags: [
+    { text: "Pain not relieved by an accurately placed STT injection", consider: "Reconsider the source: thumb carpometacarpal arthritis, de Quervain tenosynovitis and radial styloid impingement all present here." },
+    { text: "Radiographic STT change with minimal symptoms", consider: "STT degenerative change is common with age and is frequently incidental; treat the patient rather than the radiograph." },
+    { text: "Associated scapholunate widening or DISI", consider: "Assess the whole carpus; an isolated STT procedure may worsen carpal alignment." },
+    { text: "Persistent radial-sided pain after STT fusion", consider: "Consider radial styloid impingement or non-union of the fusion; CT is more informative than radiographs." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Localise the pain (STT versus thumb carpometacarpal) \u2192 radiographs including a lateral \u2192 confirm the source with a targeted injection where doubt remains", next: "confirmQ" },
+      confirmQ: {
+        type: "question",
+        title: "Is the STT joint confirmed as the source?",
+        text: "Pathway suggests confirming this before any surgery, since thumb carpometacarpal arthritis produces pain in the same area and is far more common.",
+        options: [
+          { label: "Yes", next: "severityQ" },
+          { label: "Uncertain", next: "injectionTerminal" },
+        ],
+      },
+      injectionTerminal: { type: "terminal", tone: "amber", title: "Confirm with a targeted injection", text: "Pathway suggests an image-guided injection into the STT joint as both a diagnostic test and a treatment; a clear but temporary response supports the joint as the source. Reassess the thumb carpometacarpal joint and the radial styloid at the same time." },
+      severityQ: {
+        type: "question",
+        title: "Response to non-operative treatment?",
+        text: "Pathway suggests a trial of a thumb spica or wrist splint, activity modification, analgesia and injection before considering surgery.",
+        options: [
+          { label: "Adequate", next: "conservativeTerminal" },
+          { label: "Failed", next: "combinedQ" },
+        ],
+      },
+      conservativeTerminal: { type: "terminal", tone: "green", title: "Continue non-operative care", text: "Pathway suggests continuing splinting, activity modification and analgesia, with injection repeated where it gave lasting benefit, and review if symptoms progress." },
+      combinedQ: {
+        type: "question",
+        title: "Is the thumb carpometacarpal joint also arthritic?",
+        text: "Pathway suggests this decision because combined disease changes the operation.",
+        options: [
+          { label: "Yes \u2014 combined STT and CMC disease", next: "combinedTerminal" },
+          { label: "No \u2014 isolated STT disease", next: "isolatedTerminal" },
+        ],
+      },
+      combinedTerminal: { type: "terminal", tone: "amber", title: "Combined disease", text: "Pathway suggests addressing both joints together, usually by trapeziectomy extended to include the distal scaphoid facet, rather than treating the STT joint alone and leaving a painful carpometacarpal joint." },
+      isolatedTerminal: { type: "terminal", tone: "amber", title: "Isolated STT disease", text: "Pathway suggests discussing distal scaphoid excision, which preserves motion and is technically simpler, against STT arthrodesis, which is more durable but carries a risk of non-union and of radial styloid impingement, and can alter carpal alignment. Interposition arthroplasty is an alternative. Assess carpal alignment before choosing, since distal scaphoid excision can increase DISI where the scapholunate ligament is already incompetent." },
+    },
+  },
+  sections: [{
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Radial wrist pain in an older patient, often with thumb base disease",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Age over 50", "Female", "Pain at the radial wrist", "Pain on gripping and pinching", "Pain on wrist extension", "Swelling over the distal scaphoid", "Coexisting thumb base pain"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors", options: ["Manual work", "Previous wrist injury", "Generalised osteoarthritis", "Chondrocalcinosis", "Inflammatory arthropathy"] },
+      ],
+    },
+    { id: "history", index: 2, title: "Focused History", subtitle: "Pain location, grip, previous treatment",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Radial wrist pain", "Thumb base pain", "Pain on gripping", "Weak pinch", "Swelling", "Stiffness", "Night pain"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Opening jars", "Turning keys", "Writing", "Lifting", "Work tasks", "Household tasks"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "Splinting", "Hand therapy", "Injection", "Previous wrist surgery"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Osteoarthritis elsewhere", "Inflammatory arthritis", "Diabetes", "Smoking", "Other"] },],
+    },
+    { id: "exam", index: 3, title: "Focused Examination", subtitle: "Localisation and differentiation from thumb base disease",
+      fields: [
+        { type: "rom", key: "rom", label: "Wrist range of motion", motions: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation"] },
+        { type: "testGrid", key: "sttTests", label: "Special tests", options: ["Tenderness over the STT joint", "STT grind", "Thumb carpometacarpal grind", "Finkelstein", "Scaphoid shift", "Radial styloid tenderness"], defaultOptions: ["Positive", "Negative"] },
+        { type: "numberGroup", key: "grip", label: "Grip and pinch", items: ["Grip (kg)", "Key pinch (kg)"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    { id: "imaging", index: 4, title: "Imaging", subtitle: "Radiographs, CT where planning surgery",
+      fields: [
+        { type: "info", title: "Essential", items: ["Posteroanterior, lateral and oblique radiographs; the STT joint is best seen on the oblique and on a pronated view.", "Assess carpal alignment on the lateral, since STT disease coexists with scapholunate incompetence and DISI.", "CT where fusion is planned or non-union is suspected."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "STT joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Thumb carpometacarpal arthritis", "Scapholunate widening", "DISI alignment", "Chondrocalcinosis"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT \u2014 findings", options: ["Normal appearances", "STT joint space narrowing", "Subchondral cysts", "Non-union of previous fusion", "Radial styloid impingement", "Carpal malalignment"] },
+        { type: "text", key: "ctFinding", label: "CT \u2014 additional detail" },
+      ],
+    },
+    { id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Thumb carpometacarpal osteoarthritis", "De Quervain tenosynovitis", "Scaphoid non-union or fracture", "Radial styloid impingement", "Scapholunate instability", "Intersection syndrome", "Wartenberg syndrome", "Crystal arthropathy"] }],
+    },
+    { id: "diagnosis", index: 6, title: "Diagnosis Classification", subtitle: "Extent and associated disease",
+      fields: [
+        { type: "select", key: "sttExtent", label: "Extent", options: ["Isolated STT arthritis", "STT with thumb carpometacarpal arthritis (pantrapezial)", "STT with wider carpal degenerative change"], columns: 1, noteLabel: "Extent" },
+        { type: "select", key: "sttSeverity", label: "Radiographic severity", options: ["Mild", "Moderate", "Severe"], columns: 3, noteLabel: "Radiographic severity" },
+        { type: "select", key: "carpalAlignment", label: "Carpal alignment", options: ["Normal", "DISI", "Other malalignment"], columns: 3 },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    { id: "followup", index: 9, title: "Standard Follow-up", subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Response to splinting or injection" }, { left: "3 months", right: "Function, grip, decision on surgery" }, { left: "6\u201312 months", right: "Union after fusion, function" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["6 weeks", "3 months", "6 months", "12 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    { id: "outcomes", index: 10, title: "Outcome Measures", subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS + PRWE" }, { left: "6 months", right: "PRWE + grip and pinch" }, { left: "12 months", right: "PRWE + QuickDASH" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "Radiographic STT change is common and often incidental; confirm the joint is the source before operating.",
+          "A targeted injection is the most useful single test when thumb base and STT pain overlap.",
+          "Check carpal alignment first: distal scaphoid excision can worsen DISI where the scapholunate ligament is incompetent.",
+          "Radial styloid impingement is a common reason for persistent pain after STT fusion.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Unrecognised thumb carpometacarpal disease", "Pre-existing carpal malalignment", "Non-union after fusion", "Smoking"] },
+      ],
+    }],
+};
+
+const ltInstabilityData = {
+  id: "lt-instability",
+  name: "Lunotriquetral Instability",
+  region: "wrist",
+  urgentFlags: [
+    { text: "Acute high-energy wrist injury with deranged carpal alignment", consider: "Exclude a perilunate injury; lunotriquetral disruption is part of that spectrum and is easily missed." },
+    { text: "Median nerve symptoms after an acute injury", consider: "Exclude acute carpal tunnel syndrome from a perilunate injury or lunate displacement." },
+    { text: "Fixed deformity with inability to move the wrist after injury", consider: "Urgent imaging for a dislocation or fracture-dislocation of the carpus." },
+  ],
+  redFlags: [
+    { text: "Ulnar-sided pain without instability on examination", consider: "Reconsider TFCC tear, ulnar impaction, ECU pathology and DRUJ instability, which are all commoner." },
+    { text: "Positive ulnar variance with lunotriquetral symptoms", consider: "Consider ulnar impaction as the driver; addressing variance may treat both." },
+    { text: "Static VISI on radiographs", consider: "Suggests a more extensive injury than an isolated lunotriquetral tear; assess the whole carpus and the secondary stabilisers." },
+    { text: "Persistent symptoms after ligament repair or reconstruction", consider: "Reassess for unrecognised ulnar impaction or a missed DRUJ problem before revision." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Localise ulnar-sided pain \u2192 ballottement and shear tests \u2192 radiographs including ulnar variance \u2192 MRI or arthroscopy where doubt remains", next: "confirmQ" },
+      confirmQ: {
+        type: "question",
+        title: "Is lunotriquetral instability confirmed?",
+        text: "Pathway suggests confirmation on examination with supporting imaging, recognising that arthroscopy remains the reference standard.",
+        options: [
+          { label: "Yes", next: "varianceQ" },
+          { label: "Uncertain", next: "uncertainTerminal" },
+        ],
+      },
+      uncertainTerminal: { type: "terminal", tone: "amber", title: "Clarify the diagnosis", text: "Pathway suggests MRI or MR arthrography and, where symptoms persist with negative imaging, diagnostic arthroscopy. Reassess the commoner causes of ulnar-sided wrist pain at the same time." },
+      varianceQ: {
+        type: "question",
+        title: "Ulnar variance?",
+        text: "Pathway suggests measuring variance on a neutral rotation posteroanterior radiograph, since it changes the operation.",
+        options: [
+          { label: "Positive", next: "ulnarPositiveTerminal" },
+          { label: "Neutral or negative", next: "chronicityQ" },
+        ],
+      },
+      ulnarPositiveTerminal: { type: "terminal", tone: "amber", title: "Positive ulnar variance", text: "Pathway suggests treating the impaction as well as, or instead of, the ligament: ulnar shortening osteotomy tightens the ulnocarpal ligaments and frequently relieves dynamic lunotriquetral symptoms, and is often preferred to direct ligament surgery in this group. Arthroscopy first to assess the TFCC and the lunotriquetral interval is reasonable." },
+      chronicityQ: {
+        type: "question",
+        title: "Acute or chronic?",
+        text: "Pathway suggests separating an acute tear, where repair is feasible, from chronic instability.",
+        options: [
+          { label: "Acute", next: "acuteTerminal" },
+          { label: "Chronic", next: "staticQ" },
+        ],
+      },
+      acuteTerminal: { type: "terminal", tone: "amber", title: "Acute tear", text: "Pathway suggests immobilisation for six weeks for a partial tear, with arthroscopic assessment and repair or pinning where the tear is complete and the wrist is unstable." },
+      staticQ: {
+        type: "question",
+        title: "Static VISI deformity?",
+        text: "Pathway suggests this decision because a fixed deformity implies failure of the secondary stabilisers.",
+        options: [
+          { label: "No \u2014 dynamic instability", next: "dynamicTerminal" },
+          { label: "Yes \u2014 static VISI", next: "staticTerminal" },
+        ],
+      },
+      dynamicTerminal: { type: "terminal", tone: "amber", title: "Chronic dynamic instability", text: "Pathway suggests a trial of splinting, hand therapy focused on the ulnar-sided stabilisers and injection first. Where this fails, options are arthroscopic debridement, ligament repair, or reconstruction; counsel that results are less predictable than for scapholunate surgery." },
+      staticTerminal: { type: "terminal", tone: "red", title: "Static VISI", text: "Pathway suggests that soft-tissue reconstruction alone is unlikely to hold a fixed deformity. Lunotriquetral arthrodesis is an option, with a recognised risk of non-union; where degenerative change is established, a limited intercarpal fusion is considered. Assess and address ulnar variance at the same time." },
+    },
+  },
+  sections: [{
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Ulnar-sided wrist pain after a fall on an extended, pronated wrist",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Ulnar-sided wrist pain", "Fall onto an extended wrist", "Painful clunk on ulnar deviation", "Weak grip", "Pain on pushing up from a chair", "Swelling over the lunotriquetral interval"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors", options: ["Previous wrist injury", "Positive ulnar variance", "Generalised laxity", "Manual or impact sport", "Inflammatory arthropathy"] },
+      ],
+    },
+    { id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, clunking, previous treatment",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms" },{ type: "vas", key: "vas" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Fall on an outstretched hand", "Twisting injury", "Gradual onset", "Part of a perilunate injury"], columns: 2 },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Ulnar-sided pain", "Clunking", "Weakness of grip", "Pain on ulnar deviation", "Pain on load-bearing", "Swelling"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Pushing up from a chair", "Gripping", "Twisting a lid", "Racquet or club sports", "Work tasks"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "Splinting", "Hand therapy", "Injection", "Previous wrist surgery"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Inflammatory arthritis", "Diabetes", "Smoking", "Other"] },],
+    },
+    { id: "exam", index: 3, title: "Focused Examination", subtitle: "Provocative tests and differentiation from other ulnar-sided causes",
+      fields: [
+        { type: "rom", key: "rom", label: "Wrist range of motion", motions: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation", "Pronation", "Supination"] },
+        { type: "testGrid", key: "ltTests", label: "Lunotriquetral tests", options: ["Ballottement (Reagan) test", "Shear test", "Shuck test", "Tenderness over the LT interval"], defaultOptions: ["Positive", "Negative"] },
+        { type: "testGrid", key: "ulnarTests", label: "Other ulnar-sided tests", options: ["Ulnar fovea sign", "TFCC compression test", "Ulnocarpal stress test", "DRUJ ballottement", "ECU synergy test"], defaultOptions: ["Positive", "Negative"] },
+        { type: "numberGroup", key: "grip", label: "Grip", items: ["Grip (kg)", "Contralateral grip (kg)"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    { id: "imaging", index: 4, title: "Imaging", subtitle: "Radiographs, MRI, arthroscopy",
+      fields: [
+        { type: "info", title: "Essential", items: ["Posteroanterior radiograph in neutral rotation to measure ulnar variance, with a lateral to assess carpal alignment for VISI.", "MR arthrography is more sensitive than standard MRI for an interosseous ligament tear.", "Arthroscopy remains the reference standard and allows grading and treatment in the same sitting."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "VISI alignment", "Positive ulnar variance", "Negative ulnar variance", "Lunotriquetral step", "Degenerative change", "Chondrocalcinosis"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI \u2014 findings", options: ["Normal appearances", "Lunotriquetral ligament tear", "TFCC tear", "Ulnar-sided chondral change", "Lunate or triquetral marrow oedema", "Ulnocarpal impaction changes"] },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 additional detail" },
+      ],
+    },
+    { id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["TFCC tear", "Ulnar impaction syndrome", "DRUJ instability or arthritis", "ECU tendinopathy or subluxation", "Pisotriquetral arthritis", "Hook of hamate fracture", "Ulnar neuropathy at Guyon's canal", "Perilunate injury"] }],
+    },
+    { id: "diagnosis", index: 6, title: "Diagnosis Classification", subtitle: "Chronicity, deformity, variance",
+      fields: [
+        { type: "select", key: "ltChronicity", label: "Chronicity", options: ["Acute (under 6 weeks)", "Subacute", "Chronic"], columns: 3, noteLabel: "Chronicity" },
+        { type: "select", key: "ltPattern", label: "Instability pattern", options: ["Predynamic (pain only)", "Dynamic", "Static VISI"], columns: 1, noteLabel: "Instability pattern" },
+        { type: "select", key: "ulnarVariance", label: "Ulnar variance", options: ["Positive", "Neutral", "Negative"], columns: 3, noteLabel: "Ulnar variance" },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    { id: "followup", index: 9, title: "Standard Follow-up", subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Response to splinting or therapy" }, { left: "3 months", right: "Function, decision on surgery" }, { left: "6\u201312 months", right: "Union, stability, function" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["6 weeks", "3 months", "6 months", "12 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    { id: "outcomes", index: 10, title: "Outcome Measures", subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS + PRWE" }, { left: "6 months", right: "PRWE + grip" }, { left: "12 months", right: "PRWE + QuickDASH" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "Lunotriquetral instability is far less common than TFCC tear and ulnar impaction; exclude those first.",
+          "Measure ulnar variance on a neutral rotation film: a positive variance often makes ulnar shortening the better operation.",
+          "Static VISI implies the secondary stabilisers have failed; soft-tissue surgery alone will not hold it.",
+          "Lunotriquetral arthrodesis carries a real non-union rate \u2014 counsel accordingly.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Unrecognised ulnar impaction", "Static deformity", "Chronic instability with degenerative change", "Smoking"] },
+      ],
+    }],
+};
+
+const carpalBossData = {
+  id: "carpal-boss",
+  name: "Carpal Boss",
+  region: "wrist",
+  urgentFlags: [
+    { text: "Rapidly enlarging, warm or painful dorsal mass", consider: "Reconsider infection or a soft-tissue tumour; a carpal boss is a fixed bony prominence that does not enlarge quickly." },
+    { text: "Dorsal wrist pain with systemic upset or fever", consider: "Exclude septic arthritis and inflammatory arthropathy." },
+  ],
+  redFlags: [
+    { text: "Mass that transilluminates or fluctuates", consider: "This is a dorsal wrist ganglion rather than a carpal boss; the two coexist and the treatments differ." },
+    { text: "Pain out of proportion to the prominence", consider: "Image for carpometacarpal arthritis or an occult fracture; the boss itself is often asymptomatic." },
+    { text: "Extensor tendon symptoms over the prominence", consider: "Assess for extensor tendon irritation or subluxation over the boss." },
+    { text: "Recurrence of the prominence after excision", consider: "Incomplete excision is common; where the underlying carpometacarpal joint is arthritic, consider fusion rather than repeat excision." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Confirm a fixed bony prominence at the second or third carpometacarpal joint \u2192 distinguish it from a dorsal ganglion \u2192 radiographs including a tangential (carpe bossu) view", next: "symptomaticQ" },
+      symptomaticQ: {
+        type: "question",
+        title: "Is it symptomatic?",
+        text: "Pathway suggests this decision first, as many carpal bosses are noticed rather than painful.",
+        options: [
+          { label: "No \u2014 incidental or cosmetic only", next: "reassuranceTerminal" },
+          { label: "Yes", next: "conservativeQ" },
+        ],
+      },
+      reassuranceTerminal: { type: "terminal", tone: "green", title: "Reassurance", text: "Pathway suggests explanation and reassurance: a carpal boss is a benign bony prominence at the base of the second or third metacarpal and needs no treatment when painless. Review if it becomes painful." },
+      conservativeQ: {
+        type: "question",
+        title: "Response to non-operative treatment?",
+        text: "Pathway suggests a trial of activity modification, a wrist splint and an injection before surgery.",
+        options: [
+          { label: "Adequate", next: "conservativeTerminal" },
+          { label: "Failed", next: "arthriticQ" },
+        ],
+      },
+      conservativeTerminal: { type: "terminal", tone: "green", title: "Continue non-operative care", text: "Pathway suggests continuing splinting and activity modification, repeating an injection where it helped, and reviewing if symptoms progress." },
+      arthriticQ: {
+        type: "question",
+        title: "Is the underlying carpometacarpal joint arthritic?",
+        text: "Pathway suggests CT to assess the joint before choosing the operation, since a degenerate joint is a common reason for failed excision.",
+        options: [
+          { label: "No", next: "excisionTerminal" },
+          { label: "Yes", next: "fusionTerminal" },
+        ],
+      },
+      excisionTerminal: { type: "terminal", tone: "amber", title: "Excision of the boss", text: "Pathway suggests excision of the bony prominence, protecting the extensor tendons and taking enough bone to avoid a residual prominence, which is the usual cause of persistent symptoms. Counsel about recurrence and about persistent pain where the joint is the true source." },
+      fusionTerminal: { type: "terminal", tone: "amber", title: "Address the joint", text: "Pathway suggests that excision alone is likely to disappoint where the carpometacarpal joint is degenerate, and that arthrodesis of the affected joint is considered alongside excision of the prominence." },
+    },
+  },
+  sections: [{
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Fixed dorsal prominence at the base of the index or middle metacarpal",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Age 20\u201340", "Hard fixed dorsal lump", "Does not transilluminate", "More prominent in wrist flexion", "Aching after use", "Cosmetic concern", "Noticed incidentally"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors", options: ["Manual work", "Repetitive wrist loading", "Previous wrist injury", "Racquet or weight-bearing sport"] },
+      ],
+    },
+    { id: "history", index: 2, title: "Focused History", subtitle: "Symptoms, aggravating activity, prior treatment",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Painless lump", "Aching with use", "Pain on wrist extension", "Pressure symptoms under a keyboard or desk", "Tendon catching", "Cosmetic concern"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Push-ups or weight-bearing", "Keyboard use", "Gripping", "Racquet sports", "None"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "Splinting", "Injection", "Previous excision"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Osteoarthritis", "Inflammatory arthritis", "Diabetes", "Smoking", "Other"] },],
+    },
+    { id: "exam", index: 3, title: "Focused Examination", subtitle: "Characterising the prominence",
+      fields: [
+        { type: "testGrid", key: "bossTests", label: "Examination", options: ["Hard fixed prominence", "Transilluminates", "Mobile", "Tender over the prominence", "Tender over the CMC joint", "Extensor tendon catching"], defaultOptions: ["Present", "Absent"] },
+        { type: "select", key: "bossSite", label: "Site", options: ["Second carpometacarpal joint", "Third carpometacarpal joint", "Both"], columns: 1 },
+        { type: "rom", key: "rom", label: "Wrist range of motion", motions: ["Flexion", "Extension"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    { id: "imaging", index: 4, title: "Imaging", subtitle: "Tangential view and CT",
+      fields: [
+        { type: "info", title: "Essential", items: ["A tangential (carpe bossu) view with the wrist in about 30\u00b0 of supination and ulnar deviation with slight flexion profiles the prominence, which is often hidden on standard views.", "CT where surgery is planned, to assess the underlying carpometacarpal joint and the extent of the osteophyte.", "Ultrasound distinguishes a coexisting ganglion from the bony boss."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "Dorsal bony prominence", "Carpometacarpal osteophytes", "Joint space narrowing", "Os styloideum", "Degenerative change"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ctCommon", label: "CT \u2014 findings", options: ["Normal appearances", "Dorsal osteophyte", "Carpometacarpal joint degeneration", "Os styloideum", "Loose body"] },
+        { type: "text", key: "ctFinding", label: "CT \u2014 additional detail" },
+      ],
+    },
+    { id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Dorsal wrist ganglion", "Carpometacarpal osteoarthritis", "Extensor tenosynovitis", "Scapholunate ganglion", "Osteochondroma", "Post-traumatic exostosis"] }],
+    },
+    { id: "diagnosis", index: 6, title: "Diagnosis Classification", subtitle: "Symptomatic status and joint condition",
+      fields: [
+        { type: "select", key: "bossSymptomatic", label: "Symptomatic status", options: ["Asymptomatic / incidental", "Symptomatic", "Symptomatic with tendon irritation"], columns: 1, noteLabel: "Carpal boss" },
+        { type: "select", key: "bossJoint", label: "Underlying carpometacarpal joint", options: ["Normal", "Degenerative"], columns: 2, noteLabel: "Carpometacarpal joint" },
+        { type: "select", key: "coexistingGanglion", label: "Coexisting dorsal ganglion", options: ["No", "Yes"], columns: 2 },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    { id: "followup", index: 9, title: "Standard Follow-up", subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Response to splinting or injection" }, { left: "3 months", right: "Function, decision on surgery" }, { left: "6 months", right: "Recurrence, function after excision" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["2 weeks", "6 weeks", "3 months", "12 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Monitor lesion", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    { id: "outcomes", index: 10, title: "Outcome Measures", subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS + PRWE" }, { left: "3 months", right: "VAS" }, { left: "12 months", right: "PRWE + recurrence" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "A carpal boss is hard and fixed; a dorsal ganglion is softer, mobile and transilluminates \u2014 and the two frequently coexist.",
+          "It is easily missed on standard radiographs; ask for the tangential view.",
+          "Most are asymptomatic and need nothing more than an explanation.",
+          "Residual prominence and an unrecognised degenerate joint are the usual reasons excision fails.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Incomplete excision", "Underlying carpometacarpal arthritis", "Coexisting ganglion left untreated", "Heavy manual work"] },
       ],
     }],
 };
@@ -11927,6 +12804,824 @@ const pipDislocationData = {
   ],
 };
 
+const crpsData = {
+  id: "crps",
+  name: "Complex Regional Pain Syndrome",
+  region: "hand",
+  urgentFlags: [
+    { text: "Tight cast or dressing with escalating pain", consider: "Release or split the cast immediately and re-examine; a constricting dressing can drive or mimic this picture." },
+    { text: "Pain out of proportion with a tense compartment or pain on passive stretch", consider: "Exclude compartment syndrome before attributing symptoms to CRPS." },
+    { text: "Fever, spreading erythema or discharge", consider: "Exclude infection." },
+    { text: "New or progressive neurological deficit", consider: "Exclude an evolving nerve compression or injury that needs decompression." },
+  ],
+  redFlags: [
+    { text: "A correctable mechanical cause is present \u2014 malunion, nerve compression, retained hardware", consider: "Treat the mechanical problem; CRPS is a diagnosis of exclusion and labelling it early can delay definitive treatment." },
+    { text: "Symptoms confined to one nerve territory", consider: "Reconsider a compressive or traumatic neuropathy rather than CRPS." },
+    { text: "No improvement despite three months of structured hand therapy", consider: "Refer to a pain service; consider a multidisciplinary programme." },
+    { text: "Elective surgery is being considered in the affected limb", consider: "Discuss timing with the pain team; operating during an active flare can worsen the syndrome." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Apply the Budapest criteria \u2192 exclude an alternative explanation \u2192 identify any correctable mechanical cause \u2192 start hand therapy early", next: "criteriaQ" },
+      criteriaQ: {
+        type: "question",
+        title: "Are the Budapest clinical criteria met?",
+        text: "Pathway suggests confirming continuing disproportionate pain, at least one symptom in three of the four categories, at least one sign in two, and that no other diagnosis better explains the picture.",
+        options: [
+          { label: "Yes", next: "mechanicalQ" },
+          { label: "No \u2014 criteria not met", next: "notCrpsTerminal" },
+        ],
+      },
+      notCrpsTerminal: { type: "terminal", tone: "green", title: "Not CRPS", text: "Pathway suggests treating the underlying problem and reviewing: stiffness, neuropathic pain from a specific nerve, or a healing injury may explain the picture. Early motion and hand therapy remain appropriate, and the criteria can be reapplied if the picture changes." },
+      mechanicalQ: {
+        type: "question",
+        title: "Is there a correctable mechanical cause?",
+        text: "Pathway suggests looking specifically for a constricting cast, malunion, nerve compression or prominent hardware before settling on the diagnosis.",
+        options: [
+          { label: "Yes", next: "mechanicalTerminal" },
+          { label: "No", next: "durationQ" },
+        ],
+      },
+      mechanicalTerminal: { type: "terminal", tone: "amber", title: "Treat the mechanical cause first", text: "Pathway suggests addressing the correctable problem \u2014 releasing a tight cast, decompressing a compressed nerve, correcting a malunion or removing prominent hardware \u2014 alongside hand therapy and analgesia, then reassessing." },
+      durationQ: {
+        type: "question",
+        title: "How established is the picture?",
+        text: "Pathway suggests separating an early presentation, where function usually responds to therapy, from an established one.",
+        options: [
+          { label: "Early (under 3 months)", next: "earlyTerminal" },
+          { label: "Established (3 months or more)", next: "establishedTerminal" },
+        ],
+      },
+      earlyTerminal: { type: "terminal", tone: "amber", title: "Early CRPS", text: "Pathway suggests hand therapy led by function rather than pain: active use of the limb, desensitisation, oedema control and graded motor imagery or mirror therapy. Add analgesia appropriate to neuropathic pain, explain the diagnosis clearly, and review at 6 weeks. Immobilisation generally makes matters worse." },
+      establishedTerminal: { type: "terminal", tone: "red", title: "Established CRPS", text: "Pathway suggests referral to a pain service for a multidisciplinary programme alongside continued hand therapy. Options discussed there may include neuropathic agents, bisphosphonates and sympathetic blockade. Defer elective surgery in the affected limb until the syndrome has settled, and involve the pain team in planning any surgery that cannot wait." },
+    },
+  },
+  sections: [{
+      id: "typical",
+      index: 1,
+      title: "Typical Patient",
+      subtitle: "Disproportionate pain after an injury or operation",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Pain out of proportion to the injury", "After a distal radius fracture", "After hand or wrist surgery", "After a period of immobilisation", "Swelling and colour change", "Stiffness of several joints", "Hypersensitivity to touch"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors", options: ["Previous CRPS", "Prolonged immobilisation", "Tight cast or dressing", "High pain scores early after injury", "Anxiety or low mood", "Smoking"] },
+      ],
+    },
+    {
+      id: "history",
+      index: 2,
+      title: "Focused History",
+      subtitle: "Trigger, pain character, function",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration since the trigger", placeholder: "e.g. 10 weeks" },{ type: "select", key: "trigger", label: "Trigger", options: ["Fracture", "Surgery", "Soft-tissue injury", "Nerve injury", "No identifiable trigger"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Burning pain", "Allodynia", "Hyperalgesia", "Swelling", "Colour change", "Temperature change", "Sweating change", "Stiffness", "Weakness", "Tremor", "Hair or nail changes"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Unable to use the hand", "Avoids contact with the limb", "Sleep disturbance", "Off work", "Dressing and washing"] },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Analgesics", "Neuropathic agents", "Hand therapy", "Nerve block", "Other"] },{ type: "conditional", when: (s) => (s.prevTreatment || []).includes("Other"), fields: [{ type: "text", key: "prevTreatmentOther", label: "Specify other previous treatment" }] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Diabetes", "Thyroid disease", "Anxiety or depression", "Smoking", "Other"] },],
+    },
+    {
+      id: "exam",
+      index: 3,
+      title: "Focused Examination",
+      subtitle: "Budapest signs by category",
+      fields: [
+        { type: "testGrid", key: "budapestSensory", label: "Sensory", options: ["Hyperalgesia to pinprick", "Allodynia to light touch"], defaultOptions: ["Present", "Absent"] },
+        { type: "testGrid", key: "budapestVasomotor", label: "Vasomotor", options: ["Temperature asymmetry", "Skin colour change or asymmetry"], defaultOptions: ["Present", "Absent"] },
+        { type: "testGrid", key: "budapestSudomotor", label: "Sudomotor / oedema", options: ["Oedema", "Sweating change or asymmetry"], defaultOptions: ["Present", "Absent"] },
+        { type: "testGrid", key: "budapestMotor", label: "Motor / trophic", options: ["Reduced range of motion", "Weakness, tremor or dystonia", "Trophic changes (hair, nail, skin)"], defaultOptions: ["Present", "Absent"] },
+        { type: "select", key: "budapestMet", label: "Budapest criteria met", options: ["Yes", "No"], columns: 2, noteLabel: "Budapest criteria" },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    {
+      id: "imaging",
+      index: 4,
+      title: "Imaging",
+      subtitle: "Used to exclude other causes, not to confirm the diagnosis",
+      fields: [
+        { type: "info", title: "Essential", items: ["CRPS is a clinical diagnosis; imaging is used to exclude a correctable cause such as malunion, non-union or prominent hardware.", "Radiographs may show patchy osteopenia in established disease, which supports but does not make the diagnosis."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "Patchy periarticular osteopenia", "Malunion", "Non-union", "Prominent or loose hardware", "Degenerative change"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+      ],
+    },
+    {
+      id: "differential",
+      index: 5,
+      title: "Differential Diagnosis",
+      subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Compartment syndrome", "Infection", "Nerve compression or injury", "Post-traumatic stiffness", "Malunion or non-union", "Deep vein thrombosis", "Inflammatory arthritis", "Vascular insufficiency"] }],
+    },
+    {
+      id: "diagnosis",
+      index: 6,
+      title: "Diagnosis Classification",
+      subtitle: "Type and stage",
+      fields: [
+        { type: "select", key: "crpsType", label: "CRPS type", options: ["Type I (no identified nerve injury)", "Type II (with identified nerve injury)"], columns: 1, noteLabel: "CRPS type" },
+        { type: "select", key: "crpsDuration", label: "Duration", options: ["Under 3 months", "3\u201312 months", "Over 12 months"], columns: 3, noteLabel: "Duration" },
+        { type: "select", key: "crpsSeverity", label: "Functional impact", options: ["Mild", "Moderate", "Severe"], columns: 3 },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    {
+      id: "followup",
+      index: 9,
+      title: "Standard Follow-up",
+      subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Pain, function, therapy engagement" }, { left: "3 months", right: "Reassess criteria; consider pain service" }, { left: "6 months", right: "Function, return to work" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["2 weeks", "6 weeks", "3 months", "6 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review therapy engagement", "Consider pain service referral", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    {
+      id: "outcomes",
+      index: 10,
+      title: "Outcome Measures",
+      subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS + QuickDASH" }, { left: "3 months", right: "VAS + range of motion" }, { left: "6 months", right: "VAS + QuickDASH" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "CRPS is a clinical diagnosis by the Budapest criteria; there is no confirmatory test.",
+          "Function-led therapy and active use of the limb are the mainstay; immobilisation generally worsens matters.",
+          "Always look for a correctable mechanical cause before settling on the label.",
+          "Explaining the diagnosis clearly, and that the pain is real but not a sign of ongoing damage, is part of the treatment.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Delay to diagnosis", "Prolonged immobilisation", "Established trophic change", "Poor engagement with therapy"] },
+      ],
+    }],
+};
+
+const handInfectionData = {
+  id: "hand-infection",
+  name: "Acute Hand Infections",
+  region: "hand",
+  urgentFlags: [
+    { text: "Pain out of proportion, systemic toxicity, crepitus or skin necrosis", consider: "Suspect necrotising infection: resuscitate, give broad-spectrum antibiotics and arrange emergency surgical debridement." },
+    { text: "Clenched-fist injury over a metacarpophalangeal joint", consider: "Treat as a fight bite with joint penetration until proven otherwise: explore, washout, intravenous antibiotics, and never close primarily." },
+    { text: "Hot, swollen joint with pain on any movement", consider: "Exclude septic arthritis; aspirate or washout urgently." },
+    { text: "Kanavel signs of flexor sheath infection", consider: "See Flexor Tenosynovitis \u2014 urgent washout is usually needed." },
+    { text: "Ascending lymphangitis, fever or sepsis", consider: "Admit for intravenous antibiotics and urgent surgical review." },
+  ],
+  redFlags: [
+    { text: "Not settling within 48 hours of appropriate antibiotics", consider: "Reassess for undrained collection, retained foreign body, joint or sheath involvement, or a resistant organism." },
+    { text: "Diabetes, immunosuppression or intravenous drug use", consider: "Expect a wider range of organisms and a lower threshold for admission and surgery." },
+    { text: "Recurrent infection at the same site", consider: "Consider a retained foreign body, osteomyelitis or an underlying mass." },
+    { text: "Bite wound seen late or already closed", consider: "Reopen and debride; primary closure of bite wounds in the hand is a common route to deep infection." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Define the compartment involved \u2192 look for a collection \u2192 identify the mechanism (bite, penetrating, spontaneous) \u2192 elevate and start antibiotics", next: "typeQ" },
+      typeQ: {
+        type: "question",
+        title: "Which infection?",
+        text: "Pathway suggests naming the anatomical compartment, since that determines whether drainage is needed and how urgently.",
+        options: [
+          { label: "Paronychia", next: "paronychiaQ" },
+          { label: "Felon (pulp space)", next: "felonTerminal" },
+          { label: "Bite injury", next: "biteQ" },
+          { label: "Cellulitis without collection", next: "cellulitisTerminal" },
+          { label: "Deep space or web space abscess", next: "deepSpaceTerminal" },
+          { label: "Septic arthritis", next: "septicArthritisTerminal" },
+        ],
+      },
+      paronychiaQ: {
+        type: "question",
+        title: "Is there a collection?",
+        text: "Pathway suggests distinguishing early cellulitis of the nail fold from an established abscess.",
+        options: [
+          { label: "No \u2014 early, no pus", next: "paronychiaEarlyTerminal" },
+          { label: "Yes \u2014 pus present", next: "paronychiaDrainTerminal" },
+        ],
+      },
+      paronychiaEarlyTerminal: { type: "terminal", tone: "green", title: "Early paronychia", text: "Pathway suggests oral antibiotics covering skin flora, warm soaks, elevation and review within 48 hours; drainage is suggested if a collection develops." },
+      paronychiaDrainTerminal: { type: "terminal", tone: "amber", title: "Drain the paronychia", text: "Pathway suggests drainage under ring block, lifting the nail fold off the nail plate, with partial nail removal where pus tracks beneath it. Send a specimen, dress open, elevate, and continue antibiotics." },
+      felonTerminal: { type: "terminal", tone: "amber", title: "Felon", text: "Pathway suggests prompt drainage of the closed pulp space through a lateral or volar longitudinal incision, releasing the septa while protecting the neurovascular bundles and avoiding the flexor sheath. Send a specimen, dress open, elevate, and give antibiotics. Delay risks pulp necrosis and osteomyelitis of the distal phalanx." },
+      biteQ: {
+        type: "question",
+        title: "Which bite?",
+        text: "Pathway suggests separating a clenched-fist injury from other bites, since the organisms and the risk to the joint differ.",
+        options: [
+          { label: "Human / clenched-fist", next: "fightBiteTerminal" },
+          { label: "Animal", next: "animalBiteTerminal" },
+        ],
+      },
+      fightBiteTerminal: { type: "terminal", tone: "red", title: "Fight bite", text: "Pathway suggests assuming joint and extensor tendon penetration: explore and washout in theatre with the finger in the position it was injured in, give intravenous antibiotics covering Eikenella and oral flora, leave the wound open, elevate and splint. Radiographs to look for a retained tooth fragment or fracture. Check tetanus and blood-borne virus risk." },
+      animalBiteTerminal: { type: "terminal", tone: "amber", title: "Animal bite", text: "Pathway suggests thorough irrigation and debridement, antibiotics covering Pasteurella, leaving the wound open, elevation and early review. Cat bites are deep puncture wounds with a high infection rate. Check tetanus and rabies risk where relevant." },
+      cellulitisTerminal: { type: "terminal", tone: "green", title: "Cellulitis", text: "Pathway suggests oral antibiotics, elevation, marking the margin and reviewing within 48 hours, with admission for intravenous antibiotics if it progresses or the patient is systemically unwell or immunosuppressed." },
+      deepSpaceTerminal: { type: "terminal", tone: "red", title: "Deep space infection", text: "Pathway suggests drainage in theatre with a specimen sent, intravenous antibiotics, elevation and splinting in the safe position, followed by early hand therapy once the infection has settled." },
+      septicArthritisTerminal: { type: "terminal", tone: "red", title: "Septic arthritis", text: "Pathway suggests urgent washout of the joint with a specimen sent before antibiotics where possible, then intravenous antibiotics and early motion once controlled. Delay risks rapid cartilage loss." },
+    },
+  },
+  sections: [{
+      id: "typical",
+      index: 1,
+      title: "Typical Patient",
+      subtitle: "Acute painful swelling, often after a minor breach",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Rapid onset over 1\u20133 days", "Throbbing pain", "Redness and swelling", "Pus visible", "Fever", "Recent puncture, bite or manicure", "Unable to use the hand"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors", options: ["Diabetes", "Immunosuppression", "Intravenous drug use", "Manual or wet work", "Nail biting", "Peripheral vascular disease", "Smoking"] },
+      ],
+    },
+    {
+      id: "history",
+      index: 2,
+      title: "Focused History",
+      subtitle: "Mechanism, timing, systemic features",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 days" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Puncture or splinter", "Human bite / clenched fist", "Animal bite", "Nail or cuticle trauma", "Spontaneous", "Post-operative"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "systemic", label: "Systemic features", options: ["None", "Fever", "Rigors", "Malaise", "Lymphangitis", "Unwell / septic"] },{ type: "checkbox", key: "prevTreatment", label: "Treatment already given", options: ["None", "Oral antibiotics", "Intravenous antibiotics", "Drainage elsewhere", "Tetanus booster"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Diabetes", "Immunosuppression", "Rheumatoid arthritis", "Intravenous drug use", "Anticoagulation", "Smoking", "Other"] },],
+    },
+    {
+      id: "exam",
+      index: 3,
+      title: "Focused Examination",
+      subtitle: "Compartment involved, collection, Kanavel signs",
+      fields: [
+        { type: "checkbox", key: "site", label: "Site involved", options: ["Nail fold", "Pulp space", "Web space", "Thenar space", "Midpalmar space", "Flexor sheath", "Joint", "Dorsum of hand"] },
+        { type: "testGrid", key: "kanavel", label: "Kanavel signs", options: ["Fusiform swelling", "Finger held flexed", "Tenderness along the sheath", "Pain on passive extension"], defaultOptions: ["Present", "Absent"] },
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Erythema", "Swelling", "Fluctuance", "Discharging wound", "Skin necrosis", "Crepitus", "Lymphangitic streaking"] },
+        { type: "testGrid", key: "neuroTests", label: "Neurovascular", options: ["Digital sensation", "Capillary refill"], defaultOptions: ["Normal", "Abnormal"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    {
+      id: "imaging",
+      index: 4,
+      title: "Imaging",
+      subtitle: "Foreign body, joint involvement, bone",
+      fields: [
+        { type: "info", title: "Essential", items: ["Radiographs for any bite or penetrating injury, to look for a retained foreign body, tooth fragment, fracture or gas.", "Ultrasound can confirm a collection where the examination is equivocal."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "Soft-tissue swelling", "Gas in soft tissues", "Foreign body", "Fracture", "Bony erosion", "Osteomyelitic change"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound \u2014 findings", options: ["Normal appearances", "Soft-tissue collection or abscess", "Fluid within the tendon sheath", "Hyperaemia", "Foreign body", "Subcutaneous oedema"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound \u2014 additional detail" },
+      ],
+    },
+    {
+      id: "differential",
+      index: 5,
+      title: "Differential Diagnosis",
+      subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Gout or pseudogout", "Inflammatory flare", "Herpetic whitlow", "Necrotising infection", "Retained foreign body", "Pyogenic granuloma", "Tumour presenting as swelling"] }],
+    },
+    {
+      id: "diagnosis",
+      index: 6,
+      title: "Diagnosis Classification",
+      subtitle: "Type, depth, organism",
+      fields: [
+        { type: "select", key: "infectionType", label: "Infection type", options: ["Paronychia", "Felon", "Cellulitis", "Web space abscess", "Deep space infection", "Flexor sheath infection", "Septic arthritis", "Bite-related infection", "Osteomyelitis"], columns: 1, noteLabel: "Infection type" },
+        { type: "select", key: "collectionPresent", label: "Collection present", options: ["Yes", "No"], columns: 2, noteLabel: "Collection" },
+        { type: "text", key: "organism", label: "Organism (if known)" },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    {
+      id: "followup",
+      index: 9,
+      title: "Standard Follow-up",
+      subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "48 hours", right: "Response to antibiotics, need for drainage" }, { left: "1 week", right: "Wound, motion, hand therapy" }, { left: "6 weeks", right: "Function, stiffness" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["48 hours", "1 week", "2 weeks", "6 weeks", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Wound check", "Response to treatment", "Review culture results", "Reassess need for surgery", "Hand therapy progress", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    {
+      id: "outcomes",
+      index: 10,
+      title: "Outcome Measures",
+      subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS" }, { left: "6 weeks", right: "VAS + range of motion" }, { left: "3 months", right: "QuickDASH" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "Pus needs drainage; antibiotics alone rarely resolve an established collection.",
+          "Elevation and early motion once controlled do as much for the final result as the antibiotic choice.",
+          "Never close a bite wound in the hand primarily.",
+          "Send a specimen before antibiotics wherever it is practical to do so.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Delay to drainage", "Diabetes or immunosuppression", "Joint or sheath involvement", "Prolonged immobilisation"] },
+      ],
+    }],
+};
+
+const inflammatoryHandData = {
+  id: "inflammatory-hand",
+  name: "Inflammatory Arthritis of the Hand & Wrist",
+  region: "hand",
+  urgentFlags: [
+    { text: "Sudden loss of active extension of one or more fingers", consider: "Assume extensor tendon rupture (Vaughan-Jackson) and refer for urgent surgical assessment; the window for direct repair is short." },
+    { text: "Hot, swollen single joint on background immunosuppression", consider: "Exclude septic arthritis; a flare and sepsis look alike and the treatments differ completely." },
+    { text: "Neck pain, occipital pain or myelopathic signs before anaesthesia", consider: "Exclude cervical spine instability; request flexion-extension views and discuss with anaesthesia before any procedure." },
+    { text: "Rapidly progressive deformity or skin breakdown over a prominence", consider: "Expedite surgical review before the tendon or skin fails." },
+  ],
+  redFlags: [
+    { text: "Poor disease control on current therapy", consider: "Liaise with rheumatology before planning surgery; operating during active synovitis gives poorer results." },
+    { text: "Caput ulnae with dorsal wrist synovitis", consider: "Consider prophylactic surgery: continued attrition over the prominent ulnar head leads to sequential extensor rupture." },
+    { text: "Deformity that is passively correctable versus fixed", consider: "The distinction changes the operation entirely \u2014 soft-tissue rebalancing versus arthrodesis or arthroplasty." },
+    { text: "Function limited by pain rather than deformity", consider: "Treat the pain; many rheumatoid deformities are well tolerated and do not need correction." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Confirm the diagnosis and disease control with rheumatology \u2192 identify synovitis, tendon involvement and deformity \u2192 establish what limits function", next: "controlQ" },
+      controlQ: {
+        type: "question",
+        title: "Is the disease medically controlled?",
+        text: "Pathway suggests establishing this first, since it determines both the results of surgery and whether surgery is the right next step.",
+        options: [
+          { label: "Yes", next: "problemQ" },
+          { label: "No", next: "rheumatologyTerminal" },
+        ],
+      },
+      rheumatologyTerminal: { type: "terminal", tone: "amber", title: "Optimise medical control first", text: "Pathway suggests referral back to rheumatology to optimise disease-modifying therapy, with splinting, hand therapy and analgesia meanwhile. Reassess for surgery once the disease is controlled, except where a tendon rupture or infection forces the issue." },
+      problemQ: {
+        type: "question",
+        title: "What is the dominant problem?",
+        text: "Pathway suggests naming the single problem that most limits this patient, rather than listing every abnormality.",
+        options: [
+          { label: "Tendon rupture", next: "tendonRuptureTerminal" },
+          { label: "Persistent synovitis", next: "synovitisTerminal" },
+          { label: "Painful destroyed joint", next: "jointQ" },
+          { label: "Deformity affecting function", next: "deformityTerminal" },
+        ],
+      },
+      tendonRuptureTerminal: { type: "terminal", tone: "red", title: "Tendon rupture", text: "Pathway suggests early surgical assessment: direct repair is rarely possible in attritional rupture, so tendon transfer or intercalary grafting is usually needed, together with removal of the underlying bony prominence and synovectomy to protect the remaining tendons." },
+      synovitisTerminal: { type: "terminal", tone: "amber", title: "Persistent synovitis", text: "Pathway suggests a corticosteroid injection and splinting alongside medical optimisation, with synovectomy and tenosynovectomy considered where synovitis persists beyond about six months of adequate therapy, particularly at the dorsal wrist where it threatens the extensor tendons." },
+      jointQ: {
+        type: "question",
+        title: "Which joint?",
+        text: "Pathway suggests separating joints where motion must be preserved from those where fusion is well tolerated.",
+        options: [
+          { label: "Wrist", next: "wristJointTerminal" },
+          { label: "MCP joints", next: "mcpTerminal" },
+          { label: "PIP or thumb", next: "pipThumbTerminal" },
+        ],
+      },
+      wristJointTerminal: { type: "terminal", tone: "amber", title: "Wrist", text: "Pathway suggests discussing partial or total wrist arthrodesis where pain and stability are the priority, and total wrist arthroplasty in a lower-demand patient who needs motion, recognising the higher revision burden. Distal ulna excision or a Sauv\u00e9-Kapandji is suggested for the painful, prominent distal ulna." },
+      mcpTerminal: { type: "terminal", tone: "amber", title: "MCP joints", text: "Pathway suggests MCP arthroplasty with soft-tissue rebalancing where ulnar drift and joint destruction limit grasp; counsel that the aim is an improved arc and appearance rather than restored power." },
+      pipThumbTerminal: { type: "terminal", tone: "amber", title: "PIP joint or thumb", text: "Pathway suggests arthrodesis for the index PIP and the thumb, where stability and pinch matter more than motion, and arthroplasty for the ulnar digits where motion matters more." },
+      deformityTerminal: { type: "terminal", tone: "amber", title: "Deformity", text: "Pathway suggests establishing whether the deformity is passively correctable: soft-tissue rebalancing can help a correctable deformity, while a fixed deformity generally needs arthrodesis or arthroplasty. Many deformities are well tolerated and need no correction at all." },
+    },
+  },
+  sections: [{
+      id: "typical",
+      index: 1,
+      title: "Typical Patient",
+      subtitle: "Known inflammatory arthropathy with hand involvement",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Symmetrical small joint pain", "Early morning stiffness over an hour", "Swelling of MCP or wrist joints", "Progressive deformity", "Loss of grip", "Difficulty with buttons and keys", "Known rheumatoid or psoriatic arthritis"] },
+        { type: "checkbox", key: "riskFactors", label: "Background", options: ["Rheumatoid arthritis", "Psoriatic arthritis", "Seronegative arthropathy", "Family history", "Smoking", "Long-term corticosteroids"] },
+      ],
+    },
+    {
+      id: "history",
+      index: 2,
+      title: "Focused History",
+      subtitle: "Disease control, therapy, function",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Pain", "Morning stiffness", "Swelling", "Weakness", "Loss of extension", "Deformity", "Numbness (nerve compression)"] },{ type: "checkbox", key: "medications", label: "Current therapy", options: ["None", "NSAIDs", "Corticosteroids", "Methotrexate", "Other DMARD", "Biologic", "JAK inhibitor"] },{ type: "select", key: "diseaseControl", label: "Disease control", options: ["Well controlled", "Partially controlled", "Active disease"], columns: 3, noteLabel: "Disease control" },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Buttons and fasteners", "Keys and jars", "Writing", "Keyboard", "Self-care", "Work tasks"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Cervical spine involvement", "Lung disease", "Diabetes", "Osteoporosis", "Previous joint surgery", "Other"] },],
+    },
+    {
+      id: "exam",
+      index: 3,
+      title: "Focused Examination",
+      subtitle: "Synovitis, tendons, deformity, nerve",
+      fields: [
+        { type: "checkbox", key: "inspection", label: "Inspection", options: ["Dorsal wrist swelling", "MCP swelling", "Ulnar drift", "Swan-neck deformity", "Boutonni\u00e8re deformity", "Caput ulnae", "Rheumatoid nodules", "Z-thumb deformity", "Skin thinning"] },
+        { type: "testGrid", key: "tendonTests", label: "Tendon integrity", options: ["EDC to each finger", "EPL", "FPL", "FDP to each finger", "FDS to each finger"], defaultOptions: ["Intact", "Ruptured"] },
+        { type: "testGrid", key: "deformityTests", label: "Deformity correctability", options: ["MCP ulnar drift", "Swan-neck", "Boutonni\u00e8re", "Wrist radial deviation"], defaultOptions: ["Correctable", "Fixed", "Not present"] },
+        { type: "testGrid", key: "nerveTests", label: "Nerve", options: ["Median nerve", "Ulnar nerve", "Posterior interosseous nerve"], defaultOptions: ["Normal", "Reduced", "Absent"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    {
+      id: "imaging",
+      index: 4,
+      title: "Imaging",
+      subtitle: "Radiographs, ultrasound",
+      fields: [
+        { type: "info", title: "Essential", items: ["Posteroanterior and lateral radiographs of the hands and wrists.", "Ultrasound is useful to confirm synovitis and tenosynovitis where examination is equivocal.", "Cervical spine flexion-extension views before any general anaesthetic in long-standing rheumatoid disease."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "Periarticular osteopenia", "Joint space narrowing", "Erosions", "Subluxation or dislocation", "Carpal collapse", "Caput ulnae", "Ankylosis", "Deformity or malalignment"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound \u2014 findings", options: ["Normal appearances", "Synovitis", "Tenosynovitis", "Power Doppler activity", "Erosions", "Tendon thinning or rupture"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound \u2014 additional detail" },
+      ],
+    },
+    {
+      id: "differential",
+      index: 5,
+      title: "Differential Diagnosis",
+      subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Osteoarthritis", "Gout or pseudogout", "Septic arthritis", "Psoriatic arthritis", "Connective tissue disease", "Haemochromatosis arthropathy", "Post-traumatic arthritis"] }],
+    },
+    {
+      id: "diagnosis",
+      index: 6,
+      title: "Diagnosis Classification",
+      subtitle: "Diagnosis, dominant problem, joints involved",
+      fields: [
+        { type: "select", key: "inflammatoryDiagnosis", label: "Diagnosis", options: ["Rheumatoid arthritis", "Psoriatic arthritis", "Seronegative arthropathy", "Undifferentiated inflammatory arthritis"], columns: 1, noteLabel: "Diagnosis" },
+        { type: "select", key: "dominantProblem", label: "Dominant problem", options: ["Synovitis", "Tendon rupture", "Joint destruction", "Deformity", "Nerve compression"], columns: 1, noteLabel: "Dominant problem" },
+        { type: "checkbox", key: "jointsInvolved", label: "Joints involved", options: ["Wrist", "DRUJ", "MCP", "PIP", "DIP", "Thumb CMC", "Thumb MCP"] },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    {
+      id: "followup",
+      index: 9,
+      title: "Standard Follow-up",
+      subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "3 months", right: "Synovitis, tendon integrity, function" }, { left: "6 months", right: "Deformity progression, surgical planning" }, { left: "12 months", right: "Function, radiographs" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["6 weeks", "3 months", "6 months", "12 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Monitor tendon integrity", "Reassess symptoms and function", "Review imaging", "Pre-operative planning", "Joint with rheumatology", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    {
+      id: "outcomes",
+      index: 10,
+      title: "Outcome Measures",
+      subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS + QuickDASH" }, { left: "6 months", right: "QuickDASH + grip" }, { left: "12 months", right: "QuickDASH" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "Check every extensor tendon individually at every visit; sequential rupture is silent until a finger drops.",
+          "A prominent, painful ulnar head with dorsal synovitis is a warning sign, not an incidental finding.",
+          "Correctable and fixed deformities need different operations.",
+          "Surgery on an uncontrolled disease disappoints; involve rheumatology first.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Active uncontrolled disease", "Fixed deformity", "Poor bone stock", "Multiple previous ruptures", "Smoking"] },
+      ],
+    }],
+};
+
+const gcttsData = {
+  id: "gctts",
+  name: "Giant Cell Tumour of Tendon Sheath",
+  region: "hand",
+  urgentFlags: [
+    { text: "Rapid growth, pain at rest or night pain", consider: "Image and consider biopsy before excision; a rapidly enlarging soft-tissue mass needs sarcoma to be excluded." },
+    { text: "Mass larger than 5 cm, or deep to the fascia", consider: "Treat as a soft-tissue mass of uncertain nature: MRI and discussion with a sarcoma service before any excision." },
+    { text: "Skin changes, ulceration or fixity to deep structures", consider: "Urgent imaging and specialist referral rather than local excision." },
+  ],
+  redFlags: [
+    { text: "Recurrence after previous excision", consider: "Re-image with MRI: recurrence usually reflects incomplete excision, satellite nodules or a diffuse rather than localised form." },
+    { text: "Diffuse rather than nodular appearance on MRI", consider: "The diffuse form behaves more aggressively and recurs more often; plan accordingly and counsel the patient." },
+    { text: "Bone erosion on radiographs", consider: "Consider the differential again, including a bone lesion presenting through the soft tissues." },
+    { text: "Numbness distal to the mass", consider: "Assess for digital nerve involvement or displacement, which changes the dissection." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Characterise the mass clinically \u2192 radiographs \u2192 ultrasound or MRI \u2192 decide between observation and excision", next: "featuresQ" },
+      featuresQ: {
+        type: "question",
+        title: "Any features of concern?",
+        text: "Pathway suggests excluding a sarcoma before treating any hand mass as benign: rapid growth, size over 5 cm, deep location, pain at rest.",
+        options: [
+          { label: "Yes", next: "concernTerminal" },
+          { label: "No", next: "symptomsQ" },
+        ],
+      },
+      concernTerminal: { type: "terminal", tone: "red", title: "Treat as a mass of uncertain nature", text: "Pathway suggests MRI and discussion with a sarcoma service before excision, rather than proceeding to local excision. An unplanned excision of a sarcoma compromises later limb-sparing surgery." },
+      symptomsQ: {
+        type: "question",
+        title: "Is the mass symptomatic or enlarging?",
+        text: "Pathway suggests this decision after imaging has confirmed the typical appearances.",
+        options: [
+          { label: "Yes", next: "typeQ" },
+          { label: "No", next: "observeTerminal" },
+        ],
+      },
+      observeTerminal: { type: "terminal", tone: "green", title: "Observation", text: "Pathway suggests observation with review where the mass is small, painless and not enlarging, explaining that it is benign and that excision is available if it becomes troublesome. Growth or new symptoms should prompt reassessment." },
+      typeQ: {
+        type: "question",
+        title: "Localised or diffuse on MRI?",
+        text: "Pathway suggests distinguishing the two forms, since they differ in recurrence risk and in what the operation involves.",
+        options: [
+          { label: "Localised (nodular)", next: "localisedTerminal" },
+          { label: "Diffuse", next: "diffuseTerminal" },
+        ],
+      },
+      localisedTerminal: { type: "terminal", tone: "amber", title: "Localised \u2014 marginal excision", text: "Pathway suggests marginal excision with loupe magnification through an approach that exposes the whole lesion, tracing and removing satellite nodules, and protecting the digital nerves, which are often displaced over the mass rather than within it. Inspect the joint and sheath, send the specimen for histology, and counsel that recurrence occurs in a minority of cases, usually from incomplete excision." },
+      diffuseTerminal: { type: "terminal", tone: "red", title: "Diffuse \u2014 planned complete excision", text: "Pathway suggests a planned, more extensive excision with careful assessment of joint and sheath involvement, accepting a higher recurrence rate than the localised form. Counsel the patient about recurrence and about the possibility of further surgery, and arrange longer follow-up." },
+    },
+  },
+  sections: [{
+      id: "typical",
+      index: 1,
+      title: "Typical Patient",
+      subtitle: "Slowly growing, painless nodule on a digit",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Adult, commonly 30\u201350 years", "Firm painless nodule", "Volar or lateral aspect of a digit", "Slowly enlarging over months to years", "Does not transilluminate", "Restricting a ring or glove", "Occasional catching with motion"] },
+        { type: "checkbox", key: "riskFactors", label: "Background", options: ["Previous excision at the same site", "No known risk factors"] },
+      ],
+    },
+    {
+      id: "history",
+      index: 2,
+      title: "Focused History",
+      subtitle: "Growth, symptoms, previous excision",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Painless lump", "Pain", "Catching or triggering", "Numbness distal to the lump", "Cosmetic concern", "Interfering with grip"] },{ type: "select", key: "growthRate", label: "Growth", options: ["Not changing", "Slowly enlarging", "Rapidly enlarging"], columns: 3, noteLabel: "Growth" },{ type: "select", key: "previousExcision", label: "Previous excision at this site", options: ["No", "Yes"], columns: 2 },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Grip", "Fine manipulation", "Wearing rings or gloves", "Work tasks", "None"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Diabetes", "Anticoagulation", "Previous malignancy", "Smoking", "Other"] },],
+    },
+    {
+      id: "exam",
+      index: 3,
+      title: "Focused Examination",
+      subtitle: "Mass characteristics and neurovascular status",
+      fields: [
+        { type: "select", key: "massSite", label: "Site", options: ["Volar digit", "Lateral digit", "Dorsal digit", "Palm", "Wrist", "Other"], columns: 3 },
+        { type: "select", key: "massDigit", label: "Digit", options: ["Thumb", "Index", "Middle", "Ring", "Little", "Not applicable"], columns: 3 },
+        { type: "number", key: "massSize", label: "Size", suffix: "mm" },
+        { type: "testGrid", key: "massCharacter", label: "Mass characteristics", options: ["Firm", "Mobile", "Fixed to deep tissue", "Transilluminates", "Tender", "Moves with the tendon"], defaultOptions: ["Present", "Absent"] },
+        { type: "testGrid", key: "neuroTests", label: "Neurovascular", options: ["Digital sensation radial side", "Digital sensation ulnar side", "Capillary refill"], defaultOptions: ["Normal", "Abnormal"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    {
+      id: "imaging",
+      index: 4,
+      title: "Imaging",
+      subtitle: "Radiographs and MRI",
+      fields: [
+        { type: "info", title: "Essential", items: ["Radiographs to look for bony erosion and to exclude a bony lesion.", "MRI where the diagnosis is not clear-cut, to distinguish localised from diffuse disease and to plan the approach; the lesion characteristically shows low signal on both T1 and T2 with blooming on gradient echo, from haemosiderin."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "Soft-tissue shadow", "Bony scalloping or erosion", "Underlying degenerative change", "No calcification"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "ultrasoundCommon", label: "Ultrasound \u2014 findings", options: ["Normal appearances", "Solid hypoechoic nodule", "Internal vascularity on Doppler", "Relation to the tendon sheath", "Not cystic"] },
+        { type: "text", key: "ultrasoundFinding", label: "Ultrasound \u2014 additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI \u2014 findings", options: ["Normal appearances", "Low signal on T1 and T2", "Blooming on gradient echo", "Localised nodular lesion", "Diffuse lesion", "Bone erosion", "Joint involvement", "Relation to neurovascular bundle"] },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 additional detail" },
+      ],
+    },
+    {
+      id: "differential",
+      index: 5,
+      title: "Differential Diagnosis",
+      subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Ganglion cyst", "Epidermal inclusion cyst", "Fibroma of tendon sheath", "Glomus tumour", "Lipoma", "Foreign body granuloma", "Soft-tissue sarcoma", "Rheumatoid nodule"] }],
+    },
+    {
+      id: "diagnosis",
+      index: 6,
+      title: "Diagnosis Classification",
+      subtitle: "Form, presentation, histology",
+      fields: [
+        { type: "select", key: "gcttsForm", label: "Form", options: ["Localised (nodular)", "Diffuse"], columns: 2, noteLabel: "Form" },
+        { type: "select", key: "gcttsPresentation", label: "Presentation", options: ["First presentation", "Recurrent"], columns: 2, noteLabel: "Presentation" },
+        { type: "select", key: "gcttsHistology", label: "Histology", options: ["Awaiting", "Confirmed giant cell tumour of tendon sheath", "Other diagnosis"], columns: 1, noteLabel: "Histology" },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    {
+      id: "followup",
+      index: 9,
+      title: "Standard Follow-up",
+      subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "2 weeks", right: "Wound, histology" }, { left: "3 months", right: "Motion, sensation, recurrence" }, { left: "12 months", right: "Recurrence" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["2 weeks", "6 weeks", "3 months", "12 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Wound check", "Review histology", "Monitor for recurrence", "Reassess symptoms and function", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    {
+      id: "outcomes",
+      index: 10,
+      title: "Outcome Measures",
+      subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS" }, { left: "3 months", right: "QuickDASH + motion" }, { left: "12 months", right: "QuickDASH + recurrence" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "The commonest solid soft-tissue tumour of the hand after the ganglion; it does not transilluminate, which separates it from a ganglion at the bedside.",
+          "Low signal on both T1 and T2 with blooming on gradient echo is characteristic, from haemosiderin within the lesion.",
+          "Digital nerves are usually displaced over the lesion rather than within it \u2014 find and protect them before dissecting.",
+          "Look for satellite nodules; leaving one behind is the usual reason for recurrence.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Diffuse form", "Incomplete excision", "Joint involvement", "Previous recurrence"] },
+      ],
+    }],
+};
+
+const enchondromaData = {
+  id: "enchondroma",
+  name: "Enchondroma of the Hand",
+  region: "hand",
+  urgentFlags: [
+    { text: "Pain at rest or at night without a fracture", consider: "A cartilage lesion that hurts without fracture is suspicious: image further and discuss with a sarcoma service before any curettage." },
+    { text: "Cortical destruction, periosteal reaction or an associated soft-tissue mass", consider: "Treat as a possible chondrosarcoma; refer before biopsy so that the biopsy track can be planned." },
+    { text: "Rapid growth of a previously stable lesion", consider: "Urgent imaging and specialist referral." },
+    { text: "Multiple enchondromas", consider: "Consider Ollier disease or Maffucci syndrome, which carry a real risk of malignant transformation and need lifelong surveillance." },
+  ],
+  redFlags: [
+    { text: "Lesion in a proximal long bone rather than a small tubular bone of the hand", consider: "The threshold for suspecting chondrosarcoma is much lower outside the hand; refer rather than treat locally." },
+    { text: "Recurrence after curettage", consider: "Re-image and reconsider the diagnosis; recurrence of a benign enchondroma is uncommon." },
+    { text: "Pathological fracture through a large lesion", consider: "Plan whether to treat the fracture first and the lesion later, which is usually the more reliable sequence." },
+    { text: "Incidental lesion with no symptoms", consider: "Observation with interval radiographs is reasonable; intervention is not required simply because the lesion exists." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Radiographs in two planes \u2192 assess for features suggesting malignancy \u2192 determine whether there is a fracture \u2192 decide between observation and surgery", next: "suspiciousQ" },
+      suspiciousQ: {
+        type: "question",
+        title: "Any features suggesting malignancy?",
+        text: "Pathway suggests looking specifically for rest pain without fracture, cortical destruction, periosteal reaction or a soft-tissue mass.",
+        options: [
+          { label: "Yes", next: "sarcomaTerminal" },
+          { label: "No", next: "fractureQ" },
+        ],
+      },
+      sarcomaTerminal: { type: "terminal", tone: "red", title: "Refer before biopsy", text: "Pathway suggests cross-sectional imaging and referral to a sarcoma service before any biopsy or curettage, so that the biopsy is planned by the team who would perform definitive surgery. An unplanned procedure through a chondrosarcoma compromises later limb-sparing surgery." },
+      fractureQ: {
+        type: "question",
+        title: "Is there a pathological fracture?",
+        text: "Pathway suggests separating the fracture from the lesion, since they are usually best treated in sequence.",
+        options: [
+          { label: "Yes", next: "fractureTerminal" },
+          { label: "No", next: "symptomaticQ" },
+        ],
+      },
+      fractureTerminal: { type: "terminal", tone: "amber", title: "Treat the fracture first", text: "Pathway suggests allowing the fracture to unite, usually with splinting, before addressing the lesion. Union through an enchondroma is generally reliable, and curettage of a healed lesion is more straightforward than operating acutely. Immediate curettage and grafting with fixation is reserved for unstable or displaced fractures." },
+      symptomaticQ: {
+        type: "question",
+        title: "Symptomatic or structurally significant?",
+        text: "Pathway suggests treating the patient rather than the radiograph.",
+        options: [
+          { label: "No \u2014 incidental, asymptomatic", next: "observeTerminal" },
+          { label: "Yes \u2014 painful, expansile or at risk of fracture", next: "curettageTerminal" },
+        ],
+      },
+      observeTerminal: { type: "terminal", tone: "green", title: "Observation", text: "Pathway suggests explanation and observation with interval radiographs, reserving intervention for pain, growth or fracture. Many enchondromas are found incidentally and never need treatment." },
+      curettageTerminal: { type: "terminal", tone: "amber", title: "Curettage and grafting", text: "Pathway suggests thorough curettage through an adequate cortical window with bone grafting or a substitute, sending tissue for histology in every case. Counsel about the small risk of fracture through the window during healing, and confirm union radiographically before unrestricted use." },
+    },
+  },
+  sections: [{
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Incidental lucent lesion, or a fracture through a trivial injury",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Found incidentally on a radiograph", "Pathological fracture after minor trauma", "Painless swelling of a digit", "Age 20\u201350", "Proximal phalanx or metacarpal", "Asymptomatic"] },
+        { type: "checkbox", key: "riskFactors", label: "Background", options: ["Single lesion", "Multiple lesions (Ollier disease)", "Multiple lesions with haemangiomas (Maffucci syndrome)", "Family history", "No known risk factors"] },
+      ],
+    },
+    { id: "history", index: 2, title: "Focused History", subtitle: "Pain pattern, trauma, growth",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms" },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["No symptoms", "Pain with use", "Pain at rest", "Night pain", "Swelling", "Deformity", "Pain after minor injury"] },{ type: "select", key: "fracturePresent", label: "Pathological fracture", options: ["No", "Yes"], columns: 2, noteLabel: "Pathological fracture" },{ type: "select", key: "growthRate", label: "Change over time", options: ["Not changing", "Slowly enlarging", "Rapidly enlarging", "Unknown"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["None", "Splinting", "Previous curettage", "Previous fixation"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Previous malignancy", "Ollier disease", "Maffucci syndrome", "Smoking", "Other"] },],
+    },
+    { id: "exam", index: 3, title: "Focused Examination", subtitle: "Local findings and other lesions",
+      fields: [
+        { type: "select", key: "lesionBone", label: "Bone involved", options: ["Proximal phalanx", "Middle phalanx", "Distal phalanx", "Metacarpal", "Carpus"], columns: 2 },
+        { type: "select", key: "lesionDigit", label: "Digit", options: ["Thumb", "Index", "Middle", "Ring", "Little", "Not applicable"], columns: 3 },
+        { type: "testGrid", key: "examTests", label: "Examination", options: ["Local swelling", "Tenderness", "Deformity", "Reduced range of motion", "Soft-tissue mass", "Other lesions elsewhere"], defaultOptions: ["Present", "Absent"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    { id: "imaging", index: 4, title: "Imaging", subtitle: "Radiographs, with cross-sectional imaging where atypical",
+      fields: [
+        { type: "info", title: "Essential", items: ["Radiographs in two planes are usually diagnostic: a well-defined lucent lesion with endosteal scalloping and stippled or ring-and-arc calcification.", "MRI or CT where the appearances are atypical, the cortex is breached, or there is a soft-tissue component.", "In multiple lesions, a skeletal survey and long-term surveillance are advised."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Well-defined lucent lesion", "Endosteal scalloping", "Stippled calcification", "Cortical thinning", "Cortical expansion", "Pathological fracture", "Cortical destruction", "Periosteal reaction", "Multiple lesions"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI \u2014 findings", options: ["Normal appearances", "Lobulated cartilage signal", "Cortical breach", "Soft-tissue mass", "Marrow oedema", "Multiple lesions"] },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 additional detail" },
+      ],
+    },
+    { id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Conditions actively excluded",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Chondrosarcoma", "Unicameral bone cyst", "Aneurysmal bone cyst", "Giant cell tumour of bone", "Epidermoid inclusion cyst of bone", "Osteomyelitis", "Metastasis", "Fibrous dysplasia"] }],
+    },
+    { id: "diagnosis", index: 6, title: "Diagnosis Classification", subtitle: "Number, site, fracture, histology",
+      fields: [
+        { type: "select", key: "enchondromaNumber", label: "Number of lesions", options: ["Solitary", "Multiple (Ollier disease)", "Multiple with haemangiomas (Maffucci syndrome)"], columns: 1, noteLabel: "Lesions" },
+        { type: "select", key: "enchondromaStatus", label: "Status", options: ["Incidental", "Symptomatic", "Pathological fracture", "Recurrent"], columns: 2, noteLabel: "Status" },
+        { type: "select", key: "enchondromaHistology", label: "Histology", options: ["Not obtained", "Awaiting", "Confirmed enchondroma", "Other diagnosis"], columns: 2, noteLabel: "Histology" },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    { id: "followup", index: 9, title: "Standard Follow-up", subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Fracture union, symptoms" }, { left: "3 months", right: "Graft incorporation, function" }, { left: "12 months", right: "Radiographic healing, recurrence" }, { left: "Annual (multiple lesions)", right: "Surveillance for transformation" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["2 weeks", "6 weeks", "3 months", "12 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Monitor lesion", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    { id: "outcomes", index: 10, title: "Outcome Measures", subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS" }, { left: "3 months", right: "QuickDASH + motion" }, { left: "12 months", right: "QuickDASH + radiographs" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "In the small bones of the hand a cartilage lesion is usually benign; the same appearance in a proximal long bone is treated with much more suspicion.",
+          "Pain at rest without a fracture is the finding that should stop you.",
+          "Let a pathological fracture unite first; curettage of a healed lesion is easier and more reliable.",
+          "Send tissue for histology every time, even when the radiograph looks classic.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Unrecognised chondrosarcoma", "Large lesion with extensive cortical thinning", "Fracture through a curettage window", "Multiple lesions"] },
+      ],
+    }],
+};
+
+const amputationReplantData = {
+  id: "amputation-replantation",
+  name: "Traumatic Amputation & Replantation",
+  region: "hand",
+  urgentFlags: [
+    { text: "Amputation proximal to the wrist, or multiple digits", consider: "Time-critical: contact the replantation service immediately, resuscitate the patient first, and start the ischaemia clock. Muscle in a major limb part tolerates only a few hours of warm ischaemia." },
+    { text: "Ongoing bleeding", consider: "Direct pressure and elevation; a tourniquet only where pressure fails. Avoid blind clamping, which damages vessels needed for replantation." },
+    { text: "Amputated part not correctly preserved", consider: "Wrap in saline-moistened gauze, seal in a bag, and place that bag on ice. The part must never sit directly on ice or in water." },
+    { text: "Amputation in a child", consider: "Discuss with the replantation service whatever the level: children have better functional recovery and wider indications." },
+    { text: "Thumb amputation", consider: "Discuss replantation in every case: the thumb accounts for much of hand function and even a stiff replanted thumb is usually worth more than a revision amputation." },
+  ],
+  redFlags: [
+    { text: "Crush or avulsion mechanism, or multi-level injury", consider: "These are relative contraindications to replantation and predict poorer survival; discuss rather than assume, but counsel realistically." },
+    { text: "Prolonged warm ischaemia", consider: "Recalculate the ischaemia time before committing; digits tolerate longer than parts containing muscle." },
+    { text: "Significant comorbidity, heavy smoking or vascular disease", consider: "Weigh survival of the replant against the patient's overall recovery; revision amputation may return function sooner." },
+    { text: "Self-inflicted injury or psychiatric illness", consider: "Involve psychiatry early; this changes consent, rehabilitation and the decision itself." },
+    { text: "Replant failing at 24\u201372 hours", consider: "Assess for venous congestion or arterial insufficiency; early re-exploration or leech therapy may salvage it." },
+  ],
+  pathway: {
+    start: "initial",
+    nodes: {
+      initial: { type: "info", title: "Initial Assessment", text: "Resuscitate the patient \u2192 control bleeding \u2192 preserve the part correctly \u2192 record the ischaemia time and mechanism \u2192 contact the replantation service", next: "levelQ" },
+      levelQ: {
+        type: "question",
+        title: "Level and number of parts?",
+        text: "Pathway suggests establishing this first, since it determines urgency and whether replantation is usually indicated.",
+        options: [
+          { label: "Thumb", next: "indicatedTerminal" },
+          { label: "Multiple digits", next: "indicatedTerminal" },
+          { label: "Hand, wrist or more proximal", next: "majorTerminal" },
+          { label: "Any level in a child", next: "indicatedTerminal" },
+          { label: "Single digit", next: "singleDigitQ" },
+        ],
+      },
+      indicatedTerminal: { type: "terminal", tone: "red", title: "Replantation usually indicated", text: "Pathway suggests urgent transfer to a replantation service. Preserve the part in saline-moistened gauze in a sealed bag on ice, keep the patient fasted, give antibiotics and tetanus cover, and record the time of injury so the ischaemia time is known on arrival." },
+      majorTerminal: { type: "terminal", tone: "red", title: "Major limb amputation \u2014 life before limb", text: "Pathway suggests treating this as major trauma: resuscitate, control haemorrhage and exclude other injuries before considering the limb. Warm ischaemia tolerance is short where muscle is involved, so transfer must not wait. Cool the part and record the time of injury." },
+      singleDigitQ: {
+        type: "question",
+        title: "Single digit \u2014 level relative to the FDS insertion?",
+        text: "Pathway suggests this distinction, since a replant distal to the FDS insertion usually gives a better functional result than one proximal to it.",
+        options: [
+          { label: "Distal to FDS insertion", next: "distalTerminal" },
+          { label: "Proximal to FDS insertion", next: "proximalTerminal" },
+        ],
+      },
+      distalTerminal: { type: "terminal", tone: "amber", title: "Distal single digit", text: "Pathway suggests discussing replantation, which is reasonable at this level and gives good motion when successful. Weigh mechanism, contamination, ischaemia time, occupation and the patient's wishes. Revision amputation returns the patient to work sooner and remains a legitimate choice." },
+      proximalTerminal: { type: "terminal", tone: "amber", title: "Proximal single digit", text: "Pathway suggests careful counselling: a single digit replanted proximal to the FDS insertion, other than the thumb, often ends stiff and can impair overall hand function. Revision amputation is frequently the better functional choice, though patient priorities and occupation matter." },
+    },
+  },
+  sections: [{
+      id: "typical", index: 1, title: "Typical Patient", subtitle: "Acute traumatic amputation, or review after replantation",
+      fields: [
+        { type: "checkbox", key: "typicalPresentation", label: "Presentation", options: ["Acute amputation", "Review after replantation", "Review after revision amputation", "Industrial or machinery injury", "Saw or blade injury", "Crush or degloving"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors", options: ["Machinery at work", "Smoking", "Diabetes", "Peripheral vascular disease", "Anticoagulation", "Psychiatric illness"] },
+      ],
+    },
+    { id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, timing, part preservation",
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left"], columns: 2 },{ type: "select", key: "dominantHand", label: "Dominant side", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Time since injury or surgery" },{ type: "vas", key: "vas" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Guillotine / sharp", "Crush", "Avulsion", "Degloving", "Blast", "Bite"], columns: 2 },{ type: "text", key: "injuryTime", label: "Time of injury" },{ type: "select", key: "partPreservation", label: "Part preservation", options: ["Correctly cooled", "Not cooled", "On ice directly", "In water", "Part not retrieved"], columns: 1, noteLabel: "Part preservation" },{ type: "number", key: "ischaemiaHours", label: "Ischaemia time", suffix: "hours" },{ type: "checkbox", key: "symptoms", label: "Associated injuries", options: ["None", "Other hand injuries", "Other limb injuries", "Head or torso injury", "Contamination"] },{ type: "checkbox", key: "prevTreatment", label: "Treatment given", options: ["None", "Pressure dressing", "Tourniquet", "Antibiotics", "Tetanus booster", "Analgesia"] },{ type: "checkbox", key: "medHistory", label: "Relevant medical history", options: ["None", "Diabetes", "Smoking", "Peripheral vascular disease", "Anticoagulation", "Psychiatric illness", "Other"] },],
+    },
+    { id: "exam", index: 3, title: "Focused Examination", subtitle: "Stump, part viability, associated injury",
+      fields: [
+        { type: "select", key: "amputationLevel", label: "Level", options: ["Fingertip (distal to nail fold)", "Distal phalanx", "Middle phalanx / distal to FDS", "Proximal to FDS insertion", "Through metacarpal", "Through carpus or wrist", "Proximal to wrist"], columns: 1, noteLabel: "Amputation level" },
+        { type: "checkbox", key: "digitsInvolved", label: "Digits involved", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },
+        { type: "testGrid", key: "stumpExam", label: "Stump", options: ["Bleeding controlled", "Contamination", "Crush zone extending proximally", "Bone exposed", "Viable skin edges"], defaultOptions: ["Present", "Absent"] },
+        { type: "testGrid", key: "partExam", label: "Amputated part", options: ["Clean transection", "Ribbon sign along the vessels", "Red line sign", "Severe crush", "Part not available"], defaultOptions: ["Present", "Absent"] },
+        { type: "text", key: "examFindings", label: "Additional examination detail" },
+      ],
+    },
+    { id: "imaging", index: 4, title: "Imaging", subtitle: "Radiographs of stump and part",
+      fields: [
+        { type: "info", title: "Essential", items: ["Radiographs of both the stump and the amputated part, to define the bony level and plan shortening or fixation.", "Do not delay transfer for imaging where replantation is indicated."] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Clean bony transection", "Comminution", "Multi-level injury", "Foreign body", "Associated fracture", "Joint involvement"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+      ],
+    },
+    { id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Related injuries to consider",
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Incomplete amputation with vascular compromise", "Degloving without bone loss", "Ring avulsion injury", "Fingertip injury without bone loss", "Crush injury with compartment syndrome"] }],
+    },
+    { id: "diagnosis", index: 6, title: "Diagnosis Classification", subtitle: "Level, mechanism, decision",
+      fields: [
+        { type: "select", key: "amputationType", label: "Type", options: ["Complete amputation", "Incomplete amputation with vascular compromise", "Ring avulsion injury"], columns: 1, noteLabel: "Amputation type" },
+        { type: "select", key: "replantDecision", label: "Decision", options: ["Replantation attempted", "Revision amputation", "Referred for replantation", "Not suitable for replantation"], columns: 1, noteLabel: "Decision" },
+        { type: "text", key: "decisionRationale", label: "Rationale for the decision" },
+      ],
+    },
+    { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Urgent red flags + reassessment triggers \u2014 also pinned via header button", fields: [{ type: "redflag", key: "urgentFlagsChecked" }, { type: "redflag", key: "redFlagsChecked" }] },
+    { id: "pathway", index: 8, title: "Management Pathway", subtitle: "Branching decision support" },
+    { id: "followup", index: 9, title: "Standard Follow-up", subtitle: "Review schedule",
+      fields: [{ type: "table", rows: [{ left: "24\u201372 hours", right: "Replant perfusion, congestion" }, { left: "2 weeks", right: "Wound, sutures, start therapy" }, { left: "6 weeks", right: "Bony union, motion" }, { left: "3\u201312 months", right: "Sensation, function, return to work, neuroma" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["48 hours", "2 weeks", "6 weeks", "3 months", "Other"], columns: 2 },
+        { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [{ type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" }] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Wound or healing check", "Pre-operative planning", "Other"] },
+        { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [{ type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" }] }],
+    },
+    { id: "outcomes", index: 10, title: "Outcome Measures", subtitle: "Scores and clinical pearls",
+      fields: [
+        { type: "table", rows: [{ left: "Initial", right: "VAS" }, { left: "3 months", right: "QuickDASH + motion" }, { left: "12 months", right: "QuickDASH + sensation + return to work" }] },
+        { type: "info", title: "Clinical pearls", items: [
+          "Thumb, multiple digits, hand-level and any amputation in a child are the classic indications to discuss replantation.",
+          "Preserve the part in saline-moistened gauze, in a sealed bag, on ice \u2014 never directly on ice and never in water.",
+          "A single digit replanted proximal to the FDS insertion often ends stiff and can make the hand worse.",
+          "Record the time of injury; the ischaemia clock drives every subsequent decision.",
+          "Smoking after replantation threatens survival of the part \u2014 say so explicitly.",
+        ] },
+        { type: "info", title: "Predictors of poor outcome", items: ["Crush or avulsion mechanism", "Prolonged warm ischaemia", "Multi-level injury", "Smoking", "Delayed presentation"] },
+      ],
+    }],
+};
+
 const glomusTumourData = {
   id: "glomus-tumour",
   name: "Glomus Tumour",
@@ -13029,9 +14724,39 @@ const generalHandData = {
 };
 
 const REGIONS = {
-  shoulder: { label: "Shoulder", conditions: [rotatorCuffData, sapsData, adhesiveCapsulitisData, instabilityData, bicepsData, acJointData, gleroarthritisData, avnData, calcificTendinitisData, proximalHumerusFxData, scapularDyskinesisData, slapData, pecMajorRuptureData, clavicleFxData, parsonageTurnerData] },
-  elbow: { label: "Elbow", conditions: [distalHumerusFxData, lateralEpicondylopathyData, medialEpicondylopathyData, distalBicepsRuptureData, elbowOAData, distalTricepsRuptureData, radialHeadFxData, coronoidTerribleTriadData, elbowInstabilityData, elbowStiffnessData, athleticElbowData, olecranonFxData, olecranonBursitisData] },
-  wrist: { label: "Wrist", conditions: [deQuervainData, thumbCMCOAData, wristOAData, tfccInjuryData, scapholunateInjuryData, kienbockDiseaseData, ulnarImpactionData, wristGanglionData, intersectionSyndromeData, ecuTendinopathyData, drujInstabilityData] },
+  // Every region is grouped the way a clinic list is thought about - tendon,
+  // instability, degenerative, trauma - so a diagnosis is found by category
+  // rather than by scanning one long alphabetical list.
+  shoulder: {
+    label: "Shoulder",
+    subsections: [
+      { id: "shoulder-tendon", label: "Tendon & Cuff", conditions: [rotatorCuffData, sapsData, calcificTendinitisData, bicepsData, pecMajorRuptureData] },
+      { id: "shoulder-instability", label: "Instability & Labrum", conditions: [instabilityData, slapData] },
+      { id: "shoulder-stiffness", label: "Stiffness & Joint Disease", conditions: [adhesiveCapsulitisData, gleroarthritisData, acJointData, avnData] },
+      { id: "shoulder-arthroplasty", label: "Arthroplasty Review", conditions: [shoulderArthroplastyReviewData] },
+      { id: "shoulder-trauma", label: "Trauma", conditions: [proximalHumerusFxData, clavicleFxData, scJointData] },
+      { id: "shoulder-other", label: "Scapular & Neurological", conditions: [scapularDyskinesisData, parsonageTurnerData] },
+    ],
+  },
+  elbow: {
+    label: "Elbow",
+    subsections: [
+      { id: "elbow-tendon", label: "Tendon", conditions: [lateralEpicondylopathyData, medialEpicondylopathyData, distalBicepsRuptureData, distalTricepsRuptureData] },
+      { id: "elbow-trauma", label: "Trauma", conditions: [distalHumerusFxData, radialHeadFxData, olecranonFxData, coronoidTerribleTriadData] },
+      { id: "elbow-instability", label: "Instability & Articular", conditions: [elbowInstabilityData, elbowUCLData, athleticElbowData] },
+      { id: "elbow-degenerative", label: "Stiffness & Joint Disease", conditions: [elbowOAData, elbowStiffnessData, olecranonBursitisData] },
+      { id: "elbow-arthroplasty", label: "Arthroplasty Review", conditions: [elbowArthroplastyReviewData] },
+    ],
+  },
+  wrist: {
+    label: "Wrist",
+    subsections: [
+      { id: "wrist-tendon", label: "Tendon", conditions: [deQuervainData, intersectionSyndromeData, ecuTendinopathyData] },
+      { id: "wrist-instability", label: "Instability & Ulnar-sided", conditions: [scapholunateInjuryData, ltInstabilityData, drujInstabilityData, tfccInjuryData, ulnarImpactionData] },
+      { id: "wrist-degenerative", label: "Joint Disease & Osteonecrosis", conditions: [wristOAData, thumbCMCOAData, sttArthritisData, kienbockDiseaseData] },
+      { id: "wrist-masses", label: "Masses", conditions: [wristGanglionData, carpalBossData] },
+    ],
+  },
   // Hand is organized into subsections rather than one flat list, since the
   // remaining condition set still spans distinct clinical categories
   // (general hand pathology and acute hand/wrist trauma). Peripheral Nerve
@@ -13041,11 +14766,22 @@ const REGIONS = {
   hand: {
     label: "Hand",
     subsections: [
-      { id: "general-hand", label: "General Hand", conditions: [triggerFingerData, dupuytrenDiseaseData, malletFingerData, jerseyFingerData, sagittalBandInjuryData, extensorTendonInjuriesData, boutonniereDeformityData, pipDislocationData, handOAData, flexorTenosynovitisData, glomusTumourData] },
-      { id: "hand-wrist-trauma", label: "Hand & Wrist Trauma", conditions: [distalRadiusFxData, scaphoidFxData, thumbUCLInjuryData, metacarpalFxData, phalangealFxData, bennettRolandoFxData, perilunateInjuryData, hookOfHamateFxData, fingertipInjuryData, tendonLacerationData] },
+      { id: "hand-tendon", label: "Tendon & Contracture", conditions: [triggerFingerData, dupuytrenDiseaseData, malletFingerData, jerseyFingerData, sagittalBandInjuryData, extensorTendonInjuriesData, boutonniereDeformityData, tendonLacerationData] },
+      { id: "hand-joint", label: "Joint & Ligament", conditions: [pipDislocationData, handOAData, thumbUCLInjuryData] },
+      { id: "hand-trauma", label: "Fractures & Trauma", conditions: [distalRadiusFxData, scaphoidFxData, metacarpalFxData, phalangealFxData, bennettRolandoFxData, perilunateInjuryData, hookOfHamateFxData, fingertipInjuryData, amputationReplantData] },
+      { id: "hand-masses-infection", label: "Masses & Infection", conditions: [glomusTumourData, gcttsData, enchondromaData, flexorTenosynovitisData, handInfectionData] },
+      { id: "hand-pain-inflammatory", label: "Pain & Inflammatory", conditions: [crpsData, inflammatoryHandData] },
     ],
   },
-  peripheralNerve: { label: "Peripheral Nerve", conditions: [carpalTunnelSyndromeData, cubitalTunnelData, lacertusSyndromeData, guyonsCanalSyndromeData, radialTunnelSyndromeData, pinSyndromeData, ainSyndromeData, wartenbergSyndromeData, doubleCrushSyndromeData, suprascapularNeuropathyData, thoracicOutletSyndromeData] },
+  peripheralNerve: {
+    label: "Peripheral Nerve",
+    subsections: [
+      { id: "nerve-median", label: "Median Nerve", conditions: [carpalTunnelSyndromeData, lacertusSyndromeData, ainSyndromeData] },
+      { id: "nerve-ulnar", label: "Ulnar Nerve", conditions: [cubitalTunnelData, guyonsCanalSyndromeData] },
+      { id: "nerve-radial", label: "Radial Nerve", conditions: [radialTunnelSyndromeData, pinSyndromeData, wartenbergSyndromeData] },
+      { id: "nerve-proximal", label: "Proximal & Multi-level", conditions: [suprascapularNeuropathyData, thoracicOutletSyndromeData, doubleCrushSyndromeData] },
+    ],
+  },
 };
 
 // Returns a flat array of every condition in a region, whether that region
@@ -13097,7 +14833,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.17.0";
+const APP_VERSION = "5.21.0";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -13608,6 +15344,19 @@ const RELATED_CONDITIONS = {
   "radial-head-fracture": ["elbow-osteoarthritis", "coronoid-terrible-triad", "elbow-instability", "elbow-stiffness"],
   "coronoid-terrible-triad": ["radial-head-fracture", "elbow-osteoarthritis", "elbow-instability", "elbow-stiffness"],
   "distal-humerus-fracture": ["olecranon-fracture", "radial-head-fracture", "coronoid-terrible-triad", "elbow-stiffness"],
+  "crps": ["distal-radius-fracture", "carpal-tunnel-syndrome", "elbow-stiffness"],
+  "hand-infection": ["flexor-tenosynovitis", "fingertip-injury", "hand-osteoarthritis"],
+  "inflammatory-hand": ["hand-osteoarthritis", "carpal-tunnel-syndrome", "wrist-osteoarthritis"],
+  "elbow-ucl-injury": ["athletic-elbow-ocd-veo", "cubital-tunnel-syndrome", "medial-epicondylopathy", "elbow-instability"],
+  "sc-joint": ["clavicle-fracture", "ac-joint"],
+  "gctts": ["glomus-tumour", "wrist-ganglion", "trigger-finger"],
+  "stt-arthritis": ["thumb-cmc-oa", "wrist-osteoarthritis", "de-quervain"],
+  "lt-instability": ["tfcc-injury", "ulnar-impaction", "druj-instability"],
+  "carpal-boss": ["wrist-ganglion", "wrist-osteoarthritis"],
+  "enchondroma": ["phalangeal-fracture", "metacarpal-fracture", "gctts"],
+  "amputation-replantation": ["fingertip-injury", "tendon-laceration", "crps"],
+  "shoulder-arthroplasty-review": ["glenohumeral-osteoarthritis", "rotator-cuff", "proximal-humerus-fracture"],
+  "elbow-arthroplasty-review": ["elbow-osteoarthritis", "distal-humerus-fracture", "elbow-stiffness"],
   "elbow-instability": ["coronoid-terrible-triad", "radial-head-fracture", "elbow-osteoarthritis", "elbow-stiffness", "athletic-elbow-ocd-veo"],
   "elbow-stiffness": ["elbow-osteoarthritis", "coronoid-terrible-triad", "radial-head-fracture", "elbow-instability"],
   "athletic-elbow-ocd-veo": ["medial-epicondylopathy", "cubital-tunnel-syndrome", "elbow-instability"],
@@ -15952,7 +17701,14 @@ function buildImpression(condition, state) {
   const clauses = impressionClausesFor(dx, state);
   const side = sideWord(state);
   const joined = clauses.length ? joinClausesLower(clauses).replace(/;\s+(involving\b)/g, " $1") : null;
-  const body = joined ? `Clinical impression: ${side ? `${side} side \u2014 ` : ""}${joined}` : null;
+  // Every note states the working diagnosis, with the classification detail
+  // appended when it has been recorded. Previously the impression appeared
+  // only once a diagnosis field was filled, so a note could carry the
+  // diagnosis in its title alone.
+  const dxName = `${side ? `${side} ` : ""}${lowerFirst(condition.name)}`;
+  const body = joined
+    ? `Clinical impression: ${side ? `${side} side \u2014 ` : ""}${joined}`
+    : `Clinical impression: ${dxName}.`;
   if (generalContext && body) return `${generalContext}\n${body}`;
   return generalContext || body;
 }
@@ -16032,6 +17788,19 @@ const SURGICAL_OPTIONS_BY_CONDITION = {
   // Hand - General
   "trigger-finger": ["Open A1 pulley release", "Percutaneous A1 pulley release"],
   "dupuytren-disease": ["Limited/regional fasciectomy", "Dermofasciectomy", "Percutaneous needle aponeurotomy", "Collagenase injection (enzymatic fasciotomy)"],
+  "stt-arthritis": ["Distal scaphoid excision", "STT arthrodesis", "Interposition arthroplasty", "Trapeziectomy with distal scaphoid excision", "Image-guided injection"],
+  "lt-instability": ["Arthroscopic debridement", "Lunotriquetral ligament repair", "Lunotriquetral ligament reconstruction", "Lunotriquetral arthrodesis", "Ulnar shortening osteotomy"],
+  "carpal-boss": ["Excision of carpal boss", "Excision with carpometacarpal arthrodesis", "Image-guided injection"],
+  "enchondroma": ["Curettage and bone grafting", "Curettage with bone substitute", "Fixation of pathological fracture", "Biopsy"],
+  "amputation-replantation": ["Replantation", "Revision amputation", "Terminalisation", "Local flap coverage", "Ray amputation", "Neuroma excision"],
+  "shoulder-arthroplasty-review": ["Revision shoulder arthroplasty", "Conversion to reverse shoulder arthroplasty", "Debridement and implant retention", "Two-stage revision for infection", "Component exchange", "Fixation of periprosthetic fracture"],
+  "elbow-arthroplasty-review": ["Revision elbow arthroplasty", "Bushing exchange", "Debridement and implant retention", "Two-stage revision for infection", "Triceps reconstruction", "Ulnar nerve decompression", "Fixation of periprosthetic fracture"],
+  "crps": ["Nerve decompression where a compressive cause is identified", "Removal of prominent hardware", "Corrective osteotomy for malunion"],
+  "hand-infection": ["Incision and drainage", "Drainage of paronychia", "Drainage of felon", "Washout of the flexor sheath", "Washout of joint", "Debridement of bite wound", "Debridement of deep space infection"],
+  "inflammatory-hand": ["Dorsal tenosynovectomy", "Wrist synovectomy", "Extensor tendon reconstruction or transfer", "Distal ulna excision (Darrach)", "Sauv\u00e9-Kapandji procedure", "MCP joint arthroplasty", "PIP joint arthrodesis", "Wrist arthrodesis", "Total wrist arthroplasty"],
+  "elbow-ucl-injury": ["Ulnar collateral ligament repair with internal brace", "Ulnar collateral ligament reconstruction (tendon graft)", "Ulnar nerve decompression", "Ulnar nerve transposition", "Arthroscopic removal of posteromedial osteophyte"],
+  "sc-joint": ["Closed reduction of sternoclavicular joint", "Open reduction and stabilisation of sternoclavicular joint", "Sternoclavicular ligament reconstruction", "Medial clavicle excision", "Washout of sternoclavicular joint"],
+  "gctts": ["Marginal excision of localised lesion", "Planned excision of diffuse lesion", "Revision excision for recurrence"],
   "glomus-tumour": ["Excision via transungual (nail bed) approach", "Excision via lateral subperiosteal approach", "Excision of pulp or soft-tissue lesion"],
   "mallet-finger": ["Extension block pinning", "ORIF (large bony fragment)", "Tendon repair (chronic)"],
   "jersey-finger": ["Primary tendon repair / reinsertion", "Staged tendon reconstruction (chronic)"],
@@ -16351,6 +18120,24 @@ function needsPreoperativeReferral(procedures, state) {
 
 const PREOP_SENTENCE = "Pre-operative plan: referral to the pre-anaesthesia clinic and pre-operative investigations (blood tests, and ECG as indicated).";
 
+// The surgery discussion and the pre-operative plan, built from whatever
+// was recorded. Kept as its own function so the same sentences are produced
+// whether or not the clinician worked through the pathway questions - a
+// consent discussion that was recorded must never be missing from the note.
+function surgeryConsentBullets(surgeryAgreement, surgicalDiscussion, state) {
+  if (surgeryAgreement !== "Agreed") return [];
+  const procedures = ((surgicalDiscussion && surgicalDiscussion.selected) || []).filter((p) => p !== "Other");
+  if (surgicalDiscussion && (surgicalDiscussion.selected || []).includes("Other") && surgicalDiscussion.otherText && surgicalDiscussion.otherText.trim()) {
+    procedures.push(surgicalDiscussion.otherText.trim());
+  }
+  const procedureClause = procedures.length ? `proceed with ${humanizeList(procedures, { preserveCase: true })}` : "proceed with the recommended surgical management";
+  const out = [
+    `The risks and benefits of surgery, including common complications associated with the proposed procedure, and alternative treatment options, were discussed with the patient, who agreed to ${procedureClause}.`,
+  ];
+  if (needsPreoperativeReferral(procedures, state)) out.push(PREOP_SENTENCE);
+  return out;
+}
+
 function trailToBullets(trail, surgeryAgreement, surgicalDiscussion, state) {
   const stepTexts = trail.filter((t) => t.node.type === "info" || t.node.type === "terminal").map((t) => t.node.text);
   if (!stepTexts.length) return [];
@@ -16363,10 +18150,25 @@ function trailToBullets(trail, surgeryAgreement, surgicalDiscussion, state) {
   const mriAlreadyDone = !!(state && state.mriFinding && String(state.mriFinding).trim());
   const MRI_SUGGESTION_RE = /^MRI\b.*\b(if|as)\s+indicated\b/i;
 
+  // A pathway step is written as "A \u2192 B \u2192 C" and becomes one bullet per
+  // stage. Arrows inside brackets belong to the phrase, not to the sequence
+  // \u2014 splitting on those produced fragments such as "Apply Trauma Decision
+  // Ladder (recognize" followed by "classify".
+  const splitSteps = (text) => {
+    const out = []; let buf = ""; let depth = 0;
+    for (const ch of text) {
+      if (ch === "(" || ch === "[") depth++;
+      else if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
+      if (ch === "\u2192" && depth === 0) { out.push(buf); buf = ""; continue; }
+      buf += ch;
+    }
+    out.push(buf);
+    return out;
+  };
+
   const bullets = [];
   stepTexts.forEach((text) => {
-    text
-      .split("\u2192")
+    splitSteps(text)
       .map((s) => s.trim())
       .filter(Boolean)
       .forEach((s) => {
@@ -16379,15 +18181,7 @@ function trailToBullets(trail, surgeryAgreement, surgicalDiscussion, state) {
   const combinedText = stepTexts.join(" ");
   if (SURGERY_KEYWORDS.test(combinedText)) {
     if (surgeryAgreement === "Agreed") {
-      const procedures = ((surgicalDiscussion && surgicalDiscussion.selected) || []).filter((p) => p !== "Other");
-      if (surgicalDiscussion && (surgicalDiscussion.selected || []).includes("Other") && surgicalDiscussion.otherText && surgicalDiscussion.otherText.trim()) {
-        procedures.push(surgicalDiscussion.otherText.trim());
-      }
-      const procedureClause = procedures.length ? `proceed with ${humanizeList(procedures, { preserveCase: true })}` : "proceed with the recommended surgical management";
-      bullets.push(
-        `The risks and benefits of surgery, including common complications associated with the proposed procedure, and alternative treatment options, were discussed with the patient, who agreed to ${procedureClause}.`
-      );
-      if (needsPreoperativeReferral(procedures, state)) bullets.push(PREOP_SENTENCE);
+      bullets.push(...surgeryConsentBullets(surgeryAgreement, surgicalDiscussion, state));
     } else if (surgeryAgreement === "Not agreed") {
       bullets.push("The patient was not keen for surgery at this time.");
     }
@@ -16447,9 +18241,16 @@ function buildManagementPlan(condition, state) {
     const rightPriorTx = ((state.limbData?.right?.prevTreatment) || []).length > 0;
     const leftPriorTx = ((state.limbData?.left?.prevTreatment) || []).length > 0;
     const parts = [];
-    if (Object.keys(rightAnswers).length) {
+    {
       const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, rightPriorTx);
-      const bullets = trailToBullets(walkPathwayTrail(condition.pathway, rightAnswers, effectiveStart), state.pathwaySurgeryAgreementRight, state.surgicalDiscussionRight, { mriFinding: state.limbData?.right?.mriFinding });
+      const bullets = Object.keys(rightAnswers).length
+        ? trailToBullets(walkPathwayTrail(condition.pathway, rightAnswers, effectiveStart), state.pathwaySurgeryAgreementRight, state.surgicalDiscussionRight, { mriFinding: state.limbData?.right?.mriFinding })
+        : [];
+      if (state.pathwaySurgeryAgreementRight === "Agreed" && !bullets.some((b) => /who agreed to /.test(b))) {
+        bullets.push(...surgeryConsentBullets(state.pathwaySurgeryAgreementRight, state.surgicalDiscussionRight, state));
+      } else if (state.pathwaySurgeryAgreementRight === "Not agreed" && !bullets.length) {
+        bullets.push("The patient was not keen for surgery at this time.");
+      }
       const rightInjectionSentence = buildInjectionSentence(state.injectionDetailRight);
       if (rightInjectionSentence) bullets.push(rightInjectionSentence);
       if (state.surgicalDiscussionRight && state.surgicalDiscussionRight.complicationsDiscussed) {
@@ -16458,9 +18259,16 @@ function buildManagementPlan(condition, state) {
       }
       if (bullets.length) parts.push(`Right side:\n${bullets.map((b) => `\u2022 ${b}`).join("\n")}`);
     }
-    if (Object.keys(leftAnswers).length) {
+    {
       const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, leftPriorTx);
-      const bullets = trailToBullets(walkPathwayTrail(condition.pathway, leftAnswers, effectiveStart), state.pathwaySurgeryAgreementLeft, state.surgicalDiscussionLeft, { mriFinding: state.limbData?.left?.mriFinding });
+      const bullets = Object.keys(leftAnswers).length
+        ? trailToBullets(walkPathwayTrail(condition.pathway, leftAnswers, effectiveStart), state.pathwaySurgeryAgreementLeft, state.surgicalDiscussionLeft, { mriFinding: state.limbData?.left?.mriFinding })
+        : [];
+      if (state.pathwaySurgeryAgreementLeft === "Agreed" && !bullets.some((b) => /who agreed to /.test(b))) {
+        bullets.push(...surgeryConsentBullets(state.pathwaySurgeryAgreementLeft, state.surgicalDiscussionLeft, state));
+      } else if (state.pathwaySurgeryAgreementLeft === "Not agreed" && !bullets.length) {
+        bullets.push("The patient was not keen for surgery at this time.");
+      }
       const leftInjectionSentence = buildInjectionSentence(state.injectionDetailLeft);
       if (leftInjectionSentence) bullets.push(leftInjectionSentence);
       if (state.surgicalDiscussionLeft && state.surgicalDiscussionLeft.complicationsDiscussed) {
@@ -16479,6 +18287,14 @@ function buildManagementPlan(condition, state) {
   const priorTx = (state.prevTreatment || []).length > 0;
   const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, priorTx);
   const bullets = Object.keys(answers).length ? trailToBullets(walkPathwayTrail(condition.pathway, answers, effectiveStart), state.pathwaySurgeryAgreement, state.surgicalDiscussion, state) : [];
+  // A consent discussion that was recorded must appear even when the pathway
+  // questions were not worked through - otherwise the note could state that
+  // surgery is planned while the discussion justifying it is missing.
+  if (state.pathwaySurgeryAgreement === "Agreed" && !bullets.some((b) => /who agreed to /.test(b))) {
+    bullets.push(...surgeryConsentBullets(state.pathwaySurgeryAgreement, state.surgicalDiscussion, state));
+  } else if (state.pathwaySurgeryAgreement === "Not agreed" && !bullets.some((b) => /not keen for surgery/.test(b))) {
+    bullets.push("The patient was not keen for surgery at this time.");
+  }
   bullets.push(...altPlan);
   const injectionSentence = buildInjectionSentence(state.injectionDetail);
   if (injectionSentence) bullets.push(injectionSentence);
@@ -17046,6 +18862,36 @@ function patientDischargedAtFollowup(fuState) {
   return (fuState.planOptions || []).includes("Discharge from follow-up");
 }
 
+// Several diagnoses reviewed at one visit share the visit itself: the date
+// of the last review, why the patient is here, how they have responded and
+// when they are coming back. The first diagnosis's answers carry to the
+// others until changed. What is specific to a diagnosis stays per diagnosis:
+// its pathway answers, surgical discussion, injection, and free-text notes.
+const FOLLOWUP_SHARED_KEYS = [
+  "lastVisitDate", "reason", "reasonOther", "treatmentOffered", "treatmentOfferedOther",
+  "outcome", "followUpInterval", "followUpIntervalOther", "nextReviewReason", "nextReviewReasonOther",
+];
+const FOLLOWUP_SHARED_SUMMARY = "date of last visit, reason for review, treatment since last visit, outcome and next review";
+
+function followupSharedDefaults(primaryFuState) {
+  const out = {};
+  if (!primaryFuState) return out;
+  FOLLOWUP_SHARED_KEYS.forEach((k) => {
+    const v = primaryFuState[k];
+    if (v !== undefined && v !== null && v !== "" && !(Array.isArray(v) && v.length === 0)) out[k] = v;
+  });
+  return out;
+}
+
+function followupEffectiveState(fuState, inherited) {
+  return inherited ? { ...inherited, ...(fuState || {}) } : (fuState || {});
+}
+
+function followupOverriddenKeys(fuState, inherited) {
+  if (!inherited) return [];
+  return FOLLOWUP_SHARED_KEYS.filter((k) => fuState && fuState[k] !== undefined && JSON.stringify(fuState[k]) !== JSON.stringify(inherited[k]));
+}
+
 function buildFollowupNoteParts(condition, fuState, fullState) {
   const parts = [];
 
@@ -17123,25 +18969,56 @@ function buildFollowupNote(condition, state) {
 function buildCombinedFollowupNote(session, conditionIds) {
   const items = conditionIds.map((id) => findConditionById(id)).filter(Boolean);
   const lines = ["FOLLOW-UP VISIT NOTE", `${items.length} diagnos${items.length === 1 ? "is" : "es"} reviewed this visit`, ""];
-  items.forEach((condition) => {
+
+  const primaryFu = items.length ? ((session.statesByConditionId[items[0].id] || {}).followup || {}) : {};
+  const inherited = items.length > 1 ? followupSharedDefaults(primaryFu) : null;
+
+  const entries = items.map((condition, i) => {
     const state = session.statesByConditionId[condition.id] || {};
-    const fuState = state.followup || {};
-    const parts = buildFollowupNoteParts(condition, fuState, state);
-    lines.push(`\u2550\u2550 ${condition.name.toUpperCase()} \u2550\u2550`, "");
-    if (!parts.length) {
-      lines.push("(No follow-up findings recorded for this diagnosis.)", "");
-    } else {
-      parts.forEach((p) => {
-        lines.push(p.heading.toUpperCase());
-        lines.push(p.text);
-        lines.push("");
-      });
-    }
+    const own = state.followup || {};
+    const eff = i === 0 ? own : followupEffectiveState(own, inherited);
+    return { condition, parts: buildFollowupNoteParts(condition, eff, state) };
   });
+
+  if (entries.length === 1) {
+    const { condition, parts } = entries[0];
+    lines.push(`\u2550\u2550 ${condition.name.toUpperCase()} \u2550\u2550`, "");
+    if (!parts.length) lines.push("(No follow-up findings recorded for this diagnosis.)", "");
+    else parts.forEach((p) => { lines.push(p.heading.toUpperCase(), p.text, ""); });
+  } else {
+    // One note for the visit: a section that came out the same for every
+    // diagnosis is written once; where it differs, the section is written
+    // once with a line per diagnosis beneath it.
+    const order = [];
+    entries.forEach(({ parts }) => parts.forEach((p) => { if (!order.includes(p.heading)) order.push(p.heading); }));
+    const empty = entries.filter((e) => !e.parts.length).map((e) => e.condition.name);
+
+    order.push(...[]);
+    order.forEach((heading) => {
+      const present = heading === "Diagnosis"
+        ? entries.map((e) => ({ name: e.condition.name, part: e.parts.find((p) => p.heading === heading) || { heading, text: e.condition.name } }))
+        : entries.map((e) => ({ name: e.condition.name, part: e.parts.find((p) => p.heading === heading) })).filter((x) => x.part);
+      const shared = present.length === entries.length && present.every((x) => x.part.text === present[0].part.text);
+      lines.push(heading.toUpperCase());
+      if (shared) {
+        lines.push(present[0].part.text);
+      } else {
+        present.forEach((x) => {
+          if (x.part.text.includes("\n")) { lines.push(`${x.name}:`); lines.push(x.part.text); }
+          else lines.push(`\u2022 ${x.name}: ${lowerFirst(x.part.text)}`);
+        });
+      }
+      lines.push("");
+    });
+
+    if (empty.length) lines.push(`No follow-up findings were recorded for ${humanizeList(empty)}.`, "");
+  }
+
   lines.push("---");
   lines.push("Generated with UpperTrack. For clinician review; not a diagnostic or treatment recommendation.");
   return lines.join("\n");
 }
+
 
 // Generic options for the Post-operative Follow-up workflow. Complications
 // deliberately includes "None noted" as an explicit, mutually-exclusive
@@ -20242,9 +22119,18 @@ function ConditionList({ regionKey, session, onSelect, onBack, onRemove }) {
 // reusing that condition's own Standard Follow-up intervals. Kept as its
 // own component (rather than inlined in FollowupVisitScreen) since each
 // block manages its own open/closed state independently.
-function FollowupConditionBlock({ index, condition, fuState, fullState, onChange, defaultOpen }) {
+function FollowupConditionBlock({ index, condition, fuState: ownState, fullState, onChange, defaultOpen, inherited, primaryName }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const set = (key, val) => onChange({ ...fuState, [key]: val });
+  // Reads the effective value - this diagnosis's own answer where given,
+  // otherwise the first diagnosis's - while edits stay with this diagnosis.
+  const fuState = followupEffectiveState(ownState, inherited);
+  const overridden = followupOverriddenKeys(ownState, inherited);
+  const set = (key, val) => onChange({ ...ownState, [key]: val });
+  const matchAgain = () => {
+    const next = { ...ownState };
+    FOLLOWUP_SHARED_KEYS.forEach((k) => delete next[k]);
+    onChange(next);
+  };
 
   const followupSection = condition.sections.find((s) => s.id === "followup");
   const tableField = followupSection && (followupSection.fields || []).find((f) => f.type === "table");
@@ -20269,6 +22155,22 @@ function FollowupConditionBlock({ index, condition, fuState, fullState, onChange
 
   return (
     <CollapsibleSection index={index} title={condition.name} subtitle="Reason, treatment given, outcome, new plan" isOpen={isOpen} onToggle={() => setIsOpen((v) => !v)} hasContent={hasContent}>
+      {inherited && Object.keys(inherited).length > 0 && (
+        <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 mb-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+          <CheckCircle2 size={16} color={T.tealDark} style={{ marginTop: 2, flexShrink: 0 }} />
+          <div className="text-[13px] leading-relaxed flex-1" style={{ color: T.tealDark }}>
+            {overridden.length === 0 ? (
+              <>Same {FOLLOWUP_SHARED_SUMMARY} as {primaryName}. Change anything here to make it different for this diagnosis.</>
+            ) : (
+              <>
+                {overridden.length} detail{overridden.length === 1 ? "" : "s"} changed for this diagnosis; the rest follows {primaryName}.{" "}
+                <button onClick={matchAgain} className="font-semibold underline" style={{ color: T.tealDark }}>Match {primaryName} again</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <SubLabel>Reason for review</SubLabel>
       <DateField label="Date of last visit (optional)" value={fuState.lastVisitDate} onChange={(v) => set("lastVisitDate", v)} />
       {sinceLastVisit && <div className="text-[13px] mt-1 mb-2" style={{ color: T.inkSoft }}>{sinceLastVisit} since the last visit</div>}
@@ -20384,6 +22286,11 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
   const [copyError, setCopyError] = useState(false);
 
   const conditions = conditionIds.map((id) => findConditionById(id)).filter(Boolean);
+  // Several diagnoses at one visit: the first one's shared answers become the
+  // starting point for the others.
+  const sharedFollowupDefaults = conditions.length > 1
+    ? followupSharedDefaults((session.statesByConditionId[conditions[0].id] || {}).followup || {})
+    : null;
   const note = useMemo(() => buildCombinedFollowupNote(session, conditionIds), [session, conditionIds]);
 
   const copyNote = async () => {
@@ -20432,6 +22339,8 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
               fullState={state}
               onChange={(next) => onFieldChange(condition.id, { followup: next })}
               defaultOpen={i === 0}
+              inherited={i > 0 ? sharedFollowupDefaults : null}
+              primaryName={i > 0 ? conditions[0].name : null}
             />
           );
         })}
