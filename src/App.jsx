@@ -15022,7 +15022,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.25.0";
+const APP_VERSION = "5.25.1";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -22237,6 +22237,11 @@ function DragSheet({ onClose, className, style, children, quickRef }) {
 // this app.
 function AboutSheet({ open, onClose }) {
   if (!open) return null;
+  // Counted from the live data, so this page stays correct as templates and
+  // evidence entries are added.
+  const conditionCount = Object.values(REGIONS).reduce((n, r) => n + getRegionConditions(r).length, 0);
+  const generalCount = Object.keys(GENERAL_ASSESSMENTS).length;
+  const evidenceCount = Object.keys(CONDITION_EVIDENCE).length;
   const H = ({ children }) => (
     <div className="text-[12px] font-bold uppercase tracking-wide mt-5 mb-1.5" style={{ color: T.ink, opacity: 0.72 }}>{children}</div>
   );
@@ -22261,11 +22266,22 @@ function AboutSheet({ open, onClose }) {
         <div className="px-5 pb-6 pt-1" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
           <H>What it is</H>
           <P>
-            UpperTrack is a structured documentation tool for upper extremity outpatient clinics. It covers 69 condition
-            templates across the shoulder, elbow, wrist, hand and peripheral nerves, plus 4 general assessments for
+            UpperTrack is a structured documentation tool for upper extremity outpatient clinics. It covers {conditionCount} condition
+            templates across the shoulder, elbow, wrist, hand and peripheral nerves, plus {generalCount} general assessments for
             presentations where the diagnosis is not yet clear. Tapping through history, examination, imaging and a
             management pathway produces a clinic note and a physiotherapy referral ready to copy into the record.
           </P>
+
+          <H>What you can do</H>
+          <ul className="mb-1">
+            <Li>Document a new patient, a follow-up or a post-operative review. Post-operative reviews adapt to the time since surgery and to the procedure performed.</Li>
+            <Li>Cover several diagnoses in one visit. Follow-up and post-operative reviews carry the shared details (date, reason for review, progress, plan) across diagnoses and produce one combined note that lists only what differs.</Li>
+            <Li>Use a brief encounter for a quick consultation, or the full template when the case needs it.</Li>
+            <Li>Record established classifications and scores where they guide management, for example the Wrightington classification for elbow fracture-dislocations, the GTIM score for shoulder instability, Herbert for scaphoid fractures, McGowan for cubital tunnel and STAM for scapulothoracic abnormal motion.</Li>
+            <Li>Calculate ASES, SANE and QuickDASH scores from item responses, and document injections (agent, dose and technique).</Li>
+            <Li>Search the evidence library, which has summaries and linked sources for {evidenceCount} diagnoses, and reopen the notes you have copied during the session.</Li>
+            <Li>Work on a phone or tablet. Buttons shade under a hovering Apple Pencil or S Pen on devices that report pencil hover.</Li>
+          </ul>
 
           <H>Goals</H>
           <ul className="mb-1">
@@ -22277,8 +22293,9 @@ function AboutSheet({ open, onClose }) {
 
           <H>Your data</H>
           <ul className="mb-1">
-            <Li>Nothing is stored. Everything entered is held in memory for the current session only, and is cleared by New patient or by closing the app.</Li>
-            <Li>The app sends no patient data anywhere and contains no analytics or tracking.</Li>
+            <Li>Nothing is stored. Everything entered is held in memory only, never saved to the device.</Li>
+            <Li>New patient clears what you entered for the current patient. Notes you have copied stay in the Notes list (the most recent 12) until the app is closed or reloaded, so close the app before handing a shared device to someone else.</Li>
+            <Li>The app sends no patient data anywhere and contains no analytics or tracking. Links to evidence open the publisher&apos;s or PubMed&apos;s website in your browser.</Li>
             <Li>
               Voice dictation uses your browser&apos;s built-in speech recognition. Depending on the browser, the audio may
               be processed on the browser provider&apos;s servers (for example Google, in Chrome). Avoid dictating patient
@@ -22292,7 +22309,9 @@ function AboutSheet({ open, onClose }) {
             <Li>UpperTrack is a documentation and structured-thinking aid for qualified clinicians. It does not diagnose, and it does not make treatment decisions.</Li>
             <Li>Pathways suggest options. Clinical judgement remains central, and the clinician is responsible for the accuracy of every note and for all clinical decisions.</Li>
             <Li>It has not been evaluated or approved as a medical device by any regulatory body.</Li>
-            <Li>Evidence summaries reflect a review completed in September 2026 and may become out of date. Verify against the primary source before changing practice.</Li>
+            <Li>Evidence summaries cite the sources they draw on and were last updated in October 2026. They may become out of date: verify against the primary source before changing practice.</Li>
+            <Li>Classifications, scores and treatment algorithms are condensed from the publications cited. Refer to the original for full definitions and indications.</Li>
+            <Li>Standard sentences, such as the consent discussion and the pre-operative referral line, are written from your selections. Check that they describe what actually happened and match your local practice.</Li>
             <Li>It does not replace local protocols or institutional guidelines, which take precedence.</Li>
             <Li>Outcome measure instruments remain the property of their copyright holders and should be obtained from the official sources linked in the Reference panel.</Li>
           </ul>
