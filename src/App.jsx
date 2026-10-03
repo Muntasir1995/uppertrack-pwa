@@ -15022,7 +15022,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.24.2";
+const APP_VERSION = "5.25.0";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -23756,6 +23756,23 @@ const DESIGN_SYSTEM_CSS = `
     }
   }
 
+  /* Pencil hover (Apple Pencil, S Pen and other styluses). A tablet's primary
+     input is touch, so the (hover: hover) rules above never apply there even
+     while a pencil is hovering over the screen. The pencil is therefore
+     detected in script (usePenHover) and marks the element under it with
+     data-pen-hover; these rules give that element the same response the mouse
+     gets. The shade is slightly deeper than the mouse's: on an iPad there is
+     no on-screen cursor, so the element itself is the only cue. */
+  button:not(:disabled)[data-pen-hover],
+  a[data-pen-hover],
+  [role="button"][data-pen-hover] {
+    filter: brightness(0.94);
+  }
+  .ut-card[data-pen-hover] {
+    transform: translateY(-1px);
+    box-shadow: 0 1px 2px rgba(16,30,43,0.06), 0 8px 20px rgba(16,30,43,0.08), 0 2px 6px rgba(16,30,43,0.04);
+  }
+
   /* Press feedback scaled to element size. A large card compressing 5%
      travels far more pixels than a chip doing the same, which is why a
      single value looks wrong across both. */
@@ -23986,7 +24003,7 @@ const DESIGN_SYSTEM_CSS = `
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }
-    .ut-card:hover { transform: none; }
+    .ut-card:hover, .ut-card[data-pen-hover] { transform: none; }
     .ut-nerve-trace { animation: none; stroke-dasharray: none; }
     /* The panel still appears and disappears, just without travel. */
     .ut-sheet-in, .ut-sheet-out, .ut-scrim-in, .ut-scrim-out, .ut-sheet-leave, .ut-page, .ut-spring-up, .ut-drop-out { animation: none !important; }
@@ -23995,7 +24012,65 @@ const DESIGN_SYSTEM_CSS = `
   }
 `;
 
+// Pencil hover. Apple Pencil (iPad Pro with hover support) and the Samsung S Pen
+// report their position while hovering as pointer events with pointerType
+// "pen" and no buttons pressed. This marks the interactive element under the
+// pencil with data-pen-hover so the stylesheet can shade it, exactly as :hover
+// does for a mouse - which tablets do not match, because their primary input
+// is touch. A finger touch clears any lingering pen shade and mouse input is
+// ignored, so a tap never leaves a sticky hover behind. Nothing here cancels or
+// consumes an event, so dragging, taps and pen strokes behave as before.
+const PEN_HOVER_TARGET = 'button:not(:disabled), a[href], [role="button"], .ut-card';
+
+function usePenHover() {
+  useEffect(() => {
+    let current = null;
+    const clear = () => {
+      if (current) current.removeAttribute("data-pen-hover");
+      current = null;
+    };
+    const targetFor = (node) => {
+      if (!(node instanceof Element)) return null;
+      const el = node.closest(PEN_HOVER_TARGET);
+      if (!el || el.closest("[data-no-pen-hover]") || el.getAttribute("aria-disabled") === "true") return null;
+      return el;
+    };
+    const onPointer = (e) => {
+      // A finger on the screen means the pencil is not the active input.
+      if (e.pointerType === "touch") { clear(); return; }
+      // Mouse events are ignored, not treated as "the pen has gone": mouse hover
+      // is handled by CSS, and browsers send a stray mouse-type pointerover
+      // right after a pen one, which must not wipe the shade just set. A pen
+      // that really leaves announces it with its own pointerout.
+      if (e.pointerType !== "pen") return;
+      const el = targetFor(e.target);
+      if (el === current) return;
+      clear();
+      if (el) { el.setAttribute("data-pen-hover", ""); current = el; }
+    };
+    const onOut = (e) => {
+      if (e.pointerType !== "pen" || !current) return;
+      // Moving between children of the same button is not leaving it.
+      if (e.relatedTarget instanceof Node && current.contains(e.relatedTarget)) return;
+      clear();
+    };
+    const opts = { capture: true, passive: true };
+    const events = ["pointerover", "pointermove", "pointerdown"];
+    events.forEach((n) => document.addEventListener(n, onPointer, opts));
+    document.addEventListener("pointerout", onOut, opts);
+    document.addEventListener("pointercancel", clear, opts);
+    window.addEventListener("blur", clear);
+    return () => {
+      events.forEach((n) => document.removeEventListener(n, onPointer, opts));
+      document.removeEventListener("pointerout", onOut, opts);
+      document.removeEventListener("pointercancel", clear, opts);
+      window.removeEventListener("blur", clear);
+      clear();
+    };
+  }, []);
+}
 export default function App() {
+  usePenHover();
   const [screen, setScreenRaw] = useState({ view: "visitType" });
   // Wraps every screen change with a matching history entry. `replace: true`
   // updates the current entry in place instead of adding a new one - used
