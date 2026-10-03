@@ -2188,35 +2188,151 @@ const proximalHumerusFxData = {
 
 const scapularDyskinesisData = {
   id: "scapular-dyskinesis",
-  name: "Scapular Dyskinesis",
+  name: "Scapulothoracic Abnormal Motion",
+  // Search matches the name and these terms, so the template is still found
+  // under its previous name and under the words clinicians actually use.
+  aliases: ["Scapular dyskinesis", "Scapular dyskinesia", "Scapular winging", "Winging", "STAM", "Dancing scapula", "Serratus anterior palsy", "Long thoracic nerve palsy", "Trapezius palsy", "Spinal accessory nerve palsy", "Pectoralis minor syndrome", "Scapulopexy"],
   region: "shoulder",
   redFlags: [
-    { text: "Scapular dyskinesis is being treated as the sole diagnosis without identifying an underlying cause", consider: "Search for associated pathology." },
-    { text: "True scapular winging is present", consider: "Evaluate for long thoracic or spinal accessory nerve palsy." },
+    { text: "Abnormal scapular motion is being treated as the sole diagnosis without identifying an underlying cause", consider: "Search for associated pathology and classify the STAM type before choosing treatment." },
+    { text: "True scapular winging is present", consider: "Evaluate for long thoracic nerve palsy (serratus anterior) or spinal accessory nerve palsy (trapezius), with EMG as needed." },
+    { text: "Winging began after a neck, thoracic or breast procedure, or a lymph node biopsy", consider: "Consider spinal accessory or long thoracic nerve injury; examine the trapezius and serratus anterior and request EMG." },
+    { text: "Progressive winging that is visible even in the neutral position, with a family history or other muscle weakness", consider: "Consider facioscapulohumeral muscular dystrophy or another myopathy; refer to neurology and establish the FSHD stage before discussing surgery." },
+    { text: "Involuntary or erratic scapular movement (dancing scapula)", consider: "Arrange neurological evaluation and consider psychiatric assessment of psychological contributors before any surgical discussion." },
+    { text: "Periscapular pain with paraesthesia in the arm", consider: "Consider neurogenic thoracic outlet syndrome from pectoralis minor tightness (STAM 1) and assess the cervical spine." },
+    { text: "The wall push-up is being relied on to judge serratus anterior function", consider: "It assesses only two planes of scapular motion and is not recommended; use the shoulder flexion resistance test at 30\u00b0, 60\u00b0 and 100\u00b0 and resisted protraction." },
     { text: "Symptoms are predominantly neurological", consider: "Investigate the cervical spine or peripheral nerve dysfunction." },
     { text: "Rehabilitation fails despite excellent compliance", consider: "Reassess for rotator cuff disease, instability, or structural abnormalities." },
+    { text: "Surgery is being considered before an adequate conservative trial", consider: "The review describes about 6 months of conservative care before surgery for STAM 2A/2B, at least 1 year with no reinnervation on EMG for STAM 3, and symptoms beyond 3 years for STAM 4." },
     { text: "Pain is severe at rest or associated with systemic symptoms", consider: "Consider alternative diagnoses outside the scapulothoracic mechanism." },
-    { text: "Normal scapular mechanics are demonstrated during repeated testing", consider: "Reconsider whether scapular dyskinesis is clinically relevant." },
+    { text: "Normal scapular mechanics are demonstrated during repeated testing", consider: "Reconsider whether abnormal scapular motion is clinically relevant." },
   ],
-  // DP1 is the associated-pathology branch. DP2 is the true-winging branch.
-  // DP3 (improves with SAT -> likely to respond to rehab) is prognostic
-  // rather than a management fork, so it's folded into the physiotherapy
-  // step as a note rather than built as a separate branch. DP4 is the
-  // "not improved" terminal. Flagged for your review.
+  // The pathway keeps the original first step (associated pathology) and then
+  // branches on STAM type (Gedik et al., 2024). Each type asks where the
+  // patient is on its treatment ladder today, so the plan text describes the
+  // next step for this visit. Every ending names its type, so a note written
+  // in brief mode still records which type was treated. Wording note: the
+  // surgical endings use words the consent trigger recognises (surgical,
+  // release, transfer, fusion); the conservative endings deliberately avoid
+  // them so they do not raise a consent question.
   pathway: {
     start: "initialAssessment",
     nodes: {
-      initialAssessment: { type: "info", title: "Assessment", text: "Identify associated pathology", next: "associatedPathologyQ" },
+      initialAssessment: { type: "info", title: "Assessment", text: "Identify any associated pathology and the STAM type", next: "associatedPathologyQ" },
       associatedPathologyQ: {
         type: "question",
         title: "Associated shoulder pathology identified? (Decision Point 1)",
         text: "Pathway suggests this decision once associated pathology has been sought.",
         options: [
           { label: "Yes", next: "treatBoth" },
-          { label: "No", next: "wingingQ" },
+          { label: "No", next: "stamTypeQ" },
         ],
       },
-      treatBoth: { type: "info", title: "Treat both conditions", text: "Address the associated pathology alongside scapular dyskinesis.", next: "wingingQ" },
+      treatBoth: { type: "info", title: "Treat both conditions", text: "Address the associated pathology alongside the scapulothoracic abnormal motion.", next: "stamTypeQ" },
+      stamTypeQ: {
+        type: "question",
+        title: "STAM type?",
+        text: "Pathway suggests classifying the type, since each has its own treatment sequence. Use the Horwitz manoeuvre, the SFRT pattern at 30\u00b0, 60\u00b0 and 100\u00b0, and EMG where needed.",
+        options: [
+          { label: "STAM 1", next: "stam1Q" },
+          { label: "STAM 2A / 2B", next: "stam2Q" },
+          { label: "STAM 3", next: "stam3Q" },
+          { label: "STAM 4", next: "stam4Q" },
+          { label: "STAM 5", next: "stam5Q" },
+          { label: "STAM 6 / 7A / 7B", next: "stam67Q" },
+          { label: "Dyskinesis without a STAM pattern", next: "wingingQ" },
+        ],
+      },
+
+      // STAM 1: rehabilitation, then botulinum toxin into pectoralis minor, then release
+      stam1Q: {
+        type: "question",
+        title: "STAM 1 \u2014 treatment so far?",
+        text: "Pathway suggests working up the ladder: rehabilitation, then botulinum toxin into the pectoralis minor, then release.",
+        options: [
+          { label: "Not yet treated", next: "stam1Start" },
+          { label: "Rehabilitation inadequate", next: "stam1Botox" },
+          { label: "Rehabilitation and botulinum toxin inadequate", next: "stam1Release" },
+          { label: "Responding to treatment", next: "stam1Responding" },
+        ],
+      },
+      stam1Start: { type: "terminal", tone: "green", title: "STAM 1 \u2014 rehabilitation", text: "STAM 1: pathway suggests a comprehensive rehabilitation programme targeting pectoralis minor hyperactivity, with review of the response." },
+      stam1Botox: { type: "terminal", tone: "amber", title: "STAM 1 \u2014 botulinum toxin", text: "STAM 1: pathway suggests a botulinum toxin injection directly into the pectoralis minor to temporarily reduce its overactivity, alongside continued rehabilitation." },
+      stam1Release: { type: "terminal", tone: "red", title: "STAM 1 \u2014 pectoralis minor release", text: "STAM 1: pathway suggests arthroscopic pectoralis minor release, reserved for patients who have not responded to rehabilitation or botulinum toxin." },
+      stam1Responding: { type: "terminal", tone: "green", title: "STAM 1 \u2014 continue", text: "STAM 1: pathway suggests continuing the current treatment and reviewing at the next visit." },
+
+      // STAM 2A / 2B: at least 6 months of conservative care, then release + scapulopexy
+      stam2Q: {
+        type: "question",
+        title: "STAM 2A / 2B \u2014 treatment so far?",
+        text: "Pathway suggests at least 6 months of conservative treatment (physiotherapy, botulinum toxin and electrical stimulation of the serratus anterior) before surgery is considered.",
+        options: [
+          { label: "Under 6 months of conservative care", next: "stam2Conservative" },
+          { label: "6 months or more, with persistent abnormal motion and pain", next: "stam2Surgery" },
+        ],
+      },
+      stam2Conservative: { type: "terminal", tone: "green", title: "STAM 2A / 2B \u2014 conservative care", text: "STAM 2A/2B: pathway suggests a structured conservative programme of physiotherapy, botulinum toxin and electrical stimulation of the serratus anterior, with review at 6 months." },
+      stam2Surgery: { type: "terminal", tone: "red", title: "STAM 2A / 2B \u2014 release and scapulopexy", text: "STAM 2A/2B: pathway suggests arthroscopic pectoralis minor release followed by open scapulopexy. The scapulopexy gives time for muscle rehabilitation rather than stable fixation." },
+
+      // STAM 3: serratus anterior paralysis
+      stam3Q: {
+        type: "question",
+        title: "STAM 3 \u2014 treatment so far?",
+        text: "Pathway suggests at least 1 year of conservative management, with long thoracic nerve injury documented and no sign of reinnervation on EMG, before a muscle transfer is considered.",
+        options: [
+          { label: "Under 1 year, or reinnervation on EMG", next: "stam3Conservative" },
+          { label: "At least 1 year, no reinnervation on EMG, persistent pain, winging and limited motion", next: "stam3Transfer" },
+        ],
+      },
+      stam3Conservative: { type: "terminal", tone: "green", title: "STAM 3 \u2014 conservative care", text: "STAM 3: pathway suggests continuing physiotherapy and repeating EMG to look for reinnervation of the serratus anterior." },
+      stam3Transfer: { type: "terminal", tone: "red", title: "STAM 3 \u2014 pectoralis major transfer", text: "STAM 3: pathway suggests transfer of the sternal head of pectoralis major, with its bone insertion, to the inferior pole of the scapula." },
+
+      // STAM 4: trapezius paralysis
+      stam4Q: {
+        type: "question",
+        title: "STAM 4 \u2014 treatment so far?",
+        text: "Pathway suggests a triple tendon transfer for chronic trapezius paralysis (symptoms beyond 3 years) that has not responded to conservative care or is not suitable for nerve reconstruction.",
+        options: [
+          { label: "Conservative care ongoing, or nerve recovery still possible", next: "stam4Conservative" },
+          { label: "Symptoms over 3 years, not responding, or unsuitable for nerve reconstruction", next: "stam4Transfer" },
+        ],
+      },
+      stam4Conservative: { type: "terminal", tone: "green", title: "STAM 4 \u2014 conservative care", text: "STAM 4: pathway suggests physiotherapy to strengthen the remaining periscapular muscles, with neurophysiology to judge whether nerve recovery is still possible." },
+      stam4Transfer: { type: "terminal", tone: "red", title: "STAM 4 \u2014 triple tendon transfer", text: "STAM 4: pathway suggests triple tendon transfer (Eden-Lange variant), moving the levator scapulae and both rhomboids to new insertions on the scapula." },
+
+      // STAM 5: FSHD, guided by the shoulder disability stage
+      stam5Q: {
+        type: "question",
+        title: "STAM 5 \u2014 FSHD shoulder stage?",
+        text: "Pathway suggests the stage of shoulder disability guides who benefits from a scapulothoracic procedure.",
+        options: [
+          { label: "Stage 0 or 1", next: "stam5Early" },
+          { label: "Stage 2", next: "stam5Stage2" },
+          { label: "Stage 3", next: "stam5Stage3" },
+          { label: "Stage 4", next: "stam5Stage4" },
+          { label: "Stage 5", next: "stam5Stage5" },
+        ],
+      },
+      stam5Early: { type: "terminal", tone: "green", title: "STAM 5, stage 0\u20131", text: "STAM 5, FSHD stage 0 to 1: pathway suggests physiotherapy to optimise the remaining periscapular muscles, posture and range of motion. Little or no functional gain is expected from scapulothoracic arthrodesis at this stage." },
+      stam5Stage2: { type: "terminal", tone: "amber", title: "STAM 5, stage 2", text: "STAM 5, FSHD stage 2: pathway suggests physiotherapy. The benefit of scapulothoracic arthrodesis at this stage is uncertain and usually limited, so it is discussed cautiously." },
+      stam5Stage3: { type: "terminal", tone: "red", title: "STAM 5, stage 3", text: "STAM 5, FSHD stage 3: pathway suggests scapulothoracic fusion (arthrodesis) or scapular tethering, the group that benefits most for both function and appearance, alongside physiotherapy." },
+      stam5Stage4: { type: "terminal", tone: "amber", title: "STAM 5, stage 4", text: "STAM 5, FSHD stage 4: pathway suggests physiotherapy, with scapulothoracic fusion (arthrodesis) considered for cosmetic improvement and some functional benefit, as partial deltoid function remains." },
+      stam5Stage5: { type: "terminal", tone: "amber", title: "STAM 5, stage 5", text: "STAM 5, FSHD stage 5: pathway suggests rehabilitation. With almost no functional deltoid, scapulothoracic arthrodesis is unlikely to improve outcomes." },
+
+      // STAM 6 / 7A / 7B: locked and dancing scapula
+      stam67Q: {
+        type: "question",
+        title: "STAM 6 / 7A / 7B \u2014 treatment so far?",
+        text: "Pathway suggests conservative care first. The usual scapulopexy-based techniques may not give satisfactory results in these types.",
+        options: [
+          { label: "Not yet treated, or still improving", next: "stam67Conservative" },
+          { label: "Conservative care exhausted without significant improvement", next: "stam67Tether" },
+        ],
+      },
+      stam67Conservative: { type: "terminal", tone: "amber", title: "STAM 6 / 7 \u2014 conservative care", text: "STAM 6, 7A or 7B: pathway suggests physiotherapy with neuromuscular re-education, stretching and targeted strengthening. For the dancing scapula types (7A, 7B), identify and modify provoking activities, arrange neurological evaluation and consider psychiatric assessment of psychological contributors. Scapulopexy-based techniques may not give satisfactory results in these types." },
+      stam67Tether: { type: "terminal", tone: "red", title: "STAM 6 / 7 \u2014 scapular tethering", text: "STAM 6, 7A or 7B: pathway suggests right-to-left scapular tethering with an Achilles tendon allograft to link the scapulae, with scapulothoracic fusion (arthrodesis) as a last resort. Fusion stabilises the scapula but does not always improve function." },
+
+      // Dyskinesis without a STAM pattern: the original pathway
       wingingQ: {
         type: "question",
         title: "True scapular winging present? (Decision Point 2)",
@@ -2247,8 +2363,8 @@ const scapularDyskinesisData = {
       title: "Typical Patient",
       subtitle: "Typical presentation + risk factors",
       fields: [
-        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Age 15\u201360 years", "Overhead athlete", "Repetitive overhead worker", "Shoulder fatigue rather than severe pain", "Periscapular discomfort", "Poor endurance", "Loss of throwing velocity", "Altered shoulder mechanics", "Symptoms often associated with another shoulder disorder"] },
-        { type: "checkbox", key: "riskFactors", label: "Risk factors present", options: ["Overhead sports", "Previous shoulder injury", "Rotator cuff disease", "Shoulder instability", "AC joint pathology", "Poor posture", "Muscle imbalance", "Long thoracic nerve dysfunction", "Spinal accessory nerve dysfunction"] },
+        { type: "checkbox", key: "typicalPresentation", label: "Typical presentation", options: ["Age 15\u201360 years", "Overhead athlete", "Repetitive overhead worker", "Posterior shoulder or periscapular pain", "Shoulder fatigue rather than severe pain", "Poor endurance", "Clicking or popping with arm movement", "Visible scapular prominence or winging", "Difficulty raising the arm overhead", "Loss of throwing velocity", "Altered shoulder mechanics", "Symptoms often associated with another shoulder disorder"] },
+        { type: "checkbox", key: "riskFactors", label: "Risk factors present", options: ["Overhead sports", "Previous shoulder injury", "Rotator cuff disease", "Shoulder instability", "AC joint pathology", "Poor posture", "Muscle imbalance", "Pectoralis minor tightness", "Long thoracic nerve dysfunction", "Spinal accessory nerve dysfunction", "Previous neck, thoracic or breast intervention", "Family history of muscular dystrophy"] },
       ],
     },
     {
@@ -2256,28 +2372,42 @@ const scapularDyskinesisData = {
       index: 2,
       title: "Focused History",
       subtitle: "Side, mechanism, symptoms, function",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Overuse", "Following injury", "Gradual"], columns: 3 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Periscapular pain", "Shoulder fatigue", "Weakness", "Loss of endurance", "Clicking", "Loss of throwing velocity", "Difficulty overhead", "Poor posture"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Swimming", "Weight lifting", "Work", "Activities of daily living"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Previous surgery", "Injection"] },{
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant arm", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "text", key: "duration", label: "Duration of symptoms", placeholder: "e.g. 3 months" },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Overuse", "Following injury", "Following a procedure on the neck, thorax or breast", "Gradual", "Spontaneous"], columns: 2 },{ type: "vas", key: "vas" },{ type: "checkbox", key: "symptoms", label: "Symptoms", options: ["Periscapular pain", "Pain radiating to the arm or neck", "Shoulder fatigue", "Weakness", "Loss of endurance", "Clicking or popping", "Paraesthesia in the arm", "Visible scapular winging", "Involuntary scapular movements", "Loss of throwing velocity", "Difficulty overhead", "Poor posture"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitation", options: ["Throwing", "Swimming", "Weight lifting", "Work", "Lifting the arm overhead", "Activities of daily living"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "checkbox", key: "prevTreatment", label: "Previous treatment", options: ["Physiotherapy", "NSAIDs", "Botulinum toxin (pectoralis minor)", "Electrical stimulation (serratus anterior)", "Previous surgery", "Injection"] },{
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous instability", "Rotator cuff disease", "Cervical pathology", "Previous clavicle fracture", "Rib injury"] },{ type: "text", key: "sport", label: "Sport" },],
+        },{ type: "checkbox", key: "relevantHistory", label: "Relevant history", options: ["Previous instability", "Rotator cuff disease", "Cervical pathology", "Previous clavicle fracture", "Rib injury", "Previous neck, thoracic or breast surgery", "Neck lymph node biopsy", "Muscular dystrophy or neuromuscular disease", "Neuropsychiatric history"] },{ type: "text", key: "sport", label: "Sport" },],
     },
     {
       id: "exam",
       index: 3,
       title: "Focused Examination",
-      subtitle: "Inspection, posture, dynamic tests, neurology",
+      subtitle: "Inspection, posture, SFRT, dynamic tests, neurology",
       fields: [
-        { type: "checkbox", key: "inspection", label: "Inspection \u2014 observe from behind", options: ["Symmetric scapular motion", "Prominence of medial border", "Inferior angle prominence", "Early scapular elevation", "Scapular winging", "Muscle wasting", "Other"] },
+        { type: "checkbox", key: "inspection", label: "Inspection \u2014 observe both scapulae from behind", options: ["Symmetric scapular motion", "Prominence of medial border", "Inferior angle prominence", "Early scapular elevation", "Anterior scapular tilt", "Scapular winging", "Winging in the neutral position", "Drooping shoulder", "Involuntary scapular movement", "Muscle wasting", "Other"] },
         { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
           { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
         ] },
         { type: "checkbox", key: "posture", label: "Posture", options: ["Thoracic kyphosis", "Forward head posture", "Rounded shoulders"] },
         { type: "checkbox", key: "dynamicManoeuvres", label: "Dynamic assessment \u2014 manoeuvres performed", options: ["Repeated forward elevation", "Wall push-up", "Weighted elevation"] },
-        { type: "checkbox", key: "dynamicFindings", label: "Dynamic assessment \u2014 observed findings", options: ["Dysrhythmia", "Winging", "Fatigue"] },
-        { type: "testGrid", key: "scapularTests", label: "Scapular tests", options: ["Scapular Assistance Test (SAT)", "Scapular Retraction Test (SRT)", "Lateral Scapular Slide Test (LSST)"] },
+        { type: "checkbox", key: "dynamicFindings", label: "Dynamic assessment \u2014 observed findings", options: ["Dysrhythmia", "Winging", "Anterior scapular tilt", "Erratic or involuntary movement", "Fatigue"] },
+        { type: "testGrid", key: "sfrtAngles", label: "Shoulder flexion resistance test (SFRT)", options: ["30\u00b0", "60\u00b0", "100\u00b0"] },
+        { type: "info", title: "Reading the SFRT", items: [
+          "Positive means scapular winging or instability as the examiner resists forward flexion at that angle.",
+          "Negative at 100\u00b0 suggests a functioning serratus anterior (100% negative predictive value for serratus anterior paralysis).",
+          "Positive at 30\u00b0, 60\u00b0 and 100\u00b0 strongly indicates serratus anterior paralysis (STAM 3).",
+          "Negative at low angles but positive at higher flexion suggests trapezius paralysis (STAM 4).",
+          "The wall push-up assesses only two planes of scapular motion and is not recommended for evaluating STAM.",
+        ] },
+        { type: "testGrid", key: "scapularTests", label: "Scapular tests", options: ["Scapular Assistance Test (SAT)", "Scapular Retraction Test (SRT)", "Lateral Scapular Slide Test (LSST)", "Scapular compression test", "Resisted shoulder protraction"] },
+        { type: "info", title: "Reading the scapular tests", items: [
+          "Scapular compression: manual pressure on the scapula relieves pain or improves mobility when positive.",
+          "Resisted protraction: positive means winging as the patient protracts against resistance, indicating serratus anterior weakness. Check that the patient protracts rather than internally rotates.",
+        ] },
+        { type: "select", key: "horwitzCorrection", label: "Horwitz manoeuvre \u2014 manual correction of the scapula", options: ["Corrects easily", "Corrects with difficulty", "Does not correct"], columns: 1, noteLabel: "Scapular correction with the Horwitz manoeuvre", notePhrases: { "Corrects easily": "the scapula corrected easily with the Horwitz manoeuvre", "Corrects with difficulty": "the scapula corrected with difficulty with the Horwitz manoeuvre", "Does not correct": "the scapula did not correct with the Horwitz manoeuvre" } },
+        { type: "testGrid", key: "palpationTests", label: "Palpation", options: ["Tenderness at the pectoralis minor insertion", "Upper trapezius tenderness or tightness"], defaultOptions: ["Present", "Absent"] },
         // ROM, rotator cuff, and instability appear as bare "Document" /
-        // "Assess if indicated" prompts with no scale or checkboxes given —
+        // "Assess if indicated" prompts with no scale or checkboxes given -
         // left as free text, consistent with how other open-ended blank
         // fields have been handled throughout the project.
         { type: "text", key: "romNote", label: "Shoulder ROM (document)", noteLabel: "Shoulder ROM" },
@@ -2299,13 +2429,17 @@ const scapularDyskinesisData = {
         { type: "info", title: "Plain radiographs", items: ["Only when clinically indicated."] },
         { type: "info", title: "Assess", items: ["Previous fracture", "AC joint", "Glenohumeral joint"] },
         { type: "info", title: "MRI", items: ["Not routinely required.", "Obtain only if associated pathology suspected."] },
-        { type: "info", title: "EMG / NCS — indications", items: ["Suspected nerve injury", "Persistent winging", "Unexplained weakness"] },
-        { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["Normal appearances", "Soft-tissue swelling", "Calcification", "Degenerative change", "Joint contracture"] },
-        { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
-        { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Soft-tissue thickening", "Nodular lesion", "Enhancement", "Involvement of adjacent tendon or neurovascular structures"] },
-        { type: "text", key: "mriFinding", label: "MRI — additional detail" },
-        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies — findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes"] },
-        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies — additional detail" },
+        { type: "info", title: "EMG / NCS \u2014 indications", items: ["Suspected nerve injury", "Persistent winging", "Unexplained weakness", "Documenting the absence of reinnervation before considering a muscle transfer (STAM 3)"] },
+        { type: "info", title: "Surface EMG", items: [
+          "Normal activation sequence: upper trapezius, anterior deltoid, pectoralis major, serratus anterior, then the rotator cuff. Pectoralis minor, rhomboid major and latissimus dorsi show little or no activity.",
+          "Pectoralis minor hyperactivity (STAM 1, 2A, 2B) shows as overactivity of the pectoralis minor and upper trapezius with hypoactivity of the serratus anterior, and can mimic serratus anterior dysfunction.",
+        ] },
+        { type: "checkbox", key: "radiographsCommon", label: "Radiographs \u2014 findings", options: ["Normal appearances", "Healed clavicle fracture or malunion", "Scapular fracture malunion", "Rib or thoracic deformity", "AC joint degenerative change", "Glenohumeral degenerative change", "Bony lesion of the scapula or ribs"] },
+        { type: "text", key: "radiographsFinding", label: "Radiographs \u2014 additional detail" },
+        { type: "checkbox", key: "mriCommon", label: "MRI \u2014 findings", options: ["Normal appearances", "Rotator cuff tear", "Labral pathology", "Periscapular muscle atrophy", "Fatty infiltration of periscapular muscles", "Muscle denervation oedema", "Space-occupying lesion"] },
+        { type: "text", key: "mriFinding", label: "MRI \u2014 additional detail" },
+        { type: "checkbox", key: "electrodiagnosticCommon", label: "Electrodiagnostic studies \u2014 findings", options: ["Normal study", "Mild changes", "Moderate changes", "Severe changes", "Prolonged distal latency", "Reduced conduction velocity", "Conduction block", "Reduced amplitude", "Denervation changes", "Reinnervation changes", "Serratus anterior denervation (long thoracic nerve)", "Trapezius denervation (spinal accessory nerve)", "No sign of reinnervation", "Myopathic pattern", "Pectoralis minor and upper trapezius hyperactivity with serratus anterior hypoactivity (surface EMG)"] },
+        { type: "text", key: "electrodiagnosticFinding", label: "Electrodiagnostic studies \u2014 additional detail" },
       ],
     },
     {
@@ -2313,17 +2447,58 @@ const scapularDyskinesisData = {
       index: 5,
       title: "Differential Diagnosis",
       subtitle: "Conditions actively excluded",
-      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Rotator cuff disease", "Shoulder instability", "Long thoracic nerve palsy", "Spinal accessory nerve palsy", "Cervical radiculopathy", "AC joint pathology", "Glenohumeral OA", "Scapular fracture malunion"] }],
+      fields: [{ type: "checkbox", key: "differential", label: null, options: ["Rotator cuff disease", "Shoulder instability", "Long thoracic nerve palsy", "Spinal accessory nerve palsy", "Cervical radiculopathy", "Neurogenic thoracic outlet syndrome (pectoralis minor syndrome)", "Facioscapulohumeral muscular dystrophy or other myopathy", "Parsonage-Turner syndrome", "Functional (psychogenic) movement disorder", "AC joint pathology", "Glenohumeral OA", "Scapular fracture malunion", "Scapular or rib lesion"] }],
     },
     {
       id: "diagnosis",
       index: 6,
       title: "Diagnosis Classification",
-      subtitle: "Pattern, cause, associated pathology",
+      subtitle: "STAM type, pattern, cause, associated pathology",
       fields: [
+        { type: "select", key: "stamType", label: "STAM type", options: ["STAM 1", "STAM 2A", "STAM 2B", "STAM 3", "STAM 4", "STAM 5", "STAM 6", "STAM 7A", "STAM 7B"], columns: 3, noteLabel: "STAM type", notePhrases: {
+          "STAM 1": "the abnormal motion was classified as STAM 1 (pectoralis minor hyperactivity)",
+          "STAM 2A": "the abnormal motion was classified as STAM 2A (pectoralis minor hyperactivity with serratus anterior underactivation, corrected easily)",
+          "STAM 2B": "the abnormal motion was classified as STAM 2B (pectoralis minor hyperactivity with serratus anterior underactivation, corrected with difficulty)",
+          "STAM 3": "the abnormal motion was classified as STAM 3 (serratus anterior paralysis)",
+          "STAM 4": "the abnormal motion was classified as STAM 4 (trapezius paralysis)",
+          "STAM 5": "the abnormal motion was classified as STAM 5 (combined trapezius and serratus anterior atrophy)",
+          "STAM 6": "the abnormal motion was classified as STAM 6 (locked scapula in non-reducible anterior tilt)",
+          "STAM 7A": "the abnormal motion was classified as STAM 7A (dancing scapula with activity)",
+          "STAM 7B": "the abnormal motion was classified as STAM 7B (spontaneous dancing scapula)",
+        } },
+        { type: "info", title: "STAM types (Gedik et al., 2024)", items: [
+          "STAM 1 \u2014 pectoralis minor hyperactivity with minimal abnormal motion: anterior scapular tilt, tenderness at the pectoralis minor insertion and upper trapezius hyperactivity. May be associated with thoracic outlet syndrome.",
+          "STAM 2A \u2014 more pronounced abnormal motion with pectoralis minor hyperactivity and serratus anterior underactivation. The scapula corrects easily with the Horwitz manoeuvre, so it resembles serratus anterior dysfunction. SFRT is negative at 100\u00b0.",
+          "STAM 2B \u2014 as 2A, but correction with the Horwitz manoeuvre is harder, mirroring a lesser degree of serratus anterior dysfunction. SFRT is negative at 100\u00b0.",
+          "STAM 3 \u2014 serratus anterior paralysis from long thoracic nerve palsy. SFRT is positive at 30\u00b0, 60\u00b0 and 100\u00b0.",
+          "STAM 4 \u2014 trapezius paralysis, for example from spinal accessory nerve injury. SFRT is negative at low angles but positive at higher flexion. Drooping shoulder, limited elevation and, in chronic cases, atrophy.",
+          "STAM 5 \u2014 combined trapezius and serratus anterior atrophy, typical of facioscapulohumeral muscular dystrophy (FSHD). Winging is visible even in the neutral position; the scapula can often still be corrected with the Horwitz manoeuvre.",
+          "STAM 6 \u2014 trapezius and serratus anterior paralysis with the scapula locked in a dynamic anterior tilt that does not reduce when awake but can under anaesthesia. Mostly young women; spastic scapular movements may be present.",
+          "STAM 7A \u2014 \"dancing scapula\" with activity: erratic scapular movement triggered by voluntary shoulder or arm movement.",
+          "STAM 7B \u2014 spontaneous \"dancing scapula\": erratic scapular movement with no trigger, pointing to a more complex neuromuscular problem.",
+        ] },
+        { type: "conditional", when: (s) => s.stamType === "STAM 5", fields: [
+          { type: "select", key: "fshdStage", label: "FSHD shoulder disability stage (Eren)", options: ["0", "1", "2", "3", "4", "5"], columns: 6, noteLabel: "FSHD shoulder stage" },
+          { type: "info", title: "FSHD shoulder stages and surgical benefit", items: [
+            "Stage 0 \u2014 optimal muscle function, no functional limitation; surgery offers no benefit.",
+            "Stage 1 \u2014 minimal periscapular involvement and mild winging; surgery may improve posture but not function.",
+            "Stage 2 \u2014 moderate winging with preserved deltoid; benefit is uncertain and usually limited.",
+            "Stage 3 \u2014 severe winging with atrophic periscapular muscles affecting daily activities; benefits most, for function and appearance.",
+            "Stage 4 \u2014 similar atrophy with partial deltoid function; can still offer cosmetic improvement and some functional benefit.",
+            "Stage 5 \u2014 almost no functional deltoid; surgery is unlikely to improve outcomes.",
+            "Published as a staging system, but progression from one stage to another has not been reported, so it is better regarded as a classification.",
+          ] },
+        ] },
+        { type: "select", key: "kiblerType", label: "Kibler pattern (descriptive)", options: ["Type I", "Type II", "Type III"], columns: 3, noteLabel: "Kibler type", notePhrases: { "Type I": "the scapular pattern was Kibler type I (prominence of the inferior medial border)", "Type II": "the scapular pattern was Kibler type II (prominence of the entire medial border)", "Type III": "the scapular pattern was Kibler type III (superior translation of the scapula with prominence of the superior medial border)" } },
+        { type: "info", title: "Kibler types", items: [
+          "Type I \u2014 prominence of the inferior medial border (abnormal rotation around a transverse axis).",
+          "Type II \u2014 prominence of the entire medial border (abnormal rotation around a vertical axis).",
+          "Type III \u2014 superior translation of the entire scapula, with prominence of the superior medial border.",
+          "Kibler's types describe the pattern; they do not by themselves point to a treatment, which is why the STAM classification was proposed.",
+        ] },
         { type: "select", key: "primaryPattern", label: "Primary pattern", options: ["Scapular dysrhythmia", "Medial winging", "Lateral winging"], columns: 1, noteLabel: "Primary pattern" },
         { type: "checkbox", key: "cause", label: "Cause", options: ["Muscle imbalance", "Pain inhibition", "Nerve injury", "Structural deformity"] },
-        { type: "checkbox", key: "diagAssociated", label: "Associated pathology", options: ["Rotator cuff disease", "Instability", "AC pathology", "None identified"] },
+        { type: "checkbox", key: "diagAssociated", label: "Associated pathology", options: ["Rotator cuff disease", "Instability", "AC pathology", "Pectoralis minor syndrome", "Thoracic outlet syndrome", "Facioscapulohumeral muscular dystrophy", "None identified"] },
       ],
     },
     { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags \u2014 also pinned via header button", fields: [{ type: "redflag", key: "redFlagsChecked" }] },
@@ -2333,12 +2508,12 @@ const scapularDyskinesisData = {
       index: 9,
       title: "Standard Follow-up",
       subtitle: "Review schedule",
-      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Scapular control" }, { left: "3 months", right: "Functional improvement" }, { left: "6 months", right: "Return to sport/work" }] },
-        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["6 weeks", "3 months", "6 months", "Other"], columns: 2 },
+      fields: [{ type: "table", rows: [{ left: "6 weeks", right: "Scapular control, response to rehabilitation or botulinum toxin" }, { left: "3 months", right: "Functional improvement; repeat EMG where there is a nerve palsy" }, { left: "6 months", right: "Return to sport/work; surgical decision point for STAM 2A/2B" }, { left: "12 months", right: "Surgical decision point for STAM 3 (EMG for reinnervation)" }] },
+        { type: "select", key: "followUpInterval", label: "Next review scheduled for", options: ["6 weeks", "3 months", "6 months", "12 months", "Other"], columns: 2 },
         { type: "conditional", when: (s) => s.followUpInterval === "Other", fields: [
           { type: "text", key: "followUpIntervalOther", label: "Specify follow-up timing" },
         ] },
-        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Assess response to injection/treatment", "Pre-operative planning", "Monitor for progression", "Other"] },
+        { type: "checkbox", key: "followUpReason", label: "Reason for follow-up", options: ["Routine review of treatment progress", "Reassess symptoms and function", "Review investigation results", "Assess response to injection/treatment", "Repeat EMG for reinnervation", "Pre-operative planning", "Monitor for progression", "Other"] },
         { type: "conditional", when: (s) => (s.followUpReason || []).includes("Other"), fields: [
           { type: "text", key: "followUpReasonOther", label: "Specify reason for follow-up" },
         ] }],
@@ -2347,12 +2522,24 @@ const scapularDyskinesisData = {
       id: "outcomes",
       index: 10,
       title: "Outcome Measures",
-      subtitle: "Validated scores, rehabilitation focus",
+      subtitle: "Validated scores, rehabilitation focus, operative pearls",
       fields: [
         { type: "table", rows: [{ left: "Initial", right: "QuickDASH + ASES + VAS" }, { left: "3 months", right: "ASES" }, { left: "6 months", right: "ASES + QuickDASH" }, { left: "Return to Sport", right: "SANE + RTS status" }] },
-        { type: "info", title: "Rehabilitation focus", items: ["Postural correction", "Serratus anterior activation", "Lower trapezius strengthening", "Scapular control", "Kinetic chain training"] },
+        { type: "info", title: "Rehabilitation focus", items: ["Postural correction", "Serratus anterior activation", "Lower trapezius strengthening", "Scapular control", "Neuromuscular re-education", "Kinetic chain training"] },
+        { type: "info", title: "Operative pearls (from the review)", items: [
+          "Arthroscopic pectoralis minor release: detach the tendon subperiosteally from the coracoid, confirm complete release with medial retraction, and protect the conjoint tendon and neurovascular structures.",
+          "Scapulopexy (STAM 2A/2B): tibialis posterior allograft looped around the 7th rib and through the distal scapula; pause ventilation when passing the loop to avoid pleural injury, test the serratus anterior with a nerve stimulator, and check for an air leak at the end. It buys time for muscle rehabilitation rather than giving stable fixation.",
+          "Pectoralis major transfer (STAM 3): sternal head with its bone insertion to the inferior scapular pole; the clavicular head is reattached to the humerus.",
+          "Triple tendon transfer (STAM 4): levator scapulae and both rhomboids moved to new scapular insertions; keep the dorsal scapular nerve in view throughout.",
+          "Scapulothoracic arthrodesis (STAM 5): prone position, decorticate the ribs and medial scapular border, fix with plates and cerclage with allograft or iliac crest autograft, protecting the intercostal bundle and pleura.",
+          "STAM 6, 7A, 7B: right-to-left scapular tethering with an Achilles tendon allograft links the scapulae; arthrodesis is the last resort.",
+        ] },
+        { type: "info", title: "Post-operative care (from the review)", items: [
+          "Scapulopexy: sling for 6 weeks, then active-assisted motion and aqua therapy; no stretching or strengthening until 12 weeks.",
+          "Scapulothoracic arthrodesis: sling with a posterior strap for up to 12 weeks to protect the fusion, then physiotherapy with care not to disrupt it.",
+        ] },
         { type: "info", title: "Predictors of persistent symptoms", items: ["Untreated associated pathology", "Poor physiotherapy compliance", "Nerve injury", "Persistent postural abnormalities"] },
-        { type: "info", title: "Consultant tips", items: ["Scapular dyskinesis is usually a clinical finding, not a final diagnosis \u2014 always ask why the scapula is moving abnormally.", "Watch the patient move before touching the shoulder; dynamic observation often provides more information than isolated strength testing.", "Improvement with the Scapular Assistance Test is a strong indicator that targeted rehabilitation may be effective.", "Rehabilitation should extend beyond the shoulder \u2014 thoracic mobility, core stability, and lower-limb mechanics all contribute to efficient upper-limb function in athletes.", "Treat the entire kinetic chain, not just the scapula."] },
+        { type: "info", title: "Consultant tips", items: ["Scapulothoracic abnormal motion (STAM) is usually a clinical finding, not a final diagnosis \u2014 always ask why the scapula is moving abnormally. The term covers any abnormal position or motion; \"dyskinesis\" and \"winging\" are not interchangeable.", "Watch the patient move before touching the shoulder; dynamic observation often provides more information than isolated strength testing.", "Improvement with the Scapular Assistance Test (Horwitz manoeuvre) is a strong indicator that targeted rehabilitation may be effective, and how easily the scapula corrects helps separate STAM 2A, 2B and 5.", "Do not rely on the wall push-up; use the SFRT at 30\u00b0, 60\u00b0 and 100\u00b0 and resisted protraction.", "Rehabilitation should extend beyond the shoulder \u2014 thoracic mobility, core stability, and lower-limb mechanics all contribute to efficient upper-limb function in athletes.", "Treat the entire kinetic chain, not just the scapula."] },
       ],
     }],
 };
@@ -14255,8 +14442,8 @@ const generalShoulderData = {
       id: "differential", index: 5, title: "Differential Diagnosis", subtitle: "Narrowing the picture",
       fields: [
         { type: "info", title: "Using this section", items: ["Choose the most likely diagnosis once the picture is clear \u2014 a button then appears to continue straight into its full template, carrying today\'s answers across automatically.", "Tick any other diagnoses still worth considering alongside it.", "Once a working diagnosis emerges, open its specific template from the Related conditions chips at the top of this screen \u2014 the full structured assessment and management pathway are there."] },
-        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "AVN of humeral head", "Scapular dyskinesis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
-        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "AVN of humeral head", "Scapular dyskinesis", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
+        { type: "select", key: "workingDiagnosis", label: "Most likely diagnosis", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "AVN of humeral head", "Scapulothoracic abnormal motion", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
+        { type: "checkbox", key: "differentialConsidered", excludeCurrentValueOf: "workingDiagnosis", label: "Other diagnoses still being considered (optional)", options: ["Rotator cuff disease", "Subacromial pain syndrome", "Adhesive capsulitis", "Glenohumeral osteoarthritis", "AC joint pathology", "Long head of biceps pathology", "Instability", "SLAP lesion", "Calcific tendinitis", "AVN of humeral head", "Scapulothoracic abnormal motion", "Cervical radiculopathy", "Suprascapular neuropathy", "Parsonage-Turner syndrome", "Fracture", "Referred / visceral cause"] },
       ],
     },
     {
@@ -14814,6 +15001,14 @@ function getRegionConditions(region) {
 // trial always resolves and stays valid as records are updated, whereas a
 // hand-copied PMID can silently point at the wrong paper. Follow the link
 // and the trial is the first result.
+// A template is found by its name or by any of its aliases (earlier names and
+// the terms clinicians actually say), so renaming a template never hides it.
+function conditionMatchesQuery(condition, q) {
+  if (!q) return true;
+  if (condition.name.toLowerCase().includes(q)) return true;
+  return (condition.aliases || []).some((a) => a.toLowerCase().includes(q));
+}
+
 const PM = (q) => `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(q)}`;
 const AAOS_CPG = "https://www.aaos.org/quality/clinical-practice-guidelines/";
 const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
@@ -14827,7 +15022,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.23.0";
+const APP_VERSION = "5.24.2";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -15187,6 +15382,31 @@ const CONDITION_EVIDENCE = {
     links: [
       { label: "ACR hand OA guideline", url: PM("American College of Rheumatology hand osteoarthritis guideline") },
       { label: "OrthoGuidelines (AAOS)", url: ORTHOGUIDELINES },
+    ],
+  },
+  "scapular-dyskinesis": {
+    summary: "Scapulothoracic abnormal motion (STAM) is the umbrella term for any abnormal position or motion of the scapula on the chest wall; it replaces the loose use of \"dyskinesis\" and \"winging\" as if they meant the same thing. The review sorts it into types by cause and attaches a treatment sequence to each: conservative care first, then a type-specific operation.",
+    points: [
+      "Examine both scapulae from behind with the back fully exposed, looking for asymmetry, atrophy and the scapular position as the arms are lifted.",
+      "The shoulder flexion resistance test (SFRT) at 30\u00b0, 60\u00b0 and 100\u00b0 separates serratus anterior paralysis (positive at all three) from a working serratus anterior (negative at 100\u00b0, with a 100% negative predictive value).",
+      "The wall push-up assesses only two planes of scapular motion and is not recommended for evaluating STAM.",
+      "STAM 1 (pectoralis minor hyperactivity): rehabilitation, then botulinum toxin into the pectoralis minor, then arthroscopic pectoralis minor release.",
+      "STAM 2A/2B (pectoralis minor hyperactivity with serratus anterior underactivation, SFRT negative at 100\u00b0): after at least 6 months of conservative care, arthroscopic pectoralis minor release plus open scapulopexy (the \"sexy-pexy\"). The scapulopexy buys time for muscle rehabilitation rather than giving stable fixation.",
+      "STAM 3 (serratus anterior paralysis): transfer of the sternal head of pectoralis major with its bone insertion to the inferior scapular pole, after at least 1 year of conservative care with no reinnervation on EMG.",
+      "STAM 4 (trapezius paralysis): triple tendon transfer (Eden-Lange variant) for chronic paralysis with symptoms beyond 3 years that has not responded to conservative care or is unsuitable for nerve repair or reconstruction.",
+      "STAM 5 (combined trapezius and serratus anterior atrophy, typically FSHD): scapulothoracic arthrodesis or scapular tethering. The Eren stages 0 to 5 guide who benefits: stage 3 benefits most; stage 5 is unlikely to improve.",
+      "STAM 6, 7A and 7B (locked scapula and dancing scapula): conservative care first, with neurological and psychiatric evaluation for the dancing types; right-to-left scapular tethering with an Achilles allograft, and arthrodesis as a last resort.",
+      "Kibler's classification (types I to III by the prominence pattern) describes the pattern but does not guide treatment, which is why the STAM classification was proposed.",
+    ],
+    links: [
+      { label: "Scapulothoracic abnormal motion (STAM): evaluation, classification, and treatment strategies (Gedik et al., Acta Orthop Traumatol Turc 2024)", url: "https://doi.org/10.5152/j.aott.2024.24066", doi: "10.5152/j.aott.2024.24066" },
+      { label: "Same article on ResearchGate", url: "https://www.researchgate.net/publication/384111430_A_comprehensive_review_of_scapulothoracic_abnormal_motion_STAM_evaluation_classification_and_treatment_strategies" },
+      { label: "Serratus anterior dysfunction examination: wall push-up or shoulder flexion resistance test? (Lohre & Elhassan, JSES Int 2022)", url: PM("serratus anterior dysfunction examination wall push-up or shoulder flexion resistance test") },
+      { label: "Arthroscopic pectoralis minor release and scapulopexy for STAM (Elhassan et al., JSES 2022)", url: PM("outcome of arthroscopic pectoralis minor release and scapulopexy scapulothoracic abnormal motion") },
+      { label: "Transfer of the sternal head of pectoralis major to the scapula for winging (Elhassan & Wagner, JSES 2015)", url: PM("outcome of transfer of the sternal head of the pectoralis major with its bone insertion to the scapula to manage scapular winging") },
+      { label: "Triple-tendon transfer, an Eden-Lange variant, for trapezius paralysis (Elhassan & Wagner, JSES 2015)", url: PM("outcome of triple-tendon transfer Eden-Lange variant reconstruct trapezius paralysis") },
+      { label: "Shoulder disability staging for scapulothoracic arthrodesis in FSHD (Eren et al., Orthop Traumatol Surg Res 2020)", url: PM("novel shoulder disability staging system scapulothoracic arthrodesis facioscapulohumeral dystrophy") },
+      { label: "Scapular dyskinesis: current concepts (Kibler & Sciascia, Br J Sports Med 2010)", url: PM("Kibler Sciascia current concepts scapular dyskinesis") },
     ],
   },
   "distal-humerus-fracture": {
@@ -17639,7 +17859,10 @@ function examinationTextFor(exam, state) {
   labelledClauses(fields, state).forEach(({ field: f, clause: c }) => {
     const key = f.key || "";
     if (/inspection/i.test(key)) groups.inspection.push(c);
-    else if (/palpation/i.test(key)) groups.palpation.push(c);
+    // A grid prints its own "  \u2022 Label: ..." line; filed under Palpation that
+    // repeated the heading ("Palpation:   \u2022 Palpation: ..."), so its label is
+    // dropped here and the Palpation bullet supplies it once.
+    else if (/palpation/i.test(key)) groups.palpation.push(f.type === "testGrid" ? c.replace(/^\s*\u2022\s*[^:\n]+:\s*/, "") : c);
     else if (f.type === "testGrid" || /(specialTest|provocat|impingement)/i.test(key) || /^stability[A-Z]/.test(key) || (/^st[A-Z]/.test(key) && key !== "stNeuro")) groups.special.push(c);
     else if (f.type === "rom" || f.type === "strength" || f.type === "angleSlider" || /(strength|rom|motion|romFollowUp)/i.test(key)) groups.motion.push(c);
     else groups.other.push(c);
@@ -17956,7 +18179,7 @@ const SURGICAL_OPTIONS_BY_CONDITION = {
   "avn-humeral-head": ["Core decompression", "Hemiarthroplasty", "Total shoulder arthroplasty", "Reverse shoulder arthroplasty"],
   "calcific-tendinitis": ["Arthroscopic removal of calcific deposit", "Ultrasound-guided needle barbotage / lavage"],
   "proximal-humerus-fracture": ["ORIF with locking plate", "Intramedullary nailing", "Percutaneous pinning", "Hemiarthroplasty", "Reverse shoulder arthroplasty"],
-  "scapular-dyskinesis": ["Nerve decompression (if neurogenic cause identified)", "Muscle/tendon transfer (for scapular winging)", "Surgical treatment of identified underlying pathology"],
+  "scapular-dyskinesis": ["Arthroscopic pectoralis minor release", "Arthroscopic pectoralis minor release with open scapulopexy", "Pectoralis major (sternal head) transfer to the scapula", "Triple tendon transfer (Eden-Lange variant)", "Scapulothoracic arthrodesis", "Right-to-left scapular tethering (Achilles allograft)", "Nerve decompression (if neurogenic cause identified)", "Nerve repair or reconstruction (spinal accessory or long thoracic nerve)", "Surgical treatment of identified underlying pathology"],
   "slap-lesion": ["Arthroscopic SLAP repair", "Biceps tenodesis", "Debridement alone"],
   "pec-major-rupture": ["Primary repair (acute)", "Reconstruction with graft (chronic/delayed)"],
   // Elbow
@@ -18063,6 +18286,7 @@ const PROCEDURE_COMPLICATION_CATEGORIES = [
   { test: /osteotomy/i, items: ["Nonunion or delayed union", "Malalignment"] },
   { test: /\bgraft\b/i, items: ["Graft failure or resorption", "Donor site morbidity"] },
   { test: /balloon|spacer/i, items: ["Device migration or deflation", "Limited durability of benefit"] },
+  { test: /scapulopexy|scapulothoracic|scapular teth/i, items: ["Pneumothorax or pleural injury", "Dorsal scapular or other nerve injury", "Recurrent winging or loss of correction", "Graft stretching or failure"] },
   { test: /amputation/i, items: ["Neuroma formation", "Phantom or residual limb pain"] },
 ];
 
@@ -18310,8 +18534,15 @@ const PREOP_MINOR_RE = /(\brelease\b|trigger|ganglion|mucous cyst|nail bed|trans
 const PREOP_MAJOR_RE = /(arthroplasty|replacement|reconstruct|fixation|\bORIF\b|open reduction|plat(e|ing)\b|intramedullary|arthrodesis|fusion|osteotom|\btransfer|transposition|\bgraft|latarjet|bankart|stabilis|arthroscop|tenodesis|trapeziectomy|\bflap\b|replant|\brepair\b|first rib|scalenectom|thoracic outlet)/i;
 const PREOP_RISK_RE = /(diabet|hypertens|cardiac|heart|ischaem|angina|arrhythm|atrial fibrillation|pacemaker|asthma|copd|respiratory|lung|renal|kidney|anticoag|warfarin|antiplatelet|obes|smok|stroke|sleep apn|liver|anaemi|bleeding|thyroid|rheumatoid)/i;
 
+// Scapulothoracic operations are general-anaesthesia procedures. The
+// arthroscopic pectoralis minor release would otherwise be counted as minor
+// because it is called a "release"; scapular tethering carries no generic
+// major keyword at all.
+const PREOP_FORCE_MAJOR_RE = /(scapulopexy|scapulothoracic|scapular teth|arthroscopic pectoralis minor)/i;
+
 function isMajorProcedure(name) {
   if (!name) return false;
+  if (PREOP_FORCE_MAJOR_RE.test(name)) return true;
   if (PREOP_MINOR_RE.test(name)) return false;
   return PREOP_MAJOR_RE.test(name);
 }
@@ -21424,7 +21655,7 @@ const DIFFERENTIAL_TO_CONDITION = {
     "SLAP lesion": "slap-lesion",
     "Calcific tendinitis": "calcific-tendinitis",
     "AVN of humeral head": "avn-humeral-head",
-    "Scapular dyskinesis": "scapular-dyskinesis",
+    "Scapulothoracic abnormal motion": "scapular-dyskinesis",
     "Suprascapular neuropathy": "suprascapular-neuropathy",
     "Parsonage-Turner syndrome": "parsonage-turner-syndrome",
   },
@@ -23046,11 +23277,11 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
     for (const region of Object.values(REGIONS)) {
       if (region.subsections) {
         for (const sub of region.subsections) {
-          const items = sub.conditions.filter((c) => !q || c.name.toLowerCase().includes(q));
+          const items = sub.conditions.filter((c) => conditionMatchesQuery(c, q));
           if (items.length) groups.push({ header: `${region.label} \u2014 ${sub.label}`, items });
         }
       } else {
-        const items = region.conditions.filter((c) => !q || c.name.toLowerCase().includes(q));
+        const items = region.conditions.filter((c) => conditionMatchesQuery(c, q));
         if (items.length) groups.push({ header: region.label, items });
       }
     }
@@ -23068,7 +23299,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={toggleMode ? "Search all diagnoses\u2026" : "Search templates by name\u2026"}
+            placeholder={toggleMode ? "Search all diagnoses\u2026" : "Search templates by name or keyword\u2026"}
             className="flex-1 bg-transparent py-2.5 text-[15px] outline-none"
             style={{ color: T.ink }}
           />
@@ -24043,7 +24274,10 @@ export default function App() {
 
       {viewNote && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setViewNote(null)}>
-          <DragSheet quickRef onClose={() => setViewNote(null)} className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }}>
+          {/* The shortcut bar is left off on the home screen: the footer behind
+              this sheet already shows the same four icons, and the bar's Notes
+              icon would only reopen the list this note was opened from. */}
+          <DragSheet quickRef={screen.view !== "visitType"} onClose={() => setViewNote(null)} className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>{viewNote.title}</span>
               <button onClick={() => setViewNote(null)} aria-label="Close" className="p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
