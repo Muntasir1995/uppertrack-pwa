@@ -15022,7 +15022,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.27.0";
+const APP_VERSION = "5.28.2";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -20681,8 +20681,13 @@ function groupRecentNotes(recentNotes) {
 }
 
 
-function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote, onOpenAbout, initialSection, variant = "panel", detailNote, onOpenDetail }) {
+function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote, onOpenAbout, initialSection, variant = "panel", detailNote, onOpenDetail, homeBar }) {
   const [section, setSection] = useState(null);
+  // Which layout this sheet opened in. Latched while open, so a sheet that is
+  // closing because its tap navigated away from home does not flip to the
+  // other layout part-way through its exit.
+  const onHomeBarRef = useRef(false);
+  if (open) onHomeBarRef.current = !!homeBar;
   // Opening from a quick-access tile or icon lands on that section.
   useEffect(() => { if (open) setSection(initialSection || null); }, [open, initialSection]);
   const [evQuery, setEvQuery] = useState("");
@@ -20883,20 +20888,25 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
     const Icon = meta.icon;
     // A saved note is shown in place of the notes list, inside this same sheet.
     const detail = initialSection === "notes" ? detailNote : null;
+    // On the home screen the fixed bar stays put: this overlay stops where the
+    // bar starts, so the bar is neither dimmed nor covered, and the sheet
+    // (clipped at that edge) rises out of it at the full width of the screen.
+    const onHomeBar = onHomeBarRef.current;
     return (
       <div
-        className={`fixed inset-0 flex items-end sm:items-center justify-center ${closing ? "ut-scrim-out" : "ut-scrim-in"}`}
-        style={{ background: "rgba(16,30,43,0.45)", zIndex: 60 }}
+        className={`fixed flex items-end justify-center ${onHomeBar ? "left-0 right-0 top-0 overflow-hidden" : "inset-0 sm:items-center"} ${closing ? "ut-scrim-out" : "ut-scrim-in"}`}
+        style={{ background: "rgba(16,30,43,0.45)", zIndex: onHomeBar ? 34 : 60, bottom: onHomeBar ? "var(--ut-homebar-h)" : undefined }}
         onClick={onClose}
       >
         {/* One sheet for all four sections and for a note opened from the list:
             switching swaps what is inside it, so nothing closes, re-opens or
-            animates again. The height is fixed so the bar stays exactly where
-            the finger just was, however long the section above it is. */}
+            animates again. The height is fixed so the sheet does not change
+            size as the content does. Away from the home screen there is no
+            fixed bar, so the sheet carries its own. */}
         <DragSheet
           onClose={onClose}
-          className={`w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl ${closing ? "ut-drop-out" : "ut-spring-up"}`}
-          style={{ background: T.bg, display: "flex", flexDirection: "column", height: "min(82vh, 640px)", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}
+          className={`w-full ${onHomeBar ? "rounded-t-2xl" : "sm:max-w-lg rounded-t-2xl sm:rounded-2xl"} ${closing ? "ut-drop-out" : "ut-spring-up"}`}
+          style={{ background: T.bg, display: "flex", flexDirection: "column", height: onHomeBar ? "min(84%, 720px)" : "min(82vh, 640px)", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}
         >
           <div data-sheet-drag className="flex items-center gap-2.5 px-4 py-3 shrink-0" style={{ borderBottom: `1px solid ${T.border}`, background: T.surface, touchAction: "none", cursor: "grab" }}>
             {detail ? (
@@ -20933,7 +20943,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
               {sectionContent[initialSection]}
             </div>
           )}
-          <QuickRefBar showLabel />
+          {!onHomeBar && <QuickRefBar showLabel />}
         </DragSheet>
       </div>
     );
@@ -21967,7 +21977,9 @@ function VisitTypeGate({ onSelect }) {
         </div>
       </div>
       </div>
-      <HomeFooter />
+      {/* The bar itself is fixed (see HomeBar); this keeps the page's own
+          layout exactly as tall as the room left above it. */}
+      <div aria-hidden="true" className="shrink-0" style={{ height: "var(--ut-homebar-h)" }} />
     </div>
   );
 }
@@ -22560,12 +22572,16 @@ function RefIconButton({ section, label, short, icon: Icon, tone, showLabel }) {
   const isOpen = ref.activeSection === section;
   return (
     <button
-      onClick={() => ref.openPanel(section)}
+      // Pressing the icon of the section that is already showing closes it
+      // (whether the list or a saved note is on screen - the Back button in the
+      // sheet is what returns from a note to the list). Any other icon switches.
+      onClick={() => (isOpen ? ref.closePanel() : ref.openPanel(section))}
       className={`ut-ref-icon relative flex flex-col items-center shrink-0 ${showLabel ? "gap-1 px-1" : ""}`}
       style={{ minWidth: showLabel ? 60 : 44 }}
       aria-label={count ? `Open ${label.toLowerCase()}, ${count}` : `Open ${label.toLowerCase()}`}
       aria-current={isOpen ? "true" : undefined}
-      title={label}
+      aria-expanded={isOpen}
+      title={isOpen ? `Close ${label.toLowerCase()}` : label}
     >
       <span
         className="ut-ref-tile relative flex items-center justify-center rounded-xl"
@@ -22601,23 +22617,38 @@ function QuickRefBar({ showLabel }) {
   );
 }
 
-// Home screen footer: a compact pill at the foot of the page. It sits in the
-// page flow rather than fixed over it, so it never floats across the visit
-// cards - it rests at the bottom of the screen when the page fits, and is
-// reached by scrolling when it doesn't. A hairline divider separates the
-// two "recent" lists from the two reference sections.
-function HomeFooter() {
+// Home screen reference bar. Full width and fixed to the foot of the screen, so
+// it never moves and is never covered: a reference sheet rises from directly
+// above it (its overlay ends where the bar begins) instead of carrying a second
+// copy of the icons, and tapping another icon swaps the sheet's content. The
+// four icons stay clustered in the middle however wide the screen is. Its
+// stacking level is below every real modal (previews, dialogs, search, About),
+// which should cover it. A hairline divider separates the two "recent" lists
+// from the two reference sections.
+function HomeBar() {
   const [a, b, c, d] = QUICK_REF;
   return (
-    <div className="shrink-0 flex justify-center pt-2 px-4" style={{ paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
-      <nav className="ut-glass flex items-center gap-1.5 rounded-2xl p-2" aria-label="Reference shortcuts">
-        <RefIconButton {...a} tone="glass" showLabel />
-        <RefIconButton {...b} tone="glass" showLabel />
-        <span aria-hidden="true" className="mx-1.5" style={{ width: 1, height: 24, background: "rgba(16,30,43,0.14)" }} />
-        <RefIconButton {...c} tone="glass" showLabel />
-        <RefIconButton {...d} tone="glass" showLabel />
-      </nav>
-    </div>
+    <nav
+      aria-label="Reference shortcuts"
+      className="fixed left-0 right-0 bottom-0 flex items-center justify-center"
+      style={{
+        zIndex: 35,
+        height: "var(--ut-homebar-h)",
+        padding: "8px 12px calc(6px + env(safe-area-inset-bottom, 0px))",
+        gap: "clamp(6px, 1.6vw, 22px)",
+        background: "rgba(255,255,255,0.92)",
+        WebkitBackdropFilter: "blur(18px) saturate(170%)",
+        backdropFilter: "blur(18px) saturate(170%)",
+        borderTop: `1px solid ${T.border}`,
+        boxShadow: "0 -6px 20px rgba(16,30,43,0.06)",
+      }}
+    >
+      <RefIconButton {...a} tone="glass" showLabel />
+      <RefIconButton {...b} tone="glass" showLabel />
+      <span aria-hidden="true" style={{ width: 1, height: 28, background: "rgba(16,30,43,0.14)" }} />
+      <RefIconButton {...c} tone="glass" showLabel />
+      <RefIconButton {...d} tone="glass" showLabel />
+    </nav>
   );
 }
 
@@ -22679,6 +22710,15 @@ function NoteComments({ value, onChange }) {
   );
 }
 
+// How wide a line of note text may run. Sheets that fill a wide screen (a saved
+// note opened from the home bar) would otherwise stretch each line across the
+// whole width, which is hard to read: past roughly 100 characters the eye loses
+// its place on the way back to the next line. 40rem is about 640px, which is
+// also the text width the note previews already get, and it scales with the
+// reader's font size. On a phone the column is narrower than this, so nothing
+// changes there.
+const NOTE_MEASURE = "40rem";
+
 // A note exactly as it was when copied, with its own Copy. Used wherever a
 // saved note is opened. Copy goes through the same routine as every other copy
 // button (with its fallback) and says when it has worked; the old viewer called
@@ -22698,7 +22738,9 @@ function SavedNoteView({ note }) {
       <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", background: T.surface }}>
         <NoteBody text={note.text} />
       </div>
-      <div className="px-4 py-2.5 flex flex-col gap-1.5 shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.surface }}>
+      <div className="px-4 py-2.5 shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.surface }}>
+       {/* The same column as the note above, so Copy is not a button as wide as the screen. */}
+       <div className="flex flex-col gap-1.5 mx-auto w-full" style={{ maxWidth: NOTE_MEASURE }}>
         <button
           onClick={copy}
           className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
@@ -22715,6 +22757,7 @@ function SavedNoteView({ note }) {
         <div className="text-[12px] text-center" style={{ color: T.inkSoft }}>
           Saved this session only — this is a snapshot from when it was generated, not a live copy.
         </div>
+       </div>
       </div>
     </>
   );
@@ -22741,7 +22784,7 @@ function NoteBody({ text }) {
   return (
     <pre
       className="ut-note whitespace-pre-wrap text-[14px] leading-relaxed"
-      style={{ color: T.ink, fontFamily: "inherit", overflow: "visible", margin: 0 }}
+      style={{ color: T.ink, fontFamily: "inherit", overflow: "visible", margin: "0 auto", maxWidth: NOTE_MEASURE }}
     >
       {lines.map((line, i) => {
         const trimmed = line.trim();
@@ -24255,6 +24298,10 @@ const DESIGN_SYSTEM_CSS = `
 
   /* Home screen fills exactly the space below the app bar; dvh tracks the
      mobile browser's collapsing toolbars where supported. */
+  /* Height of the home reference bar. The bar, the room the home page leaves for
+     it and the bottom edge of the sheet that rises from it all use this, so
+     they cannot drift apart. */
+  :root { --ut-homebar-h: calc(74px + env(safe-area-inset-bottom, 0px)); }
   .ut-home { height: calc(100vh - 48px); height: calc(100dvh - 48px); }
   /* The visit-card glyphs scale with their tile, which is itself sized from
      viewport height, so the cards shrink evenly on a short screen. */
@@ -24481,6 +24528,7 @@ export default function App() {
   const [panelNote, setPanelNote] = useState(null);
   const referenceValue = {
     openPanel: (section) => { setPanelNote(null); setPanelSection(section || null); setPanelVariant(section ? "sheet" : "panel"); setPanelOpen(true); },
+    closePanel: () => setPanelOpen(false),
     openAbout: () => { setPanelOpen(false); setAboutOpen(true); },
     noteCount: 0,
     recentCount: 0,
@@ -24696,7 +24744,10 @@ export default function App() {
         </div>
       )}
 
+      {screen.view === "visitType" && <HomeBar />}
+
       <SidePanel
+        homeBar={screen.view === "visitType"}
         open={panelOpen}
         onClose={() => setPanelOpen(false)}
         recentIds={recentIds}
@@ -24712,11 +24763,11 @@ export default function App() {
       <AboutSheet open={aboutOpen} onClose={() => setAboutOpen(false)} />
 
       {viewNote && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setViewNote(null)}>
+        <div className={`fixed inset-0 z-50 flex items-end justify-center ${screen.view === "visitType" ? "" : "sm:items-center"}`} style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setViewNote(null)}>
           {/* The shortcut bar is left off on the home screen: the footer behind
               this sheet already shows the same four icons, and the bar's Notes
               icon would only reopen the list this note was opened from. */}
-          <DragSheet quickRef={screen.view !== "visitType"} onClose={() => setViewNote(null)} className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }}>
+          <DragSheet quickRef={screen.view !== "visitType"} onClose={() => setViewNote(null)} className={screen.view === "visitType" ? "w-full rounded-t-2xl" : "w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl"} style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh" }}>
             <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
               <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>{viewNote.title}</span>
               <button onClick={() => setViewNote(null)} aria-label="Close" className="p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
