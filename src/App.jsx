@@ -15022,7 +15022,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.25.1";
+const APP_VERSION = "5.27.0";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -18576,6 +18576,37 @@ function surgeryConsentBullets(surgeryAgreement, surgicalDiscussion, state) {
   return out;
 }
 
+// Pathway steps mix two kinds of thing. Some are decisions or plans that belong
+// in the record ("Education", "Night splint", "Review at 6 weeks"). Others are
+// prompts to the clinician about what to assess while working the case up
+// ("Assess stability", "Classify fracture", "Apply Trauma Decision Ladder").
+// A prompt is neither a finding nor a decision: pasted into the Management Plan
+// it reads as something not yet done, or as something ordered. What those
+// assessments found is already recorded in the History, Examination and
+// Imaging sections, so the prompts stay on screen as decision support and are
+// left out of the note.
+//
+// The rule works stage by stage on the leading words, not step by step, because
+// one step often mixes both ("Diagnosis -> Assess functional arc -> Education
+// -> Physiotherapy -> Review"): dropping a whole step by its title would lose
+// real plan items. It is deliberately conservative. Only unmistakable
+// assessment prompts are dropped, and anything ambiguous ("Reassess",
+// "Consider injection", "Review at 3 months", "Confirm with MRI") is kept.
+const WORKUP_LEAD_RE = /^(?:(?:assess|evaluate|identify|exclude|determine|establish|classify|examine|localis[ez]e|define|characteris[ez]e|measure|look for|distinguish|differentiate|compare with|confirm|clinical|neurovascular)\b|focused history|regional examination|proximal screen|cervical spine screen|red flag review|patient assessment|phase identification|apply (?:the )?(?:trauma decision ladder|budapest criteria)|review (?:imaging|diagnosis|stage)\b|consider (?:age|a zone)\b|decide (?:between|whether)\b|record the\b)/i;
+// A bare classification or checklist name ("AO/OTA classification",
+// "Stable Elbow Checklist") is a framework to apply, not a plan.
+const WORKUP_NOUN_RE = /\b(?:classification|checklist)\b/i;
+// "Confirm with MRI" or "confirm the source with a targeted injection" is a
+// request or a referral, which is plan, not a prompt.
+const WORKUP_REQUEST_RE = /\b(?:MRI|CT|EMG|NCS|ultrasound|injection|rheumatolog\w*)\b/i;
+
+function isWorkupPrompt(stage) {
+  const t = String(stage || "").trim();
+  if (!t || /^diagnosis$/i.test(t)) return false;
+  if (/^confirm\b/i.test(t) && WORKUP_REQUEST_RE.test(t)) return false;
+  return WORKUP_LEAD_RE.test(t) || WORKUP_NOUN_RE.test(t);
+}
+
 function trailToBullets(trail, surgeryAgreement, surgicalDiscussion, state) {
   const stepTexts = trail.filter((t) => t.node.type === "info" || t.node.type === "terminal").map((t) => t.node.text);
   if (!stepTexts.length) return [];
@@ -18611,12 +18642,17 @@ function trailToBullets(trail, surgeryAgreement, surgicalDiscussion, state) {
       .filter(Boolean)
       .forEach((s) => {
         if (mriAlreadyDone && MRI_SUGGESTION_RE.test(s)) return;
+        if (isWorkupPrompt(s)) return;
         bullets.push(/^diagnosis$/i.test(s) ? "The probable diagnosis was discussed with the patient." : s);
       });
   });
-  if (!bullets.length) return [];
 
+  // Judged on the full text of the trail, prompts included, exactly as the
+  // surgery-agreement question is: whatever makes the app ask about consent
+  // must also make the note record the answer. A pathway that was nothing but
+  // prompts has no plan to write, but must not swallow a recorded agreement.
   const combinedText = stepTexts.join(" ");
+  if (!bullets.length && !SURGERY_KEYWORDS.test(combinedText)) return [];
   if (SURGERY_KEYWORDS.test(combinedText)) {
     if (surgeryAgreement === "Agreed") {
       bullets.push(...surgeryConsentBullets(surgeryAgreement, surgicalDiscussion, state));
@@ -18653,6 +18689,16 @@ function buildManagementPlan(condition, state) {
       if (Object.keys(digitAnswers).length) {
         const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, priorTx);
         bullets.push(...trailToBullets(walkPathwayTrail(condition.pathway, digitAnswers, effectiveStart), state.pathwaySurgeryAgreementByDigit?.[digit], digitDiscussion, state));
+      }
+      // The same safety net the single and bilateral notes have: a recorded
+      // agreement must reach the note even if this digit's pathway was not
+      // walked (or was changed afterwards), otherwise the review plan says
+      // "scheduled for surgery" with no record that it was discussed.
+      const digitAgreement = state.pathwaySurgeryAgreementByDigit?.[digit];
+      if (digitAgreement === "Agreed" && !bullets.some((b) => /who agreed to /.test(b))) {
+        bullets.push(...surgeryConsentBullets(digitAgreement, digitDiscussion, state));
+      } else if (digitAgreement === "Not agreed" && !bullets.length) {
+        bullets.push("The patient was not keen for surgery at this time.");
       }
       const digitAltPlan = (digitAlt.options || []).filter((p) => p !== "Other");
       if ((digitAlt.options || []).includes("Other") && digitAlt.optionsOther && digitAlt.optionsOther.trim()) digitAltPlan.push(digitAlt.optionsOther.trim());
@@ -18993,6 +19039,100 @@ function getPresentUrgentFlags(condition, state) {
   return (condition.urgentFlags || []).filter((_, i) => urgentChecked.includes(i));
 }
 
+// ---- One-line summary --------------------------------------------------
+// A clinician scanning a list, a handover or a referral wants the patient,
+// the diagnosis and what was decided before anything else - and often a short
+// line to paste into a problem list. Built only from what was recorded: it
+// never states a plan the clinician did not choose, so a diagnosis with no
+// recorded decision is just "who and what".
+function lowerDiagnosisName(name) {
+  const lowerWord = (w) => w.split("-").map(lowerListItem).join("-");
+  return String(name || "").split(" ").map((w) => (w.startsWith("(") ? `(${lowerWord(w.slice(1))}` : lowerWord(w))).join(" ");
+}
+
+function summaryPatientPhrase(condition, state) {
+  const all = resolveFields(condition.sections.flatMap((sec) => sec.fields || []), state);
+  const val = (re) => { const f = all.find((ff) => re.test(ff.key || "")); return f ? state[f.key] : null; };
+  const age = val(/^age$/i);
+  const gender = val(/^gender$/i);
+  const occ = val(/^occupation$/i) || val(/^occupationBeforeInjury$/i);
+  const ageStr = age != null ? String(age).trim() : (state.__generalAssessmentAgeBand != null ? String(state.__generalAssessmentAgeBand).trim() : null);
+  const numeric = ageStr != null && /^\d{1,3}$/.test(ageStr);
+  const g = gender ? String(gender).toLowerCase() : null;
+  let who = null;
+  if (numeric && g) who = `${ageStr}-year-old ${g}`;
+  else if (numeric) who = `${ageStr} years old`;
+  else if (ageStr && g) who = `${g}, age group ${ageStr}`;
+  else if (ageStr) who = `Age group ${ageStr}`;
+  else if (g) who = g;
+  const job = occ && String(occ).trim() ? lowerListItem(String(occ).trim()) : null;
+  if (who && job) who = `${who}, ${job}`;
+  else if (job) who = job;
+  return who ? who.charAt(0).toUpperCase() + who.slice(1) : null;
+}
+
+function summaryDiagnosisPhrase(condition, state) {
+  const side = sideWord(state) || (String(state.side || "").toLowerCase() === "bilateral" ? "bilateral" : null);
+  const text = `${side ? `${side} ` : ""}${lowerDiagnosisName(condition.name)}`;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+// "Surgery agreed: <procedure>" across every way a decision can be recorded:
+// one decision, one per side, or one per digit. A procedure agreed for one
+// side or digit is labelled with it, so the line cannot be read as applying
+// to all of them.
+function summarySurgeryPhrase(state) {
+  const contexts = [];
+  if (state.pathwaySurgeryAgreement) contexts.push({ label: null, a: state.pathwaySurgeryAgreement, d: state.surgicalDiscussion });
+  if (state.pathwaySurgeryAgreementRight) contexts.push({ label: "right", a: state.pathwaySurgeryAgreementRight, d: state.surgicalDiscussionRight });
+  if (state.pathwaySurgeryAgreementLeft) contexts.push({ label: "left", a: state.pathwaySurgeryAgreementLeft, d: state.surgicalDiscussionLeft });
+  Object.entries(state.pathwaySurgeryAgreementByDigit || {}).forEach(([digit, a]) => {
+    contexts.push({ label: String(digit).toLowerCase(), a, d: (state.surgicalDiscussionByDigit || {})[digit] });
+  });
+  const procsOf = (d) => {
+    const chosen = ((d && d.selected) || []).filter((x) => x !== "Other");
+    if (d && (d.selected || []).includes("Other") && d.otherText && d.otherText.trim()) chosen.push(d.otherText.trim());
+    return chosen;
+  };
+  const agreed = contexts.filter((c) => c.a === "Agreed");
+  if (agreed.length) {
+    const parts = agreed
+      .map((c) => { const procs = procsOf(c.d); return procs.length ? `${humanizeList(procs, { preserveCase: true })}${c.label ? ` (${c.label})` : ""}` : null; })
+      .filter(Boolean);
+    if (parts.length) return `Surgery agreed: ${parts.join("; ")}.`;
+    const labels = agreed.map((c) => c.label).filter(Boolean);
+    return `Surgery agreed${labels.length ? ` (${labels.join(", ")})` : ""}.`;
+  }
+  if (contexts.some((c) => c.a === "Not agreed")) return "Surgery offered; patient not keen.";
+  return null;
+}
+
+// Reuses the review-plan wording so the summary can never disagree with it.
+function summaryReviewPhrase(condition, state) {
+  if (patientScheduledForSurgery(state)) return null;
+  if (!condition.sections.find((sec) => sec.id === "followup")) return null;
+  const interval = state.followUpInterval === "Other" ? state.followUpIntervalOther : state.followUpInterval;
+  if (!interval || !String(interval).trim()) return null;
+  return reviewPlanSentence(String(interval).trim(), null)
+    .replace(/^The patient will be reviewed /, "Review ")
+    .replace(/^The patient will be discharged from follow-up\.$/, "To be discharged from follow-up.");
+}
+
+function buildSummaryLine(condition, state, opts) {
+  const includePatient = !opts || opts.includePatient !== false;
+  const parts = [];
+  if (includePatient) {
+    const who = summaryPatientPhrase(condition, state);
+    if (who) parts.push(`${who}.`);
+  }
+  parts.push(`${summaryDiagnosisPhrase(condition, state)}.`);
+  const surgery = summarySurgeryPhrase(state);
+  if (surgery) parts.push(surgery);
+  const review = summaryReviewPhrase(condition, state);
+  if (review) parts.push(review);
+  return parts.join(" ");
+}
+
 function buildNote(condition, state) {
   const parts = buildProseNote(condition, state);
   const presentUrgent = getPresentUrgentFlags(condition, state);
@@ -19013,6 +19153,13 @@ function buildNote(condition, state) {
   if (!parts.length) {
     lines.push("No findings have been documented yet for this condition.");
   } else {
+    // Only once there is something besides the impression to summarise: with
+    // nothing else recorded the summary would just repeat the impression.
+    if (parts.some((p) => p.heading !== "Impression")) {
+      lines.push("SUMMARY");
+      lines.push(buildSummaryLine(condition, state));
+      lines.push("");
+    }
     parts.forEach((p) => {
       lines.push(p.heading.toUpperCase());
       lines.push(p.text);
@@ -19106,26 +19253,28 @@ function buildCombinedNote(session) {
   };
   const withLabel = (name, label) => (label ? `${name} (${label})` : name);
 
-  lines.push("CONDITIONS ASSESSED THIS SESSION");
   if (!realDiagnoses.length) {
     // A general assessment on its own, not yet continued into a specific
     // diagnosis - shouldn't normally reach the combined note, but handled
     // rather than producing an empty header.
+    lines.push("CONDITIONS ASSESSED THIS SESSION");
     lines.push(`Assessment in progress: ${withStates[0].condition.name}`);
-  } else if (realDiagnoses.length === 1) {
-    lines.push(`Diagnosis: ${realDiagnoses[0].condition.name}`);
   } else {
-    lines.push(`Primary diagnosis: ${realDiagnoses[0].condition.name}`);
-    const secondaries = realDiagnoses.slice(1);
-    lines.push(`Secondary diagnos${secondaries.length === 1 ? "is" : "es"}: ${secondaries.map((s) => s.condition.name).join(", ")}`);
+    // The summary names every diagnosis (with Primary/Secondary where there is
+    // more than one) and what was decided for each, so it replaces the bare
+    // list of conditions rather than repeating it. The patient is stated once.
+    lines.push("SUMMARY");
+    let who = null;
+    for (const { condition, state } of withStates) {
+      who = summaryPatientPhrase(condition, state);
+      if (who) break;
+    }
+    if (who) lines.push(`${who}.`);
+    realDiagnoses.forEach(({ condition, state }) => {
+      const label = labelFor(condition);
+      lines.push(`${label ? `${label}: ` : ""}${buildSummaryLine(condition, state, { includePatient: false })}`);
+    });
   }
-  lines.push("");
-
-  lines.push("RED FLAGS");
-  withStates.forEach(({ condition, state }) => {
-    const text = buildRedFlagsExcluded(condition, state) || "Red flags not yet reviewed for this diagnosis.";
-    lines.push(`${withLabel(condition.name, labelFor(condition))}: ${text}`);
-  });
   lines.push("");
 
   // Patient demographics are the same patient regardless of how many
@@ -19162,6 +19311,16 @@ function buildCombinedNote(session) {
   pushPerDiagnosisSection("HISTORY", buildHistory);
   pushPerDiagnosisSection("EXAMINATION", buildExamination);
   pushPerDiagnosisSection("IMAGING", buildImaging);
+
+  // Same place as in a single-diagnosis note (after imaging, before the
+  // differential), so the two read in the same order.
+  lines.push("RED FLAGS");
+  withStates.forEach(({ condition, state }) => {
+    const text = buildRedFlagsExcluded(condition, state) || "Red flags not yet reviewed for this diagnosis.";
+    lines.push(`${withLabel(condition.name, labelFor(condition))}: ${text}`);
+  });
+  lines.push("");
+
   pushPerDiagnosisSection("DIFFERENTIAL DIAGNOSIS", buildDifferential);
 
   // Impression is combined into a single paragraph covering every
@@ -19189,12 +19348,21 @@ function buildCombinedNote(session) {
   withStates.forEach(({ condition, state }) => {
     if (supersededGeneralIds.has(condition.id)) return;
     const mgmt = buildManagementPlan(condition, state);
+    // A single note includes the outcome scores between the plan and the
+    // review; the combined note used to omit them altogether, so scores
+    // recorded in a multi-diagnosis visit never reached the record.
+    const scores = buildOutcomeScores(condition, state);
     const review = buildReviewPlan(condition, state);
-    if (!mgmt && !review) return;
+    if (!mgmt && !scores && !review) return;
     lines.push(`MANAGEMENT & REVIEW PLAN \u2014 ${withLabel(condition.name, labelFor(condition))}`);
     if (mgmt) {
       lines.push("Management Plan:");
       lines.push(mgmt);
+      lines.push("");
+    }
+    if (scores) {
+      lines.push("Outcome Scores:");
+      lines.push(scores);
       lines.push("");
     }
     if (review) {
@@ -20513,7 +20681,7 @@ function groupRecentNotes(recentNotes) {
 }
 
 
-function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote, onOpenAbout, initialSection, variant = "panel" }) {
+function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onOpenNote, onOpenAbout, initialSection, variant = "panel", detailNote, onOpenDetail }) {
   const [section, setSection] = useState(null);
   // Opening from a quick-access tile or icon lands on that section.
   useEffect(() => { if (open) setSection(initialSection || null); }, [open, initialSection]);
@@ -20582,7 +20750,14 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                       {group.parts.map((part) => (
                         <button
                           key={part.id}
-                          onClick={() => { onOpenNote(part); onClose(); }}
+                          onClick={() => {
+                            // In a sheet the note opens in place, so the list is one tap
+                            // back and the other sections stay one tap away. The side
+                            // panel has no room for that, so it still hands over to the
+                            // full-size viewer.
+                            if (variant === "sheet" && onOpenDetail) onOpenDetail({ ...part, title: `${part.title} \u2014 ${NOTE_KIND_LABEL[part.kind] || "Clinic note"}` });
+                            else { onOpenNote(part); onClose(); }
+                          }}
                           className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-left active:scale-95 transition"
                           style={{ minHeight: 44, background: T.slateChip }}
                         >
@@ -20706,32 +20881,59 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
       outcomes: { title: "Outcome measures", icon: Gauge, count: OUTCOME_MEASURES.length },
     }[initialSection];
     const Icon = meta.icon;
+    // A saved note is shown in place of the notes list, inside this same sheet.
+    const detail = initialSection === "notes" ? detailNote : null;
     return (
       <div
         className={`fixed inset-0 flex items-end sm:items-center justify-center ${closing ? "ut-scrim-out" : "ut-scrim-in"}`}
         style={{ background: "rgba(16,30,43,0.45)", zIndex: 60 }}
         onClick={onClose}
       >
+        {/* One sheet for all four sections and for a note opened from the list:
+            switching swaps what is inside it, so nothing closes, re-opens or
+            animates again. The height is fixed so the bar stays exactly where
+            the finger just was, however long the section above it is. */}
         <DragSheet
           onClose={onClose}
           className={`w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl ${closing ? "ut-drop-out" : "ut-spring-up"}`}
-          style={{ background: T.bg, display: "flex", flexDirection: "column", maxHeight: "85vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}
+          style={{ background: T.bg, display: "flex", flexDirection: "column", height: "min(82vh, 640px)", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}
         >
-          <div data-sheet-drag className="flex items-center gap-2.5 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, background: T.surface, touchAction: "none", cursor: "grab" }}>
-            <span className="shrink-0 flex items-center justify-center rounded-lg" style={{ width: 30, height: 30, background: T.tealTint }} aria-hidden="true">
-              <Icon size={16} color={T.tealDark} />
-            </span>
+          <div data-sheet-drag className="flex items-center gap-2.5 px-4 py-3 shrink-0" style={{ borderBottom: `1px solid ${T.border}`, background: T.surface, touchAction: "none", cursor: "grab" }}>
+            {detail ? (
+              <button
+                onClick={() => onOpenDetail && onOpenDetail(null)}
+                aria-label="Back to recent notes"
+                className="shrink-0 flex items-center rounded-lg pl-0.5 pr-2.5 active:opacity-60"
+                style={{ minHeight: 44, color: T.tealDark }}
+              >
+                <ChevronLeft size={21} color={T.tealDark} />
+                <span className="text-[14px] font-semibold">Notes</span>
+              </button>
+            ) : (
+              <span className="shrink-0 flex items-center justify-center rounded-lg" style={{ width: 30, height: 30, background: T.tealTint }} aria-hidden="true">
+                <Icon size={16} color={T.tealDark} />
+              </span>
+            )}
             <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>
-              {meta.title}
-              <span className="ml-1.5 font-normal" style={{ color: T.inkSoft }}>({meta.count})</span>
+              {detail ? detail.title : (
+                <>
+                  {meta.title}
+                  <span className="ml-1.5 font-normal" style={{ color: T.inkSoft }}>({meta.count})</span>
+                </>
+              )}
             </span>
             <button onClick={onClose} aria-label="Close" className="p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
               <X size={20} color={T.inkSoft} />
             </button>
           </div>
-          <div className="px-4 pb-5" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-            {sectionContent[initialSection]}
-          </div>
+          {detail ? (
+            <SavedNoteView note={detail} />
+          ) : (
+            <div className="px-4 pb-5" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+              {sectionContent[initialSection]}
+            </div>
+          )}
+          <QuickRefBar showLabel />
         </DragSheet>
       </div>
     );
@@ -20789,7 +20991,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
   );
 }
 
-function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome, onNoteSaved }) {
+function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome, onNoteSaved, noteComments, onNoteCommentsChange }) {
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -20947,9 +21149,10 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   const generatedNote = useMemo(
     () => {
       if (noteType === "physio") return buildPhysioReferral(condition, state);
-      return hasMultipleActive ? buildCombinedNote(session) : buildNote(condition, state);
+      const base = hasMultipleActive ? buildCombinedNote(session) : buildNote(condition, state);
+      return withAdditionalComments(base, noteComments);
     },
-    [condition, state, noteType, hasMultipleActive, session]
+    [condition, state, noteType, hasMultipleActive, session, noteComments]
   );
 
   // Lets the clinician correct or add to the note here rather than pasting
@@ -21464,6 +21667,11 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 />
               ) : (
                 <NoteBody text={note} />
+              )}
+              {/* Not offered while the text is being edited by hand: an edited
+                  note already holds whatever the clinician typed. */}
+              {noteType === "note" && !editingNote && !isEdited && onNoteCommentsChange && (
+                <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />
               )}
             </div>
             {/* One row of actions, so the note keeps most of the sheet: a compact
@@ -22277,6 +22485,7 @@ function AboutSheet({ open, onClose }) {
             <Li>Document a new patient, a follow-up or a post-operative review. Post-operative reviews adapt to the time since surgery and to the procedure performed.</Li>
             <Li>Cover several diagnoses in one visit. Follow-up and post-operative reviews carry the shared details (date, reason for review, progress, plan) across diagnoses and produce one combined note that lists only what differs.</Li>
             <Li>Use a brief encounter for a quick consultation, or the full template when the case needs it.</Li>
+            <Li>Start each new-visit note with a one-line summary of the patient, diagnosis and decision, which can be copied on its own. Add your own comments, typed or dictated, and they stay in the note as it updates, unlike editing the text by hand.</Li>
             <Li>Record established classifications and scores where they guide management, for example the Wrightington classification for elbow fracture-dislocations, the GTIM score for shoulder instability, Herbert for scaphoid fractures, McGowan for cubital tunnel and STAM for scapulothoracic abnormal motion.</Li>
             <Li>Calculate ASES, SANE and QuickDASH scores from item responses, and document injections (agent, dose and technique).</Li>
             <Li>Search the evidence library, which has summaries and linked sources for {evidenceCount} diagnoses, and reopen the notes you have copied during the session.</Li>
@@ -22381,10 +22590,13 @@ function RefIconButton({ section, label, short, icon: Icon, tone, showLabel }) {
 
 // Bottom of every note preview: the four shortcuts, evenly spaced. Each
 // opens its section as a sheet over the note; closing it returns here.
-function QuickRefBar() {
+function QuickRefBar({ showLabel }) {
   return (
-    <div className="flex items-center justify-around px-4 py-2 shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.surface }}>
-      {QUICK_REF.map((q) => <RefIconButton key={q.section} {...q} />)}
+    <div
+      className="flex items-center justify-around px-4 py-2 shrink-0"
+      style={{ borderTop: `1px solid ${T.border}`, background: T.surface, paddingBottom: showLabel ? "calc(8px + env(safe-area-inset-bottom, 0px))" : undefined }}
+    >
+      {QUICK_REF.map((q) => <RefIconButton key={q.section} {...q} showLabel={showLabel} />)}
     </div>
   );
 }
@@ -22426,8 +22638,106 @@ function AboutVersionLink() {
 }
 
 
+// Editing the note text freezes it: it stops following the form, which is the
+// wrong trade for the usual need - one sentence the template did not capture.
+// Additional comments are kept separately and written under ADDITIONAL
+// COMMENTS at the end of the note, so the note keeps updating around them.
+const NOTE_FOOTER_MARK = "\n---\nGenerated with UpperTrack";
+function withAdditionalComments(text, comments) {
+  const c = String(comments || "").trim();
+  if (!c) return text;
+  const note = String(text || "");
+  const block = `ADDITIONAL COMMENTS\n${c}\n`;
+  const at = note.lastIndexOf(NOTE_FOOTER_MARK);
+  if (at === -1) return `${note.replace(/\s+$/, "")}\n\n${block}`;
+  return `${note.slice(0, at).replace(/\s+$/, "")}\n\n${block}${note.slice(at)}`;
+}
+
+function NoteComments({ value, onChange }) {
+  const spoken = (text) => onChange(`${value ? `${String(value).trimEnd()} ` : ""}${text}`);
+  return (
+    <div className="mt-4 pt-3" style={{ borderTop: `1px dashed ${T.border}` }}>
+      <label htmlFor="ut-note-comments" className="block text-[12px] font-bold uppercase tracking-wide mb-0.5" style={{ color: T.inkSoft }}>
+        Additional comments
+      </label>
+      <div className="text-[12px] mb-2" style={{ color: T.inkSoft }}>
+        Added to the end of the note. The note keeps updating around them.
+      </div>
+      <div className="flex items-start gap-2">
+        <textarea
+          id="ut-note-comments"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          rows={3}
+          placeholder="Anything the template did not capture"
+          className="flex-1 rounded-xl px-3 py-2.5 text-[14px]"
+          style={{ background: T.surface, border: `1px solid ${T.border}`, color: T.ink, minHeight: 84, resize: "vertical", fontFamily: "inherit" }}
+        />
+        <DictateButton onResult={spoken} />
+      </div>
+    </div>
+  );
+}
+
+// A note exactly as it was when copied, with its own Copy. Used wherever a
+// saved note is opened. Copy goes through the same routine as every other copy
+// button (with its fallback) and says when it has worked; the old viewer called
+// the clipboard directly and gave no sign either way.
+function SavedNoteView({ note }) {
+  const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const copy = async () => {
+    const ok = await copyTextRobust(note.text);
+    setCopied(ok);
+    setFailed(!ok);
+    setTimeout(() => setCopied(false), 1800);
+    if (!ok) setTimeout(() => setFailed(false), 4000);
+  };
+  return (
+    <>
+      <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", background: T.surface }}>
+        <NoteBody text={note.text} />
+      </div>
+      <div className="px-4 py-2.5 flex flex-col gap-1.5 shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.surface }}>
+        <button
+          onClick={copy}
+          className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
+          style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
+        >
+          {copied ? <Check size={17} /> : <Copy size={17} />}
+          {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
+        </button>
+        {failed && (
+          <div className="text-[13px] text-center" style={{ color: T.red }}>
+            Couldn&apos;t copy automatically — tap and hold the note above to select and copy it manually.
+          </div>
+        )}
+        <div className="text-[12px] text-center" style={{ color: T.inkSoft }}>
+          Saved this session only — this is a snapshot from when it was generated, not a live copy.
+        </div>
+      </div>
+    </>
+  );
+}
+
 function NoteBody({ text }) {
   const lines = String(text || "").split("\n");
+  const [summaryCopied, setSummaryCopied] = useState(false);
+  // The SUMMARY section can be copied on its own, for a problem list or the
+  // reason on a referral. Display only: the note's own copy is unchanged.
+  const summaryAt = lines.findIndex((l) => l.trim() === "SUMMARY");
+  const summaryText = (() => {
+    if (summaryAt === -1) return null;
+    const body = [];
+    for (let j = summaryAt + 1; j < lines.length && lines[j].trim() !== ""; j++) body.push(lines[j]);
+    return body.join("\n");
+  })();
+  const copySummary = async () => {
+    if (await copyTextRobust(summaryText)) {
+      setSummaryCopied(true);
+      setTimeout(() => setSummaryCopied(false), 1800);
+    }
+  };
   return (
     <pre
       className="ut-note whitespace-pre-wrap text-[14px] leading-relaxed"
@@ -22437,16 +22747,32 @@ function NoteBody({ text }) {
         const trimmed = line.trim();
         const isHeading = trimmed.length > 2 && /^[A-Z0-9][A-Z0-9 &\u2014/()'-]*$/.test(trimmed) && /[A-Z]{3}/.test(trimmed);
         const isSubHeading = !isHeading && /^[^\s].*:$/.test(line) && line.length < 60;
+        const isSummaryHeading = i === summaryAt && summaryText;
         return (
           <span
             key={i}
             style={{
-              display: "block",
+              display: isSummaryHeading ? "flex" : "block",
+              alignItems: isSummaryHeading ? "center" : undefined,
+              justifyContent: isSummaryHeading ? "space-between" : undefined,
               fontWeight: isHeading ? 700 : isSubHeading ? 600 : 400,
               marginTop: isHeading && i > 0 ? "0.75em" : 0,
             }}
           >
             {line === "" ? "\u00a0" : line}
+            {isSummaryHeading && (
+              // Unselectable: if the note is selected by hand (the fallback when
+              // Copy fails) this button's label must not end up in the record.
+              <button
+                type="button"
+                onClick={copySummary}
+                aria-label="Copy summary"
+                className="shrink-0 rounded-lg px-3 text-[12px] font-semibold active:scale-95"
+                style={{ minHeight: 36, background: T.slateChip, color: summaryCopied ? T.tealDark : T.inkSoft, border: `1px solid ${T.border}`, fontFamily: "inherit", userSelect: "none", WebkitUserSelect: "none" }}
+              >
+                {summaryCopied ? "Copied" : "Copy summary"}
+              </button>
+            )}
           </span>
         );
       })}
@@ -22732,7 +23058,7 @@ function FollowupConditionBlock({ index, condition, fuState: ownState, fullState
 // Root screen for the Follow-up Visit flow: one FollowupConditionBlock per
 // diagnosis selected in FollowupConditionPicker, plus a note preview/copy
 // panel at the bottom matching the same UX as the initial-encounter note.
-function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoHome, onNewPatient, onNoteSaved }) {
+function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoHome, onNewPatient, onNoteSaved, noteComments, onNoteCommentsChange }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -22744,7 +23070,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
   const sharedFollowupDefaults = conditions.length > 1
     ? followupSharedDefaults((session.statesByConditionId[conditions[0].id] || {}).followup || {})
     : null;
-  const note = useMemo(() => buildCombinedFollowupNote(session, conditionIds), [session, conditionIds]);
+  const note = useMemo(() => withAdditionalComments(buildCombinedFollowupNote(session, conditionIds), noteComments), [session, conditionIds, noteComments]);
 
   const copyNote = async () => {
     const ok = await copyTextRobust(note);
@@ -22834,6 +23160,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={note} />
+              {onNoteCommentsChange && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
               <div className="grid grid-cols-1 gap-2">
@@ -23013,7 +23340,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
 // plus a note preview), reusing that same UX intentionally so the two
 // follow-up-style flows feel consistent to a clinician switching between
 // them.
-function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoHome, onNewPatient, onNoteSaved }) {
+function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoHome, onNewPatient, onNoteSaved, noteComments, onNoteCommentsChange }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -23025,7 +23352,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
   const sharedPostopDefaults = conditions.length > 1
     ? postopSharedDefaults((session.statesByConditionId[conditions[0].id] || {}).postop || {})
     : null;
-  const note = useMemo(() => buildCombinedPostopNote(session, conditionIds), [session, conditionIds]);
+  const note = useMemo(() => withAdditionalComments(buildCombinedPostopNote(session, conditionIds), noteComments), [session, conditionIds, noteComments]);
 
   const copyNote = async () => {
     const ok = await copyTextRobust(note);
@@ -23114,6 +23441,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={note} />
+              {onNoteCommentsChange && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
               <div className="grid grid-cols-1 gap-2">
@@ -24147,8 +24475,12 @@ export default function App() {
   const [aboutOpen, setAboutOpen] = useState(false);
   const [panelSection, setPanelSection] = useState(null);
   const [panelVariant, setPanelVariant] = useState("panel");
+  // A saved note being read inside the reference sheet. Cleared whenever a
+  // section is opened - including the one already showing, so tapping Notes
+  // while reading a note returns to the list.
+  const [panelNote, setPanelNote] = useState(null);
   const referenceValue = {
-    openPanel: (section) => { setPanelSection(section || null); setPanelVariant(section ? "sheet" : "panel"); setPanelOpen(true); },
+    openPanel: (section) => { setPanelNote(null); setPanelSection(section || null); setPanelVariant(section ? "sheet" : "panel"); setPanelOpen(true); },
     openAbout: () => { setPanelOpen(false); setAboutOpen(true); },
     noteCount: 0,
     recentCount: 0,
@@ -24158,6 +24490,12 @@ export default function App() {
   // Notes previewed or copied this session, newest first. In memory only,
   // like recentIds - a clinic list is one app session.
   const [recentNotes, setRecentNotes] = useState([]);
+  // Additional comments for the note, per kind of visit. Held with the session
+  // (in memory only) and cleared by New patient.
+  const [noteComments, setNoteComments] = useState({ visit: "", followup: "", postop: "" });
+  const setVisitComments = useCallback((t) => setNoteComments((m) => ({ ...m, visit: t })), []);
+  const setFollowupComments = useCallback((t) => setNoteComments((m) => ({ ...m, followup: t })), []);
+  const setPostopComments = useCallback((t) => setNoteComments((m) => ({ ...m, postop: t })), []);
   const [viewNote, setViewNote] = useState(null);
   // A diagnosis's clinic note and physio referral are shown as one entry.
   const groupedNotes = useMemo(() => groupRecentNotes(recentNotes), [recentNotes]);
@@ -24225,6 +24563,7 @@ export default function App() {
 
   const endSession = useCallback(() => {
     setSession({ order: [], statesByConditionId: {} });
+    setNoteComments({ visit: "", followup: "", postop: "" });
     setCombinedNoteOpen(false);
     setScreen({ view: "visitType" }, { replace: true });
   }, []);
@@ -24254,7 +24593,7 @@ export default function App() {
     setFollowupSelectedIds([]);
   }, []);
 
-  const combinedNote = useMemo(() => buildCombinedNote(session), [session]);
+  const combinedNote = useMemo(() => withAdditionalComments(buildCombinedNote(session), noteComments.visit), [session, noteComments.visit]);
   const copyCombinedNote = async () => {
     const ok = await copyTextRobust(combinedNote);
     if (ok) {
@@ -24281,7 +24620,7 @@ export default function App() {
         onViewCombinedNote={() => setCombinedNoteOpen(true)}
         onEndSession={endSession}
         onOpenSearch={() => setSearchOpen(true)}
-        onOpenPanel={() => { setPanelSection(null); setPanelVariant("panel"); setPanelOpen(true); }}
+        onOpenPanel={() => { setPanelNote(null); setPanelSection(null); setPanelVariant("panel"); setPanelOpen(true); }}
         noteCount={recentNotes.length}
         onGoHome={goHome}
         onRemoveCondition={removeCondition}
@@ -24335,6 +24674,8 @@ export default function App() {
           onGoHome={goHome}
           onNewPatient={endSession}
           onNoteSaved={noteRecent2}
+          noteComments={noteComments.followup}
+          onNoteCommentsChange={setFollowupComments}
         />
         </div>
       )}
@@ -24349,6 +24690,8 @@ export default function App() {
           onGoHome={goHome}
           onNewPatient={endSession}
           onNoteSaved={noteRecent2}
+          noteComments={noteComments.postop}
+          onNoteCommentsChange={setPostopComments}
         />
         </div>
       )}
@@ -24362,6 +24705,8 @@ export default function App() {
         onOpenNote={(n) => setViewNote({ ...n, title: `${n.title} \u2014 ${NOTE_KIND_LABEL[n.kind] || "Clinic note"}` })}
         initialSection={panelSection}
         variant={panelVariant}
+        detailNote={panelNote}
+        onOpenDetail={setPanelNote}
         onOpenAbout={referenceValue.openAbout}
       />
       <AboutSheet open={aboutOpen} onClose={() => setAboutOpen(false)} />
@@ -24378,23 +24723,7 @@ export default function App() {
                 <X size={20} color={T.inkSoft} />
               </button>
             </div>
-            <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto" }}>
-              <NoteBody text={viewNote.text} />
-            </div>
-            <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-1 gap-2">
-              <button
-                onClick={() => { try { navigator.clipboard.writeText(viewNote.text); } catch (e) { /* user can select manually */ } }}
-                className="rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
-                style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}
-              >
-                Copy
-              </button>
-              </div>
-              <div className="text-[12px] text-center" style={{ color: T.inkSoft }}>
-                Saved this session only — this is a snapshot from when it was generated, not a live copy.
-              </div>
-            </div>
+            <SavedNoteView note={viewNote} />
           </DragSheet>
         </div>
       )}
@@ -24420,6 +24749,8 @@ export default function App() {
           state={session.statesByConditionId[screen.condition.id] || {}}
           onFieldChange={(patch) => updateConditionState(screen.condition.id, patch)}
           onNoteSaved={noteRecent2}
+          noteComments={noteComments.visit}
+          onNoteCommentsChange={setVisitComments}
           session={session}
           onOpenCondition={openCondition}
           onResetCondition={endSession}
@@ -24440,6 +24771,7 @@ export default function App() {
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
               <NoteBody text={combinedNote} />
+              <NoteComments value={noteComments.visit} onChange={setVisitComments} />
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
               <div className="grid grid-cols-1 gap-2">
