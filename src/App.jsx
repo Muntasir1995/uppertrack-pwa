@@ -15022,7 +15022,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.28.2";
+const APP_VERSION = "5.28.3";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -22712,12 +22712,16 @@ function NoteComments({ value, onChange }) {
 
 // How wide a line of note text may run. Sheets that fill a wide screen (a saved
 // note opened from the home bar) would otherwise stretch each line across the
-// whole width, which is hard to read: past roughly 100 characters the eye loses
-// its place on the way back to the next line. 40rem is about 640px, which is
-// also the text width the note previews already get, and it scales with the
-// reader's font size. On a phone the column is narrower than this, so nothing
-// changes there.
-const NOTE_MEASURE = "40rem";
+// whole width, which is hard to read: the eye loses its place on the way back
+// to the next line once lines run well past 100 characters. 48rem is about
+// 768px, roughly 110 characters across (about 100 on a typical wrapped line).
+// That is the generous end of readable, chosen because most of a note is short
+// bulleted lines and only the occasional long one (a plan, a comment) reaches
+// the limit; the compact previews inside a template use about 640px. It scales
+// with the reader's font size. The column sits against the left edge, in line
+// with the sheet's title and back button. On a phone it is narrower than this,
+// so nothing changes there.
+const NOTE_MEASURE = "48rem";
 
 // A note exactly as it was when copied, with its own Copy. Used wherever a
 // saved note is opened. Copy goes through the same routine as every other copy
@@ -22739,8 +22743,8 @@ function SavedNoteView({ note }) {
         <NoteBody text={note.text} />
       </div>
       <div className="px-4 py-2.5 shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.surface }}>
-       {/* The same column as the note above, so Copy is not a button as wide as the screen. */}
-       <div className="flex flex-col gap-1.5 mx-auto w-full" style={{ maxWidth: NOTE_MEASURE }}>
+       {/* The same column as the note above, left-aligned with it, so Copy is not a button as wide as the screen. */}
+       <div className="flex flex-col gap-1.5 w-full" style={{ maxWidth: NOTE_MEASURE }}>
         <button
           onClick={copy}
           className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95"
@@ -22750,11 +22754,11 @@ function SavedNoteView({ note }) {
           {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
         </button>
         {failed && (
-          <div className="text-[13px] text-center" style={{ color: T.red }}>
+          <div className="text-[13px]" style={{ color: T.red }}>
             Couldn&apos;t copy automatically — tap and hold the note above to select and copy it manually.
           </div>
         )}
-        <div className="text-[12px] text-center" style={{ color: T.inkSoft }}>
+        <div className="text-[12px]" style={{ color: T.inkSoft }}>
           Saved this session only — this is a snapshot from when it was generated, not a live copy.
         </div>
        </div>
@@ -22784,7 +22788,7 @@ function NoteBody({ text }) {
   return (
     <pre
       className="ut-note whitespace-pre-wrap text-[14px] leading-relaxed"
-      style={{ color: T.ink, fontFamily: "inherit", overflow: "visible", margin: "0 auto", maxWidth: NOTE_MEASURE }}
+      style={{ color: T.ink, fontFamily: "inherit", overflow: "visible", margin: 0, maxWidth: NOTE_MEASURE }}
     >
       {lines.map((line, i) => {
         const trimmed = line.trim();
