@@ -15022,7 +15022,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.28.3";
+const APP_VERSION = "5.28.5";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -22368,8 +22368,37 @@ function DragSheet({ onClose, className, style, children, quickRef }) {
 
   const vh = () => (typeof window !== "undefined" ? window.innerHeight : 800);
   const MIN_FRAC = 0.3;   // smallest size it rests at
-  const MAX_FRAC = 0.96;  // tallest it can be pulled
+  const MAX_FRAC = 0.96;  // tallest it can be pulled when there is no top bar to respect
   const CLOSE_FRAC = 0.22; // released below this -> close
+  const TOP_GAP = 6;      // clear space left between the top bar and the sheet
+
+  // The tallest the sheet may be. Its top edge stops just below the top bar, so
+  // the drag handle is always left in reach: a sheet pulled up under the bar
+  // can no longer be grabbed to bring it back down. Worked out from the real
+  // layout - the bar's actual bottom edge, and the box the sheet sits in (which
+  // on the home screen stops above the home bar) - not from a fraction of the
+  // window. On a phone the sheet is anchored to the bottom of that box and grows
+  // upward; on a wide screen it is centred in it and grows both ways, so the
+  // same limit allows only twice the room above the middle.
+  const maxPx = () => {
+    const el = ref.current;
+    const box = el && el.parentElement;
+    if (!box || typeof document === "undefined") return vh() * MAX_FRAC;
+    const r = box.getBoundingClientRect();
+    const bar = document.querySelector("[data-ut-topbar]");
+    const floor = bar ? Math.max(r.top, bar.getBoundingClientRect().bottom + TOP_GAP) : r.top + vh() * (1 - MAX_FRAC);
+    const centred = getComputedStyle(box).alignItems === "center";
+    const room = centred ? 2 * ((r.top + r.bottom) / 2 - floor) : r.bottom - floor;
+    return Math.max(160, room);
+  };
+
+  // A rotated screen or a changed window can shrink the room under a sheet that
+  // is already tall; bring it back inside the limit.
+  useEffect(() => {
+    const onResize = () => setHeightPx((h) => (h == null ? h : Math.min(h, maxPx())));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const close = () => {
     if (leaving) return;
@@ -22384,6 +22413,8 @@ function DragSheet({ onClose, className, style, children, quickRef }) {
     if (e.button != null && e.button !== 0) return;
     const el = ref.current;
     if (!el) return;
+    // Anything already selected would turn this press into a native drag.
+    try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch (err) { /* nothing to clear */ }
     drag.current = { startY: e.clientY, startH: el.getBoundingClientRect().height, lastY: e.clientY, lastT: Date.now(), vy: 0 };
     setDragging(true);
     try { el.setPointerCapture(e.pointerId); } catch (err) { /* older browsers */ }
@@ -22400,7 +22431,7 @@ function DragSheet({ onClose, className, style, children, quickRef }) {
     const h = d.startH - (e.clientY - d.startY);
     // Allowed to shrink past the resting minimum while dragging, so the
     // user can see it heading off-screen before letting go.
-    setHeightPx(Math.max(vh() * 0.08, Math.min(vh() * MAX_FRAC, h)));
+    setHeightPx(Math.max(vh() * 0.08, Math.min(maxPx(), h)));
   };
 
   const onPointerUp = () => {
@@ -22417,7 +22448,7 @@ function DragSheet({ onClose, className, style, children, quickRef }) {
     // Rest no smaller than the minimum.
     // Never rest so small that the header and action buttons no longer fit.
     const restMin = Math.min(Math.max(vh() * MIN_FRAC, 340), vh() * 0.9);
-    setHeightPx(Math.max(restMin, h));
+    setHeightPx(Math.min(maxPx(), Math.max(restMin, h)));
   };
 
   const sized = heightPx != null;
@@ -22431,6 +22462,8 @@ function DragSheet({ onClose, className, style, children, quickRef }) {
         // action buttons must shrink out of view inside the sheet rather
         // than hang below it.
         overflow: "hidden",
+        // Nothing may be selected while the sheet is being pulled.
+        ...(dragging ? { userSelect: "none", WebkitUserSelect: "none" } : null),
         ...(sized ? { height: heightPx, maxHeight: `${MAX_FRAC * 100}vh` } : null),
         transition: dragging ? "none" : "height 200ms cubic-bezier(0.32,0.72,0,1)",
       }}
@@ -23518,7 +23551,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
   const [confirmRemove, setConfirmRemove] = useState(null);
   const items = session.order.map((id) => findConditionById(id)).filter(Boolean);
   return (
-    <div className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 px-3 py-2 overflow-x-auto" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
+    <div data-ut-topbar className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 px-3 py-2 overflow-x-auto" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
       <button onClick={onGoHome} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Go to home">
         <Home size={16} color="#fff" />
       </button>
@@ -24323,7 +24356,12 @@ const DESIGN_SYSTEM_CSS = `
      under the version number. */
   @media (max-height: 600px) { .ut-credits { display: none; } }
 
-  [data-sheet-drag] { touch-action: none; }
+  /* Drag handles and sheet headers: no touch panning (a drag is not a page
+     scroll) and no text selection. A mouse drag used to leave a one-character
+     selection behind; pressing on a selection starts a native drag-and-drop on
+     the next gesture, the browser cancels the pointer, and the sheet then
+     ignored its handle altogether. */
+  [data-sheet-drag] { touch-action: none; -webkit-user-select: none; user-select: none; }
   @keyframes ut-sheet-leave { to { transform: translateY(100%); opacity: 0.6; } }
   .ut-sheet-leave { animation: ut-sheet-leave 180ms cubic-bezier(0.32,0.72,0,1) forwards; }
 
