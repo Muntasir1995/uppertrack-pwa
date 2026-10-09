@@ -1587,7 +1587,18 @@ const gleroarthritisData = {
           type: "conditional",
           when: (s) => (s.prevTreatment || []).length > 0,
           fields: [{ type: "select", key: "treatmentResponse", label: "Response", options: ["Good", "Partial", "None"], columns: 3, noteLabel: "Previous treatment response" }],
-        },{ type: "checkbox", key: "medHistory", label: "Medical history", options: ["Rheumatoid arthritis", "Rotator cuff disease", "Diabetes", "Osteoporosis"] },{ type: "select", key: "activityLevel", label: "Activity level", options: ["Low", "Moderate", "High"], columns: 3 },{ type: "text", key: "patientExpectations", label: "Patient expectations" },],
+        },{ type: "checkbox", key: "medHistory", label: "Medical history", options: ["Rheumatoid arthritis", "Rotator cuff disease", "Diabetes", "Osteoporosis", "Other"] },
+        { type: "conditional", when: (s) => (s.medHistory || []).includes("Other"), fields: [
+          { type: "text", key: "medHistoryOther", label: "Specify other medical history" },
+        ] },
+        // Asked in every history because it changes what can be done safely
+        // (injection, aspiration, surgery) and has to be planned for. Patient-level
+        // (see DEMOGRAPHIC_KEY_RE): recorded once, written on its own line, and any
+        // agent other than "None" counts towards the pre-operative referral. The
+        // detail box is always shown, and also takes any agent not in the list.
+        { type: "checkbox", key: "anticoagulants", label: "Anticoagulant / antiplatelet use", options: ["None", "Warfarin", "DOAC (e.g. apixaban, rivaroxaban)", "Aspirin", "Clopidogrel or other antiplatelet", "Heparin or LMWH"] },
+        { type: "text", key: "anticoagulantDetail", label: "Other agent, indication, last dose or INR (optional)", placeholder: "e.g. AF, last dose 3 days ago, INR 2.4" },
+        { type: "select", key: "activityLevel", label: "Activity level", options: ["Low", "Moderate", "High"], columns: 3 },{ type: "text", key: "patientExpectations", label: "Patient expectations" },],
     },
     {
       id: "exam",
@@ -1598,6 +1609,20 @@ const gleroarthritisData = {
         { type: "checkbox", key: "inspection", label: "Inspection", options: ["Normal", "Muscle wasting", "Deltoid wasting", "Other"] },
         { type: "conditional", when: (s) => (s.inspection || []).includes("Other"), fields: [
           { type: "text", key: "inspectionOther", label: "Specify other inspection finding" },
+        ] },
+        // Skin and axilla are looked at separately: both matter before an
+        // incision or an injection (active infection, folliculitis or maceration
+        // of the axilla, and the scars of earlier surgery that shape the approach).
+        { type: "checkbox", key: "inspectionSkin", label: "Skin", options: ["Normal", "Previous surgical scar", "Active skin infection", "Open wound or ulcer", "Post-radiotherapy skin changes", "Other"] },
+        { type: "conditional", when: (s) => (s.inspectionSkin || []).includes("Previous surgical scar"), fields: [
+          { type: "text", key: "inspectionScarSite", label: "Scar site and previous surgery", placeholder: "e.g. deltopectoral scar, previous ORIF", noteLabel: "Scar" },
+        ] },
+        { type: "conditional", when: (s) => (s.inspectionSkin || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionSkinOther", label: "Specify other skin finding" },
+        ] },
+        { type: "checkbox", key: "inspectionAxilla", label: "Axilla", options: ["Normal", "Rash or maceration", "Folliculitis or boil", "Abscess or other active infection", "Other"] },
+        { type: "conditional", when: (s) => (s.inspectionAxilla || []).includes("Other"), fields: [
+          { type: "text", key: "inspectionAxillaOther", label: "Specify other axillary finding" },
         ] },
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "checkbox", key: "mechanicalFindings", label: "Mechanical findings", options: ["Crepitus", "Pain at end range", "Capsular stiffness"] },
@@ -1610,7 +1635,7 @@ const gleroarthritisData = {
       id: "imaging",
       index: 4,
       title: "Imaging",
-      subtitle: "Radiographs, CT, MRI; AVN staging reference",
+      subtitle: "Radiographs, CT, MRI; glenoid classification; AVN staging reference",
       fields: [
         { type: "checkbox", key: "imgEssential", label: "Radiographs obtained", options: ["AP", "Grashey", "Axillary"] },
         { type: "info", title: "Review", items: ["Joint space narrowing", "Inferior osteophytes", "Humeral head flattening", "Posterior glenoid wear", "Glenoid version", "Posterior subluxation", "Cuff tear arthropathy"] },
@@ -1629,6 +1654,46 @@ const gleroarthritisData = {
         { type: "text", key: "mriFinding", label: "MRI — additional detail" },
         { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Joint space narrowing", "Osteophytes", "Subchondral cysts", "Loose body", "Deformity or malalignment", "Bone loss"] },
         { type: "text", key: "ctFinding", label: "CT — additional detail" },
+        // Glenoid classification, read from the films (Walch is best judged on CT, but an
+        // axillary view will do), so it belongs with the imaging and not the diagnosis.
+        // imagingGroup writes both into one "Classification:" sentence in the IMAGING part
+        // of the note; without it a field with no modality in its label would be filed
+        // under "Additional imaging", which wrongly suggests an extra study.
+        // Glenoid morphology in primary OA (Walch 1999, modified by Bercik 2016).
+        // The definitions are the published ones; B3 and D were added in 2016.
+        { type: "select", key: "walchType", label: "Walch classification", noteLabel: "Walch type", imagingGroup: "Classification", options: ["A1", "A2", "B1", "B2", "B3", "C", "D"], columns: 4, notePhrases: {
+          A1: "glenoid morphology was Walch type A1 (centred humeral head, minor central erosion)",
+          A2: "glenoid morphology was Walch type A2 (centred humeral head, major central erosion)",
+          B1: "glenoid morphology was Walch type B1 (posterior subluxation with joint-space narrowing and sclerosis, no posterior bone loss)",
+          B2: "glenoid morphology was Walch type B2 (posterior subluxation with a biconcave glenoid and posterior rim erosion)",
+          B3: "glenoid morphology was Walch type B3 (monoconcave posterior wear with retroversion of at least 15\u00b0 and/or posterior subluxation of at least 70%)",
+          C: "glenoid morphology was Walch type C (dysplastic glenoid with retroversion of at least 25\u00b0 not caused by erosion)",
+          D: "glenoid morphology was Walch type D (glenoid anteversion or anterior humeral head subluxation)",
+        } },
+        { type: "info", title: "Walch classification (modified by Bercik) \u2014 primary OA", items: [
+          "A \u2014 humeral head centred in the glenoid. A1: minor central erosion. A2: major central erosion (a line joining the native anterior and posterior glenoid rims cuts through the humeral head).",
+          "B \u2014 humeral head subluxated posteriorly. B1: posterior joint-space narrowing, subchondral sclerosis and osteophytes, no posterior bone loss. B2: biconcave glenoid with posterior rim erosion and retroversion. B3: monoconcave, worn posteriorly, with retroversion of at least 15\u00b0 and/or posterior subluxation of at least 70%.",
+          "C \u2014 dysplastic glenoid: retroversion of at least 25\u00b0 that is not caused by erosion.",
+          "D \u2014 glenoid anteversion or anterior humeral head subluxation.",
+          "Best assessed on CT: using 3D reconstructions, the modified classification raised interobserver agreement from fair to substantial (Bercik 2016).",
+        ] },
+        // Glenoid erosion in cuff tear arthropathy (Favard classification, E0-E4). E4, anteroinferior erosion with
+        // anteversion, is the uncommon pattern; it is defined in Walch et al., J Clin Med 2020 (cited in the evidence list).
+        { type: "select", key: "favardType", label: "Favard classification", noteLabel: "Favard type", imagingGroup: "Classification", options: ["E0", "E1", "E2", "E3", "E4"], columns: 5, notePhrases: {
+          E0: "glenoid erosion was Favard type E0 (superior humeral head migration without glenoid erosion)",
+          E1: "glenoid erosion was Favard type E1 (concentric, medialised glenoid erosion)",
+          E2: "glenoid erosion was Favard type E2 (erosion predominantly of the superior glenoid)",
+          E3: "glenoid erosion was Favard type E3 (global glenoid erosion, more severe superiorly)",
+          E4: "glenoid erosion was Favard type E4 (erosion predominantly anteroinferior, with glenoid anteversion)",
+        } },
+        { type: "info", title: "Favard classification \u2014 cuff tear arthropathy (cuff-deficient)", items: [
+          "E0 \u2014 superior humeral head migration without glenoid erosion.",
+          "E1 \u2014 concentric (medialised) glenoid erosion.",
+          "E2 \u2014 erosion predominantly of the superior glenoid.",
+          "E3 \u2014 global glenoid erosion, more severe superiorly (superior erosion extending into the inferior glenoid).",
+          "E4 \u2014 erosion predominantly anteroinferior, with glenoid anteversion and anterior subluxation; the uncommon pattern.",
+          "Use Walch for primary OA with an intact cuff and Favard for a cuff-deficient shoulder; the two answer different questions, so record whichever fits.",
+        ] },
       ],
     },
     {
@@ -15022,7 +15087,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.28.5";
+const APP_VERSION = "5.29.2";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -15257,9 +15322,15 @@ const CONDITION_EVIDENCE = {
     points: [
       "Recent meta-analyses and age-stratified comparative studies show reverse TSA carries a lower reoperation rate even with an intact cuff \u2014 particularly in patients aged 70+, with posterior glenoid wear, or restricted preoperative forward elevation.",
       "Anatomic TSA retains an advantage in active external rotation and, in some series, functional outcome.",
+      "Glenoid morphology in primary OA is described with the Walch classification; Bercik's 2016 modification added B3 (monoconcave posterior wear, retroversion of at least 15\u00b0 and/or at least 70% posterior subluxation) and D (anteversion or anterior subluxation) and, assessed on 3D CT, raised interobserver agreement from fair (\u03ba 0.39) to substantial (\u03ba 0.70).",
+      "In a cuff-deficient shoulder glenoid erosion is graded with the Favard classification (E0 superior migration without erosion; E1 concentric; E2 superior; E3 global, worse superiorly; E4 anteroinferior).",
     ],
     links: [
       { label: "Anatomic vs reverse TSA with intact cuff", url: PM("anatomic versus reverse total shoulder arthroplasty intact rotator cuff reoperation") },
+      { label: "Walch et al., J Arthroplasty 1999 \u2014 glenoid morphology in primary OA", url: "https://doi.org/10.1016/S0883-5403(99)90232-2", doi: "10.1016/S0883-5403(99)90232-2" },
+      { label: "Bercik et al., JSES 2016 \u2014 modified Walch classification (B3, D)", url: "https://doi.org/10.1016/j.jse.2016.03.010", doi: "10.1016/j.jse.2016.03.010", pmid: "27282738" },
+      { label: "Sirveaux et al., JBJS Br 2004 \u2014 glenoid erosion in cuff arthropathy (Favard)", url: PM("Sirveaux Grammont inverted total shoulder arthroplasty glenohumeral osteoarthritis massive rupture of the cuff") },
+      { label: "Walch et al., J Clin Med 2020 \u2014 Favard E4 glenoid in cuff tear arthropathy (CT study)", url: "https://doi.org/10.3390/jcm9113704", doi: "10.3390/jcm9113704" },
     ],
   },
   "elbow-osteoarthritis": {
@@ -17155,6 +17226,8 @@ function fieldClause(field, state) {
   if (field.type === "info" || field.type === "table") return null;
   if (!isFilled(field, state)) return null;
   const key = field.key || "";
+  // The optional scar site is written inside the skin clause (see below), not as a clause of its own.
+  if (key === "inspectionScarSite") return null;
   const label = field.noteLabel || field.label || "";
   // Field labels are Title-Case UI text (e.g. "Cervical Spine Screening");
   // embedded mid-sentence in the generic fallbacks below, every word needs
@@ -17176,9 +17249,20 @@ function fieldClause(field, state) {
       // actual value, substitute it in place of the literal word "Other"
       // so the note reads the clinician's specific finding rather than a
       // meaningless placeholder.
-      const rawItems = resolveOtherItems(state[key] || [], state[`${key}Other`]);
+      let rawItems = resolveOtherItems(state[key] || [], state[`${key}Other`]);
+      // A scar is only worth recording with where it is and what it came from.
+      if (key === "inspectionSkin" && String(state.inspectionScarSite || "").trim()) {
+        rawItems = rawItems.map((i) => (i === "Previous surgical scar" ? `previous surgical scar (${String(state.inspectionScarSite).trim()})` : i));
+      }
       const list = humanizeList(rawItems, { preserveCase: isNamedTestList });
       if (!list) return null;
+      // Skin and axilla are sub-groups of the inspection and have to say which is
+      // which ("axilla showed rash or maceration", not a bare "rash or maceration"),
+      // and two bare "normal"s would be meaningless.
+      if (/^inspection(Skin|Axilla)$/.test(key)) {
+        if (rawItems.length === 1 && EXCLUSIVE_OPTION_RE.test(rawItems[0])) return `${lowerLabel} was ${lowerListItem(rawItems[0])}`;
+        return `${lowerLabel} showed ${list}`;
+      }
       // A lone "None"/"Normal" answer reads badly through the "included"
       // phrasings below ("symptoms included none"). Phrased with "was"
       // rather than a colon, because these clauses sit inside a bullet that
@@ -17439,7 +17523,20 @@ function fieldClause(field, state) {
   }
 }
 
-const DEMOGRAPHIC_KEY_RE = /^(age|side|gender|dominantArm|dominantHand|dominantHandSide|occupation|occupationBeforeInjury|activityLevel|workDemand|workStatus|medHistory|relevantHistory|prevSurgery)$/i;
+const DEMOGRAPHIC_KEY_RE = /^(age|side|gender|dominantArm|dominantHand|dominantHandSide|occupation|occupationBeforeInjury|activityLevel|workDemand|workStatus|medHistory|relevantHistory|prevSurgery|anticoagulants|anticoagulantDetail)$/i;
+
+// Whether a field is a fact about the patient (asked once) rather than about a
+// limb. A box whose only job is to qualify a patient-level answer - "Specify
+// other medical history" under Medical history - belongs with that answer.
+// Without this it counted as limb-specific: a bilateral patient was shown it
+// once under each limb, and what was typed there never reached the patient
+// sentence, so the note quietly lost it.
+function isPatientLevelField(f) {
+  if (!f) return false;
+  if (f.type === "conditional") return (f.fields || []).length > 0 && f.fields.every(isPatientLevelField);
+  const k = f.key || "";
+  return DEMOGRAPHIC_KEY_RE.test(k) || (/Other$/.test(k) && DEMOGRAPHIC_KEY_RE.test(k.replace(/Other$/, "")));
+}
 
 // Resolves absolute hand dominance (Right/Left) for the "patient is X hand
 // dominant" statement. Most templates only ask "is the affected side
@@ -17560,7 +17657,7 @@ function historyGroupsFor(fields, state) {
   const groups = emptyHistoryGroups();
 
   resolveFields(fields, state).forEach((f) => {
-    if (DEMOGRAPHIC_KEY_RE.test(f.key || "")) return;
+    if (isPatientLevelField(f)) return;
     const key = f.key || "";
     if (/^typicalPresentation/i.test(key)) return; // handled as its own leading sentence in buildHistory
     const c = fieldClause(f, state);
@@ -17684,6 +17781,18 @@ function dedupeSymptomsAgainstTypical(typical, state) {
   return changed ? next : state;
 }
 
+// Anticoagulant / antiplatelet use is stated on a line of its own. It is a fact
+// about the patient (so it is not repeated for each limb), and the one history
+// item that changes what can safely be done, so it is not buried in "other".
+function bloodThinnerBullet(state) {
+  const agents = resolveOtherItems(state.anticoagulants || [], undefined);
+  const detail = String(state.anticoagulantDetail || "").trim().replace(/[.\s]+$/, "");
+  const label = "\u2022 Anticoagulant / antiplatelet use: ";
+  if (agents.length === 1 && EXCLUSIVE_OPTION_RE.test(agents[0])) return `${label}none.`;
+  if (!agents.length) return detail ? `${label}${detail}.` : null;
+  return `${label}${humanizeList(agents)}${detail ? ` (${detail})` : ""}.`;
+}
+
 function buildHistory(condition, state) {
   const typical = condition.sections.find((s) => s.id === "typical");
   const history = condition.sections.find((s) => s.id === "history");
@@ -17705,6 +17814,8 @@ function buildHistory(condition, state) {
     if (openingSentence) parts.push(openingSentence);
     const typicalText = typicalGroups && historyGroupsToText(typicalGroups);
     if (typicalText) parts.push(typicalText);
+    const thinners = bloodThinnerBullet(state);
+    if (thinners) parts.push(thinners);
     const rightText = historyGroupsToText(rightGroups);
     if (rightText) parts.push(`Right side:\n${rightText}`);
     const leftText = historyGroupsToText(leftGroups);
@@ -17714,7 +17825,7 @@ function buildHistory(condition, state) {
 
   const dedupedState = dedupeSymptomsAgainstTypical(typical, state);
   const historyGroups = history ? historyGroupsFor(history.fields, dedupedState) : null;
-  const mergedText = historyGroupsToText(mergeHistoryGroups(typicalGroups, historyGroups));
+  const mergedText = [historyGroupsToText(mergeHistoryGroups(typicalGroups, historyGroups)), bloodThinnerBullet(dedupedState)].filter(Boolean).join("\n") || null;
   // The opening sentence now already states which side is affected, so
   // there's no separate laterality statement to add here anymore.
   if (openingSentence && mergedText) return `${openingSentence}\n${mergedText}`;
@@ -17958,11 +18069,19 @@ const IMAGING_RADIOGRAPH_VIEW_KEYS = new Set(["imgEssential", "imgViews", "imgRe
 
 function imagingTextFor(imaging, state) {
   const buckets = new Map();
+  // Sentences a field names for itself (imagingGroup), e.g. a classification read
+  // from the films. They follow the modality sentences, since they are drawn from them.
+  const named = new Map();
   const other = [];
 
   resolveFields(imaging.fields, state).forEach((f) => {
     const c = fieldClause(f, state);
     if (!c) return;
+    if (f.imagingGroup) {
+      if (!named.has(f.imagingGroup)) named.set(f.imagingGroup, []);
+      named.get(f.imagingGroup).push(c);
+      return;
+    }
     const key = f.key || "";
     let modalityLabel = null;
     if (IMAGING_RADIOGRAPH_VIEW_KEYS.has(key)) {
@@ -17984,6 +18103,7 @@ function imagingTextFor(imaging, state) {
   IMAGING_MODALITY_ORDER.forEach((m) => {
     if (buckets.has(m.label)) sentences.push(`${m.label}: ${joinClausesLower(buckets.get(m.label))}`);
   });
+  named.forEach((clauses, label) => sentences.push(`${label}: ${joinClausesLower(clauses)}`));
   if (other.length) sentences.push(`Additional imaging: ${joinClausesLower(other)}`);
 
   return sentences.length ? sentences.join(" ") : null;
@@ -18552,6 +18672,16 @@ function needsPreoperativeReferral(procedures, state) {
   if ((procedures || []).some(isMajorProcedure)) return true;
   const age = Number(st.age);
   if (Number.isFinite(age) && age >= 40) return true;
+  // Any anticoagulant or antiplatelet agent is a reason for pre-operative
+  // planning ("None" is not an agent). Judged on the selection, not on drug
+  // names, so DOACs, heparin and clopidogrel count as much as warfarin.
+  if ((st.anticoagulants || []).some((a) => typeof a === "string" && !EXCLUSIVE_OPTION_RE.test(a))) return true;
+  // The detail box also takes an agent that is not in the list, and the note
+  // already writes it as the anticoagulant line, so it has to count here too -
+  // unless "None" was ticked, which says there is nothing to plan for.
+  const agentsTicked = st.anticoagulants || [];
+  const saidNone = agentsTicked.length > 0 && agentsTicked.every((a) => typeof a === "string" && EXCLUSIVE_OPTION_RE.test(a));
+  if (!saidNone && String(st.anticoagulantDetail || "").trim()) return true;
   const history = [].concat(st.medHistory || [], st.riskFactors || [], st.relevantHistory || []);
   return history.some((h) => typeof h === "string" && PREOP_RISK_RE.test(h));
 }
@@ -19929,8 +20059,8 @@ function sectionHasContent(section, state, conditionId) {
     return sharedFilled || digitFilled;
   }
   if (bilateral && (section.id === "history" || section.id === "exam" || section.id === "imaging" || section.id === "diagnosis")) {
-    const sharedFields = section.fields.filter((f) => DEMOGRAPHIC_KEY_RE.test(f.key || ""));
-    const limbFields = section.fields.filter((f) => !DEMOGRAPHIC_KEY_RE.test(f.key || ""));
+    const sharedFields = section.fields.filter(isPatientLevelField);
+    const limbFields = section.fields.filter((f) => !isPatientLevelField(f));
     const right = state.limbData?.right || {};
     const left = state.limbData?.left || {};
     return sharedFields.some((f) => isFilled(f, state)) || limbFields.some((f) => isFilled(f, right)) || limbFields.some((f) => isFilled(f, left));
@@ -21549,8 +21679,8 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 // regardless of laterality \u2014 only genuinely limb-specific
                 // content (symptoms, exam findings, imaging, diagnosis) is
                 // split into independent Right/Left panels.
-                const sharedFields = section.fields.filter((f) => DEMOGRAPHIC_KEY_RE.test(f.key || ""));
-                const limbFields = dedupeFields(section.fields.filter((f) => !DEMOGRAPHIC_KEY_RE.test(f.key || "")));
+                const sharedFields = section.fields.filter(isPatientLevelField);
+                const limbFields = dedupeFields(section.fields.filter((f) => !isPatientLevelField(f)));
                 return (
                   <>
                     {sharedFields.map((f, i) => <Field key={`s-${i}`} field={f} state={state} setField={setField} region={condition.region} />)}
