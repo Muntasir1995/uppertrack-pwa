@@ -15087,7 +15087,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.31.0";
+const APP_VERSION = "5.31.1";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -18721,7 +18721,7 @@ const SURGICAL_OPTIONS_BY_CONDITION = {
   "ecu-tendinopathy": ["ECU subsheath repair/reconstruction", "Tendon debridement", "Groove deepening (recurrent instability)"],
   "druj-instability": ["Ligament reconstruction (TFCC/DRUJ)", "Sauv\u00e9-Kapandji procedure", "Darrach procedure", "DRUJ arthroplasty"],
   "boutonniere-deformity": ["Central slip repair", "Central slip reconstruction (chronic)", "Extensor tenotomy (Fowler procedure, chronic fixed deformity)"],
-  "pip-dislocation-volar-plate": ["Open reduction internal fixation", "Volar plate arthroplasty", "External fixation (dynamic/hinged)"],
+  "pip-dislocation-volar-plate": ["Open reduction internal fixation", "Volar plate arthroplasty", "Hemi-hamate arthroplasty", "External fixation (dynamic/hinged)"],
   "hand-osteoarthritis": ["Joint arthrodesis (fusion)", "Joint arthroplasty (implant)"],
   "flexor-tenosynovitis": ["Urgent surgical washout/drainage of the flexor sheath", "Open debridement"],
   "thoracic-outlet-syndrome": ["First rib resection", "Scalenectomy", "Combined first rib resection and scalenectomy", "Vascular repair/reconstruction (vascular subtypes)"],
@@ -18754,8 +18754,24 @@ const PROCEDURE_COMPLICATION_CATEGORIES = [
   { test: /amputation/i, items: ["Neuroma formation", "Phantom or residual limb pain"] },
 ];
 
+// Procedures whose name would match the categories above for the wrong reason.
+// "Arthroplasty" brings the implant risks (loosening, wear, periprosthetic
+// fracture, thromboembolism) and "plate" brings hardware risks - but a
+// hemi-hamate arthroplasty reconstructs the volar lip of the middle phalanx with
+// a bone graft from the hamate, and a volar plate arthroplasty advances the volar
+// plate (a ligament) into the defect. Neither uses an implant, and the plate is
+// not hardware. Their risks are written out here, in place of the name matching;
+// the same list feeds the consent sentence and the post-operative complication
+// options.
+const PROCEDURE_COMPLICATION_OVERRIDES = [
+  { test: /hemi[-\s]?hamate/i, items: ["Stiffness or loss of PIP motion", "Graft resorption, collapse or nonunion", "Recurrent subluxation or instability", "Donor-site pain or carpometacarpal joint instability", "Post-traumatic arthritis of the PIP joint", "Hardware irritation or need for removal", "Need for revision surgery"] },
+  { test: /volar plate arthroplasty/i, items: ["Stiffness or flexion contracture of the PIP joint", "Recurrent subluxation or instability", "Post-traumatic arthritis of the PIP joint", "Need for revision surgery"] },
+];
+
 function complicationsForProcedure(procedureName) {
   const items = [...GENERIC_SURGICAL_COMPLICATIONS];
+  const override = PROCEDURE_COMPLICATION_OVERRIDES.find((o) => o.test.test(procedureName));
+  if (override) return [...new Set([...items, ...override.items])];
   PROCEDURE_COMPLICATION_CATEGORIES.forEach((cat) => {
     if (cat.test.test(procedureName)) items.push(...cat.items);
   });
