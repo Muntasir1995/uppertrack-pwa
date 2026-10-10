@@ -15087,7 +15087,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.29.2";
+const APP_VERSION = "5.31.0";
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -15631,16 +15631,16 @@ const RELATED_CONDITIONS = {
   "distal-humerus-fracture": ["olecranon-fracture", "radial-head-fracture", "coronoid-terrible-triad", "elbow-stiffness"],
   "crps": ["distal-radius-fracture", "carpal-tunnel-syndrome", "elbow-stiffness"],
   "hand-infection": ["flexor-tenosynovitis", "fingertip-injury", "hand-osteoarthritis"],
-  "inflammatory-hand": ["hand-osteoarthritis", "carpal-tunnel-syndrome", "wrist-osteoarthritis"],
+  "inflammatory-hand": ["hand-osteoarthritis", "carpal-tunnel-syndrome", "wrist-oa"],
   "elbow-ucl-injury": ["athletic-elbow-ocd-veo", "cubital-tunnel-syndrome", "medial-epicondylopathy", "elbow-instability"],
   "sc-joint": ["clavicle-fracture", "ac-joint"],
   "gctts": ["glomus-tumour", "wrist-ganglion", "trigger-finger"],
-  "stt-arthritis": ["thumb-cmc-oa", "wrist-osteoarthritis", "de-quervain"],
+  "stt-arthritis": ["thumb-cmc-oa", "wrist-oa", "de-quervain"],
   "lt-instability": ["tfcc-injury", "ulnar-impaction", "druj-instability"],
-  "carpal-boss": ["wrist-ganglion", "wrist-osteoarthritis"],
+  "carpal-boss": ["wrist-ganglion", "wrist-oa"],
   "enchondroma": ["phalangeal-fracture", "metacarpal-fracture", "gctts"],
   "amputation-replantation": ["fingertip-injury", "tendon-laceration", "crps"],
-  "shoulder-arthroplasty-review": ["glenohumeral-osteoarthritis", "rotator-cuff", "proximal-humerus-fracture"],
+  "shoulder-arthroplasty-review": ["gh-osteoarthritis", "rotator-cuff", "proximal-humerus-fracture"],
   "elbow-arthroplasty-review": ["elbow-osteoarthritis", "distal-humerus-fracture", "elbow-stiffness"],
   "elbow-instability": ["coronoid-terrible-triad", "radial-head-fracture", "elbow-osteoarthritis", "elbow-stiffness", "athletic-elbow-ocd-veo"],
   "elbow-stiffness": ["elbow-osteoarthritis", "coronoid-terrible-triad", "radial-head-fracture", "elbow-instability"],
@@ -15679,16 +15679,22 @@ const RELATED_CONDITIONS = {
   "dupuytren-disease": ["trigger-finger"],
 };
 
-// When a new condition is added to an active session, these demographic
-// fields are auto-filled from whatever's already been entered for another
-// active condition, so the clinician isn't re-typing side/occupation/sport
-// for every coexisting diagnosis on the same patient.
-const SHARED_FIELD_KEYS = ["side", "age", "gender", "occupation", "occupationBeforeInjury", "sport", "hobbies", "competitionLevel", "workDemand", "workStatus", "medHistory"];
+// Side and gender are copied into a condition when it joins the visit, so the
+// clinician is not re-typing them for every coexisting diagnosis. Everything else
+// about the patient (age, occupation, sport, work, medical history, hand
+// dominance) goes through the patient-facts link below, because the same fact is
+// asked under different names, in different shapes and with different options in
+// different templates.
+const SHARED_FIELD_KEYS = ["side", "gender"];
 
-// "Dominant arm" (Shoulder/Elbow templates) and "Dominant hand" (Wrist/Hand
-// templates) are the same clinical fact under a region-appropriate label and
-// a different field key \u2014 aliased here so either one auto-fills the other.
-const DOMINANT_SIDE_ALIASES = ["dominantArm", "dominantHand"];
+// Field keys the patient-facts link owns. The general-assessment carry in
+// deriveSharedDefaults leaves these alone: copied raw they could land in a field
+// that does not offer the value.
+const FACT_ENGINE_KEYS = new Set([
+  "occupation", "occupationBeforeInjury", "sport", "primarySport", "sportHobby", "hobbies", "competitionLevel",
+  "workDemand", "workStatus", "activityLevel", "medHistory", "medHistoryOther", "relevantHistory", "relevantHistoryOther",
+  "dominantArm", "dominantHand", "dominantHandSide",
+]);
 
 // General assessments are deliberately NOT in REGIONS: they shouldn't appear
 // in a region's condition list alongside the specific diagnoses. They're
@@ -15830,18 +15836,8 @@ function deriveSharedDefaults(session, targetCondition) {
       }
     }
   }
-  outer: for (const cid of session.order) {
-    const s = session.statesByConditionId[cid];
-    if (!s) continue;
-    for (const key of DOMINANT_SIDE_ALIASES) {
-      if (s[key] != null && s[key] !== "") {
-        for (const aliasKey of DOMINANT_SIDE_ALIASES) defaults[aliasKey] = s[key];
-        break outer;
-      }
-    }
-  }
 
-  // A specific diagnosis reached from a general (undifferentiated)
+  // A specific diagnosis reached from a general (undifferentiated)  // A specific diagnosis reached from a general (undifferentiated)
   // assessment is a continuation of the same encounter, not a fresh one -
   // so far more than the standard patient-level facts above should carry
   // forward: duration, mechanism, symptoms, exam findings, imaging. Only
@@ -15857,14 +15853,14 @@ function deriveSharedDefaults(session, targetCondition) {
       const targetKeys = allFieldKeysOf(targetCondition);
       const genState = generalSource.state;
       Object.keys(genState).forEach((key) => {
-        if (defaults[key] != null) return;
+        if (defaults[key] != null || FACT_ENGINE_KEYS.has(key)) return;
         if (key === "age" && genState[key] != null && !/^\d{1,3}$/.test(String(genState[key]).trim())) return; // band value - see below
         if (targetKeys.has(key) && genState[key] != null && genState[key] !== "") {
           defaults[key] = genState[key];
         }
       });
       GENERAL_TO_SPECIFIC_SYNONYMS.forEach(([genKey, specKey]) => {
-        if (defaults[specKey] != null) return;
+        if (defaults[specKey] != null || FACT_ENGINE_KEYS.has(specKey)) return;
         if (targetKeys.has(specKey) && genState[genKey] != null && genState[genKey] !== "") {
           defaults[specKey] = genState[genKey];
         }
@@ -15903,12 +15899,360 @@ function deriveSharedDefaults(session, targetCondition) {
   return defaults;
 }
 
+/* ============================================================================
+   PATIENT FACTS SHARED ACROSS A VISIT
+   Occupation, sport, work, medical history and hand dominance belong to the
+   person, not to one diagnosis, but each template asks for them in its own way:
+   different field names (occupation / occupationBeforeInjury; sport / primarySport /
+   sportHobby; medHistory / relevantHistory), different option lists (work demand
+   comes in four versions; 50-odd wordings of medical history), and hand dominance
+   in two shapes ("is the affected side the dominant one?" Yes/No, or "which hand
+   is dominant?" Right/Left). Copying the raw value between templates therefore put
+   values into fields that do not offer them, and missed whole families of names.
+
+   Here each fact is read from the diagnoses where the clinician entered it and
+   written into every other template through that template's own field: the right
+   key, an option it really offers, the shape it expects. What was filled in this
+   way is remembered (__auto), so a copy that has not been touched follows the
+   source when the source changes, and anything the clinician typed is never
+   overwritten.
+============================================================================ */
+const FACT_PMH_KEYS = ["medHistory", "relevantHistory"];
+const FACT_DOMINANCE_KEYS = ["dominantArm", "dominantHand", "dominantHandSide"];
+const PMH_NONE_RE = /^(none|nil|n\/a|not applicable|none noted|none identified)$/i;
+// Wordings that mean exactly the same thing. Kept short on purpose: a broader or
+// narrower wording ("Gout" / "Gout/pseudogout") is not the same fact.
+const PMH_SYNONYMS = { "iv drug use": "intravenous drug use", "lung disease": "respiratory disease", "generalised hypermobility": "hypermobility", "diabetes mellitus": "diabetes" };
+
+const factOptionLabel = (o) => (typeof o === "string" ? o : o && (o.label != null ? o.label : o.value));
+const factOptions = (f) => ((f && f.options) || []).map(factOptionLabel).filter((o) => typeof o === "string");
+const isEmptyFact = (v) => v == null || v === "" || (Array.isArray(v) && v.length === 0);
+const sameFact = (a, b) => JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b);
+const pmhCanon = (s) => {
+  const t = String(s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return PMH_SYNONYMS[t] || t;
+};
+
+const fieldMapCache = new WeakMap();
+// key -> field, for every field a template really has (conditionals walked).
+function fieldMapOf(condition) {
+  let m = fieldMapCache.get(condition);
+  if (m) return m;
+  m = new Map();
+  const walk = (fields) => (fields || []).forEach((f) => {
+    if (f.type === "conditional") { walk(f.fields); return; }
+    if (f.key && !m.has(f.key)) m.set(f.key, f);
+  });
+  (condition.sections || []).forEach((sec) => walk(sec.fields));
+  fieldMapCache.set(condition, m);
+  return m;
+}
+
+// The age band ("Under 20", "20-39", "75+") a general assessment offers for an
+// exact age, or null. The bands are read from the field's own options.
+function ageBandFor(age, options) {
+  const n = Number(age);
+  if (!Number.isFinite(n)) return null;
+  for (const o of options) {
+    const t = o.replace(/[\u2013\u2014]/g, "-").trim();
+    let m = t.match(/^(?:under|<)\s*(\d+)$/i);
+    if (m) { if (n < Number(m[1])) return o; continue; }
+    m = t.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (m) { if (n >= Number(m[1]) && n <= Number(m[2])) return o; continue; }
+    m = t.match(/^(\d+)\s*\+$/);
+    if (m && n >= Number(m[1])) return o;
+  }
+  return null;
+}
+
+// The option a template offers for a value from another template, or null.
+function matchFactOption(value, options, kind) {
+  if (typeof value !== "string") return null;
+  const v = value.trim().toLowerCase();
+  const exact = options.find((o) => o.trim().toLowerCase() === v);
+  if (exact) return exact;
+  if (kind === "workDemand") {
+    // Office and Sedentary are the same demand under two names.
+    const eq = v === "office" ? "sedentary" : v === "sedentary" ? "office" : null;
+    if (eq) { const hit = options.find((o) => o.trim().toLowerCase() === eq); if (hit) return hit; }
+    // "Manual" takes in light manual work; the reverse would claim more than was recorded.
+    if (v === "light manual") { const hit = options.find((o) => o.trim().toLowerCase() === "manual"); if (hit) return hit; }
+  }
+  return null;
+}
+
+// A value this link put there and nobody has touched since is a copy, not a
+// source: it must not be read back as if the clinician had entered it.
+function isAutoFact(st, k) {
+  return !!(st && st.__auto && k in st.__auto && sameFact(st[k], st.__auto[k]));
+}
+
+function gatherPatientFacts(session, excludeId) {
+  const f = {
+    age: null, ageAny: null, gender: null, occupation: null, sport: null, hobbies: null, sportHobby: null, competitionLevel: null,
+    workDemand: null, workStatus: null, activityLevel: null, prevSurgery: null, bandAge: null,
+    pmhExplicit: [], pmh: [], pmhNone: false, dominantHand: null, rawDominance: null,
+  };
+  const seenExplicit = new Set();
+  const seenAll = new Set();
+  const addPmh = (text, explicit) => {
+    const t = String(text).trim();
+    if (!t) return;
+    const c = pmhCanon(t);
+    if (explicit && !seenExplicit.has(c)) { seenExplicit.add(c); f.pmhExplicit.push(t); }
+    if (!seenAll.has(c)) { seenAll.add(c); f.pmh.push(t); }
+  };
+  for (const cid of session.order) {
+    if (cid === excludeId) continue;
+    const cond = findConditionById(cid);
+    const st = session.statesByConditionId[cid];
+    if (!cond || !st) continue;
+    const fm = fieldMapOf(cond);
+    const get = (k) => (fm.has(k) && !isEmptyFact(st[k]) && !isAutoFact(st, k) ? st[k] : null);
+    const a = get("age");
+    if (a != null) {
+      if (f.ageAny == null) f.ageAny = a;
+      if (f.age == null && /^\d{1,3}$/.test(String(a).trim())) f.age = a;
+    }
+    if (f.bandAge == null && st.__generalAssessmentAgeBand != null) f.bandAge = st.__generalAssessmentAgeBand;
+    if (f.gender == null) f.gender = get("gender");
+    if (f.occupation == null) f.occupation = get("occupation") || get("occupationBeforeInjury");
+    if (f.sport == null) f.sport = get("sport") || get("primarySport");
+    if (f.hobbies == null) f.hobbies = get("hobbies");
+    if (f.sportHobby == null) f.sportHobby = get("sportHobby");
+    if (f.competitionLevel == null) f.competitionLevel = get("competitionLevel");
+    ["workDemand", "workStatus", "activityLevel", "prevSurgery"].forEach((k) => { if (f[k] == null) f[k] = get(k); });
+    FACT_PMH_KEYS.forEach((key) => {
+      const arr = get(key);
+      if (!Array.isArray(arr)) return;
+      resolveOtherItems(arr, st[`${key}Other`]).forEach((item) => {
+        if (typeof item !== "string") return;
+        if (PMH_NONE_RE.test(item.trim())) { f.pmhNone = true; return; }
+        addPmh(item, true);
+      });
+    });
+    // Recorded elsewhere under a different question: still the same fact.
+    const ac = get("anticoagulants");
+    if (Array.isArray(ac) && ac.some((x) => typeof x === "string" && !EXCLUSIVE_OPTION_RE.test(x))) addPmh("Anticoagulation", false);
+    if (get("smoking") === "Yes") addPmh("Smoking", false);
+    if (f.dominantHand == null) {
+      const yn = get("dominantArm") || get("dominantHand");
+      const dh = resolveDominantHandSide(st.side, get("dominantHandSide"), yn);
+      if (dh) f.dominantHand = dh;
+      else if (yn && f.rawDominance == null) f.rawDominance = { yn, sideKnown: st.side === "Right" || st.side === "Left" };
+    }
+  }
+  return f;
+}
+
+const factGroupOf = (k) => (/^(medHistory|relevantHistory)(Other)?$/.test(k) ? `pmh:${k.replace(/Other$/, "")}` : FACT_DOMINANCE_KEYS.includes(k) ? "dominance" : k);
+
+// What this template should hold for each patient fact, as groups of keys that
+// move together (a medical-history answer and its "Other" detail, or the dominance
+// answers). Only keys the template really has, only options it really offers.
+function patientFactGroups(condition, facts, state) {
+  const fm = fieldMapOf(condition);
+  const groups = [];
+  const add = (id, values) => { if (Object.values(values).some((v) => !isEmptyFact(v))) groups.push({ id, values }); };
+  const selectValue = (key, value, kind) => matchFactOption(value, factOptions(fm.get(key)), kind);
+  const textual = (key) => { const t = fm.get(key) && fm.get(key).type; return t === "text" || t === "textarea"; };
+
+  const ageField = fm.get("age");
+  if (ageField) {
+    if (ageField.type === "number" || textual("age")) { if (facts.age != null) add("age", { age: facts.age }); }
+    else if (ageField.type === "select") {
+      // A band field (the general assessments) takes the band that contains the age, or the same band.
+      const band = facts.age != null ? ageBandFor(facts.age, factOptions(ageField)) : selectValue("age", facts.ageAny);
+      if (band) add("age", { age: band });
+    }
+  }
+  if (fm.has("gender") && facts.gender) { const g = selectValue("gender", facts.gender); if (g) add("gender", { gender: g }); }
+  ["occupation", "occupationBeforeInjury"].forEach((k) => { if (textual(k) && facts.occupation) add(k, { [k]: facts.occupation }); });
+
+  // Sport and hobbies are asked per limb for a bilateral patient, which this link leaves alone.
+  if (!(state && state.side === "Bilateral")) {
+    if (textual("sport")) add("sport", { sport: facts.sport || facts.sportHobby });
+    if (textual("primarySport")) add("primarySport", { primarySport: facts.sport || facts.sportHobby });
+    if (textual("hobbies")) add("hobbies", { hobbies: facts.hobbies || (!fm.has("sport") ? facts.sportHobby : null) });
+    if (textual("sportHobby")) add("sportHobby", { sportHobby: [facts.sport, facts.hobbies].filter(Boolean).join("; ") || facts.sportHobby });
+    if (fm.has("competitionLevel") && facts.competitionLevel) {
+      const v = textual("competitionLevel") ? facts.competitionLevel : selectValue("competitionLevel", facts.competitionLevel);
+      if (v) add("competitionLevel", { competitionLevel: v });
+    }
+  }
+
+  [["workDemand", "workDemand"], ["workStatus", null], ["activityLevel", null]].forEach(([k, kind]) => {
+    if (fm.has(k) && facts[k]) { const v = selectValue(k, facts[k], kind); if (v) add(k, { [k]: v }); }
+  });
+
+  FACT_PMH_KEYS.forEach((key) => {
+    const pf = fm.get(key);
+    if (!pf || pf.type !== "checkbox") return;
+    const opts = factOptions(pf);
+    const byCanon = new Map();
+    opts.forEach((o) => { if (!CATCH_ALL_OPTION_RE.test(o) && !PMH_NONE_RE.test(o.trim())) byCanon.set(pmhCanon(o), o); });
+    const otherOpt = opts.find((o) => BARE_OTHER_RE.test(o.trim()));
+    const otherKey = `${key}Other`;
+    const picked = [];
+    const left = [];
+    facts.pmh.forEach((item) => {
+      const hit = byCanon.get(pmhCanon(item));
+      if (hit) { if (!picked.includes(hit)) picked.push(hit); } else left.push(item);
+    });
+    const values = {};
+    // What this template has no option for goes in its "Other" box, so it is not lost from this record.
+    if (left.length && otherOpt && fm.has(otherKey)) { picked.push(otherOpt); values[otherKey] = left.join("; "); }
+    if (!picked.length && facts.pmhNone) { const none = opts.find((o) => /^none$/i.test(o.trim())); if (none) picked.push(none); }
+    if (picked.length) { values[key] = picked; add(`pmh:${key}`, values); }
+  });
+
+  // Dominance: Yes/No ("is the affected side dominant?") and Right/Left ("which hand?")
+  // are converted through the side, so the answer is right for THIS template's side.
+  const yesNo = ["dominantArm", "dominantHand"].filter((k) => fm.has(k));
+  const dom = {};
+  if (facts.dominantHand) {
+    if (fm.has("dominantHandSide")) dom.dominantHandSide = facts.dominantHand;
+    const side = state && state.side;
+    if (yesNo.length && (side === "Right" || side === "Left")) yesNo.forEach((k) => { dom[k] = facts.dominantHand === side ? "Yes" : "No"; });
+  } else if (facts.rawDominance && !facts.rawDominance.sideKnown && yesNo.length && !(state && (state.side === "Right" || state.side === "Left"))) {
+    // Neither side is recorded yet: all there is to carry is the answer itself.
+    yesNo.forEach((k) => { dom[k] = facts.rawDominance.yn; });
+  }
+  add("dominance", dom);
+  return groups;
+}
+
+// Brings every condition's patient facts into line with the others. Untouched
+// copies follow the source; anything the clinician typed is left exactly as it is.
+function syncPatientFacts(session) {
+  let states = session.statesByConditionId;
+  let changed = false;
+  session.order.forEach((id) => {
+    const cond = findConditionById(id);
+    const cur = states[id];
+    if (!cond || !cur) return;
+    const facts = gatherPatientFacts({ order: session.order, statesByConditionId: states }, id);
+    const groups = patientFactGroups(cond, facts, cur);
+    const auto = cur.__auto || {};
+    const values = { ...cur };
+    const nextAuto = { ...auto };
+    let moved = false;
+    const untouched = (keys, want) => keys.every((k) => (k in auto ? sameFact(cur[k], auto[k]) : isEmptyFact(cur[k]) || sameFact(cur[k], want[k])));
+    const live = new Set(groups.map((g) => g.id));
+    groups.forEach((g) => {
+      const keys = Object.keys(g.values);
+      const stale = Object.keys(auto).filter((k) => factGroupOf(k) === g.id && !(k in g.values));
+      if (!untouched(keys.concat(stale), g.values)) return;
+      keys.forEach((k) => {
+        if (!sameFact(values[k], g.values[k])) { values[k] = g.values[k]; moved = true; }
+        if (!sameFact(nextAuto[k], g.values[k])) { nextAuto[k] = g.values[k]; moved = true; }
+      });
+      stale.forEach((k) => { delete values[k]; delete nextAuto[k]; moved = true; });
+    });
+    // Facts that no longer exist anywhere: take back only what this link put there and nobody touched.
+    const gone = {};
+    Object.keys(auto).forEach((k) => { const gid = factGroupOf(k); if (!live.has(gid)) (gone[gid] = gone[gid] || []).push(k); });
+    Object.values(gone).forEach((keys) => {
+      if (keys.every((k) => sameFact(cur[k], auto[k]))) keys.forEach((k) => { delete values[k]; delete nextAuto[k]; moved = true; });
+    });
+    if (!moved) return;
+    if (Object.keys(nextAuto).length) values.__auto = nextAuto; else delete values.__auto;
+    states = { ...states, [id]: values };
+    changed = true;
+  });
+  return changed ? { ...session, statesByConditionId: states } : session;
+}
+
+// One set of patient facts for the whole visit, as the combined note needs it.
+// It used to take them from the first diagnosis that had any and stop, so a fact
+// recorded under a later diagnosis never reached the note. Returned as a
+// condition and state that buildDemographics and summaryPatientPhrase read as
+// they would a template, so both sentences are built by the same code as before.
+const PATIENT_VIEW_CONDITION = {
+  id: "__patient", name: "Patient",
+  sections: [{ id: "patient", fields: ["age", "gender", "side", "dominantHandSide", "occupation", "workDemand", "workStatus", "activityLevel", "medHistory", "prevSurgery"].map((key) => ({ key, type: "text" })) }],
+};
+function mergedPatientView(session) {
+  const facts = gatherPatientFacts(session, null);
+  // Anticoagulants have their own line in the note; the medical-history sentence need not repeat them.
+  const history = facts.pmhExplicit;
+  const state = {
+    age: facts.age != null ? facts.age : facts.ageAny != null ? facts.ageAny : undefined,
+    gender: facts.gender || undefined,
+    dominantHandSide: facts.dominantHand || undefined,
+    occupation: facts.occupation || undefined,
+    workDemand: facts.workDemand || undefined,
+    workStatus: facts.workStatus || undefined,
+    activityLevel: facts.activityLevel || undefined,
+    medHistory: history.length ? history : facts.pmhNone ? ["None"] : undefined,
+    prevSurgery: facts.prevSurgery || undefined,
+    __generalAssessmentAgeBand: facts.bandAge != null ? facts.bandAge : undefined,
+  };
+  return { condition: PATIENT_VIEW_CONDITION, state };
+}
+
 function addConditionToSession(session, condition) {
-  if (session.statesByConditionId[condition.id]) return session; // already active
-  return {
+  const existing = session.statesByConditionId[condition.id];
+  if (existing) {
+    if (!existing.__deferredDefaults) return session; // already active
+    // Added earlier from Related conditions and being opened now: its copied
+    // patient facts are already current, so keep them and stop syncing.
+    const { __deferredDefaults, ...opened } = existing;
+    return { ...session, statesByConditionId: { ...session.statesByConditionId, [condition.id]: opened } };
+  }
+  return syncPatientFacts({
     order: [...session.order, condition.id],
     statesByConditionId: { ...session.statesByConditionId, [condition.id]: deriveSharedDefaults(session, condition) },
-  };
+  });
+}
+
+// Related conditions are added to the visit without being opened. Until one is
+// opened it holds nothing the clinician has entered - only patient facts copied
+// from the other diagnoses (age, side, history...) - so those copies are kept
+// current as the others change (syncDeferredConditions), and opening it freezes
+// them. A related condition added at the start of a consultation, before the
+// patient is filled in, therefore still has the right age and side when it is
+// opened, or when the combined note is written without it ever being opened.
+function addConditionDeferred(session, condition) {
+  if (session.statesByConditionId[condition.id]) return session;
+  return syncPatientFacts({
+    order: [...session.order, condition.id],
+    statesByConditionId: {
+      ...session.statesByConditionId,
+      [condition.id]: { ...deriveSharedDefaults(session, condition), __deferredDefaults: true },
+    },
+  });
+}
+
+function syncDeferredConditions(session) {
+  let states = session.statesByConditionId;
+  let changed = false;
+  session.order.forEach((id) => {
+    const cur = states[id];
+    if (!cur || !cur.__deferredDefaults) return;
+    const cond = findConditionById(id);
+    if (!cond) return;
+    // Copied from the OTHER diagnoses only, so it never feeds on itself.
+    const others = { order: session.order.filter((o) => o !== id), statesByConditionId: states };
+    const next = { ...deriveSharedDefaults(others, cond), __deferredDefaults: true };
+    // Compared on what deriveSharedDefaults controls; the patient facts are kept in step by syncPatientFacts.
+    const auto = cur.__auto || {};
+    const same = Object.keys(next).every((k) => sameFact(cur[k], next[k])) && Object.keys(cur).every((k) => k in next || k === "__auto" || k in auto);
+    if (!same) { states = { ...states, [id]: next }; changed = true; }
+  });
+  return changed ? { ...session, statesByConditionId: states } : session;
+}
+
+// What happens to the visit when a field of one condition changes. Kept out of
+// the component so it can be exercised directly.
+function applyConditionUpdate(session, conditionId, patch) {
+  // Entering anything into a condition means it is in use, so it is no longer a
+  // not-yet-opened related condition.
+  const { __deferredDefaults, ...base } = session.statesByConditionId[conditionId] || {};
+  return syncPatientFacts(syncDeferredConditions({
+    ...session,
+    statesByConditionId: { ...session.statesByConditionId, [conditionId]: { ...base, ...patch } },
+  }));
 }
 
 /* ============================================================================
@@ -19347,6 +19691,7 @@ function buildCombinedNote(session) {
   // itself is defined further below, once supersededGeneralIds is known -
   // it needs that to decide whether Primary/Secondary applies at all.)
   const withStates = items.map((condition) => ({ condition, state: session.statesByConditionId[condition.id] || {} }));
+  const patientView = mergedPatientView(session);
 
   // Guard against an empty session: previously this emitted the section
   // headings below with nothing under them, producing a note that looked
@@ -19394,11 +19739,7 @@ function buildCombinedNote(session) {
     // more than one) and what was decided for each, so it replaces the bare
     // list of conditions rather than repeating it. The patient is stated once.
     lines.push("SUMMARY");
-    let who = null;
-    for (const { condition, state } of withStates) {
-      who = summaryPatientPhrase(condition, state);
-      if (who) break;
-    }
+    const who = summaryPatientPhrase(patientView.condition, patientView.state);
     if (who) lines.push(`${who}.`);
     realDiagnoses.forEach(({ condition, state }) => {
       const label = labelFor(condition);
@@ -19408,17 +19749,10 @@ function buildCombinedNote(session) {
   lines.push("");
 
   // Patient demographics are the same patient regardless of how many
-  // diagnoses are active in this session, so they're stated once - using
-  // whichever condition has them documented first, rather than repeating
-  // (and risking re-typing inconsistencies of) the same facts per diagnosis.
-  let demographicsText = null;
-  for (const { condition, state } of withStates) {
-    const text = buildDemographics(condition, state);
-    if (text) {
-      demographicsText = text;
-      break;
-    }
-  }
+  // diagnoses are active in this session, so they're stated once, from every
+  // diagnosis together. Taking them from the first diagnosis that had any lost
+  // whatever was recorded only under a later one.
+  const demographicsText = buildDemographics(patientView.condition, patientView.state);
   if (demographicsText) {
     lines.push("PATIENT");
     lines.push(demographicsText);
@@ -20171,28 +20505,78 @@ function SurgicalDiscussionPrompt({ label, conditionId, selected, onSelectedChan
 /* ============================================================================
    CONDITION TEMPLATE SCREEN
 ============================================================================ */
-function RelatedConditionsBar({ conditionId, sessionOrder, onOpen }) {
+// Related conditions are a shortcut, not part of the work in hand, so they start
+// folded away into one slim tab and the template's own sections sit right
+// under the header. Folded, the tab is deliberately faded - no white card, no
+// shadow, muted title and badge - and it only takes on the white-card look of
+// the section tabs once it is opened. The count sits on the right beside the
+// chevron: on the left it read as one more section number. The tab is quiet on
+// purpose (ut-calm: no press squash, no spring, no colour fades). Tapping a
+// condition adds it to the visit and does NOT leave the diagnosis in hand; it
+// appears in the green tracker, which scrolls to show it. Tapping one that is
+// already in the visit just points to it there. (The caller keys this by the
+// condition, so every template opens with it folded.)
+function RelatedConditionsBar({ conditionId, sessionOrder, onAdd, onReveal }) {
+  const [open, setOpen] = useState(false);
+  const [announce, setAnnounce] = useState("");
   const items = (RELATED_CONDITIONS[conditionId] || []).map((id) => findConditionById(id)).filter(Boolean);
   if (!items.length) return null;
+  const panelId = `ut-related-${conditionId}`;
   return (
-    <div className="mb-3">
-      <div className="text-[12px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: T.inkSoft }}>Related conditions</div>
-      <div className="flex flex-wrap gap-2">
-        {items.map((c) => {
-          const already = sessionOrder.includes(c.id);
-          return (
-            <button
-              key={c.id}
-              onClick={() => onOpen(c)}
-              className="rounded-full px-3 py-1.5 text-[13px] font-medium flex items-center gap-1 active:scale-95 transition"
-              style={{ background: already ? T.tealTint : T.slateChip, color: already ? T.tealDark : T.ink, border: `1px solid ${already ? T.teal : T.border}` }}
-            >
-              {already && <Check size={12} />}
-              {c.name}
-            </button>
-          );
-        })}
-      </div>
+    <div
+      className="rounded-2xl mb-3 overflow-hidden"
+      style={{ border: `1px solid ${T.border}`, background: open ? T.surface : "transparent", boxShadow: open ? T.shadowCard : "none" }}
+    >
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        data-no-spring
+        className="ut-calm w-full flex items-center gap-3 px-4 text-left"
+        style={{ minHeight: 44 }}
+      >
+        <span className="flex-1 min-w-0 text-[14px]" style={{ color: open ? T.ink : T.inkSoft, fontWeight: open ? 600 : 500 }}>
+          Related conditions
+        </span>
+        <span
+          className="flex items-center justify-center rounded-full text-[12px] font-semibold shrink-0"
+          style={{ minWidth: 24, height: 24, padding: "0 6px", background: open ? T.tealDark : T.slateChip, color: open ? "#fff" : T.inkSoft }}
+          aria-label={`${items.length} related ${items.length === 1 ? "condition" : "conditions"}`}
+        >
+          {items.length}
+        </span>
+        {open ? <ChevronDown size={18} color={T.inkSoft} /> : <ChevronRight size={18} color={T.inkSoft} />}
+      </button>
+      {/* Read out by screen readers; there is no other sign for them that a tap did something. */}
+      <span role="status" aria-live="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap" }}>{announce}</span>
+      {open && (
+        <div id={panelId} className="px-4 pb-4 pt-3" style={{ borderTop: `1px solid ${T.border}` }}>
+          <div className="text-[12px] mb-2.5" style={{ color: T.inkSoft }}>
+            Tap to add to this visit. Switch between diagnoses in the green bar at the top.
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {items.map((c) => {
+              const already = sessionOrder.includes(c.id);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    if (already) { if (onReveal) onReveal(c.id); setAnnounce(`${c.name} is already in this visit. It is in the green bar at the top.`); }
+                    else { onAdd(c); setAnnounce(`${c.name} added to this visit. Switch to it from the green bar at the top.`); }
+                  }}
+                  data-no-spring
+                  aria-label={already ? `${c.name}, already in this visit` : `Add ${c.name} to this visit`}
+                  className="ut-calm rounded-full px-3 py-1.5 text-[13px] font-medium flex items-center gap-1"
+                  style={{ background: already ? T.tealTint : T.slateChip, color: already ? T.tealDark : T.ink, border: `1px solid ${already ? T.teal : T.border}` }}
+                >
+                  {already && <Check size={12} />}
+                  {c.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -21131,7 +21515,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
   );
 }
 
-function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onResetCondition, onBack, onGoHome, onNoteSaved, noteComments, onNoteCommentsChange }) {
+function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCondition, onAddCondition, onRevealCondition, onResetCondition, onBack, onGoHome, onNoteSaved, noteComments, onNoteCommentsChange }) {
   const [openSection, setOpenSection] = useState(condition.sections[0]?.id || null);
   const [flagsOpen, setFlagsOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -21422,7 +21806,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
       </div>
 
       <div className="px-3 pt-3 max-w-2xl lg:max-w-4xl mx-auto">
-        <RelatedConditionsBar conditionId={condition.id} sessionOrder={session.order} onOpen={onOpenCondition} />
+        <RelatedConditionsBar key={condition.id} conditionId={condition.id} sessionOrder={session.order} onAdd={onAddCondition || onOpenCondition} onReveal={onRevealCondition} />
 
         {state.__derivedFromGeneral && findConditionById(state.__derivedFromGeneral) && (
           <div className="rounded-xl px-3 py-2.5 mb-3 flex items-start gap-2" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
@@ -22659,6 +23043,7 @@ function AboutSheet({ open, onClose }) {
           <ul className="mb-1">
             <Li>Document a new patient, a follow-up or a post-operative review. Post-operative reviews adapt to the time since surgery and to the procedure performed.</Li>
             <Li>Cover several diagnoses in one visit. Follow-up and post-operative reviews carry the shared details (date, reason for review, progress, plan) across diagnoses and produce one combined note that lists only what differs.</Li>
+            <Li>Details about the patient (age, occupation, sport, work, medical history, hand dominance) entered under one diagnosis fill in the same details under the others, in whatever form each template asks for them. Anything you type yourself is left alone, and the combined note states the patient once, using every diagnosis.</Li>
             <Li>Use a brief encounter for a quick consultation, or the full template when the case needs it.</Li>
             <Li>Start each new-visit note with a one-line summary of the patient, diagnosis and decision, which can be copied on its own. Add your own comments, typed or dictated, and they stay in the note as it updates, unlike editing the text by hand.</Li>
             <Li>Record established classifications and scores where they guide management, for example the Wrightington classification for elbow fracture-dislocations, the GTIM score for shoulder instability, Herbert for scaphoid fractures, McGowan for cubital tunnel and STAM for scapulothoracic abnormal motion.</Li>
@@ -23676,12 +24061,78 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 /* Persistent strip shown above every screen once a patient session has one
    or more active conditions: quick-switch tabs, one-tap access to the
    combined note across all active diagnoses, and ending the session. */
-function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, onGoHome, onRemoveCondition, onOpenPanel, noteCount = 0 }) {
+function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, onGoHome, onRemoveCondition, onOpenPanel, noteCount = 0, reveal = { id: null, n: 0 } }) {
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(null);
   const items = session.order.map((id) => findConditionById(id)).filter(Boolean);
+
+  // Home, reference and search stay put on the left; everything else scrolls
+  // beside them. When a diagnosis is added, or one is asked for, the scrolling
+  // part moves left to bring it into view - along with the diagnosis in hand if
+  // both fit, so the clinician sees what is in the visit, not only the new tab.
+  const scrollerRef = useRef(null);
+  const chipRefs = useRef({});
+  const prevOrderRef = useRef(session.order);
+  const prevActiveRef = useRef(activeConditionId);
+  const lastRevealRef = useRef(reveal.n);
+  // A soft fade on whichever side has more of the strip out of view, so a tab that
+  // is only partly showing reads as scrolled rather than cut off, and so there is
+  // a sign that more diagnoses are there to scroll to.
+  const [fade, setFade] = useState({ l: false, r: false });
+  const updateFade = useCallback(() => {
+    const sc = scrollerRef.current;
+    if (!sc) return;
+    const l = sc.scrollLeft > 2;
+    const r = sc.scrollLeft + sc.clientWidth < sc.scrollWidth - 2;
+    setFade((f) => (f.l === l && f.r === r ? f : { l, r }));
+  }, []);
+  useEffect(() => {
+    updateFade();
+    const sc = scrollerRef.current;
+    if (!sc) return undefined;
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateFade) : null;
+    if (ro) ro.observe(sc);
+    window.addEventListener("resize", updateFade);
+    return () => { if (ro) ro.disconnect(); window.removeEventListener("resize", updateFade); };
+  }, [updateFade, session.order]);
+  const showChips = useCallback((ids) => {
+    const sc = scrollerRef.current;
+    const els = ids.map((id) => chipRefs.current[id]).filter(Boolean);
+    if (!sc || !els.length) return;
+    const pad = 8;
+    const sr = sc.getBoundingClientRect();
+    const lefts = els.map((el) => el.getBoundingClientRect().left - sr.left + sc.scrollLeft);
+    const rights = els.map((el) => el.getBoundingClientRect().right - sr.left + sc.scrollLeft);
+    const minLeft = Math.min(...lefts);
+    const maxRight = Math.max(...rights);
+    // Already wholly in view: leave the tracker where it is.
+    if (minLeft >= sc.scrollLeft + 2 && maxRight <= sc.scrollLeft + sc.clientWidth - 2) return;
+    const room = sc.clientWidth - pad * 2;
+    // Everything asked for fits: put its left edge at the left. Otherwise end on the last one.
+    let target = maxRight - minLeft <= room ? minLeft - pad : maxRight - sc.clientWidth + pad;
+    target = Math.max(0, Math.min(target, sc.scrollWidth - sc.clientWidth));
+    if (Math.abs(target - sc.scrollLeft) < 2) return;
+    const calm = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sc.scrollTo({ left: target, behavior: calm ? "auto" : "smooth" });
+  }, []);
+  useEffect(() => {
+    const added = session.order.filter((id) => !prevOrderRef.current.includes(id));
+    if (added.length) {
+      const newest = added[added.length - 1];
+      showChips(activeConditionId && activeConditionId !== newest ? [activeConditionId, newest] : [newest]);
+    } else if (reveal.n !== lastRevealRef.current && reveal.id) {
+      showChips([reveal.id]);
+    } else if (activeConditionId && activeConditionId !== prevActiveRef.current) {
+      showChips([activeConditionId]);
+    }
+    prevOrderRef.current = session.order;
+    prevActiveRef.current = activeConditionId;
+    lastRevealRef.current = reveal.n;
+  }, [session.order, activeConditionId, reveal.n, reveal.id, showChips]);
+
   return (
-    <div data-ut-topbar className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 px-3 py-2 overflow-x-auto" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
+    <div data-ut-topbar className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 pl-3 pr-0 py-2" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
+      <div className="shrink-0 flex items-center gap-2" data-ut-tracker-fixed>
       <button onClick={onGoHome} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Go to home">
         <Home size={16} color="#fff" />
       </button>
@@ -23708,19 +24159,37 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
           )}
         </button>
       )}
-      <button onClick={onOpenSearch} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="Search templates">
-        <Search size={14} color="#fff" />
-        <span>Search</span>
+      <button onClick={onOpenSearch} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Search templates" title="Search templates">
+        <Search size={16} color="#fff" />
       </button>
+      </div>
 
       {items.length > 0 && (
-        <>
+        <div
+          ref={scrollerRef}
+          onScroll={updateFade}
+          data-ut-tracker-scroll
+          role="group"
+          aria-label="Diagnoses in this visit"
+          className="ut-tracker-scroll flex-1 min-w-0 self-stretch flex items-center gap-2 overflow-x-auto pl-3 pr-3"
+          style={{
+            borderLeft: "1px solid rgba(255,255,255,0.2)",
+            ...(fade.l || fade.r
+              ? (() => {
+                  const m = `linear-gradient(to right, ${fade.l ? "transparent" : "#000"} 0, #000 18px, #000 calc(100% - 18px), ${fade.r ? "transparent" : "#000"} 100%)`;
+                  return { WebkitMaskImage: m, maskImage: m };
+                })()
+              : null),
+          }}
+        >
           <span className="text-[12px] font-semibold uppercase tracking-wide shrink-0" style={{ color: "rgba(255,255,255,0.75)" }}>Session</span>
           {items.map((c) => {
             const active = c.id === activeConditionId;
             return (
               <span
                 key={c.id}
+                ref={(el) => { if (el) chipRefs.current[c.id] = el; else delete chipRefs.current[c.id]; }}
+                data-ut-chip={c.id}
                 className="shrink-0 flex items-center rounded-full pl-3 pr-1 py-1 transition"
                 style={{ background: active ? "#fff" : "rgba(255,255,255,0.16)" }}
               >
@@ -23745,7 +24214,11 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
                       />
                     );
                   })()}
-                  {c.name.length > 24 ? c.name.slice(0, 22) + "\u2026" : c.name}
+                  {/* Cut to fit by width, not by character count (see .ut-tracker-label):
+                      beside the three fixed icons a phone leaves little room, and a tab
+                      wider than that could never be fully on screen. The whole name stays
+                      in the page for screen readers and on hover. */}
+                  <span className={`ut-tracker-label${active ? "" : " ut-tracker-label--idle"}`} title={c.name}>{c.name}</span>
                 </button>
                 {onRemoveCondition && (
                   <button
@@ -23768,7 +24241,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
           <button onClick={() => setConfirmEnd(true)} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="New patient">
             <RotateCcw size={14} color="#fff" /> New patient
           </button>
-        </>
+        </div>
       )}
 
       {confirmRemove && (
@@ -24426,6 +24899,35 @@ const DESIGN_SYSTEM_CSS = `
     transition-duration: 160ms, 160ms, 160ms, 70ms, 160ms, 160ms;
   }
 
+  /* Quiet controls - the Related conditions tab and its chips. They are a side
+     shortcut, so tapping them should not draw the eye: no press squash, no
+     spring back, no colour fades. The state simply changes, and a pressed
+     control takes a faint tint (an inset shadow, so it works over any inline
+     background). Used together with data-no-spring, which takes the control
+     out of the spring rules above. */
+  button.ut-calm { transition: none; }
+  button.ut-calm:active { transform: none; box-shadow: inset 0 0 0 999px rgba(16,30,43,0.06); }
+  button.ut-calm[data-pen-hover] { filter: none; }
+  @media (hover: hover) and (pointer: fine) {
+    button.ut-calm:not(:disabled):hover { filter: none; }
+  }
+
+  /* The tracker's scrolling part has no scrollbar: one would make the bar
+     taller than the 48px the sticky headers below it allow for. */
+  .ut-tracker-scroll { scrollbar-width: none; -ms-overflow-style: none; container-type: inline-size; }
+  .ut-tracker-scroll::-webkit-scrollbar { display: none; }
+  /* A diagnosis tab's name is cut with an ellipsis to the room the scrolling part
+     really has, so one whole tab always fits beside the fixed icons at any phone
+     width. 54px is what the rest of a tab takes (dot, padding, remove button).
+     The first rule is for browsers without container units. */
+  .ut-tracker-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: clamp(6.5rem, 26vw, 20rem); }
+  @supports (width: 1cqw) {
+    .ut-tracker-label { max-width: clamp(4.5rem, calc(100cqw - 58px), 20rem); }
+    /* On a phone the diagnosis in hand keeps its full name and the others are compact,
+       like browser tabs, so two or more diagnoses can be seen together. */
+    @container (max-width: 420px) { .ut-tracker-label--idle { max-width: 6.5rem; } }
+  }
+
   /* Page change: a short fade only. "backwards" fill means nothing is
      left applied once it finishes, so it can never hold a stacking
      context over the fixed bars and sheets inside each screen. */
@@ -24672,6 +25174,10 @@ export default function App() {
   const [combinedCopied, setCombinedCopied] = useState(false);
   const [combinedCopyError, setCombinedCopyError] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  // Asks the green tracker to bring one diagnosis's tab into view (n counts the
+  // requests, so asking for the same tab twice still works).
+  const [reveal, setReveal] = useState({ id: null, n: 0 });
+  const revealCondition = useCallback((id) => setReveal((r) => ({ id, n: r.n + 1 })), []);
 
   // Follow-up Visit and Post-operative Follow-up share the same diagnosis
   // picker (FollowupConditionPicker) and selection state; only where
@@ -24732,6 +25238,15 @@ export default function App() {
     setScreen({ view: "template", regionKey: condition.region, condition });
   }, [noteRecent]);
 
+  // Choosing a related condition adds it to the visit but stays on the
+  // diagnosis in hand. The green tracker moves to show it, and the clinician
+  // switches to it from there when ready.
+  const addRelatedCondition = useCallback((condition) => {
+    setSession((s) => addConditionDeferred(s, condition));
+    noteRecent(condition.id);
+    revealCondition(condition.id);
+  }, [noteRecent, revealCondition]);
+
   // Context-aware: from most screens, picking a search result opens that
   // template directly (the original behaviour). But from inside the
   // Follow-up / Post-operative diagnosis picker, navigating away would
@@ -24753,13 +25268,7 @@ export default function App() {
   );
 
   const updateConditionState = useCallback((conditionId, patch) => {
-    setSession((s) => ({
-      ...s,
-      statesByConditionId: {
-        ...s.statesByConditionId,
-        [conditionId]: { ...(s.statesByConditionId[conditionId] || {}), ...patch },
-      },
-    }));
+    setSession((s) => applyConditionUpdate(s, conditionId, patch));
   }, []);
 
   const resetCondition = useCallback((conditionId) => {
@@ -24844,6 +25353,7 @@ export default function App() {
         noteCount={recentNotes.length}
         onGoHome={goHome}
         onRemoveCondition={removeCondition}
+        reveal={reveal}
       />
 
       {screen.view === "visitType" && (
@@ -24976,6 +25486,8 @@ export default function App() {
           onNoteCommentsChange={setVisitComments}
           session={session}
           onOpenCondition={openCondition}
+          onAddCondition={addRelatedCondition}
+          onRevealCondition={revealCondition}
           onResetCondition={endSession}
           onBack={() => window.history.back()}
           onGoHome={goHome}
