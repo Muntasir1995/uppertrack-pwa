@@ -25,6 +25,7 @@ import {
   Info,
   Pencil,
   Dumbbell,
+  Mail,
 } from "lucide-react";
 
 /* ============================================================================
@@ -6962,9 +6963,9 @@ const wristGanglionData = {
         { type: "select", key: "painReproduced", label: "Pain reproduced?", options: ["Yes", "No"], columns: 2 },
         { type: "testGrid", key: "strength", label: "Strength", options: ["Grip strength", "Key pinch", "Tip pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "checkbox", key: "specialAssessment", label: "Special assessment", options: ["Transillumination (when appropriate)", "Relation to scapholunate interval", "Volar neurovascular structures assessed"] },
-        { type: "checkbox", key: "ring1", label: "Three Stability Rings \u2014 Ring 1: Radiocarpal stability", options: ["Stable"] },
+        { type: "checkbox", key: "ring1", label: "Three Stability Rings \u2014 Ring 1: Radiocarpal stability", noteLabel: "Three Stability Rings \u2014 Ring 1: Radiocarpal", options: ["Stable"] },
         { type: "select", key: "ring2", label: "Three Stability Rings \u2014 Ring 2: Intercarpal stability", options: ["Stable", "Suspicious for instability"], columns: 2 },
-        { type: "checkbox", key: "ring3", label: "Three Stability Rings \u2014 Ring 3: DRUJ stability", options: ["Stable"] },
+        { type: "checkbox", key: "ring3", label: "Three Stability Rings \u2014 Ring 3: DRUJ stability", noteLabel: "Three Stability Rings \u2014 Ring 3: DRUJ", options: ["Stable"] },
         { type: "checkbox", key: "symptomHierarchy", label: "Wrist Symptom Hierarchy \u2014 primary complaint", options: ["Pain", "Mechanical dysfunction", "Functional limitation", "Patient concern"] },
         { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
         { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [
@@ -12982,7 +12983,7 @@ const pipDislocationData = {
     },
     {
       id: "history", index: 2, title: "Focused History", subtitle: "Mechanism, reduction history, functional impact",
-      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Axial load/hyperextension (ball to fingertip)", "Direct blow", "Twisting injury"], columns: 2 },{ type: "select", key: "dislocationDirection", label: "Direction of dislocation (if witnessed/known)", options: ["Dorsal", "Volar", "Lateral", "Unknown/already reduced"], noteLabel: "Direction of dislocation" },{ type: "select", key: "priorReduction", label: "Already reduced prior to this assessment?", options: ["Yes, reduced on-field/by patient", "Yes, reduced by another clinician", "No, still dislocated"], noteLabel: "Prior reduction" },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling", "Bruising", "Sensation of instability", "Numbness/tingling in the digit"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to fully extend the finger", "Difficulty gripping", "Unable to continue sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },],
+      fields: [{ type: "select", key: "gender", label: "Gender", options: ["Male", "Female"], columns: 2 },{ type: "number", key: "age", label: "Age", suffix: "years" },{ type: "select", key: "side", label: "Side", options: ["Right", "Left", "Bilateral"], columns: 3 },{ type: "select", key: "dominantArm", label: "Dominant side affected", options: ["Yes", "No"], columns: 2 },{ type: "text", key: "occupation", label: "Occupation" },{ type: "date", key: "injuryDate", label: "Date of injury" },{ type: "text", key: "timeSinceInjury", label: "Time since injury", placeholder: "e.g. 2 days" },{ type: "checkbox", key: "affectedDigit", label: "Affected digit(s)", options: ["Thumb", "Index", "Middle", "Ring", "Little"] },{ type: "select", key: "mechanism", label: "Mechanism", options: ["Axial load/hyperextension (ball to fingertip)", "Direct blow", "Twisting injury"], columns: 2 },{ type: "select", key: "dislocationDirection", label: "Direction of dislocation (if witnessed/known)", options: ["Dorsal", "Volar", "Lateral", "Unknown/already reduced"], noteLabel: "Direction of dislocation" },{ type: "select", key: "priorReduction", label: "Already reduced prior to this assessment?", options: ["Yes, reduced on-field/by patient", "Yes, reduced by another clinician", "No, still dislocated"], noteLabel: "Prior reduction", notePhrases: { "Yes, reduced on-field/by patient": "the dislocation was reduced on the field or by the patient before assessment", "Yes, reduced by another clinician": "the dislocation was reduced by another clinician before assessment", "No, still dislocated": "the joint was still dislocated at assessment" } },{ type: "vas", key: "vas", label: "Pain (VAS)" },{ type: "checkbox", key: "symptoms", label: "Associated symptoms", options: ["Swelling", "Bruising", "Sensation of instability", "Numbness/tingling in the digit"] },{ type: "checkbox", key: "functionalLimits", label: "Functional limitations", options: ["Unable to fully extend the finger", "Difficulty gripping", "Unable to continue sport"] },{ type: "select", key: "symptomProgression", label: "Progression of symptoms since onset", options: ["Improving", "Worsening", "Stable/unchanged", "Fluctuating"], columns: 2 },{ type: "text", key: "sport", label: "Sport" },],
     },
     {
       id: "exam", index: 3, title: "Focused Examination", subtitle: "Stability, active motion, neurovascular status",
@@ -15087,7 +15088,39 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // the PWA and follow-up/post-op visit types (3.x), and the structured
 // evidence review with its in-pathway citations (4.x). Bump MINOR for
 // fixes and content edits, MAJOR when a new capability lands.
-const APP_VERSION = "5.31.1";
+// The version is the date this build was made (year.month.day). A clinician can
+// read it ("is my copy today's?") and it says more than 5.31.1 ever did. Change
+// it, and add a line to WHATS_NEW, with each release.
+const APP_VERSION = "2026.10.11";
+
+// Where suggestions and problems go. The one address to change if it moves.
+const CONTACT_EMAIL = "namanimuntasir@gmail.com";
+
+// Summarised for clinicians, newest first. Not a commit log: what a user would
+// notice. Dated groups are added as releases are made.
+const WHATS_NEW = [
+  {
+    when: "11 October 2026",
+    items: [
+      "Credit and contact details now sit in About, with a tappable email link. The home screen is cleaner.",
+      "The version is now a date, and this list says what changed.",
+      "Every button and link now has at least a 44 px area to tap, including the three icons in the green bar and the remove button on a diagnosis tab (which was 21 px).",
+      "Brief encounter now includes Diagnosis Classification, so the classification, severity and sub-type that the impression is written from are no longer hidden. Only the differential diagnosis checklist stays in the full template.",
+      "Wording fixed in two notes: PIP dislocation now says how the dislocation was reduced beforehand, and the wrist ganglion stability rings no longer read \"stability was stable\".",
+    ],
+  },
+  {
+    when: "Earlier in October 2026",
+    items: [
+      "Hemi-hamate arthroplasty added to the surgical options for PIP dislocations. The risks listed for it, and for volar plate arthroplasty, no longer mention implants.",
+      "Patient details (age, occupation, sport, work, medical history, hand dominance) carry between diagnoses in a visit, and the combined note states the patient once, using every diagnosis.",
+      "Search is now an icon. Home, reference and search stay fixed in the green bar while the diagnoses scroll beside them.",
+      "Related conditions start folded away. Choosing one adds it to the visit without leaving the diagnosis you are working on.",
+      "Glenohumeral osteoarthritis: Walch and Favard classifications under Imaging, an anticoagulant question, skin and axilla inspection, and an Other option under medical history.",
+      "Notes are kept to a readable width on wide screens, and sheets stop below the green bar so they can always be dragged back down.",
+    ],
+  },
+];
 
 // Height of the persistent SessionBar at the top of every screen. Any
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
@@ -16511,7 +16544,7 @@ function VASSlider({ value, onChange }) {
           {v}<span className="text-[13px] font-normal" style={{ color: T.inkSoft }}>/10</span>
         </span>
       </div>
-      <input type="range" min={0} max={10} step={1} value={v} onChange={(e) => onChange(Number(e.target.value))} className="w-full" style={{ accentColor: color, height: 36 }} />
+      <input type="range" min={0} max={10} step={1} value={v} onChange={(e) => onChange(Number(e.target.value))} className="w-full" style={{ accentColor: color, height: 44 }} />
       <div className="flex justify-between text-[12px] mt-0.5" style={{ color: T.inkSoft }}>
         <span>No pain</span><span>Worst pain</span>
       </div>
@@ -16803,7 +16836,7 @@ function ROMSlider({ label, value, onChange, max, min, color }) {
   return (
     <div className="flex items-center gap-2 py-1">
       <span className="text-[12px] w-16 shrink-0" style={{ color: T.inkSoft }}>{label}</span>
-      <input type="range" min={min} max={max} step={5} value={value ?? 0} onChange={(e) => onChange(Number(e.target.value))} className="flex-1" style={{ accentColor: color, height: 32 }} />
+      <input type="range" min={min} max={max} step={5} value={value ?? 0} onChange={(e) => onChange(Number(e.target.value))} className="flex-1" style={{ accentColor: color, height: 44 }} />
       <div className="flex items-center gap-0.5 shrink-0">
         <input
           type="number"
@@ -16841,7 +16874,7 @@ function SpinalLevelSlider({ label, value, onChange, color }) {
         value={sliderIdx}
         onChange={(e) => onChange(SPINAL_LEVELS[Number(e.target.value)])}
         className="flex-1"
-        style={{ accentColor: color, height: 32 }}
+        style={{ accentColor: color, height: 44 }}
       />
       <span className="text-[13px] font-semibold shrink-0 text-right" style={{ width: 64, color }}>
         {value || "\u2014"}
@@ -17147,7 +17180,7 @@ function RedFlagChip({ condition, state, onOpen }) {
     <button
       onClick={onOpen}
       className="flex items-center gap-1.5 rounded-full px-3 py-2 active:scale-95 shrink-0"
-      style={{ background: look.bg, border: `1px solid ${look.border}`, minHeight: 40 }}
+      style={{ background: look.bg, border: `1px solid ${look.border}`, minHeight: 44 }}
       aria-label={
         s.kind === "present"
           ? `${s.count} red flags recorded. Open red flags.`
@@ -17288,7 +17321,7 @@ function InlineDetailField({ field, state, setField }) {
     <button
       onClick={() => setOpen(true)}
       className="flex items-center gap-1.5 -mt-1 mb-2 px-1 text-[13px] font-semibold"
-      style={{ color: T.teal, minHeight: 36 }}
+      style={{ color: T.teal, minHeight: 44 }}
       aria-label={`Add ${field.label}`}
     >
       <FilePlus size={15} color={T.teal} /> Add detail
@@ -20583,7 +20616,7 @@ function RelatedConditionsBar({ conditionId, sessionOrder, onAdd, onReveal }) {
                   data-no-spring
                   aria-label={already ? `${c.name}, already in this visit` : `Add ${c.name} to this visit`}
                   className="ut-calm rounded-full px-3 py-1.5 text-[13px] font-medium flex items-center gap-1"
-                  style={{ background: already ? T.tealTint : T.slateChip, color: already ? T.tealDark : T.ink, border: `1px solid ${already ? T.teal : T.border}` }}
+                  style={{ background: already ? T.tealTint : T.slateChip, color: already ? T.tealDark : T.ink, border: `1px solid ${already ? T.teal : T.border}`, minHeight: 44 }}
                 >
                   {already && <Check size={12} />}
                   {c.name}
@@ -20737,7 +20770,7 @@ function OutcomeScores({ condition, state, onFieldChange }) {
             type="range" min={0} max={100} step={5}
             value={state.saneScore ?? 0}
             onChange={(e) => onFieldChange({ saneScore: Number(e.target.value) })}
-            className="flex-1" style={{ accentColor: T.teal, height: 32 }}
+            className="flex-1" style={{ accentColor: T.teal, height: 44 }}
           />
           <input
             type="number" inputMode="numeric" min={0} max={100}
@@ -20758,7 +20791,7 @@ function OutcomeScores({ condition, state, onFieldChange }) {
               type="range" min={0} max={10} step={1}
               value={ases.pain ?? 0}
               onChange={(e) => setAses("pain", Number(e.target.value))}
-              className="flex-1" style={{ accentColor: T.teal, height: 32 }}
+              className="flex-1" style={{ accentColor: T.teal, height: 44 }}
             />
             <input
               type="number" inputMode="numeric" min={0} max={10}
@@ -21368,7 +21401,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                               <div className="flex flex-col gap-1">
                                 {(ev.links || []).map((l, i) => (
                                   <a key={i} href={l.url} target="_blank" rel="noopener noreferrer"
-                                     className="text-[12px] font-medium flex items-start gap-1.5 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 32 }}>
+                                     className="text-[12px] font-medium flex items-start gap-1.5 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 44 }}>
                                     <ChevronRight size={14} color={T.teal} style={{ flexShrink: 0, marginTop: 2 }} />
                                     <span>
                                       {l.label}
@@ -21396,7 +21429,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
                   <div className="text-[12px] mb-1" style={{ color: T.inkSoft }}>{m.use}</div>
                   {m.note && <div className="text-[12px] mb-1" style={{ color: T.amber }}>{m.note}</div>}
                   <a href={m.url} target="_blank" rel="noopener noreferrer"
-                     className="text-[12px] font-medium flex items-center gap-1 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 32 }}>
+                     className="text-[12px] font-medium flex items-center gap-1 py-1.5" style={{ color: T.teal, textDecoration: "none", minHeight: 44 }}>
                     Open reference <ChevronRight size={14} color={T.teal} />
                   </a>
                 </div>
@@ -21520,10 +21553,10 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
             onClick={onOpenAbout}
             className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-[12px]"
             style={{ color: T.inkSoft, minHeight: 44 }}
-            aria-label={`About UpperTrack, version ${APP_VERSION}`}
+            aria-label="About UpperTrack"
           >
             <Info size={13} color={T.inkSoft} />
-            UpperTrack v{APP_VERSION}
+            About UpperTrack
           </button>
         </div>
       </div>
@@ -21787,9 +21820,13 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   // the template - reaching a working diagnosis and continuing into it - so
   // it stays in Brief Encounter there even though it's left out for specific
   // diagnosis templates, where it really is just a reference checklist.
+  // Diagnosis Classification is in Brief for every specific diagnosis: it holds
+  // the classification, severity and sub-type that the note's impression is
+  // written from, so leaving it out meant a quick consultation produced a note
+  // with no classification and nothing to say it was missing.
   const BRIEF_SECTION_IDS = condition.isGeneralAssessment
     ? ["history", "exam", "imaging", "differential", "pathway", "followup"]
-    : ["history", "exam", "imaging", "pathway", "followup"];
+    : ["history", "exam", "imaging", "diagnosis", "pathway", "followup"];
   // Brief Encounter is the default: a busy OPD consultation rarely needs
   // all ten sections, and the reference-heavy ones (typical patient,
   // differential as a checklist, outcome measures) are the ones most often
@@ -21807,7 +21844,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
     <div className="min-h-screen pb-32" style={{ background: T.bg }}>
       <div className="sticky z-30" style={{ top: TOPBAR_H, background: T.surface, boxShadow: "0 1px 3px rgba(16,30,43,0.04)" }}>
         <div className="flex items-center gap-2 px-3 py-3">
-          <button onClick={onBack} className="p-2 -ml-1 active:opacity-60"><ArrowLeft size={22} color={T.ink} /></button>
+          <button onClick={onBack} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Back"><ArrowLeft size={22} color={T.ink} /></button>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-[16px] truncate" style={{ color: T.ink }}>{condition.name}</div>
             <div className="text-[12px] capitalize" style={{ color: T.inkSoft }}>
@@ -21852,7 +21889,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 onClick={() => setBriefMode(seg.on)}
                 className="flex-1 rounded-lg py-2 text-[13px] font-semibold"
                 style={{
-                  minHeight: 40,
+                  minHeight: 44,
                   background: selected ? T.surface : "transparent",
                   color: selected ? T.tealDark : T.inkSoft,
                   boxShadow: selected ? "0 1px 1px rgba(16,30,43,0.04), 0 2px 4px rgba(16,30,43,0.06)" : "none",
@@ -21866,7 +21903,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         </div>
         {briefMode && (
           <div className="text-[12px] mb-3 px-1" style={{ color: T.inkSoft }}>
-            Showing history, examination, imaging,{condition.isGeneralAssessment ? " differential," : ""} plan and review. Anything already entered elsewhere is kept and still appears in the note. Red flags remain available from the button above.
+            Showing history, examination, imaging,{condition.isGeneralAssessment ? " differential," : " diagnosis classification,"} plan and review. Anything already entered elsewhere is kept and still appears in the note. Red flags remain available from the button above.
           </div>
         )}
 
@@ -22160,7 +22197,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                     onClick={() => setNoteType(t.key)}
                     className="flex-1 rounded-lg px-2 py-2 text-[13px] font-semibold"
                     style={{
-                      minHeight: 40,
+                      minHeight: 44,
                       background: selected ? T.surface : "transparent",
                       color: selected ? T.tealDark : T.inkSoft,
                       boxShadow: selected ? "0 1px 1px rgba(16,30,43,0.04), 0 2px 4px rgba(16,30,43,0.06)" : "none",
@@ -22501,9 +22538,7 @@ function VisitTypeGate({ onSelect }) {
           </button>
         </div>
         <div className="text-center" style={{ marginTop: "clamp(8px, 3vh, 32px)" }}>
-          <div className="ut-credits font-medium" style={{ color: T.inkSoft, fontSize: "clamp(11px, 1.6vh, 13px)" }}>Created by Dr. Muntasir Al-Naamani</div>
-          <div className="ut-credits" style={{ color: T.inkSoft, fontSize: "clamp(11px, 1.6vh, 13px)" }}>Suggestions: namanimuntasir@gmail.com</div>
-          <AboutVersionLink />
+          <AboutLink />
         </div>
       </div>
       </div>
@@ -22788,7 +22823,7 @@ function RegionPicker({ onSelect, onBack }) {
     <div className="min-h-screen px-4 lg:px-10 pt-4 lg:pt-10 pb-8" style={{ background: T.bg }}>
       <div className="max-w-2xl lg:max-w-none mx-auto lg:mx-0 lg:flex lg:items-start lg:gap-10 xl:gap-14">
         <div className="lg:w-[360px] xl:w-[420px] lg:shrink-0">
-          <button onClick={onBack} className="flex items-center gap-1.5 mb-4 lg:mb-8 active:opacity-60" style={{ color: T.inkSoft }}>
+          <button onClick={onBack} className="flex items-center gap-1.5 mb-4 lg:mb-8 active:opacity-60" style={{ color: T.inkSoft, minHeight: 44 }}>
             <ArrowLeft size={18} className="lg:hidden" /><ArrowLeft size={22} className="hidden lg:block" /><span className="text-[14px] lg:text-[17px] font-medium">Home</span>
           </button>
           <div className="text-[12px] lg:text-[15px] font-semibold uppercase tracking-widest mb-1 lg:mb-2" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
@@ -22824,7 +22859,8 @@ function ConditionButton({ condition, active, onSelect, onRemove }) {
               tabIndex={0}
               onClick={(e) => { e.stopPropagation(); setConfirmRemove(true); }}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); setConfirmRemove(true); } }}
-              className="p-1.5 rounded-full active:scale-90"
+              className="flex items-center justify-center rounded-full active:scale-90"
+              style={{ minWidth: 44, minHeight: 44 }}
               aria-label={`Remove ${condition.name} from this session`}
             >
               <X size={15} color={T.tealDark} />
@@ -23018,6 +23054,38 @@ function DragSheet({ onClose, className, style, children, quickRef }) {
 // written to be accurate rather than reassuring - in particular about
 // voice dictation, whose audio handling is decided by the browser, not by
 // this app.
+// Contact for suggestions and problems: a link that opens a message in one tap
+// (the version already in the subject), a copy button for a device with no mail
+// app set up, and a reminder not to send patient details. The one channel the
+// app invites is the one place patient information could leave it.
+const CONTACT_HREF = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`UpperTrack feedback (version ${APP_VERSION})`)}&body=${encodeURIComponent(`Please do not include any patient details.\n\nWhat were you doing, and what happened or what would help?\n\n\n\u2014\nVersion: ${APP_VERSION}`)}`;
+
+function AboutContact() {
+  const [copied, setCopied] = useState(null);
+  const copy = async () => {
+    const ok = await copyTextRobust(CONTACT_EMAIL);
+    setCopied(ok ? "yes" : "no");
+    setTimeout(() => setCopied(null), 2500);
+  };
+  return (
+    <div className="mt-6 pt-4 text-[13px] leading-relaxed" style={{ borderTop: `1px solid ${T.border}`, color: T.inkSoft }}>
+      <div>Created by Dr. Muntasir Al-Naamani</div>
+      <div className="font-semibold mt-3" style={{ color: T.ink }}>Suggestions and problems</div>
+      <div className="flex flex-wrap items-center gap-2 mt-1.5">
+        <a href={CONTACT_HREF} className="inline-flex items-center gap-1.5 rounded-xl px-3 font-semibold" style={{ minHeight: 44, background: T.tealTint, color: T.tealDark, textDecoration: "none" }}>
+          <Mail size={15} color={T.tealDark} />
+          Email {CONTACT_EMAIL}
+        </a>
+        <button type="button" onClick={copy} className="inline-flex items-center rounded-xl px-3 font-semibold" style={{ minHeight: 44, background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>
+          {copied === "yes" ? "Copied" : "Copy address"}
+        </button>
+      </div>
+      {copied === "no" && <div className="mt-1.5" style={{ color: T.amber }}>Could not copy automatically. Press and hold the address above to copy it.</div>}
+      <div className="mt-2">Please do not include patient names, identifiers or screenshots of notes in your message.</div>
+    </div>
+  );
+}
+
 function AboutSheet({ open, onClose }) {
   if (!open) return null;
   // Counted from the live data, so this page stays correct as templates and
@@ -23101,11 +23169,16 @@ function AboutSheet({ open, onClose }) {
             <Li>Outcome measure instruments remain the property of their copyright holders and should be obtained from the official sources linked in the Reference panel.</Li>
           </ul>
 
-          <div className="mt-6 pt-4 text-[13px] leading-relaxed" style={{ borderTop: `1px solid ${T.border}`, color: T.inkSoft }}>
-            <div className="font-semibold" style={{ color: T.ink }}>UpperTrack v{APP_VERSION}</div>
-            <div>Created by Dr. Muntasir Al-Naamani</div>
-            <div>Suggestions: namanimuntasir@gmail.com</div>
-          </div>
+          <H>Version and what&apos;s new</H>
+          <P>Version {APP_VERSION}. The version is the date this build was made.</P>
+          {WHATS_NEW.map((group) => (
+            <div key={group.when} className="mb-2">
+              <div className="text-[13px] font-semibold mb-1" style={{ color: T.ink }}>{group.when}</div>
+              <ul>{group.items.map((item, i) => <Li key={i}>{item}</Li>)}</ul>
+            </div>
+          ))}
+
+          <AboutContact />
         </div>
       </DragSheet>
     </div>
@@ -23216,18 +23289,19 @@ function HomeBar() {
   );
 }
 
-// Version and About link, back in the page body under the credits.
-function AboutVersionLink() {
+// A quiet About link under the visit choices. The credit, contact details and
+// version live inside About, not on the screen the clinician sees all day.
+function AboutLink() {
   const ref = React.useContext(ReferenceCtx);
   return (
     <button
       onClick={() => ref && ref.openAbout()}
       className="mt-1 inline-flex items-center justify-center gap-1.5 px-3 text-[12px]"
       style={{ color: T.inkSoft, minHeight: 44 }}
-      aria-label={`About UpperTrack, version ${APP_VERSION}`}
+      aria-label="About UpperTrack"
     >
       <Info size={13} color={T.inkSoft} />
-      v{APP_VERSION}
+      About UpperTrack
     </button>
   );
 }
@@ -23379,7 +23453,7 @@ function NoteBody({ text }) {
                 onClick={copySummary}
                 aria-label="Copy summary"
                 className="shrink-0 rounded-lg px-3 text-[12px] font-semibold active:scale-95"
-                style={{ minHeight: 36, background: T.slateChip, color: summaryCopied ? T.tealDark : T.inkSoft, border: `1px solid ${T.border}`, fontFamily: "inherit", userSelect: "none", WebkitUserSelect: "none" }}
+                style={{ minHeight: 44, background: T.slateChip, color: summaryCopied ? T.tealDark : T.inkSoft, border: `1px solid ${T.border}`, fontFamily: "inherit", userSelect: "none", WebkitUserSelect: "none" }}
               >
                 {summaryCopied ? "Copied" : "Copy summary"}
               </button>
@@ -23710,7 +23784,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
   return (
     <div className="min-h-screen pb-28" style={{ background: T.bg }}>
       <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal }}>
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal, minHeight: 44 }}>
           <ArrowLeft size={16} /> Change diagnoses
         </button>
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Follow-up Visit</div>
@@ -23992,7 +24066,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
   return (
     <div className="min-h-screen pb-28" style={{ background: T.bg }}>
       <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
-        <button onClick={onBack} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal }}>
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal, minHeight: 44 }}>
           <ArrowLeft size={16} /> Change diagnoses
         </button>
         <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Post-operative Follow-up</div>
@@ -24147,15 +24221,15 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
   }, [session.order, activeConditionId, reveal.n, reveal.id, showChips]);
 
   return (
-    <div data-ut-topbar className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 pl-3 pr-0 py-2" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
-      <div className="shrink-0 flex items-center gap-2" data-ut-tracker-fixed>
-      <button onClick={onGoHome} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Go to home">
+    <div data-ut-topbar className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 pl-3 pr-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)", height: 48 }}>
+      <div className="shrink-0 flex items-center gap-3" data-ut-tracker-fixed>
+      <button onClick={onGoHome} className="ut-hit shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Go to home">
         <Home size={16} color="#fff" />
       </button>
       {onOpenPanel && (
         <button
           onClick={onOpenPanel}
-          className="shrink-0 relative flex items-center justify-center rounded-full p-2 active:scale-95 transition"
+          className="ut-hit shrink-0 relative flex items-center justify-center rounded-full p-2 active:scale-95 transition"
           style={{ background: "rgba(255,255,255,0.16)" }}
           aria-label={noteCount ? `Open reference panel, ${noteCount} saved ${noteCount === 1 ? "note" : "notes"}` : "Open reference panel"}
         >
@@ -24175,7 +24249,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
           )}
         </button>
       )}
-      <button onClick={onOpenSearch} className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Search templates" title="Search templates">
+      <button onClick={onOpenSearch} className="ut-hit shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Search templates" title="Search templates">
         <Search size={16} color="#fff" />
       </button>
       </div>
@@ -24206,12 +24280,12 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
                 key={c.id}
                 ref={(el) => { if (el) chipRefs.current[c.id] = el; else delete chipRefs.current[c.id]; }}
                 data-ut-chip={c.id}
-                className="shrink-0 flex items-center rounded-full pl-3 pr-1 py-1 transition"
-                style={{ background: active ? "#fff" : "rgba(255,255,255,0.16)" }}
+                className="shrink-0 flex items-center rounded-full pl-3 transition"
+                style={{ background: active ? "#fff" : "rgba(255,255,255,0.16)", height: 32 }}
               >
                 <button
                   onClick={() => onSwitch(c)}
-                  className="text-[13px] font-medium active:scale-95 py-0.5 flex items-center gap-1.5"
+                  className="ut-hit self-stretch text-[13px] font-medium active:scale-95 flex items-center gap-1.5"
                   style={{ color: active ? T.tealDark : "#fff" }}
                 >
                   {(() => {
@@ -24239,22 +24313,23 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
                 {onRemoveCondition && (
                   <button
                     onClick={() => setConfirmRemove(c)}
-                    className="ml-1 p-1 rounded-full active:scale-90"
+                    className="ut-hit self-stretch shrink-0 flex items-center justify-center rounded-full active:scale-90"
+                    style={{ width: 44 }}
                     aria-label={`Remove ${c.name} from this session`}
                   >
-                    <X size={13} color={active ? T.inkSoft : "rgba(255,255,255,0.75)"} />
+                    <X size={14} color={active ? T.inkSoft : "rgba(255,255,255,0.75)"} />
                   </button>
                 )}
               </span>
             );
           })}
-          <button onClick={onViewCombinedNote} className="shrink-0 ml-1 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "#fff", color: T.tealDark }}>
+          <button onClick={onViewCombinedNote} className="ut-hit shrink-0 ml-1 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "#fff", color: T.tealDark }}>
             Combined note
           </button>
           {/* Previously an X labelled "End session". X now means "close this
               sheet" everywhere, so a clearing action gets the same name and
               icon as the other New patient buttons. */}
-          <button onClick={() => setConfirmEnd(true)} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="New patient">
+          <button onClick={() => setConfirmEnd(true)} className="ut-hit shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)", color: "#fff" }} aria-label="New patient">
             <RotateCcw size={14} color="#fff" /> New patient
           </button>
         </div>
@@ -24337,7 +24412,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: T.bg }}>
       <div className="flex items-center gap-2 px-3 py-3 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
-        <button onClick={onClose} className="p-2 -ml-1 active:opacity-60"><ArrowLeft size={22} color={T.ink} /></button>
+        <button onClick={onClose} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Close search"><ArrowLeft size={22} color={T.ink} /></button>
         <div className="ut-searchbar flex-1 flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
           <Search size={17} color={T.inkSoft} />
           <input
@@ -24350,7 +24425,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
             style={{ color: T.ink }}
           />
           {query && (
-            <button onClick={() => setQuery("")} className="p-1 active:opacity-60"><X size={16} color={T.inkSoft} /></button>
+            <button onClick={() => setQuery("")} className="flex items-center justify-center p-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Clear search"><X size={16} color={T.inkSoft} /></button>
           )}
         </div>
       </div>
@@ -24487,7 +24562,8 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
       <div className="flex items-center gap-2 px-3 lg:px-6 py-3 lg:py-4 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button
           onClick={() => (regionKey ? setRegionKey(null) : onBack())}
-          className="p-2 -ml-1 active:opacity-60 lg:hidden"
+          className="flex items-center justify-center p-2 -ml-1 active:opacity-60 lg:hidden"
+          style={{ minWidth: 44, minHeight: 44 }}
           aria-label="Back"
         >
           <ArrowLeft size={22} color={T.ink} />
@@ -24928,17 +25004,26 @@ const DESIGN_SYSTEM_CSS = `
     button.ut-calm:not(:disabled):hover { filter: none; }
   }
 
+  /* Touch targets. Nothing a clinician taps should be smaller than 44 x 44 CSS px,
+     the fingertip size Apple's and Material's guidance set. Where the visible
+     control is smaller by design - a 32px round icon in the green bar, a compact
+     tab - .ut-hit extends the area that answers a tap to 44 x 44 around it, with no
+     change to the layout. Text boxes are given the same minimum height. */
+  .ut-hit:not(.absolute):not(.fixed):not(.sticky) { position: relative; }
+  .ut-hit::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { min-height: 44px; }
+
   /* The tracker's scrolling part has no scrollbar: one would make the bar
      taller than the 48px the sticky headers below it allow for. */
   .ut-tracker-scroll { scrollbar-width: none; -ms-overflow-style: none; container-type: inline-size; }
   .ut-tracker-scroll::-webkit-scrollbar { display: none; }
   /* A diagnosis tab's name is cut with an ellipsis to the room the scrolling part
      really has, so one whole tab always fits beside the fixed icons at any phone
-     width. 54px is what the rest of a tab takes (dot, padding, remove button).
+     width. 73px is what the rest of a tab takes (padding, dot, remove button).
      The first rule is for browsers without container units. */
   .ut-tracker-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: clamp(6.5rem, 26vw, 20rem); }
   @supports (width: 1cqw) {
-    .ut-tracker-label { max-width: clamp(4.5rem, calc(100cqw - 58px), 20rem); }
+    .ut-tracker-label { max-width: clamp(4.5rem, calc(100cqw - 73px), 20rem); }
     /* On a phone the diagnosis in hand keeps its full name and the others are compact,
        like browser tabs, so two or more diagnoses can be seen together. */
     @container (max-width: 420px) { .ut-tracker-label--idle { max-width: 6.5rem; } }
@@ -24999,10 +25084,6 @@ const DESIGN_SYSTEM_CSS = `
      which would otherwise win over this rule. */
   button.ut-ref-icon:active .ut-ref-tile { background: var(--ut-teal) !important; }
   button.ut-ref-icon:active .ut-ref-tile svg { stroke: #fff; }
-  /* On a very short window the credit lines are dropped so the cards and the
-     icon bar still fit without scrolling; the same details stay one tap away
-     under the version number. */
-  @media (max-height: 600px) { .ut-credits { display: none; } }
 
   /* Drag handles and sheet headers: no touch panning (a drag is not a page
      scroll) and no text selection. A mouse drag used to leave a one-character
