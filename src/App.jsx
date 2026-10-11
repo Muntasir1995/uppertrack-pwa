@@ -15091,7 +15091,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // The version is the date this build was made (year.month.day). A clinician can
 // read it ("is my copy today's?") and it says more than 5.31.1 ever did. Change
 // it, and add a line to WHATS_NEW, with each release.
-const APP_VERSION = "2026.10.11";
+const APP_VERSION = "2026.10.12";
 
 // Where suggestions and problems go. The one address to change if it moves.
 const CONTACT_EMAIL = "namanimuntasir@gmail.com";
@@ -15099,6 +15099,12 @@ const CONTACT_EMAIL = "namanimuntasir@gmail.com";
 // Summarised for clinicians, newest first. Not a commit log: what a user would
 // notice. Dated groups are added as releases are made.
 const WHATS_NEW = [
+  {
+    when: "12 October 2026",
+    items: [
+      "Fixed raw code text (\"u2014\") appearing in the hint under \"No templates match\" when a search finds nothing, and in two similar messages.",
+    ],
+  },
   {
     when: "11 October 2026",
     items: [
@@ -21370,7 +21376,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
               />
             </div>
             {evidenceByRegion.length === 0 ? (
-              <div className="mt-3"><EmptyState compact icon={Search} title="No matching evidence" body="Search runs over diagnosis names, summaries and trial names \u2014 try a shorter term." action="Clear search" onAction={() => setEvQuery("")} /></div>
+              <div className="mt-3"><EmptyState compact icon={Search} title="No matching evidence" body="Search runs over diagnosis names, summaries and trial names — try a shorter term." action="Clear search" onAction={() => setEvQuery("")} /></div>
             ) : (
               <div className="flex flex-col gap-1.5">
                 {evidenceByRegion.map(({ regionKey, label, entries }) => {
@@ -23500,7 +23506,7 @@ function EmptySubsection() {
       compact
       icon={FilePlus}
       title="No templates in this group yet"
-      body="New templates slot in here automatically as they are added \u2014 nothing needs configuring."
+      body="New templates slot in here automatically as they are added — nothing needs configuring."
     />
   );
 }
@@ -24443,7 +24449,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
               <EmptyState
                 icon={Search}
                 title={`No templates match \u201c${query}\u201d`}
-                body="Try a shorter term, the anatomical site, or an abbreviation \u2014 templates are matched on name and region."
+                body="Try a shorter term, the anatomical site, or an abbreviation — templates are matched on name and region."
                 action="Clear search"
                 onAction={() => setQuery("")}
               />
