@@ -433,6 +433,7 @@ const adhesiveCapsulitisData = {
   // shared persistent-stiffness checkpoint, which carries Decision Points 3 & 4.
   pathway: {
     start: "stageSelect",
+    noteStages: [{ node: "stageSelect", label: "Clinical stage" }],
     nodes: {
       stageSelect: {
         type: "question",
@@ -539,7 +540,7 @@ const adhesiveCapsulitisData = {
           when: (s) => s.diagType === "Secondary",
           fields: [{ type: "checkbox", key: "diagSecondaryCauses", label: "Secondary causes", options: ["Diabetes", "Trauma", "Surgery", "Immobilization"], noteLabel: "Secondary causes" }],
         },
-        { type: "select", key: "clinicalStage", label: "Clinical stage", options: ["Stage I \u2013 Painful (Freezing)", "Stage II \u2013 Stiff (Frozen)", "Stage III \u2013 Resolution (Thawing)"], columns: 1, noteLabel: "Clinical stage" },
+        { type: "info", title: "The clinical stage is recorded in the Management Pathway", items: ["The clinical stage is chosen once, in the Management Pathway below. That answer also decides the suggested management, and it is written into the impression."] },
       ],
     },
     { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags — also pinned via header button", fields: [{ type: "redflag", key: "redFlagsChecked" }] },
@@ -1176,7 +1177,6 @@ const acJointData = {
           when: (s) => s.diagPrimary === "Acute AC joint separation" || s.mechanism === "Trauma",
           fields: [
             { type: "info", title: "Rockwood classification (reference)", items: ["Type I \u2013 AC ligament sprain; CC ligament intact; normal radiographs", "Type II \u2013 AC ligament disrupted; CC ligament sprained but intact; slight AC joint widening, CC distance not significantly increased", "Type III \u2013 AC and CC ligaments both disrupted; CC distance increased 25\u2013100% versus the uninjured side; clavicle displaced superiorly but deltotrapezial fascia intact", "Type IV \u2013 Complete AC and CC disruption with the clavicle displaced posteriorly into or through the trapezius", "Type V \u2013 Complete AC and CC disruption with severe superior displacement (CC distance increased 100\u2013300%) and deltotrapezial fascia stripped from the clavicle", "Type VI \u2013 Complete AC and CC disruption with the clavicle displaced inferiorly, subacromial or subcoracoid (rare)"] },
-            { type: "select", key: "rockwoodType", label: "Rockwood classification", options: ["Type I", "Type II", "Type III", "Type IV", "Type V", "Type VI"], columns: 3, noteLabel: "Rockwood type" },
             // Acute AC separation management is a distinct, stage-based
             // decision from the chronic/degenerative Management Pathway
             // below (which assumes education/activity modification/NSAIDs
@@ -1184,7 +1184,7 @@ const acJointData = {
             // it's built as its own interactive sub-pathway here, the same
             // pattern already used for AVN staging in Glenohumeral OA,
             // rather than folded into the main pathway.
-            { type: "pathway", key: "acuteAcSeparationPathwayAnswers", title: "Acute AC separation \u2014 stage-based management", introText: "Select the Rockwood type to see pathway-suggested, stage-based management.", schema: acuteAcSeparationPathway },
+            { type: "pathway", key: "acuteAcSeparationPathwayAnswers", title: "Acute AC separation \u2014 Rockwood type and suggested management", introText: "Select the Rockwood type to see pathway-suggested, stage-based management. The type is recorded in the impression, so it is asked only here.", noteStage: "Rockwood type", schema: acuteAcSeparationPathway },
           ],
         },
       ],
@@ -1648,7 +1648,7 @@ const gleroarthritisData = {
         // main Management Pathway since it applies only when AVN is the
         // working diagnosis.
         { type: "info", title: "Humeral Head Avascular Necrosis \u2014 Cruess Classification (reference)", items: ["Stage I \u2013 Normal radiographs; MRI positive", "Stage II \u2013 Sclerosis and cysts without collapse", "Stage III \u2013 Subchondral collapse (crescent sign)", "Stage IV \u2013 Flattening of the humeral head", "Stage V \u2013 Secondary glenohumeral arthritis"] },
-        { type: "pathway", key: "avnPathwayAnswers", title: "AVN staging \u2014 stage-based management", introText: "Select the Cruess stage to see pathway-suggested, stage-based management.", schema: avnPathway },
+        { type: "pathway", key: "avnPathwayAnswers", title: "AVN staging \u2014 stage-based management", introText: "Select the Cruess stage to see pathway-suggested, stage-based management. The stage is recorded in the impression.", noteStage: "Cruess stage", schema: avnPathway },
         { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["Normal appearances", "Joint space narrowing", "Osteophytes", "Subchondral sclerosis", "Subchondral cysts", "Deformity or malalignment", "Erosions", "Loose body", "Chondrocalcinosis", "Ankylosis"] },
         { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
         { type: "checkbox", key: "mriCommon", label: "MRI — findings", options: ["Normal appearances", "Cartilage loss", "Subchondral oedema", "Subchondral cysts", "Effusion", "Synovitis", "Loose body", "Osteophytes"] },
@@ -1770,6 +1770,7 @@ const avnData = {
   // progressing) and Stage IV–V. Flagged for your review.
   pathway: {
     start: "diagnosisStep",
+    noteStages: [{ node: "stageSelect", label: "Cruess stage" }],
     nodes: {
       diagnosisStep: { type: "info", title: "Diagnosis", text: "Identify stage \u2192 Modify risk factors \u2192 Pain control \u2192 Activity modification", next: "stageSelect" },
       stageSelect: {
@@ -1877,7 +1878,7 @@ const avnData = {
       title: "Diagnosis Classification",
       subtitle: "Cruess stage + disease characteristics",
       fields: [
-        { type: "select", key: "cruessStage", label: "Cruess classification", options: ["Stage I", "Stage II", "Stage III", "Stage IV", "Stage V"], columns: 1, noteLabel: "Cruess stage" },
+        { type: "info", title: "The Cruess stage is recorded in the Management Pathway", items: ["The Cruess stage is chosen once, in the Management Pathway below. That answer also decides the suggested management, and it is written into the impression."] },
         { type: "info", title: "Cruess classification reference", items: ["Stage I: Normal radiographs; MRI positive.", "Stage II: Sclerosis, cysts, no collapse.", "Stage III: Subchondral collapse (crescent sign).", "Stage IV: Flattening of humeral head.", "Stage V: Secondary glenohumeral arthritis."] },
         { type: "select", key: "laterality", label: "Laterality", options: ["Unilateral", "Bilateral"], columns: 2 },
         { type: "select", key: "collapse", label: "Collapse", options: ["Present", "Absent"], columns: 2 },
@@ -4315,6 +4316,7 @@ const distalHumerusFxData = {
   ],
   pathway: {
     start: "initial",
+    noteStages: [{ node: "aoQ", label: "AO/OTA type" }],
     nodes: {
       initial: { type: "info", title: "Initial Assessment", text: "Neurovascular examination \u2192 radiographs \u2192 CT (with 3D reconstruction) \u2192 AO/OTA classification \u2192 assess bone quality and demand", next: "displacedQ" },
       displacedQ: {
@@ -4408,7 +4410,7 @@ const distalHumerusFxData = {
       title: "Diagnosis Classification",
       subtitle: "AO/OTA 13, articular pattern, bone quality",
       fields: [
-        { type: "select", key: "aoOtaType", label: "AO/OTA 13 type", options: ["13A \u2014 extra-articular", "13B \u2014 partial articular", "13C \u2014 complete articular"], columns: 1, noteLabel: "AO/OTA type" },
+        { type: "info", title: "The AO/OTA 13 type is recorded in the Management Pathway", items: ["The AO/OTA 13 type is chosen once, in the Management Pathway below. That answer also decides the suggested management, and it is written into the impression."] },
         { type: "select", key: "aoOtaGroup", label: "AO/OTA group", options: ["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"], columns: 5, noteLabel: "AO/OTA group" },
         { type: "info", title: "AO/OTA 13 reference", items: [
           "13A extra-articular: A1 apophyseal avulsion, A2 simple metaphyseal, A3 multifragmentary metaphyseal.",
@@ -4474,6 +4476,7 @@ const elbowUCLData = {
   ],
   pathway: {
     start: "initial",
+    noteStages: [{ node: "tearQ", label: "UCL tear" }],
     nodes: {
       initial: { type: "info", title: "Initial Assessment", text: "Clinical examination including moving valgus stress and milking manoeuvre \u2192 radiographs \u2192 MRI or MR arthrography \u2192 define partial versus complete tear and the athlete's demands", next: "tearQ" },
       tearQ: {
@@ -4567,7 +4570,7 @@ const elbowUCLData = {
       title: "Diagnosis Classification",
       subtitle: "Tear pattern and associated pathology",
       fields: [
-        { type: "select", key: "uclTearType", label: "Tear pattern", options: ["No structural tear", "Partial tear", "Complete tear"], columns: 1, noteLabel: "UCL tear" },
+        { type: "info", title: "The tear pattern is recorded in the Management Pathway", items: ["The tear pattern is chosen once, in the Management Pathway below. That answer also decides the suggested management, and it is written into the impression."] },
         { type: "select", key: "uclTearSite", label: "Site", options: ["Proximal avulsion", "Mid-substance", "Distal avulsion"], columns: 3, noteLabel: "Tear site" },
         { type: "checkbox", key: "associatedPathology", label: "Associated pathology", options: ["Ulnar neuritis", "Ulnar nerve subluxation", "Valgus extension overload", "Loose body", "Flexor-pronator injury", "Osteochondral lesion"] },
       ],
@@ -11858,11 +11861,76 @@ const tendonLacerationData = {
     }],
 };
 
+// Conservative care for a lateral clavicle fracture, from Yue 2025 (sling about 2 weeks, passive motion at once,
+// no figure-of-eight, radiographs at 1-2 and 6 weeks). Written as "conservative", not "non-operative": the
+// surgical-prompt detector reads "operat" in a step as surgery.
+const NEER_CONSERVATIVE_TEXT = "Initial conservative care \u2192 Sling for about 2 weeks for comfort, starting passive range of motion at the same time \u2192 Figure-of-eight bracing is not recommended \u2192 Repeat radiograph at 1\u20132 weeks if stability is uncertain, and routinely at 6 weeks for union \u2192 Add strengthening once radiographic union is seen";
+
+// The steps for one group of unstable lateral fractures (type IIA, type IIB or IIC, or type V): displaced or not,
+// patient demand, the shared decision for an older or lower-demand patient, and the conservative route with its
+// review. The right fixation differs by type (Kim 2026), so each group has its own copy and says where a decision
+// to fix should go.
+function lateralUnstableGroup(p, fragment, what) {
+  return {
+    [p + "Displaced"]: {
+      type: "question", text: "Is the " + what + " fracture displaced (about 5 mm or more)? Displacement is the feature observers agree on best.",
+      options: [{ label: "Displaced", next: p + "Demand" }, { label: "Not displaced", next: p + "NotDisplaced" }],
+    },
+    [p + "Demand"]: {
+      type: "question", text: "Younger or high-demand patient, or high functional or cosmetic expectations?",
+      options: [{ label: "Yes", next: fragment }, { label: "No \u2014 older or lower demand", next: p + "Shared" }],
+    },
+    [p + "Shared"]: {
+      type: "question", text: "Older or lower-demand patient with a displaced fracture. In the trial and pooled data, fixation gave more union (about 96% against 63%) with similar shoulder function at 1 year; conservative care carries a nonunion risk of about one in three (about half of nonunions are symptomatic), while fixation has a reoperation burden that depends on the technique. How will you proceed?",
+      options: [{ label: "Conservative with early radiographic review", next: p + "Stable" }, { label: "Discuss fixation", next: fragment }],
+    },
+    [p + "NotDisplaced"]: {
+      type: "question", text: "A fracture that is not displaced is a controversial group: initial conservative care is an option, and so is discussing fixation. How will you proceed?",
+      options: [{ label: "Conservative with early radiographic review", next: p + "Stable" }, { label: "Discuss fixation", next: fragment }],
+    },
+    [p + "Stable"]: { type: "info", text: NEER_CONSERVATIVE_TEXT, next: p + "Review" },
+    [p + "Review"]: {
+      type: "question", text: "Is the fracture healing as expected?",
+      options: [{ label: "Yes", next: "continueRehab" }, { label: "No \u2014 displacement increasing or symptomatic nonunion", next: fragment }],
+    },
+  };
+}
+
 const clavicleFxData = {
+  // Where the fracture is, and for the lateral third its Neer type (Craig modification),
+  // are asked here once: the answer both classifies the fracture and decides the suggested
+  // management, and noteStages writes them into the impression. There is deliberately no
+  // second location or Neer question in Diagnosis Classification. Lateral management
+  // follows Kim et al. 2026 (J Musculoskelet Trauma, doi 10.12671/jmt.2026.00241) for
+  // fixation by type (IIA locking plate, IIB/IIC coracoclavicular stabilisation or plate with
+  // augmentation, V locking plate or hook plate as salvage), and Yue 2025, Hall 2021,
+  // Thurston 2024 and Uittenbogaard 2023 for conservative care and the shared decision:
+  // types I and III start conservatively, non-displaced II is controversial.
   pathway: {
     start: "diagnosis",
+    noteStages: [
+      { node: "location", label: "Fracture location" },
+      { node: "neerType", label: "Neer type (Craig)" },
+    ],
     nodes: {
-      diagnosis: { type: "info", text: "Diagnosis \u2192 Assess displacement, shortening and skin integrity \u2192 Exclude neurovascular injury", next: "displaced" },
+      diagnosis: { type: "info", text: "Diagnosis \u2192 Assess displacement, shortening and skin integrity \u2192 Exclude neurovascular injury", next: "urgent" },
+      urgent: {
+        type: "question", text: "Open fracture, skin compromise (tenting) or neurovascular injury?",
+        options: [
+          { label: "Yes", next: "urgentSurg" },
+          { label: "No", next: "location" },
+        ],
+      },
+      urgentSurg: { type: "terminal", tone: "amber", text: "Urgent surgical review \u2192 Open fractures, skin compromise and neurovascular injury are accepted indications for surgery \u2192 Discuss surgery" },
+      location: {
+        type: "question", text: "Where is the fracture?",
+        options: [
+          { label: "Middle third", next: "displaced" },
+          { label: "Lateral third", next: "neerType" },
+          { label: "Medial third", next: "medialNote" },
+        ],
+      },
+      medialNote: { type: "info", text: "Medial third fractures are uncommon and the evidence behind this pathway is for the middle and lateral thirds \u2192 CT is suggested for complex or intra-articular fractures (see Imaging) \u2192 Continue with the displacement-based flow", next: "displaced" },
       displaced: {
         type: "question", text: "Is the fracture significantly displaced or shortened (>2cm)?",
         options: [
@@ -11878,8 +11946,58 @@ const clavicleFxData = {
           { label: "No \u2014 nonunion risk factors or displacement progressing", next: "surgDiscuss" },
         ],
       },
-      continueRehab: { type: "terminal", text: "Continue physiotherapy-guided rehabilitation \u2192 Progress to strengthening at union" },
-      surgDiscuss: { type: "terminal", text: "Discuss Surgery \u2192 Shared decision-making regarding open reduction internal fixation" },
+      continueRehab: { type: "terminal", tone: "green", text: "Continue physiotherapy-guided rehabilitation \u2192 Progress to strengthening at union" },
+      surgDiscuss: { type: "terminal", tone: "amber", text: "Discuss Surgery \u2192 Shared decision-making regarding open reduction internal fixation" },
+      neerType: {
+        type: "question", text: "Which Neer type (Craig modification) best fits? The type is recorded in the impression.",
+        options: [
+          { label: "Type I", next: "neerICheck" },
+          { label: "Type IIA", next: "neerIIADisplaced" },
+          { label: "Type IIB", next: "neerIIBDisplaced" },
+          { label: "Type IIC", next: "neerIIBDisplaced" },
+          { label: "Type III", next: "neerStable" },
+          { label: "Type IV", next: "neerIV" },
+          { label: "Type V", next: "neerVDisplaced" },
+        ],
+      },
+      neerICheck: {
+        type: "question", text: "Does the type I fracture look stable? Radiographs can miss ruptured coracoclavicular ligaments (a type IIC). Stable means displacement under 5 mm, a coracoclavicular distance within 5 mm of the other side and under 15 mm, and a fracture angle under about 30\u00b0.",
+        options: [
+          { label: "Stable \u2014 displacement under 5 mm, normal coracoclavicular distance and angle", next: "neerStable" },
+          { label: "Doubtful \u2014 displacement 5 mm or more, wide distance, angle over about 30\u00b0, or posterior displacement", next: "neerDoubtful" },
+        ],
+      },
+      neerDoubtful: { type: "terminal", tone: "amber", text: "Stability doubtful on radiographs \u2192 Sling for comfort and repeat radiograph at 1\u20132 weeks \u2192 MRI to see whether both coracoclavicular ligaments are ruptured (type IIC), or CT if comminution or posterior displacement is the question \u2192 Reclassify as type IIC and follow that pathway if the ligaments are ruptured" },
+      neerStable: { type: "info", text: NEER_CONSERVATIVE_TEXT, next: "neerReview" },
+      neerReview: {
+        type: "question", text: "Is the fracture healing as expected?",
+        options: [
+          { label: "Yes", next: "continueRehab" },
+          { label: "No \u2014 displacement increasing or symptomatic nonunion", next: "neerLateFail" },
+        ],
+      },
+      neerLateFail: { type: "terminal", tone: "amber", text: "Discuss Surgery \u2192 Shared decision-making regarding fixation for symptomatic nonunion or increasing displacement \u2192 The choice follows the fragment and the ligaments: a locking plate, with coracoclavicular augmentation if the ligaments are disrupted; coracoclavicular stabilisation for a small fragment; a hook plate only as a salvage" },
+      ...lateralUnstableGroup("neerIIA", "neerIIAFragment", "type IIA"),
+      neerIIAFragment: {
+        type: "question", text: "If fixation is chosen: does the lateral fragment have room for at least three locking screws?",
+        options: [{ label: "Yes", next: "neerSurgIIAPlate" }, { label: "No \u2014 too small or comminuted", next: "neerSurgHook" }],
+      },
+      neerSurgIIAPlate: { type: "terminal", tone: "amber", text: "Discuss Surgery \u2192 Shared decision-making regarding fixation of an unstable type IIA fracture \u2192 Anatomic locking plate, with coracoclavicular suture-button augmentation when possible \u2192 This avoids the subacromial complications and the planned removal that a hook plate usually needs" },
+      ...lateralUnstableGroup("neerIIB", "neerIIBFragment", "type IIB or IIC"),
+      neerIIBFragment: {
+        type: "question", text: "If fixation is chosen: does the lateral fragment have room for at least three locking screws and is it not comminuted?",
+        options: [{ label: "Yes", next: "neerSurgIIBPlateCC" }, { label: "No \u2014 small or comminuted", next: "neerSurgCC" }],
+      },
+      neerSurgIIBPlateCC: { type: "terminal", tone: "amber", text: "Discuss Surgery \u2192 Shared decision-making regarding fixation of an unstable type IIB or IIC fracture (conoid ligament torn) \u2192 A locking plate combined with coracoclavicular augmentation (suture button) ranked best for function in a network meta-analysis \u2192 Coracoclavicular stabilisation alone is the alternative, with the best complication profile of any single technique" },
+      neerSurgCC: { type: "terminal", tone: "amber", text: "Discuss Surgery \u2192 Shared decision-making regarding fixation of an unstable type IIB or IIC fracture with a small or comminuted lateral fragment \u2192 Dedicated coracoclavicular stabilisation (suture button; open or arthroscopic according to experience) \u2192 Nonunion is about 5\u20139%, and arthroscopically assisted ligament reconstruction has had union as low as 70% \u2192 A hook plate is only a salvage, with planned removal" },
+      ...lateralUnstableGroup("neerV", "neerVFragment", "type V"),
+      neerVFragment: {
+        type: "question", text: "If fixation is chosen: is there enough distal bone to hold a locking plate (room for at least three screws)?",
+        options: [{ label: "Yes", next: "neerSurgVPlate" }, { label: "No \u2014 severely comminuted", next: "neerSurgHook" }],
+      },
+      neerSurgVPlate: { type: "terminal", tone: "amber", text: "Discuss Surgery \u2192 Shared decision-making regarding fixation of an unstable type V (comminuted) fracture \u2192 Locking plate when the distal fragment can hold it \u2192 Otherwise a hook plate as a salvage construct, with planned removal" },
+      neerSurgHook: { type: "terminal", tone: "amber", text: "Discuss Surgery \u2192 Shared decision-making regarding fixation when the distal fragment is too small or comminuted for a plate \u2192 A hook plate is the salvage option, with planned removal expected in most patients and an overall complication rate of about one in three, against about one in eight for a locking plate" },
+      neerIV: { type: "terminal", tone: "amber", text: "Neer type IV is a periosteal sleeve avulsion, seen mainly in children and adolescents, and the sources reviewed do not give a treatment for it \u2192 Individualise management by displacement and age, with specialist or paediatric input as needed" },
     },
   },
   id: "clavicle-fracture",
@@ -11922,14 +12040,16 @@ const clavicleFxData = {
     {
       id: "imaging", index: 4, title: "Imaging",
       fields: [
-        { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP clavicle", "15\u00b0 cephalic tilt view", "Chest X-ray (assess for pneumothorax)"] },
-        { type: "info", title: "Review for", items: ["Fracture location (medial/middle/lateral third)", "Displacement", "Shortening", "Comminution", "Associated rib or scapular fracture"] },
-        { type: "info", title: "CT (selected cases)", items: ["Complex or intra-articular medial/lateral third fractures", "Suspected floating shoulder", "Preoperative planning"] },
+        { type: "checkbox", key: "imgEssential", label: "Essential views obtained", options: ["AP clavicle", "15\u00b0 cephalic tilt view", "Zanca view (AC joint and distal clavicle, 10\u201315\u00b0 cephalic tilt)", "Axillary lateral view (posterior displacement)", "Bilateral comparison views (coracoclavicular distance)", "Chest X-ray (assess for pneumothorax)"] },
+        { type: "info", title: "Review for", items: ["Fracture location (medial/middle/lateral third)", "Displacement", "Shortening", "Comminution", "Associated rib or scapular fracture", "Lateral third: the fracture line relative to the coracoclavicular ligaments, and intra-articular extension (Neer type)", "Lateral third: coracoclavicular distance compared with the other side (a difference of 5 mm or more, or an absolute distance of 15 mm or more, suggests ligament disruption), the fracture angle (over about 30\u00b0 suggests instability), and posterior displacement", "Lateral third: size of the lateral fragment (a locking plate needs about 10 mm) and any small inferior fragment (Neer type V)"] },
+        { type: "info", title: "CT (selected cases)", items: ["Complex or intra-articular medial/lateral third fractures", "Shortening, displacement and progression of union", "Lateral third: comminution, fragment size, or posterior displacement that radiographs cannot show", "Suspected floating shoulder", "Preoperative planning"] },
+        { type: "info", title: "MRI (selected cases, not routine)", items: ["Coracoclavicular ligament integrity cannot be decided from radiographs and the answer would change management", "Associated rotator cuff, labral or capsular injury"] },
         { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Fracture", "Displacement", "Angulation", "Comminution", "Intra-articular extension", "Dislocation or subluxation", "Avulsion fragment", "Shortening", "Loss of reduction", "Nonunion", "Malunion", "Hardware in situ"] },
         { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
         { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Impaction", "Bone loss", "Loose body", "Nonunion", "Malunion"] },
         { type: "text", key: "ctFinding", label: "CT — additional detail" },
         { type: "numberGroup", key: "shorteningMeasurement", label: "Measured shortening", items: ["Shortening (mm)"], suffix: "mm" },
+        { type: "numberGroup", key: "ccDistance", label: "Coracoclavicular distance (lateral third fractures)", items: ["Coracoclavicular distance, injured side", "Coracoclavicular distance, other side"], suffix: "mm" },
       ],
     },
     {
@@ -11940,8 +12060,12 @@ const clavicleFxData = {
     },
     {
       id: "diagnosis", index: 6, title: "Diagnosis Classification",
+      subtitle: "Displacement, associated features and classification reference",
       fields: [
-        { type: "select", key: "diagLocation", label: "Fracture location", options: ["Medial third", "Middle third", "Lateral third"], columns: 3, noteLabel: "Fracture location" },
+        { type: "info", title: "Location and Neer type are recorded in the Management Pathway", items: ["Where the fracture is, and for a lateral third fracture its Neer type, are chosen once in the Management Pathway below. That answer also decides the suggested management, and it is written into the impression."] },
+        { type: "info", title: "Location (Allman) \u2014 reference", items: ["Group I \u2013 middle third (the most common)", "Group II \u2013 lateral (distal) third", "Group III \u2013 medial (proximal) third"] },
+        { type: "info", title: "Lateral third: Neer classification, Craig modification \u2014 reference", items: ["Type I \u2013 fracture lateral to the coracoclavicular (CC) ligaments, which stay intact; little displacement; considered stable", "Type IIA \u2013 fracture medial to the CC ligaments, both still attached to the lateral fragment; unstable", "Type IIB \u2013 conoid ligament torn, trapezoid still attached to the lateral fragment; unstable", "Type IIC \u2013 fracture lateral to the CC ligaments, but both conoid and trapezoid ruptured; it can look like type I on radiographs; unstable", "Type III \u2013 fracture into the AC joint with the CC ligaments intact; considered stable", "Type IV \u2013 periosteal sleeve avulsion, mainly in children and adolescents", "Type V \u2013 comminuted; the CC ligaments are attached to a small inferior fragment and not to either main fragment; unstable", "Displaced type II and type V are the usual surgical indications; types I and III, and non-displaced type II, can start conservatively (non-displaced type II is controversial)", "Cho system (2018), for comparison: type I is stable (under 5 mm of displacement); types IIA to IID are unstable (5 mm or more). IIA matches Neer IIA; IIB and IIC match Neer IIB (IIC: fracture lateral to the CC ligaments, both ruptured); IID (comminuted) matches Neer V. Observer agreement is moderate (kappa 0.43)"] },
+        { type: "info", title: "Reading the radiograph: how far to trust the type", items: ["Observers agree only fairly to moderately on the Neer type (kappa 0.11 to 0.57 across studies, and the lowest of four systems in one multicentre study), but agree very well on displacement (kappa 0.89 in one study). Record the displacement and let it, not the label alone, drive the decision.", "A fracture that looks like type I can hide ruptured CC ligaments (type IIC): in an MRI series about 1 in 20 fractures read as type I were reclassified, which changed the advice from conservative to operative.", "Signs that a type I fracture may be unstable: displacement of 5 mm or more; a CC distance 5 mm or more wider than the other side, or 15 mm or more in absolute terms; or a fracture angle over about 30\u00b0 (approximate, not a validated cut-off). Posterior displacement and angulation are common and easy to miss on one view, so check an axillary lateral.", "If in doubt: CT shows comminution, fragment size and posterior displacement; MRI shows the ligaments and is for when their integrity cannot be decided and the answer would change management. Standard AP and Zanca views, with an axillary lateral and bilateral comparison, come first."] },
         { type: "select", key: "diagDisplacement", label: "Displacement", options: ["Undisplaced", "Minimally displaced", "Displaced (>100% shaft width or shortening >2cm)"], noteLabel: "Displacement" },
         { type: "checkbox", key: "diagAssociated", label: "Associated features", options: ["Comminution", "Floating shoulder", "Open fracture"] },
       ],
@@ -11958,8 +12082,8 @@ const clavicleFxData = {
       id: "followup", index: 9, title: "Standard Follow-up",
       fields: [
         { type: "table", title: "Review schedule", rows: [
-          { left: "2 weeks", right: "Pain, skin integrity, neurovascular status, repeat radiograph if displaced" },
-          { left: "6 weeks", right: "Radiographic union, range of motion" },
+          { left: "2 weeks", right: "Pain, skin integrity, neurovascular status and radiographic stability (repeat radiograph at 1\u20132 weeks if uncertain, particularly for lateral third fractures)" },
+          { left: "6 weeks", right: "Radiographic union (routine radiograph), range of motion, and readiness to start strengthening" },
           { left: "3 months", right: "Functional recovery, return to sport/work" },
         ] },
         { type: "select", key: "followUpInterval", label: "Selected follow-up interval", options: ["2 weeks", "6 weeks", "3 months", "Other"], noteLabel: "Follow-up interval" },
@@ -15091,7 +15215,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // The version is the date this build was made (year.month.day). A clinician can
 // read it ("is my copy today's?") and it says more than 5.31.1 ever did. Change
 // it, and add a line to WHATS_NEW, with each release.
-const APP_VERSION = "2026.10.12";
+const APP_VERSION = "2026.10.13";
 
 // Where suggestions and problems go. The one address to change if it moves.
 const CONTACT_EMAIL = "namanimuntasir@gmail.com";
@@ -15099,6 +15223,15 @@ const CONTACT_EMAIL = "namanimuntasir@gmail.com";
 // Summarised for clinicians, newest first. Not a commit log: what a user would
 // notice. Dated groups are added as releases are made.
 const WHATS_NEW = [
+  {
+    when: "13 October 2026",
+    items: [
+      "Clavicle fractures, lateral third: the pathway now follows a September 2026 review. Fixation is chosen by type and fragment: a locking plate for IIA, coracoclavicular stabilisation or a plate with augmentation for IIB and IIC, and a hook plate only as a salvage. The Cho system is listed for comparison.",
+      "Clavicle fractures: an apparent type I gets a stability check (displacement 5 mm or more, wide coracoclavicular distance, angle over about 30\u00b0), imaging adds an axillary lateral view and bilateral comparison, and sources include recent trials and meta-analyses.",
+      "Five classifications were asked twice and are now asked once, in the pathway that suggests management, and are still written into the impression: Rockwood type (AC joint), stage (adhesive capsulitis), Cruess stage (AVN of the humeral head), AO/OTA type (distal humerus fracture) and tear pattern (elbow UCL injury).",
+      "Glenohumeral osteoarthritis: the Cruess stage chosen in the AVN pathway is now written into the impression.",
+    ],
+  },
   {
     when: "12 October 2026",
     items: [
@@ -15186,12 +15319,41 @@ const CONDITION_EVIDENCE = {
     links: [{ label: "Thumb CMC arthritis surgical options", url: PM("trapeziectomy ligament reconstruction tendon interposition thumb carpometacarpal osteoarthritis") }],
   },
   "clavicle-fracture": {
-    summary: "Displaced midshaft fractures with significant shortening warrant a shared decision about fixation rather than automatic surgery \u2014 non-operative management remains reasonable for many.",
+    summary: "Lateral third fractures: classify with the Neer system (Craig modification) and check that a type I is really stable, because radiographs can miss ruptured coracoclavicular ligaments (type IIC). Types I and III, and most non-displaced type II, start conservatively. A displaced unstable fracture is a genuine shared decision: fixation gives more union, but 1-year function is similar. When fixing, choose by type: a locking plate (with coracoclavicular augmentation when possible) for IIA, coracoclavicular stabilisation or a plate with augmentation for IIB and IIC, and a locking plate or, as a salvage, a hook plate for type V. A displaced, shortened middle third fracture is a shared decision rather than automatic surgery.",
     points: [
-      "Shortening beyond roughly 2cm is a commonly used threshold for discussing fixation.",
-      "Routing to shared decision-making rather than directly to surgery reflects the balance of evidence.",
+      "Kim 2026 (a September 2026 evidence review) organises fixation by morphology: anatomic locking plate, with coracoclavicular suture-button augmentation when possible, for Neer IIA (Cho IIA) with enough distal fragment (room for at least three locking screws); dedicated coracoclavicular stabilisation, or a plate with augmentation, for Neer IIB (Cho IIB and IIC); a locking plate for Neer V (Cho IID) when the distal bone can hold it, with the hook plate as a salvage construct needing planned removal.",
+      "Observer agreement is only fair to moderate: Neer kappa 0.11\u20130.40 in several studies, 0.37 (lowest of four systems) in a multicentre study, 0.28 in Rauer 2019 and 0.57 in Akg\u00fcn 2025, where displacement alone reached 0.89. The Cho system is moderate (0.43). The 2025 simpler system reached 0.80, but its categories could not be read, so the app keeps the modified Neer\u2013Craig system and lists Cho for comparison.",
+      "On MRI (Fleischhacker 2022, 59 patients) 8.5% of fractures were misclassified on radiographs and 5% read as Neer I were really Craig IIC (both coracoclavicular ligaments ruptured), turning conservative advice into operative. A contralateral coracoclavicular distance difference of 5 mm or more, or an absolute distance of 15 mm or more, suggests ligament disruption (Kim 2026); a fracture angle over about 30\u00b0 is an approximate sign of instability, not a validated cut-off.",
+      "CT (Liu 2025, 81 fractures, 3D mapping): posterior displacement (93%, mean 6.3 mm) and posterior angulation were almost universal and often missed on standard radiographs, and were key predictors of failure. Imaging order in Kim 2026: bilateral AP and Zanca views with the coracoclavicular distance, an axillary lateral in every case, CT when comminution, fragment size or posterior displacement cannot be judged, MRI only when ligament integrity cannot be decided and the answer would change management.",
+      "Pooled data (Thurston 2024, 779 patients, 11 studies): union 63% with conservative care against 96% with surgery, yet none of the seven comparative studies found a significant difference in patient-reported outcomes (Constant 91.8 against 87.4; DASH 7.8 against 6.4). Conservative complications 45% (nonunion 31%, coracoclavicular calcification 7%); 11% needed delayed surgery, mostly for symptomatic nonunion.",
+      "Randomised trial (Hall 2021, 57 completely displaced type II): union 96% against 63%, DASH 6.7 against 10.8 (not significant) and Constant 89.9 against 90.0 at 1 year; return to sport at 6 months 78% against 44%. Implant removal followed 71% of hook plates and 18% of locking plates.",
+      "Hook plate against superior locking plate (Malik 2023, 1,261 patients): complications 32.7% against 12.7% (odds ratio 6.3), with acromial osteolysis up to 11.3%; planned removal is likely in about 9 of 10 hook plates against about 1 of 100 suture-button constructs (cost-effectiveness analysis). Locking plate with coracoclavicular augmentation ranked best for function in a network meta-analysis of 29 studies (Xu 2022), while coracoclavicular reconstruction alone had the best complication profile of any single technique.",
+      "A meta-analysis of type IIB (IIC) fractures (2022) likewise found similar major complication rates across techniques and inferior clinical results for the hook plate.",
+      "Coracoclavicular fixation for Neer IIB and extra-lateral fractures (21 studies, 421 patients): major complications 2.6%, minor 12.8%. Nonunion is about 5\u20139%, coracoclavicular ossification 10\u201315% (usually asymptomatic), and arthroscopically assisted reconstruction has had union as low as 70% (Malik 2022). Arthroscopic cortical-button fixation (Yagnik 2021, 226 fractures): union 94%, major complications 12%, reoperation 6%.",
+      "Augmenting a locking plate with a suture button (2025 meta-analysis of 5 small studies): Constant score 4.4 points higher, union about 2 weeks sooner, less pain, fewer complications. One comparison found union in 17 of 17 with a locking plate against 25 of 29 (86%) with coracoclavicular stabilisation alone.",
+      "Conservative care: a simple sling (about 2 weeks for comfort, with passive motion started at the same time), no figure-of-eight bracing, a repeat radiograph at 1\u20132 weeks if stability is uncertain and at 6 weeks for union (Yue 2025; Kim 2026).",
+      "Type IV (periosteal sleeve avulsion) is not given a treatment in the evidence reviewed, and the pathway says so rather than guess.",
+      "Shortening beyond roughly 2cm is a commonly used threshold for discussing fixation of a middle third fracture. This is not from the sources above.",
     ],
-    links: [{ label: "Midshaft clavicle fracture management", url: PM("displaced midshaft clavicle fracture operative versus nonoperative") }],
+    links: [
+      { label: "Kim et al. 2026 \u2014 Current concepts in distal clavicle fractures: an evidence-based update", url: "https://doi.org/10.12671/jmt.2026.00241" },
+      { label: "Thurston et al. 2024 \u2014 Are displaced distal clavicle fractures associated with inferior outcomes after nonoperative management? A systematic review", url: "https://doi.org/10.1016/j.jse.2023.12.006" },
+      { label: "Hall et al. 2021 \u2014 Operative versus nonoperative treatment of acute displaced distal clavicle fractures: a randomized controlled trial", url: "https://doi.org/10.1097/BOT.0000000000002211" },
+      { label: "Uittenbogaard et al. 2023 \u2014 Neer type II distal clavicle fractures: systematic review and meta-analysis of 2284 patients", url: "https://doi.org/10.1177/03635465211053336" },
+      { label: "Malik et al. 2023 \u2014 Hook plates against superior plates for displaced distal clavicle fractures: meta-analysis", url: "https://doi.org/10.1007/s00402-021-04287-z" },
+      { label: "Xu et al. 2022 \u2014 Internal fixation methods for unstable distal clavicle fractures: network meta-analysis", url: "https://doi.org/10.1186/s13018-021-02904-6" },
+      { label: "Optimal surgical treatment for Neer type IIB (IIC) fractures: systematic review and meta-analysis (2022)", url: "https://doi.org/10.1186/s13018-022-03108-2" },
+      { label: "Cho et al. 2018 \u2014 Distal clavicle fractures: a new classification system", url: "https://doi.org/10.1016/j.otsr.2018.05.015" },
+      { label: "Liu et al. 2025 \u2014 Three-dimensional mapping of distal clavicle fractures", url: "https://doi.org/10.1111/os.70033" },
+      { label: "Yagnik et al. 2021 \u2014 Outcomes of arthroscopic fixation of unstable distal clavicle fractures: systematic review", url: "https://doi.org/10.1177/23259671211001773" },
+      { label: "Fleischhacker et al. 2022 \u2014 Accuracy of distal clavicle fracture classifications (MRI study)", url: "https://doi.org/10.3390/jcm11195638" },
+      { label: "Akg\u00fcn et al. 2025 \u2014 Differentiating and treating lateral clavicle fractures: a new simple classification system", url: "https://www.jshoulderelbow.org/article/S1058-2746(25)00425-2/fulltext" },
+      { label: "Rauer et al. 2019 \u2014 Interobserver agreement of three classification systems for lateral clavicle fractures", url: "https://doi.org/10.1186/s13037-019-0228-y" },
+      { label: "Yue et al. 2025 \u2014 Treatment strategies for distal clavicle fractures: a narrative review", url: "https://doi.org/10.2147/ORR.S507343" },
+      { label: "Locking plate with AC TightRope augmentation for lateral-end clavicle fractures: meta-analysis (2025)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12832051/" },
+      { label: "Neer 1968 \u2014 Fractures of the distal third of the clavicle", url: "https://doi.org/10.1097/00003086-196805000-00007" },
+      { label: "Midshaft clavicle fracture management", url: PM("displaced midshaft clavicle fracture operative versus nonoperative") },
+    ],
   },
   "de-quervain": {
     summary: "Injection and splinting are effective first-line. A septated first dorsal compartment is a recognised cause of both injection and surgical failure and is worth anticipating.",
@@ -18572,8 +18734,63 @@ function buildDifferential(condition, state) {
   return `The following alternative diagnoses were considered and felt to be less likely: ${humanizeList(list, { preserveCase: true })}.`;
 }
 
+// A classification asked inside a pathway - the answer both classifies the injury
+// and decides the suggested management - is written into the impression as if it
+// had been a select field, so it is asked once and recorded once. Only an answer
+// on the route actually followed counts, so an answer left over from a branch the
+// clinician has since left is ignored.
+function stagedAnswers(schema, answers, stages) {
+  if (!schema || !answers || !stages || !stages.length) return [];
+  const route = walkPathwayTrail(schema, answers);
+  const out = [];
+  stages.forEach((s) => {
+    const hit = route.find((t) => t.id === s.node && t.node.type === "question");
+    const answer = hit ? answers[s.node] : null;
+    if (answer) out.push({ label: s.label, answer });
+  });
+  return out;
+}
+// the main pathway's classification questions (condition.pathway.noteStages), as impression clauses
+function pathwayStageClauses(condition, state, answers) {
+  const entries = stagedAnswers(condition.pathway, answers, condition.pathway && condition.pathway.noteStages);
+  if (!entries.length) return [];
+  const st = { ...state };
+  const fields = entries.map((e, i) => { st[`__stage${i}`] = e.answer; return { type: "select", key: `__stage${i}`, label: e.label, noteLabel: e.label, options: [e.answer] }; });
+  return labelledClauses(fields, st).map((e) => e.clause);
+}
+// An embedded stage pathway can sit in any section, not only Diagnosis Classification (the AVN stage pathway
+// in glenohumeral osteoarthritis sits under Imaging). impressionClausesFor handles the diagnosis section; this
+// finds the ones in every other section.
+function embeddedStageClauses(condition, state) {
+  let st = state; let n = 0; const fields = [];
+  condition.sections.forEach((sec) => {
+    if (sec.id === "diagnosis") return;
+    resolveFields(sec.fields, state).forEach((f) => {
+      if (f.type === "pathway" && f.noteStage && f.schema) {
+        stagedAnswers(f.schema, state[f.key], [{ node: f.schema.start, label: f.noteStage }]).forEach((e) => {
+          const k = `__elsewhere${n++}`;
+          fields.push({ type: "select", key: k, label: e.label, noteLabel: e.label, options: [e.answer] });
+          st = { ...st, [k]: e.answer };
+        });
+      }
+    });
+  });
+  return fields.length ? labelledClauses(fields, st).map((e) => e.clause) : [];
+}
 function impressionClausesFor(dx, state) {
-  return labelledClauses(resolveFields(dx.fields, state), state).map((e) => e.clause);
+  let st = state; let n = 0;
+  const fields = [];
+  resolveFields(dx.fields, state).forEach((f) => {
+    // an embedded pathway marked noteStage records the answer to its first question
+    if (f.type === "pathway" && f.noteStage && f.schema) {
+      stagedAnswers(f.schema, state[f.key], [{ node: f.schema.start, label: f.noteStage }]).forEach((e) => {
+        const k = `__embedded${n++}`;
+        fields.push({ type: "select", key: k, label: e.label, noteLabel: e.label, options: [e.answer] });
+        st = { ...st, [k]: e.answer };
+      });
+    } else fields.push(f);
+  });
+  return labelledClauses(fields, st).map((e) => e.clause);
 }
 
 // Laterality was previously recorded in the form but never reached the note
@@ -18613,8 +18830,8 @@ function buildImpression(condition, state) {
   if (state.side === "Bilateral") {
     const rightState = { ...state, ...(state.limbData?.right || {}) };
     const leftState = { ...state, ...(state.limbData?.left || {}) };
-    const rightClauses = impressionClausesFor(dx, rightState);
-    const leftClauses = impressionClausesFor(dx, leftState);
+    const rightClauses = [...pathwayStageClauses(condition, rightState, state.pathwayAnswersRight), ...embeddedStageClauses(condition, rightState), ...impressionClausesFor(dx, rightState)];
+    const leftClauses = [...pathwayStageClauses(condition, leftState, state.pathwayAnswersLeft), ...embeddedStageClauses(condition, leftState), ...impressionClausesFor(dx, leftState)];
     const parts = [];
     const fix = (s) => s.replace(/;\s+(involving\b)/g, " $1");
     if (rightClauses.length) parts.push(`Right side \u2014 ${fix(joinClausesLower(rightClauses))}`);
@@ -18624,7 +18841,7 @@ function buildImpression(condition, state) {
     return generalContext || body;
   }
 
-  const clauses = impressionClausesFor(dx, state);
+  const clauses = [...pathwayStageClauses(condition, state, state.pathwayAnswers), ...embeddedStageClauses(condition, state), ...impressionClausesFor(dx, state)];
   const side = sideWord(state);
   const joined = clauses.length ? joinClausesLower(clauses).replace(/;\s+(involving\b)/g, " $1") : null;
   // Every note states the working diagnosis, with the classification detail
@@ -18751,7 +18968,7 @@ const SURGICAL_OPTIONS_BY_CONDITION = {
   "fingertip-injury": ["Local flap coverage", "Skin graft", "Revision amputation", "Nail bed repair"],
   "tendon-laceration": ["Primary flexor tendon repair", "Primary extensor tendon repair", "Staged tendon reconstruction (chronic)"],
   // Newly added conditions
-  "clavicle-fracture": ["Open reduction internal fixation (plate)", "Intramedullary fixation"],
+  "clavicle-fracture": ["Open reduction internal fixation (plate)", "Intramedullary fixation", "Distal clavicle locking plate", "Locking plate with coracoclavicular augmentation", "Coracoclavicular stabilisation (suture button)", "Arthroscopically assisted coracoclavicular stabilisation", "Clavicle hook plate"],
   "parsonage-turner-syndrome": ["Tendon transfer (for persistent isolated nerve palsy)"],
   "suprascapular-neuropathy": ["Arthroscopic suprascapular nerve decompression", "Arthroscopic cyst decompression"],
   "olecranon-fracture": ["Tension band wiring", "Plate fixation", "Fragment excision with triceps advancement (comminuted, elderly)"],
@@ -18782,6 +18999,9 @@ const PROCEDURE_COMPLICATION_CATEGORIES = [
   { test: /repair|reconstruction|reinsertion|tenodesis|ligament/i, items: ["Re-tear or failure of repair", "Stiffness", "Incomplete return of strength"] },
   { test: /release|decompress/i, items: ["Incomplete symptom relief", "Recurrent compression", "Nerve or vessel injury"] },
   { test: /fixation|\bORIF\b|pinning|plate|screw|nail/i, items: ["Nonunion or malunion", "Hardware irritation or need for removal", "Loss of fixation"] },
+  // Named in the distal clavicle review (Yue 2025): the hook sits under the acromion, and is usually removed.
+  { test: /hook plate/i, items: ["Subacromial impingement", "Acromial erosion or osteolysis", "Rotator cuff injury", "Planned implant removal"] },
+  { test: /coracoclavicular/i, items: ["Loss of reduction", "Nonunion", "Hardware irritation or need for removal"] },
   { test: /fusion|arthrodesis/i, items: ["Nonunion", "Adjacent joint stress", "Loss of motion"] },
   { test: /trapeziectomy|excision/i, items: ["Subsidence / loss of length", "Residual weakness"] },
   { test: /transposition|transfer/i, items: ["Altered or incomplete function", "Recurrent symptoms at the new site"] },
