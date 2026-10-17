@@ -15228,10 +15228,12 @@ const WHATS_NEW = [
   {
     when: "17 October 2026",
     items: [
-      "Operative note: a fourth visit type with 70 procedures across the shoulder, elbow, wrist, hand and peripheral nerve, grouped by region and family. Choose one or several, tick the indications that applied, record findings, technique and implants, and confirm the standard steps once. Nothing is pre-ticked.",
+      "Operative note: a fourth visit type that covers every operation offered in the clinic notes. Seventy have a full template (findings, technique, standard steps, plan, rehabilitation); the rest have a basic one where you write the steps. Choose the region on the body map, then the operation from a table. Nothing is pre-ticked.",
+      "Operative note: the standard steps are yours to start, then reword, delete or add to in place, with no separate deviations box. Steps you have not edited keep following the side and findings, so clock-face positions stay right; steps you have edited never change.",
       "Operative note: clock-face positions (Bankart repair, Latarjet, capsular release) are written for the side operated on, and an operation that combined several procedures reads as one note, with preparation and closure described once and no repeated arthroscopy.",
       "Operative note: the note carries the anaesthesia and safety details (time-out, antibiotics, tranexamic acid, tourniquet or WALANT, counts, blood loss, complications), and the post-operative plan is pre-filled from the protocol for the procedure and stays editable.",
-      "Operative note: the preview also gives a one-line summary for the follow-up visit and a rehabilitation protocol, each copied on its own.",
+      "Operative note: the preview has one Copy button and tabs for the note, the follow-up summary and the rehabilitation protocol. The summary now says what was found and done (the tendons repaired, tear size, anchors, implant sizes), never free text or lot numbers.",
+      "Operative note: the green bar's Search finds operations, not diagnoses; the date starts as today; assistants can be several; each section opens at its top; and the Notes list names the operation and calls it an operative note.",
       "Post-operative review by period: the review is placed at 2 weeks, 6 weeks, 3, 6 or 12 months from the date of surgery, or chosen by you. For an operation that has an operative note, the form shows its protocol at that point and the scores due from the diagnosis's own outcomes table.",
       "Post-operative review: the next review is suggested from the operation's protocol, with what is due at it (imaging, wire removal, electrodiagnostic review) as the templates state. One tap sets it from the diagnosis's own follow-up options; when the protocol has no later review, one tap sets the final visit.",
       "Post-operative review: what to assess now differs by operation (for example subscapularis precautions after a shoulder arthroplasty, pillar pain after a carpal tunnel release), and ticks from another operation never carry across.",
@@ -21469,8 +21471,8 @@ function PanelRow({ title, count, isOpen, onToggle, icon: Icon, children }) {
 // so they are listed together under one diagnosis heading - but they remain
 // two separate notes, each opened and copied on its own. Grouping here is
 // presentation only: no note's text is merged with another's.
-const NOTE_KIND_ORDER = { note: 0, physio: 1 };
-const NOTE_KIND_LABEL = { note: "Clinic note", physio: "Physio referral" };
+const NOTE_KIND_ORDER = { note: 0, operative: 0, physio: 1 };
+const NOTE_KIND_LABEL = { note: "Clinic note", operative: "Operative note", physio: "Physio referral" };
 
 function groupRecentNotes(recentNotes) {
   const order = [];
@@ -22831,7 +22833,7 @@ const REGION_ACCENT = {
   peripheralNerve: { bar: "#DCD3EC", ink: "#463A66" },
 };
 
-function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
+function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut", unit = "templates" }) {
   // Contiguous horizontal hit zones, so there are no dead gaps between
   // regions - a tap anywhere in a band's vertical slice selects it, which
   // is far more forgiving than requiring a hit on the muscle itself.
@@ -23032,17 +23034,17 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
       )}
 
       <text x="208" y="96" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#2C5468">SHOULDER</text>
-      <text x="208" y="118" fontSize="11" fill="#3F6D84">{n("shoulder")} templates</text>
+      <text x="208" y="118" fontSize="11" fill="#3F6D84">{n("shoulder")} {unit}</text>
       <text x="20" y="278" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#6B5410">ELBOW</text>
-      <text x="20" y="300" fontSize="11" fill="#8A6C16">{n("elbow")} templates</text>
+      <text x="20" y="300" fontSize="11" fill="#8A6C16">{n("elbow")} {unit}</text>
       <text x="20" y="394" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#7A4A14">WRIST</text>
-      <text x="20" y="416" fontSize="11" fill="#98601C">{n("wrist")} templates</text>
+      <text x="20" y="416" fontSize="11" fill="#98601C">{n("wrist")} {unit}</text>
       <text x="20" y="496" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#7E2F2A">HAND</text>
-      <text x="20" y="518" fontSize="11" fill="#9C443C">{n("hand")} templates</text>
+      <text x="20" y="518" fontSize="11" fill="#9C443C">{n("hand")} {unit}</text>
 
       <rect x="0" y="556" width="348" height="46" rx="7" fill="#DCD3EC" opacity="0.6"/>
       <text x="20" y="576" fontSize="17" fontWeight="700" letterSpacing="1.2" fill="#463A66">PERIPHERAL NERVE</text>
-      <text x="20" y="592" fontSize="11" fill="#5A4B80">{n("peripheralNerve")} templates</text>
+      <text x="20" y="592" fontSize="11" fill="#5A4B80">{n("peripheralNerve")} {unit}</text>
       <g strokeLinecap="round" fill="none">
         <path d="M250 566 h30" stroke="#F0C64A" strokeWidth="3"/>
         <path d="M250 580 h30" stroke="#7FD4DC" strokeWidth="3"/>
@@ -23063,7 +23065,7 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut" }) {
           style={{ cursor: "pointer" }}
           onClick={() => onSelect(z.key)}
           role="button"
-          aria-label={`${z.label}, ${n(z.key)} templates`}
+          aria-label={`${z.label}, ${n(z.key)} ${unit}`}
         />
       ))}
     </svg>
@@ -23374,13 +23376,13 @@ function AboutSheet({ open, onClose }) {
             UpperTrack is a structured documentation tool for upper extremity clinics, theatre and follow-up. It covers {conditionCount} condition
             templates across the shoulder, elbow, wrist, hand and peripheral nerves, plus {generalCount} general assessments for
             presentations where the diagnosis is not yet clear. Tapping through history, examination, imaging and a
-            management pathway produces a clinic note and a physiotherapy referral ready to copy into the record. Operative notes cover the shoulder, elbow, wrist, hand and peripheral nerve operations in the surgeon's own templates.
+            management pathway produces a clinic note and a physiotherapy referral ready to copy into the record. Operative notes cover every operation offered in the clinic notes: seventy have a full template, and the rest a basic one in which you write the steps.
           </P>
 
           <H>What you can do</H>
           <ul className="mb-1">
             <Li>At a post-operative review, choose the operation and the date of surgery, or paste the summary line from its operative note, to see the protocol for that review (2 weeks, 6 weeks, 3, 6 or 12 months): the current rehabilitation phase, precautions, imaging and follow-up, red flags and the scores due. It also suggests the next review and what to assess for that operation. Nothing is pre-ticked.</Li>
-            <Li>Write an operative note: choose the procedures performed (one or several), tick the indications that applied, record findings, technique, implants and the safety details, and confirm the standard steps once. Nothing is pre-ticked, and the plan is pre-filled from your protocol. Procedures are grouped by region and family, and an operation that combined several reads as one note.</Li>
+            <Li>Write an operative note: choose the region on the body map, then the operations performed (one or several), tick the indications that applied, record findings, technique, implants and the safety details, and start from the standard steps if you want them, then edit them in place. Nothing is pre-ticked, and the plan is pre-filled from your protocol. Copy the note, a follow-up summary or the rehabilitation protocol from one preview.</Li>
             <Li>Document a new patient, a follow-up, a post-operative review or an operation. Post-operative reviews adapt to the time since surgery and to the procedure performed.</Li>
             <Li>Cover several diagnoses in one visit. Follow-up and post-operative reviews carry the shared details (date, reason for review, progress, plan) across diagnoses and produce one combined note that lists only what differs.</Li>
             <Li>Details about the patient (age, occupation, sport, work, medical history, hand dominance) entered under one diagnosis fill in the same details under the others, in whatever form each template asks for them. Anything you type yourself is left alone, and the combined note states the patient once, using every diagnosis.</Li>
@@ -24410,7 +24412,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 /* Persistent strip shown above every screen once a patient session has one
    or more active conditions: quick-switch tabs, one-tap access to the
    combined note across all active diagnoses, and ending the session. */
-function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, onGoHome, onRemoveCondition, onOpenPanel, noteCount = 0, reveal = { id: null, n: 0 } }) {
+function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, searchLabel = "Search templates", onGoHome, onRemoveCondition, onOpenPanel, noteCount = 0, reveal = { id: null, n: 0 } }) {
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(null);
   const items = session.order.map((id) => findConditionById(id)).filter(Boolean);
@@ -24508,7 +24510,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
           )}
         </button>
       )}
-      <button onClick={onOpenSearch} className="ut-hit shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Search templates" title="Search templates">
+      <button onClick={onOpenSearch} className="ut-hit shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label={searchLabel} title="Search templates">
         <Search size={16} color="#fff" />
       </button>
       </div>
@@ -25068,7 +25070,6 @@ function buildOutcomeScores(condition, state) {
 
 const OP_FOOTER = "Generated with UpperTrack. For clinician review; not a diagnostic or treatment recommendation.";
 const OP_WALANT = "Local with adrenaline (WALANT)";
-const OP_STEPS_CONFIRMED = "Performed as described";
 
 // Plan lines are written once per procedure. "extra" lines are the ones that
 // every selected procedure contributes; all other kinds come from the primary
@@ -25099,7 +25100,7 @@ const OP_FAMILIES = [
   { id: "elbow-fracture-arthroplasty", region: "elbow", name: "Elbow fracture and arthroplasty" },
   { id: "carpal-tunnel", region: "wrist", name: "Carpal tunnel release" },
   { id: "wrist-fracture", region: "wrist", name: "Distal radius and scaphoid fracture" },
-  { id: "wrist-arthroscopy", region: "wrist", name: "Wrist arthroscopy" },
+  { id: "wrist-arthroscopy", covers: [["lt-instability", "Arthroscopic debridement"], ["tfcc-injury", "Arthroscopic debridement"], ["scapholunate-injury", "Arthroscopic debridement / pinning"]], region: "wrist", name: "Wrist arthroscopy" },
   { id: "carpal-ligament-salvage", region: "wrist", name: "Carpal ligament and salvage" },
   { id: "druj", region: "wrist", name: "Distal radioulnar joint" },
   { id: "wrist-soft-tissue", region: "wrist", name: "Wrist soft tissue" },
@@ -25666,6 +25667,24 @@ const opPlanLines = (o) => [
   { kind: "followup", text: o.follow || OP_FU },
 ].filter(Boolean);
 
+// The one entry a clinic name may be linked to by name, or null. Used by the catalogue and by the generation of
+// basic entries, so the two cannot drift apart. Linked only when that cannot be wrong: the entry's own name when no
+// other entry also claims it, or a clinic name that exactly one entry claims, that no entry marks as generic, and
+// that is offered under exactly one region.
+function opResolveName(name, entries, regionsOf) {
+  const n = String(name || "").trim().toLowerCase();
+  if (!n) return null;
+  const same = (list) => (list || []).some((a) => a.toLowerCase() === n);
+  if (entries.some((e) => same(e.ambiguousAliases))) return null;
+  const owners = entries.filter((e) => e.name.toLowerCase() === n);
+  const claims = entries.filter((e) => same(e.aliases) || same(e.ambiguousAliases));
+  const everyone = new Set([...owners, ...claims]);
+  if (everyone.size !== 1) return null;
+  if (owners.length === 1) return owners[0];
+  const regions = regionsOf.get(n);
+  return regions && regions.size === 1 ? claims[0] : null;
+}
+
 // ---- shoulder: instability, arthroplasty, fracture, stiffness (templates 4-6 and 10-16) --------------
 const OP_PROCS_SHOULDER_2 = [
   opProc({
@@ -25948,7 +25967,7 @@ const OP_PROCS_SHOULDER_2 = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): sling or abduction pillow, passive range of motion only, no active motion", "Phase 2 (Early mobilisation, 6\u201312 weeks): progress to active-assisted then active range of motion once healing is confirmed", "Phase 3 (Strengthening, 12\u201320 weeks): progressive rotator cuff and deltoid strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to full activity once solid union is confirmed"], "Return to driving 4\u20136 weeks; desk work 4\u20136 weeks; manual labour 4\u20136 months", "Red flags: sudden loss of motion or pain (hardware failure or AVN), numbness, signs of infection"),
   }),
   opProc({
-    id: "capsular-release-arthroscopic", family: "stiff-shoulder", variantName: "Capsular release (arthroscopic)", name: "Arthroscopic capsular release",
+    id: "capsular-release-arthroscopic", covers: [["adhesive-capsulitis", "Arthroscopic capsular release"]], family: "stiff-shoulder", variantName: "Capsular release (arthroscopic)", name: "Arthroscopic capsular release",
     clinicNames: ["Arthroscopic capsular release"], region: "shoulder", sided: "shoulder", planPriority: 50,
     preop: ["Adhesive capsulitis"], positioning: [],
     reference: opRef(
@@ -25982,7 +26001,7 @@ const OP_ELBOW_TQ_PREP = ["Supine position, arm on a hand table, tourniquet appl
 const OP_ULNAR_FIELD = opS("ulnarNerve", "Ulnar nerve", ["Identified and protected", "Decompressed in situ", "Transposed (subcutaneous)", "Transposed (submuscular)"], 2);
 const OP_PROCS_ELBOW = [
   opProc({
-    id: "elbow-arthroscopy", family: "elbow-arthroscopy-release", variantName: "Elbow arthroscopy", name: "Elbow arthroscopy",
+    id: "elbow-arthroscopy", covers: [["elbow-osteoarthritis", "Arthroscopic debridement"]], family: "elbow-arthroscopy-release", variantName: "Elbow arthroscopy", name: "Elbow arthroscopy",
     clinicNames: ["Loose body removal", "Arthroscopic debridement", "Arthroscopic debridement / microfracture (OCD)", "Arthroscopic removal of posteromedial osteophyte"], region: "elbow", sided: "elbow", planPriority: 70,
     preop: ["Loose bodies", "Synovitis", "Osteochondritis dissecans of the capitellum"], positioning: ["Lateral decubitus", "Supine with arm holder", "Prone"],
     reference: opRef(
@@ -26072,7 +26091,7 @@ const OP_PROCS_ELBOW = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint or brace immobilisation, avoid active elbow flexion and supination", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive active-assisted range of motion in a hinged brace, gradually increasing extension", "Phase 3 (Strengthening, 6\u201312 weeks): progressive resistance training beginning with light loads", "Phase 4 (Return to activity, 4\u20136 months): return to heavy lifting and sport once strength is restored"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 3\u20134 months", "Red flags: sudden pop or weakness (repair failure), persistent numbness, signs of infection"),
   }),
   opProc({
-    id: "distal-triceps-repair", family: "elbow-tendon-ligament", variantName: "Distal triceps repair", name: "Distal triceps tendon repair",
+    id: "distal-triceps-repair", covers: [["distal-triceps-rupture", "Primary repair"]], family: "elbow-tendon-ligament", variantName: "Distal triceps repair", name: "Distal triceps tendon repair",
     clinicNames: ["Primary repair"], region: "elbow", sided: "elbow", planPriority: 90,
     preop: ["Distal triceps tendon rupture"], positioning: ["Prone", "Lateral decubitus"],
     reference: opRef(
@@ -26184,7 +26203,7 @@ const OP_PROCS_ELBOW = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation, gentle motion as directed", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive active-assisted range of motion", "Phase 3 (Strengthening, 6\u201312 weeks): gentle strengthening within lifetime lifting restrictions", "Phase 4 (Return to activity, 3\u20134 months): return to daily activities within permanent lifting restrictions"], "Return to driving 3\u20134 weeks; desk work 3\u20134 weeks; avoid heavy or repetitive lifting indefinitely", "Red flags: sudden instability (dislocation in unlinked systems), increasing pain (loosening or infection), new numbness"),
   }),
   opProc({
-    id: "lateral-epicondylitis-release", family: "epicondylitis", variantName: "Lateral epicondylitis release", name: "Lateral epicondylitis debridement and release",
+    id: "lateral-epicondylitis-release", covers: [["lateral-epicondylopathy", "Arthroscopic debridement"]], family: "epicondylitis", variantName: "Lateral epicondylitis release", name: "Lateral epicondylitis debridement and release",
     clinicNames: ["Open debridement/repair (ECRB)"], region: "elbow", sided: "elbow", planPriority: 60,
     preop: ["Lateral epicondylitis (ECRB tendinopathy)"],
     reference: opRef(
@@ -26295,7 +26314,7 @@ const OP_PROCS_ELBOW = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or brief splint, early gentle motion", "Phase 2 (Early mobilisation, 1\u20134 weeks): progressive active range of motion", "Phase 3 (Strengthening, 4\u20138 weeks): progressive grip and intrinsic strengthening as nerve recovery allows", "Phase 4 (Return to activity, 6\u201312 weeks): return to full activity; sensory and motor recovery may continue for 6\u201312 months"], "Return to driving 1\u20132 weeks; desk work 1 week; manual labour 4\u20138 weeks", "Red flags: worsening rather than improving numbness or weakness, new valgus instability (throwers), signs of infection"),
   }),
   opProc({
-    id: "endoscopic-cubital-tunnel-release", family: "ulnar-nerve-elbow", variantName: "Endoscopic cubital tunnel release", name: "Endoscopic cubital tunnel release",
+    id: "endoscopic-cubital-tunnel-release", covers: [["cubital-tunnel-syndrome", "Endoscopic decompression"]], family: "ulnar-nerve-elbow", variantName: "Endoscopic cubital tunnel release", name: "Endoscopic cubital tunnel release",
     clinicNames: ["Endoscopic decompression"], region: "elbow", sided: "elbow", planPriority: 70,
     preop: ["Cubital tunnel syndrome (ulnar neuropathy at the elbow)"],
     reference: opRef(
@@ -26322,7 +26341,7 @@ const OP_PROCS_ELBOW = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion", "Phase 3 (Strengthening, 3\u20136 weeks): progressive grip and intrinsic strengthening", "Phase 4 (Return to activity, 4\u20138 weeks): return to full activity; recovery of sensation and strength may continue for 6\u201312 months"], "Return to driving 1 week; desk work 3\u20137 days; manual labour 3\u20136 weeks", "Red flags: worsening numbness or weakness, subluxation sensation, signs of infection"),
   }),
   opProc({
-    id: "olecranon-orif", family: "elbow-fracture-arthroplasty", variantName: "Olecranon ORIF", name: "Olecranon open reduction internal fixation",
+    id: "olecranon-orif", covers: [["olecranon-fracture", "Plate fixation"]], family: "elbow-fracture-arthroplasty", variantName: "Olecranon ORIF", name: "Olecranon open reduction internal fixation",
     clinicNames: ["Tension band wiring", "ORIF of proximal ulna"], ambiguousNames: ["Plate fixation"], region: "elbow", sided: "elbow", planPriority: 90,
     preop: ["Displaced olecranon fracture"], positioning: ["Lateral decubitus", "Prone", "Supine with arm across the chest"],
     reference: opRef(
@@ -26351,7 +26370,7 @@ const OP_PROCS_ELBOW = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive active-assisted range of motion", "Phase 3 (Strengthening, 6\u201312 weeks): progressive strengthening once union is demonstrated", "Phase 4 (Return to activity, 3\u20134 months): return to full activity once solid union is confirmed"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 3\u20134 months", "Red flags: hardware failure or loss of reduction, numbness, signs of infection"),
   }),
   opProc({
-    id: "radial-head-orif", family: "elbow-fracture-arthroplasty", variantName: "Radial head ORIF", name: "Radial head open reduction internal fixation",
+    id: "radial-head-orif", covers: [["radial-head-fracture", "ORIF"]], family: "elbow-fracture-arthroplasty", variantName: "Radial head ORIF", name: "Radial head open reduction internal fixation",
     clinicNames: ["ORIF of radial head"], region: "elbow", sided: "elbow", planPriority: 90,
     preop: ["Displaced radial head fracture (Mason type II)", "Displaced radial head fracture (Mason type III)"],
     reference: opRef(
@@ -26378,7 +26397,7 @@ const OP_PROCS_ELBOW = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): splint for comfort, early gentle range of motion", "Phase 2 (Early mobilisation, 1\u20134 weeks): progressive active range of motion", "Phase 3 (Strengthening, 4\u20138 weeks): progressive strengthening once healing is progressing well", "Phase 4 (Return to activity, 3\u20134 months): return to full activity once solid healing is confirmed"], "Return to driving 1\u20132 weeks; desk work 3\u20137 days; manual labour 3\u20134 months", "Red flags: mechanical block to rotation (hardware impingement), new instability, signs of infection"),
   }),
   opProc({
-    id: "elbow-contracture-release", family: "elbow-arthroscopy-release", variantName: "Contracture release", name: "Elbow contracture release",
+    id: "elbow-contracture-release", covers: [["elbow-stiffness", "Arthroscopic capsular release"]], family: "elbow-arthroscopy-release", variantName: "Contracture release", name: "Elbow contracture release",
     clinicNames: ["Arthroscopic capsular release", "Open capsular release (column procedure)"], region: "elbow", sided: "elbow", planPriority: 80,
     preop: ["Post-traumatic elbow contracture"], positioning: ["Supine with arm on a hand table", "Lateral decubitus"],
     reference: opRef(
@@ -26520,7 +26539,7 @@ const OP_PROCS_WRIST = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation, encourage finger motion throughout", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive wrist range of motion in a removable brace", "Phase 3 (Strengthening, 6\u201312 weeks): progressive grip and wrist strengthening", "Phase 4 (Return to activity, 3\u20134 months): return to full activity once solid union is confirmed"], "Return to driving 2\u20134 weeks; desk work 1\u20132 weeks; manual labour 3\u20134 months", "Red flags: new numbness (median nerve), tendon rupture symptoms (sudden inability to flex the thumb IP joint (FPL) or extend the fingers (EDC)), hardware-related pain"),
   }),
   opProc({
-    id: "wrist-arthroscopy", family: "wrist-arthroscopy", variantName: "Wrist arthroscopy", name: "Wrist arthroscopy",
+    id: "wrist-arthroscopy", covers: [["lt-instability", "Arthroscopic debridement"], ["tfcc-injury", "Arthroscopic debridement"], ["scapholunate-injury", "Arthroscopic debridement / pinning"]], family: "wrist-arthroscopy", variantName: "Wrist arthroscopy", name: "Wrist arthroscopy",
     clinicNames: ["Arthroscopic debridement", "TFCC debridement"], ambiguousNames: ["Arthroscopic debridement / pinning"], region: "wrist", sided: "wrist", planPriority: 40,
     preop: ["Unexplained wrist pain", "Loose bodies", "Synovitis"],
     reference: opRef(
@@ -26547,7 +26566,7 @@ const OP_PROCS_WRIST = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or splint for comfort, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion", "Phase 3 (Strengthening, 3\u20136 weeks): progressive strengthening", "Phase 4 (Return to activity, 6\u20138 weeks): full return to activity"], "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 4\u20136 weeks", "Red flags: persistent mechanical symptoms, new numbness, signs of infection"),
   }),
   opProc({
-    id: "tfcc-repair-arthroscopic", family: "wrist-arthroscopy", variantName: "TFCC repair (arthroscopic)", name: "Arthroscopic TFCC repair",
+    id: "tfcc-repair-arthroscopic", covers: [["tfcc-injury", "Arthroscopic repair"]], family: "wrist-arthroscopy", variantName: "TFCC repair (arthroscopic)", name: "Arthroscopic TFCC repair",
     clinicNames: [], ambiguousNames: ["Arthroscopic repair"], region: "wrist", sided: "wrist", planPriority: 85,
     preop: ["TFCC tear (Palmer type 1B)"],
     reference: opRef(
@@ -26577,7 +26596,7 @@ const OP_PROCS_WRIST = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): splint or cast immobilisation, forearm rotation restricted", "Phase 2 (Early mobilisation, 6\u201310 weeks): progressive wrist and forearm range of motion", "Phase 3 (Strengthening, 10\u201316 weeks): progressive grip and forearm strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to full activity and sport"], "Return to driving 4\u20136 weeks; desk work 3\u20134 weeks; manual labour 4\u20135 months", "Red flags: recurrent ulnar-sided pain or instability, new numbness, signs of infection"),
   }),
   opProc({
-    id: "scaphoid-orif", family: "wrist-fracture", variantName: "Scaphoid ORIF", name: "Scaphoid open reduction internal fixation",
+    id: "scaphoid-orif", covers: [["scaphoid-fracture", "Open reduction internal fixation"]], family: "wrist-fracture", variantName: "Scaphoid ORIF", name: "Scaphoid open reduction internal fixation",
     clinicNames: [], ambiguousNames: ["Open reduction internal fixation"], region: "wrist", sided: "wrist", planPriority: 90,
     preop: ["Displaced scaphoid fracture", "Undisplaced scaphoid fracture"],
     reference: opRef(
@@ -26605,7 +26624,7 @@ const OP_PROCS_WRIST = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation", "Phase 2 (Early mobilisation, 2\u20138 weeks): removable brace, progressive wrist range of motion once early healing is demonstrated", "Phase 3 (Strengthening, 8\u201312 weeks): progressive grip and wrist strengthening once union is confirmed", "Phase 4 (Return to activity, 3\u20134 months): return to full activity and contact sport once solid union is confirmed on CT"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; contact sport or manual labour 3\u20134 months", "Red flags: persistent pain suggesting non-union, new numbness, signs of infection"),
   }),
   opProc({
-    id: "scapholunate-repair-reconstruction", family: "carpal-ligament-salvage", variantName: "Scapholunate repair or reconstruction", name: "Scapholunate ligament repair or reconstruction",
+    id: "scapholunate-repair-reconstruction", covers: [["scapholunate-injury", "Open ligament repair"], ["scapholunate-injury", "Ligament reconstruction (tenodesis)"]], family: "carpal-ligament-salvage", variantName: "Scapholunate repair or reconstruction", name: "Scapholunate ligament repair or reconstruction",
     clinicNames: [], ambiguousNames: ["Open ligament repair", "Ligament reconstruction (tenodesis)"], region: "wrist", sided: "wrist", planPriority: 85,
     preop: ["Acute scapholunate ligament instability", "Chronic scapholunate ligament instability"],
     reference: opRef(
@@ -26660,7 +26679,7 @@ const OP_PROCS_WRIST = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive wrist range of motion in a removable brace", "Phase 3 (Strengthening, 6\u201312 weeks): progressive grip and wrist strengthening", "Phase 4 (Return to activity, 3\u20134 months): return to full activity within reduced expected wrist motion and grip strength compared with the native wrist"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 3 months", "Red flags: new instability sensation, persistent pain suggesting progression of arthritis, signs of infection"),
   }),
   opProc({
-    id: "wrist-arthrodesis-total", family: "carpal-ligament-salvage", variantName: "Total wrist arthrodesis", name: "Total wrist arthrodesis",
+    id: "wrist-arthrodesis-total", covers: [["kienbock-disease", "Partial or total wrist fusion (advanced stage)"]], family: "carpal-ligament-salvage", variantName: "Total wrist arthrodesis", name: "Total wrist arthrodesis",
     clinicNames: ["Total wrist arthrodesis (fusion)", "Wrist arthrodesis"], ambiguousNames: ["Partial or total wrist fusion (advanced stage)"], region: "wrist", sided: "wrist", planPriority: 100,
     preop: ["Pancarpal wrist arthritis"],
     reference: opRef(
@@ -26767,7 +26786,7 @@ const OP_PROCS_WRIST = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or splint for comfort, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive thumb and wrist range of motion", "Phase 3 (Strengthening, 3\u20136 weeks): progressive pinch and grip strengthening", "Phase 4 (Return to activity, 6 weeks): return to full activity"], "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 3\u20134 weeks", "Red flags: persistent triggering or pain (incomplete release), new numbness, tendon subluxation with a snapping sensation"),
   }),
   opProc({
-    id: "ganglion-excision", family: "wrist-soft-tissue", variantName: "Ganglion excision", name: "Wrist ganglion excision",
+    id: "ganglion-excision", covers: [["wrist-ganglion", "Open excision"]], family: "wrist-soft-tissue", variantName: "Ganglion excision", name: "Wrist ganglion excision",
     clinicNames: [], ambiguousNames: ["Open excision"], region: "wrist", sided: "wrist", planPriority: 40,
     preop: ["Dorsal wrist ganglion", "Volar wrist ganglion"],
     reference: opRef(
@@ -26795,7 +26814,7 @@ const OP_PROCS_WRIST = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or splint for comfort, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive wrist range of motion", "Phase 3 (Strengthening, 3\u20136 weeks): progressive grip strengthening", "Phase 4 (Return to activity, 6 weeks): return to full activity"], "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 3\u20134 weeks", "Red flags: recurrent mass, new numbness, signs of infection"),
   }),
   opProc({
-    id: "four-corner-fusion", family: "carpal-ligament-salvage", variantName: "Scaphoid excision and four-corner fusion", name: "Scaphoid excision and four-corner fusion",
+    id: "four-corner-fusion", covers: [["scapholunate-injury", "Scapholunate or limited fusion (salvage)"]], family: "carpal-ligament-salvage", variantName: "Scaphoid excision and four-corner fusion", name: "Scaphoid excision and four-corner fusion",
     clinicNames: ["Limited (e.g. four-corner) fusion"], ambiguousNames: ["Scapholunate or limited fusion (salvage)"], region: "wrist", sided: "wrist", planPriority: 95,
     preop: ["SLAC wrist arthritis", "SNAC wrist arthritis"],
     reference: opRef(
@@ -26860,7 +26879,7 @@ const OP_PROCS_HAND = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): dorsal blocking splint, controlled passive or early active motion per the surgeon and therapy programme (for example modified Duran, Kleinert or early active motion)", "Phase 2 (Early mobilisation, 4\u20136 weeks): progressive active range of motion, discontinue the blocking splint per protocol", "Phase 3 (Strengthening, 6\u201312 weeks): progressive strengthening once tendon healing is sufficiently advanced", "Phase 4 (Return to activity, 3\u20134 months): return to full unrestricted use and heavy gripping"], "Return to driving 2\u20133 weeks; desk work and light typing 2\u20133 weeks; manual labour 3\u20134 months", "Red flags: sudden loss of active flexion (rupture), increasing stiffness beyond the expected timeline (adhesions), signs of infection"),
   }),
   opProc({
-    id: "extensor-tendon-repair", family: "hand-tendon", variantName: "Extensor tendon repair", name: "Extensor tendon repair",
+    id: "extensor-tendon-repair", covers: [["sagittal-band-injury", "Primary repair"], ["extensor-tendon-injuries", "Primary repair"]], family: "hand-tendon", variantName: "Extensor tendon repair", name: "Extensor tendon repair",
     clinicNames: ["Primary extensor tendon repair"], region: "hand", sided: "hand", planPriority: 80,
     preop: ["Extensor tendon laceration or rupture", "Sagittal band rupture"],
     reference: opRef(
@@ -27076,7 +27095,7 @@ const OP_PROCS_HAND = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): bulky dressing transitioning to an extension splint, oedema control", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive active range of motion with continued night extension splinting", "Phase 3 (Strengthening, 6\u201312 weeks): progressive grip strengthening", "Phase 4 (Return to activity, 3 months): return to full activity; night splinting often continued for 3\u20136 months or longer to minimise recurrence"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 6\u20138 weeks", "Red flags: vascular compromise of the digit, wound healing complications, progressive loss of correction (recurrence)"),
   }),
   opProc({
-    id: "metacarpal-orif", family: "hand-fracture", variantName: "Metacarpal fixation", name: "Metacarpal open reduction internal fixation or percutaneous pinning",
+    id: "metacarpal-orif", covers: [["metacarpal-fracture", "Intramedullary fixation"], ["metacarpal-fracture", "Closed reduction percutaneous pinning"]], family: "hand-fracture", variantName: "Metacarpal fixation", name: "Metacarpal open reduction internal fixation or percutaneous pinning",
     clinicNames: ["ORIF (plate/screws)", "Intramedullary fixation"], ambiguousNames: ["Closed reduction percutaneous pinning"], region: "hand", sided: "hand", planPriority: 90,
     preop: ["Displaced metacarpal fracture (shaft)", "Displaced metacarpal fracture (neck)", "Displaced metacarpal fracture (base)"],
     reference: opRef(
@@ -27104,7 +27123,7 @@ const OP_PROCS_HAND = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20133 weeks): splint immobilisation, adjacent joint motion (IP joints if the MCP is splinted) encouraged throughout", "Phase 2 (Early mobilisation, 3\u20136 weeks): progressive active range of motion", "Phase 3 (Strengthening, 6\u201310 weeks): progressive grip strengthening once healing is confirmed", "Phase 4 (Return to activity, 3 months): return to full activity and contact sport once solid union is confirmed"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour or contact sport 10\u201312 weeks", "Red flags: new rotational deformity, hardware-related symptoms, persistent pain suggesting non-union"),
   }),
   opProc({
-    id: "phalanx-orif", family: "hand-fracture", variantName: "Phalanx fixation", name: "Phalanx open reduction internal fixation or percutaneous pinning",
+    id: "phalanx-orif", covers: [["phalangeal-fracture", "ORIF"], ["phalangeal-fracture", "Closed reduction percutaneous pinning"]], family: "hand-fracture", variantName: "Phalanx fixation", name: "Phalanx open reduction internal fixation or percutaneous pinning",
     clinicNames: ["ORIF", "Percutaneous pinning"], region: "hand", sided: "hand", planPriority: 90,
     preop: ["Displaced proximal phalanx fracture", "Displaced middle phalanx fracture"],
     reference: opRef(
@@ -27189,7 +27208,7 @@ const OP_PROCS_HAND = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): elevation, warm environment, protective splint", "Phase 2 (Early mobilisation, 2\u20134 weeks): gradual active motion once perfusion is stable, per concomitant repairs", "Phase 3 (Strengthening, 4\u20138 weeks): progressive activity, cold-protection advice", "Phase 4 (Return to activity, 6\u201312 weeks): return to full activity; cold intolerance may persist for months"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 8\u201312 weeks", "Red flags: any new sign of vascular compromise, persisting cold intolerance, signs of infection"),
   }),
   opProc({
-    id: "finger-joint-arthroplasty", family: "finger-arthroplasty", variantName: "PIP or MCP arthroplasty", name: "Finger joint arthroplasty",
+    id: "finger-joint-arthroplasty", covers: [["hand-osteoarthritis", "Joint arthroplasty (implant)"]], family: "finger-arthroplasty", variantName: "PIP or MCP arthroplasty", name: "Finger joint arthroplasty",
     clinicNames: ["MCP joint arthroplasty"], ambiguousNames: ["Joint arthroplasty (implant)"], region: "hand", sided: "hand", planPriority: 100,
     preop: ["PIP joint arthritis", "MCP joint arthritis"],
     reference: opRef(
@@ -27309,7 +27328,7 @@ const OP_PROCS_NERVE = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or brief splint, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion, scar care", "Phase 3 (Strengthening, 3\u20138 weeks): progressive strengthening as nerve recovery allows", "Phase 4 (Return to activity, 6\u201312 weeks): return to full activity; recovery after AIN decompression may take 6\u201312 months"], "Return to driving 1\u20132 weeks; desk work 1 week; manual labour 4\u20138 weeks", "Red flags: worsening numbness or weakness, no motor recovery by the expected milestones, signs of infection"),
   }),
   opProc({
-    id: "guyons-canal-decompression", family: "ulnar-nerve-wrist", variantName: "Guyon's canal", name: "Guyon's canal (ulnar tunnel) decompression",
+    id: "guyons-canal-decompression", covers: [["guyons-canal-syndrome", "Endoscopic decompression"]], family: "ulnar-nerve-wrist", variantName: "Guyon's canal", name: "Guyon's canal (ulnar tunnel) decompression",
     clinicNames: ["Open decompression of Guyon's canal", "Endoscopic decompression"], region: "peripheralNerve", sided: "wrist", planPriority: 50,
     preop: ["Ulnar tunnel syndrome"],
     reference: opRef(
@@ -27479,7 +27498,74 @@ const OP_PROCS_NERVE = [
   }),
 ];
 
-const OPERATIVE_PROCEDURES = [...OP_PROCS_SHOULDER_1, ...OP_PROCS_SHOULDER_2, ...OP_PROCS_ELBOW, ...OP_PROCS_WRIST, ...OP_PROCS_HAND, ...OP_PROCS_NERVE];
+// ---- basic entries: every clinic operation without a full template ------------------------------------------------
+// Generated from the clinic procedure lists at load, so nothing is typed twice. A (diagnosis, operation) pair is
+// covered when its name links to a full module, or the module lists that exact pair in `covers`; every other pair
+// gets a basic entry. A basic entry has no standard narrative: the surgeon writes the steps. Names of one or two
+// words ("ORIF", "Biopsy") are generic, so they get one entry per diagnosis, qualified by it.
+const OP_FULL_PROCEDURES = [...OP_PROCS_SHOULDER_1, ...OP_PROCS_SHOULDER_2, ...OP_PROCS_ELBOW, ...OP_PROCS_WRIST, ...OP_PROCS_HAND, ...OP_PROCS_NERVE];
+const OP_SIDED_BY_REGION = { shoulder: "shoulder", elbow: "elbow", wrist: "wrist", hand: "hand", peripheralNerve: "arm" };
+
+function opShortDiagnosis(name) { return String(name).replace(/\s*[(\u201c].*$/, "").trim(); }
+function opSlug(text) { return String(text).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
+
+function opDeriveBasic(full) {
+  const pairs = [];
+  const regionsOf = new Map();
+  Object.keys(REGIONS).forEach((region) => REGIONS[region].subsections.forEach((sub) => sub.conditions.forEach((c) => {
+    const cond = findConditionById(c.id);
+    surgicalOptionsFor(c.id).forEach((name) => {
+      pairs.push({ region, dxId: c.id, dx: opShortDiagnosis(cond.name), dxFull: cond.name, name });
+      const key = name.toLowerCase();
+      if (!regionsOf.has(key)) regionsOf.set(key, new Set());
+      regionsOf.get(key).add(region);
+    });
+  })));
+  const entries = full.map((m) => ({ name: m.name, aliases: m.clinicNames, ambiguousAliases: m.ambiguousNames || [] }));
+  const covered = (p) => !!opResolveName(p.name, entries, regionsOf) || full.some((m) => (m.covers || []).some(([d, n]) => d === p.dxId && n === p.name));
+  const uncovered = pairs.filter((p) => !covered(p));
+
+  const families = [];
+  const familyIds = new Set();
+  const familyFor = (p) => {
+    const id = `dx-${p.dxId}`;
+    if (!familyIds.has(id)) { familyIds.add(id); families.push({ id, region: p.region, name: p.dx, diagnosis: true }); }
+    return id;
+  };
+  const used = new Set(full.map((m) => m.id));
+  const uniqueId = (base) => { let id = base, n = 2; while (used.has(id)) id = `${base}-${n++}`; used.add(id); return id; };
+  const make = (name, group, qualifier) => {
+    const famIds = [...new Set(group.map(familyFor))];
+    return {
+      id: uniqueId(`basic-${opSlug(name)}${qualifier ? `-${group[0].dxId}` : ""}`), basic: true,
+      family: famIds[0], families: famIds, variantName: name, name: qualifier ? `${name} (${group[0].dx})` : name,
+      clinicNames: [name], ambiguousNames: [], region: group[0].region, sided: OP_SIDED_BY_REGION[group[0].region] || "side", planPriority: 20,
+      preop: [...new Set(group.map((p) => p.dx))], diagnoses: [...new Set(group.map((p) => p.dxFull))], positioning: [],
+      reference: { indications: [], considerations: [], equipment: [], pitfalls: [] },
+      findings: [opT("otherFindings", "Findings", "Operative findings")],
+      technique: [opT("technique", "Technique and implants", "What was done; implants used")],
+      closure: [opT("closureNote", "Closure and dressing", "e.g. skin closure, dressing, splint")],
+      summary: () => null, prep: [], steps: [], closureSteps: [], plan: [], rehab: { phases: [], returnTo: "", redFlags: "" },
+    };
+  };
+  const byName = new Map();
+  uncovered.forEach((p) => { const k = p.name.toLowerCase(); if (!byName.has(k)) byName.set(k, []); byName.get(k).push(p); });
+  const procedures = [];
+  byName.forEach((group) => {
+    const name = group[0].name;
+    if (name.split(/\s+/).length <= 2) {
+      const perDx = new Map();
+      group.forEach((p) => { if (!perDx.has(p.dxId)) perDx.set(p.dxId, p); });
+      perDx.forEach((p) => procedures.push(make(name, [p], true)));
+    } else procedures.push(make(name, group, false));
+  });
+  return { procedures, families };
+}
+const OP_BASIC = opDeriveBasic(OP_FULL_PROCEDURES);
+OP_BASIC.families.forEach((f) => OP_FAMILIES.push(f));
+const OP_PROCS_BASIC = OP_BASIC.procedures;
+
+const OPERATIVE_PROCEDURES = [...OP_FULL_PROCEDURES, ...OP_PROCS_BASIC];
 
 /* ============================================================================
    OPERATIVE NOTES - logic (pure functions: state in, state or text out)
@@ -27613,8 +27699,13 @@ function opProcedureLabel(proc, state) {
   const side = opSideWord(state).toLowerCase();
   return side ? `${proc.name}, ${side} ${proc.sided}` : proc.name;
 }
-function opLowerFirstName(name) { return name.charAt(0).toLowerCase() + name.slice(1); }
+// Lower-case the first letter of a name unless it starts an acronym ("ORIF", "TFCC").
+function opLowerFirstName(name) { return String(name).replace(/^([A-Z])([a-z])/, (m, a, b) => a.toLowerCase() + b); }
 function opCap(text) { return text ? text.charAt(0).toUpperCase() + text.slice(1) : text; }
+function opNoteHeadline(s) {
+  const procs = opOrderProcs(opSelected(s));
+  return opCap([opSideWord(s), opJoin(procs.map((p) => opLowerFirstName(p.name)))].filter(Boolean).join(" "));
+}
 
 function buildOperativeNote(s) {
   const procs = opOrderProcs(opSelected(s));
@@ -27622,7 +27713,7 @@ function buildOperativeNote(s) {
   const out = [];
   const section = (lines) => { if (lines.length) { if (out.length) out.push(""); out.push(...lines); } };
   const side = opSideWord(s);
-  out.push(`OPERATIVE NOTE \u2014 ${opCap([side, opJoin(procs.map((p) => opLowerFirstName(p.name)))].filter(Boolean).join(" "))}`);
+  out.push(`OPERATIVE NOTE \u2014 ${opNoteHeadline(s)}`);
 
   const op = [];
   if (s.op__date) op.push(`Date of operation: ${formatDateDMY(s.op__date)}`);
@@ -27634,7 +27725,10 @@ function buildOperativeNote(s) {
   if (s.op__postop === "Same as pre-operative diagnosis") op.push("Post-operative diagnosis: same as the pre-operative diagnosis");
   else if (s.op__postop === "Revised") op.push(`Post-operative diagnosis: ${opHasValue(s.op__postopText) ? String(s.op__postopText).trim() : "revised"}`);
   if (opHasValue(s.op__surgeon)) op.push(`Surgeon: ${String(s.op__surgeon).trim()}`);
-  if (opHasValue(s.op__assistant)) op.push(`Assistant: ${String(s.op__assistant).trim()}`);
+  if (opHasValue(s.op__assistant)) {
+    const many = /[,;&\n]|\band\b/i.test(String(s.op__assistant));
+    op.push(`${many ? "Assistants" : "Assistant"}: ${String(s.op__assistant).trim()}`);
+  }
   section(["OPERATION", ...op.slice(0)].filter((l, i) => i > 0 || op.length));
 
   const safe = [];
@@ -27678,12 +27772,12 @@ function buildOperativeNote(s) {
     const closure = opFieldLines(p, p.closure, s);
     if (closure.length) { L.push("Closure:"); L.push(...closure); }
     pick("equipment", "Equipment used:");
-    if (s[opKey(p.id, "stepsConfirmed")] === OP_STEPS_CONFIRMED) {
-      L.push("Operative steps (performed as described):");
-      opStepTexts(p, s, procs, idx === 0).forEach((t, i) => L.push(`${i + 1}. ${t}`));
+    // the steps are the surgeon's own lines: started from the standard steps if wanted, then edited, reworded or added to
+    const stepLines = opEffectiveSteps(s, p, procs, idx === 0).filter((l) => l.on && opHasValue(l.text));
+    if (stepLines.length) {
+      L.push("Operative steps:");
+      stepLines.forEach((l, i) => L.push(`${i + 1}. ${String(l.text).trim()}`));
     }
-    const dev = s[opKey(p.id, "deviations")];
-    if (opHasValue(dev)) L.push(`Deviations from the described steps, and additional details: ${String(dev).trim()}`);
     if (L.length) section([p.name.toUpperCase(), ...L]);
   });
 
@@ -27702,20 +27796,41 @@ function buildOperativeNote(s) {
   return out.join("\n");
 }
 
-// One identifier-free line for the follow-up visit, plus a compact token the
-// post-operative screen can read back. Nothing here names the patient.
+// What the follow-up visit needs to see: the operation, the diagnosis, what was found and done (every ticked or
+// chosen finding and technique, never free text), and the implants, then a compact token the post-operative screen
+// reads back. Nothing here names the patient.
+function opSummaryDetails(proc, state) {
+  const v = opLocalView(state, proc.id);
+  const parts = [];
+  resolveFields([...proc.findings, ...proc.technique], v).forEach((f) => {
+    if (!f.key || f.type === "text") return;
+    const raw = v[f.key];
+    if (!opHasValue(raw)) return;
+    let text;
+    if (f.type === "checkbox") text = opJoin(raw.map(opLowerFirstName));
+    else if (f.type === "number") text = `${raw}${f.suffix ? ` ${f.suffix}` : ""}`;
+    else if (f.type === "numberGroup") {
+      const bits = (f.items || []).filter((it) => raw && opHasValue(raw[it])).map((it) => `${opLowerFirstName(it)} ${raw[it]}${f.suffix || ""}`);
+      if (!bits.length) return;
+      text = bits.join(", ");
+    } else text = opLowerFirstName(String(raw));
+    parts.push(`${opLowerFirstName(f.label)}: ${text}`);
+  });
+  return parts;
+}
 function buildOperationSummary(s) {
   const procs = opOrderProcs(opSelected(s));
   if (!procs.length) return "";
   const side = opSideWord(s);
-  const parts = procs.map((p, i) => {
-    const detail = i === 0 && p.summary ? p.summary(opLocalView(s, p.id)) : null;
-    return opLowerFirstName(p.name) + (detail ? ` (${detail})` : "");
-  });
   const when = s.op__date ? `${formatDateDMY(s.op__date)}, ` : "";
-  const sentence = `Operation summary: ${when}${[side.toLowerCase(), opJoin(parts)].filter(Boolean).join(" ")}.`;
-  const token = `UT-OP v1 | ${s.op__date || "-"} | ${side ? side.charAt(0).toUpperCase() : "-"} | ${procs.map((p) => p.id).join(",")}`;
-  return `${sentence}\n${token}`;
+  const lines = [`Operation summary: ${when}${[side.toLowerCase(), opJoin(procs.map((p) => opLowerFirstName(p.name)))].filter(Boolean).join(" ")}.`];
+  const dx = s.op__postop === "Revised" && opHasValue(s.op__postopText) ? s.op__postopText : s.op__preop;
+  if (opHasValue(dx)) lines.push(`Diagnosis: ${String(dx).trim()}.`);
+  procs.forEach((p) => { const d = opSummaryDetails(p, s); if (d.length) lines.push(`${p.name}: ${d.join("; ")}.`); });
+  const implants = (s.op__implants || []).filter((r) => r && (opHasValue(r.item) || opHasValue(r.size)));
+  if (implants.length) lines.push(`Implants: ${implants.map((r) => [r.item, r.size].filter(opHasValue).map((x) => String(x).trim()).join(" ")).join("; ")}.`);
+  lines.push(`UT-OP v1 | ${s.op__date || "-"} | ${side ? side.charAt(0).toUpperCase() : "-"} | ${procs.map((p) => p.id).join(",")}`);
+  return lines.join("\n");
 }
 function parseOperationSummaryToken(text) {
   const m = /UT-OP v1 \| (\d{4}-\d{2}-\d{2}|-) \| ([RL-]) \| ([a-z0-9,-]+)/.exec(String(text || ""));
@@ -27731,6 +27846,88 @@ function buildRehabNote(s) {
   const side = opSideWord(s);
   const names = opJoin(procs.map((p) => opLowerFirstName(p.name)));
   return [`POST-OPERATIVE REHABILITATION PROTOCOL \u2014 ${opCap([side, names].filter(Boolean).join(" "))}`, "", ...lines.map((l) => `\u2022 ${String(l.text).trim()}`), "", "---", OP_FOOTER].join("\n");
+}
+
+// ---- the operative steps: the surgeon's own lines, kept linked to the standard steps ---------------------------
+// Loading the standard steps is the surgeon's choice and is never done for them. Once loaded, a line that has not been
+// edited keeps following the standard text, so a change of side or finding is reflected in it (clock-face positions
+// included); a line the surgeon has edited is theirs and never changes; a standard step that newly applies appears;
+// one the surgeon deleted never comes back. Lines they add themselves are simply theirs.
+function opStandardSteps(proc, state, procs, isPrimary) {
+  const v = opLocalView(state, proc.id);
+  const ctx = opContext(procs, opSideWord(state));
+  const prep = isPrimary ? proc.prep.map((t, i) => ({ ref: `prep:${i}`, text: t })) : [];
+  const body = proc.steps.map((st, i) => (!st.if || st.if(v, ctx) ? { ref: `steps:${i}`, text: opStepText(st, v, ctx) } : null)).filter(Boolean);
+  const closure = isPrimary ? proc.closureSteps.map((t, i) => ({ ref: `closure:${i}`, text: t })) : [];
+  return [...prep, ...body, ...closure];
+}
+function opSyncSteps(stored, std, removed) {
+  const stdText = new Map(std.map((x) => [x.ref, x.text]));
+  const gone = removed || [];
+  const out = [];
+  (stored || []).forEach((l) => {
+    if (!l) return;
+    if (!l.ref) { out.push(l); return; }
+    if (!stdText.has(l.ref)) { if (l.edited) out.push(l); return; }
+    out.push(l.edited ? l : { ...l, text: stdText.get(l.ref) });
+  });
+  std.forEach((x, i) => {
+    if (out.some((l) => l.ref === x.ref) || gone.includes(x.ref)) return;
+    let at = -1;
+    for (let j = i - 1; j >= 0 && at === -1; j--) at = out.findIndex((l) => l.ref === std[j].ref);
+    out.splice(at + 1, 0, { ref: x.ref, text: x.text, on: true, edited: false });
+  });
+  return out;
+}
+function opEffectiveSteps(state, proc, procs, isPrimary) {
+  const loaded = state[opKey(proc.id, "stepsLoaded")] === true;
+  const std = loaded ? opStandardSteps(proc, state, procs, isPrimary) : [];
+  return opSyncSteps(state[opKey(proc.id, "stepLines")], std, state[opKey(proc.id, "stepsRemoved")]);
+}
+// Start (or restart) from the standard steps.
+function opLoadSteps(state, id) {
+  if (!opProcedureById(id)) return state;
+  return { ...state, [opKey(id, "stepsLoaded")]: true, [opKey(id, "stepLines")]: [], [opKey(id, "stepsRemoved")]: [] };
+}
+function opFamiliesOf(p) { return p.families || [p.family]; }
+function opFamilyName(id) { const f = OP_FAMILIES.find((x) => x.id === id); return f ? f.name : id; }
+function opProcsInFamily(familyId) { return OPERATIVE_PROCEDURES.filter((p) => opFamiliesOf(p).includes(familyId)); }
+function opCountInRegion(regionId) { return OPERATIVE_PROCEDURES.filter((p) => opFamiliesOf(p).some((f) => (OP_FAMILIES.find((x) => x.id === f) || {}).region === regionId)).length; }
+// The full names of the diagnoses an operation belongs to, so a search for "frozen shoulder" finds it. A basic entry
+// carries its own; a full template uses the diagnoses it covers and those whose specific names link to it.
+let opDxIndex = null;
+function opDiagnosisIndex() {
+  if (opDxIndex) return opDxIndex;
+  const byName = new Map();
+  const byId = new Map();
+  Object.keys(REGIONS).forEach((r) => REGIONS[r].subsections.forEach((sub) => sub.conditions.forEach((c) => {
+    const full = findConditionById(c.id).name;
+    byId.set(c.id, full);
+    surgicalOptionsFor(c.id).forEach((n) => { const k = n.toLowerCase(); if (!byName.has(k)) byName.set(k, new Set()); byName.get(k).add(full); });
+  })));
+  opDxIndex = { byName, byId };
+  return opDxIndex;
+}
+function opDiagnosesOf(p) {
+  if (p.diagnoses) return p.diagnoses;
+  const { byName, byId } = opDiagnosisIndex();
+  const out = new Set();
+  (p.covers || []).forEach(([d]) => { if (byId.has(d)) out.add(byId.get(d)); });
+  p.clinicNames.forEach((n) => { const e = catalogueForClinicName(n); if (e && e.id === p.id) (byName.get(n.toLowerCase()) || []).forEach((x) => out.add(x)); });
+  return [...out];
+}
+// Search over every operation by name, variant, clinic name, family, region or diagnosis; every word must match.
+function opSearchProcedures(query) {
+  const tokens = String(query || "").toLowerCase().split(/\s+/).filter(Boolean);
+  const groups = [];
+  OP_REGIONS.forEach((r) => {
+    const items = OPERATIVE_PROCEDURES.filter((p) => p.region === r.id).filter((p) => {
+      const hay = [p.name, p.variantName, ...p.clinicNames, ...(p.ambiguousNames || []), ...opFamiliesOf(p).map(opFamilyName), r.name, ...(p.preop || []), ...opDiagnosesOf(p)].join(" ").toLowerCase();
+      return tokens.every((t) => hay.includes(t));
+    });
+    if (items.length) groups.push({ region: r, items: items.map((p) => ({ proc: p, where: opFamilyName(opFamiliesOf(p)[0]) })) });
+  });
+  return groups;
 }
 
 /* ============================================================================
@@ -27818,14 +28015,15 @@ function opClinicNameRegions() {
 }
 function opModuleForName(name) {
   const entry = catalogueForClinicName(name);
-  return entry ? opProcedureById(entry.operativeModule) : null;
+  const mod = entry ? opProcedureById(entry.operativeModule) : null;
+  return mod && !mod.basic ? mod : null;   // a basic entry has no protocol to show
 }
 // Modules for a post-operative form: the ones a pasted summary named, as long as the procedure text is still
 // what that paste wrote; otherwise whatever the typed name unambiguously means.
 function opModulesForPostop(po) {
   const state = po || {};
   if (Array.isArray(state.opModuleIds) && state.opModuleIds.length && state.procedureName === state.opModuleProcedureName) {
-    const mods = state.opModuleIds.map(opProcedureById).filter(Boolean);
+    const mods = state.opModuleIds.map(opProcedureById).filter((p) => p && !p.basic);
     if (mods.length) return mods;
   }
   const m = opModuleForName(state.procedureName);
@@ -28054,12 +28252,15 @@ function opPromptsFor(procs, periodId) {
 
 const PROCEDURE_CATALOGUE = OPERATIVE_PROCEDURES.map((m) => ({
   id: m.id,
+  kind: m.basic ? "basic" : "full",
   name: m.name,
   region: m.region,
   family: m.family,
+  families: m.families || [m.family],
   variantName: m.variantName,
   aliases: m.clinicNames.slice(),
   ambiguousAliases: (m.ambiguousNames || []).slice(),
+  covers: (m.covers || []).map((pair) => pair.slice()),
   clinicGap: !!m.clinicGap,
   reviewClass: OP_REVIEW_CLASS_BY_ID[m.id] || null,
   milestones: OP_REVIEW_MILESTONES[m.id] || [],
@@ -28082,23 +28283,12 @@ function catalogueAmbiguousNames() {
 // The one entry a typed or clicked name may be linked to, or null. Linked only when that cannot be wrong: the
 // entry's own name when no other entry also claims it, or a clinic name that exactly one entry claims, that no
 // entry marks as generic, and that is offered under exactly one region.
-function catalogueForClinicName(name) {
-  const n = String(name || "").trim().toLowerCase();
-  if (!n) return null;
-  if (catalogueAmbiguousNames().has(n)) return null;
-  const owners = PROCEDURE_CATALOGUE.filter((e) => e.name.toLowerCase() === n);
-  const claims = catalogueClaims(name);
-  // an entry whose own name this is, claimed by no other entry, is that operation wherever the name is offered
-  const everyone = new Set([...owners, ...claims]);
-  if (everyone.size !== 1) return null;
-  if (owners.length === 1) return owners[0];
-  const regions = opClinicNameRegions().get(n);
-  return regions && regions.size === 1 ? claims[0] : null;
-}
+function catalogueForClinicName(name) { return opResolveName(name, PROCEDURE_CATALOGUE, opClinicNameRegions()); }
 // Every clinic procedure name, region by region, and where it stands against the catalogue:
 //   linked  - resolves to one entry
-//   claimed - an entry covers it, but it cannot be linked by name (generic label, several entries, several regions)
-//   none    - no operative note yet
+//   claimed - a full entry covers it, but it cannot be linked by name (generic label, several entries, several regions)
+//   basic   - only basic entries (no standard steps yet) cover it
+//   none    - nothing covers it
 function catalogueBridge() {
   const rows = [];
   Object.keys(REGIONS).forEach((region) => {
@@ -28106,13 +28296,14 @@ function catalogueBridge() {
     REGIONS[region].subsections.forEach((sub) => sub.conditions.forEach((c) => surgicalOptionsFor(c.id).forEach((n) => seen.add(n))));
     [...seen].sort().forEach((name) => {
       const claims = catalogueClaims(name);
+      const full = claims.filter((e) => e.kind === "full");
       const linked = catalogueForClinicName(name);
       let state = "none", why = "";
-      if (linked) state = "linked";
-      else if (claims.length) {
+      if (linked && linked.kind === "full") state = "linked";
+      else if (full.length) {
         state = "claimed";
-        why = catalogueAmbiguousNames().has(name.toLowerCase()) ? "generic label" : claims.length > 1 ? "claimed by several entries" : "offered under several regions";
-      }
+        why = catalogueAmbiguousNames().has(name.toLowerCase()) ? "generic label" : full.length > 1 ? "claimed by several entries" : "offered under several regions";
+      } else if (claims.length) state = "basic";
       rows.push({ region, name, state, why, entries: claims.map((e) => e.id) });
     });
   });
@@ -28121,16 +28312,29 @@ function catalogueBridge() {
 
 /* ============================================================================
    OPERATIVE NOTES - screen
+
+   Sizes follow the rest of the app: buttons and chips 14px, section titles
+   15px, group labels 12px, helper lines 13px, chevrons 20, action icons 17,
+   the sticky header's back arrow 22.
 ============================================================================ */
 
-const OP_OPERATION_FIELDS_TOP = [
+// The green bar is 48px tall and sticky; this screen's own header sits directly beneath it.
+const OP_BAR_HEIGHT = 48;
+
+function opTodayISO() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+const OP_DETAIL_FIELDS = [
   { type: "select", key: "op__side", label: "Side", options: ["Right", "Left"], columns: 2 },
   { type: "date", key: "op__date", label: "Date of operation" },
   { type: "text", key: "op__surgeon", label: "Surgeon" },
-  { type: "text", key: "op__assistant", label: "Assistant" },
+  { type: "text", key: "op__assistant", label: "Assistant(s)", placeholder: "Names, separated by commas" },
   { type: "text", key: "op__planned", label: "Planned procedure (only if different from the one performed)" },
 ];
-const OP_OPERATION_FIELDS_POSTOP = [
+const OP_POSTOP_FIELDS = [
   { type: "select", key: "op__postop", label: "Post-operative diagnosis", options: ["Same as pre-operative diagnosis", "Revised"], columns: 1 },
   { type: "conditional", when: (s) => s.op__postop === "Revised", fields: [{ type: "text", key: "op__postopText", label: "Revised diagnosis" }] },
 ];
@@ -28182,76 +28386,99 @@ function OpInput({ value, onChange, placeholder, ariaLabel }) {
   );
 }
 
-function OpTextArea({ label, value, onChange, placeholder }) {
+function OpSelectedStrip({ selectedIds, onToggle }) {
+  if (!selectedIds.length) return null;
   return (
-    <div className="mb-3">
-      <div className="text-[13px] mb-1" style={{ color: T.inkSoft }}>{label}</div>
-      <textarea value={value || ""} placeholder={placeholder} aria-label={label} rows={3} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.surface, color: T.ink, minHeight: 88, resize: "vertical" }} />
-    </div>
-  );
-}
-
-// Procedures are offered by region, then by family, so a surgeon who thinks "cuff repair" finds
-// arthroscopic, mini-open and open side by side. The selected procedures stay visible whichever
-// region is showing, because one operation can cross regions.
-function OpProcedurePicker({ selectedIds, onToggle }) {
-  const first = OPERATIVE_PROCEDURES.find((p) => selectedIds.includes(p.id));
-  const [region, setRegion] = useState(first ? first.region : "shoulder");
-  const countIn = (r) => OPERATIVE_PROCEDURES.filter((p) => p.region === r && selectedIds.includes(p.id)).length;
-  const regions = OP_REGIONS.filter((r) => OPERATIVE_PROCEDURES.some((p) => p.region === r.id));
-  const chipStyle = (active) => ({ background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 44 });
-  return (
-    <div>
-      <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>Tap every procedure performed. Add more than one if the operation combined them.</div>
-      {selectedIds.length > 0 && (
-        <div className="mb-3">
-          <div className="text-[12px] font-bold uppercase tracking-wide mb-1.5" style={{ color: T.tealDark }}>Selected</div>
-          <div className="flex flex-wrap gap-1.5">
-            {selectedIds.map((id) => {
-              const p = opProcedureById(id);
-              return p ? (
-                <button key={id} onClick={() => onToggle(id)} aria-label={`Remove ${p.name}`} className="rounded-full pl-3.5 pr-2.5 py-2 text-[13px] font-medium active:scale-95 transition flex items-center gap-1.5" style={chipStyle(true)}>
-                  {p.name} <X size={14} color="#fff" />
-                </button>
-              ) : null;
-            })}
-          </div>
-        </div>
-      )}
-      <div role="tablist" aria-label="Region" className="flex flex-wrap gap-1.5 mb-3">
-        {regions.map((r) => {
-          const n = countIn(r.id);
-          return (
-            <button key={r.id} role="tab" aria-selected={region === r.id} onClick={() => setRegion(r.id)} className="rounded-xl px-3.5 py-2 text-[14px] font-semibold active:scale-95 transition" style={{ background: region === r.id ? T.tealDark : T.surface, color: region === r.id ? "#fff" : T.ink, border: `1px solid ${region === r.id ? T.tealDark : T.border}`, minHeight: 44 }}>
-              {r.name}{n > 0 ? ` (${n})` : ""}
+    <div className="mb-4">
+      <div className="text-[12px] font-bold uppercase tracking-wide mb-2" style={{ color: T.tealDark }}>Selected</div>
+      <div className="flex flex-wrap gap-2">
+        {selectedIds.map((id) => {
+          const p = opProcedureById(id);
+          return p ? (
+            <button key={id} onClick={() => onToggle(id)} aria-label={`Remove ${p.name}`} className="rounded-full pl-3.5 pr-3 py-2 text-[14px] font-medium active:scale-95 transition flex items-center gap-2" style={{ minHeight: 44, background: T.tealDark, color: "#fff", border: `1px solid ${T.tealDark}` }}>
+              {p.name} <X size={16} color="#fff" />
             </button>
-          );
+          ) : null;
         })}
       </div>
-      {OP_FAMILIES.filter((f) => f.region === region).map((fam) => {
-        const procs = OPERATIVE_PROCEDURES.filter((p) => p.family === fam.id);
-        if (!procs.length) return null;
-        return (
-          <div key={fam.id} className="mb-3">
-            <div className="text-[12px] font-bold uppercase tracking-wide mb-1.5" style={{ color: T.ink, opacity: 0.72 }}>{fam.name}</div>
-            <div className="flex flex-wrap gap-1.5">
-              {procs.map((p) => {
-                const active = selectedIds.includes(p.id);
-                return (
-                  <button key={p.id} onClick={() => onToggle(p.id)} aria-pressed={active} className="rounded-full px-3.5 py-2 text-[13px] font-medium active:scale-95 transition" style={chipStyle(active)}>
-                    {p.variantName}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
 
-function OpLinesEditor({ lines, onChange, addLabel, noun }) {
+// Step 1 is the body map, the same picker as New Visit and Follow-up, so the region is the first and most
+// obvious thing to choose. Once a region is chosen the operations are a table: one row per family, the variants
+// as tap targets in the row.
+function OpProcedurePicker({ selectedIds, onToggle, region, onRegion }) {
+  const counts = useMemo(() => { const c = {}; OP_REGIONS.forEach((r) => { c[r.id] = opCountInRegion(r.id); }); return c; }, []);
+  const regionInfo = OP_REGIONS.find((r) => r.id === region);
+  const accent = REGION_ACCENT[region] || {};
+  const families = region ? OP_FAMILIES.filter((f) => f.region === region && opProcsInFamily(f.id).length) : [];
+  const groups = [
+    { id: "templates", title: "Operation templates", list: families.filter((f) => !f.diagnosis) },
+    { id: "diagnosis", title: "Other operations by diagnosis", list: families.filter((f) => f.diagnosis) },
+  ].filter((g) => g.list.length);
+  return (
+    <div>
+      <OpSelectedStrip selectedIds={selectedIds} onToggle={onToggle} />
+      {!region ? (
+        <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[400px] md:max-w-[560px]" style={{ background: "#FBF9F3", border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
+          <BodyMap onSelect={onRegion} counts={counts} unit="operations" uid="opm" />
+        </div>
+      ) : (
+        <>
+          <button onClick={() => onRegion("")} className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 mb-3 active:scale-95 transition" style={{ background: T.tealTint, border: `1px solid ${T.teal}`, minHeight: 48 }}>
+            <ArrowLeft size={17} color={T.tealDark} />
+            <span className="flex-1 text-left min-w-0">
+              <span className="block text-[14px] font-bold truncate" style={{ color: T.tealDark }}>Choose a different region</span>
+              <span className="block text-[12px] truncate" style={{ color: T.inkSoft }}>{`Showing ${regionInfo ? regionInfo.name : ""}${selectedIds.length ? ` \u00b7 ${selectedIds.length} selected so far (kept)` : ""}`}</span>
+            </span>
+          </button>
+          <table className="w-full" style={{ borderCollapse: "collapse", tableLayout: "fixed" }}>
+            <thead>
+              <tr>
+                <th scope="col" className="text-left text-[12px] font-bold uppercase tracking-wide pb-2" style={{ width: "36%", color: T.ink, opacity: 0.72 }}>Operation</th>
+                <th scope="col" className="text-left text-[12px] font-bold uppercase tracking-wide pb-2" style={{ color: T.ink, opacity: 0.72 }}>Choose</th>
+              </tr>
+            </thead>
+            <tbody>
+              {groups.map((g) => (
+                <React.Fragment key={g.id}>
+                  <tr>
+                    <th scope="colgroup" colSpan={2} className="text-left pt-4 pb-1.5">
+                      <span className="flex items-center gap-2">
+                        <span className="rounded-full shrink-0" style={{ width: 3, height: 14, background: accent.bar || T.teal }} aria-hidden="true" />
+                        <span className="text-[12px] font-bold uppercase tracking-wide" style={{ color: accent.ink || T.teal }}>{g.title}</span>
+                      </span>
+                    </th>
+                  </tr>
+                  {g.list.map((f) => (
+                    <tr key={f.id} style={{ borderTop: `1px solid ${T.border}` }}>
+                      <th scope="row" className="text-left align-top py-3 pr-2 text-[14px] font-semibold" style={{ color: T.ink }}>{f.name}</th>
+                      <td className="py-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {opProcsInFamily(f.id).map((p) => {
+                            const active = selectedIds.includes(p.id);
+                            return (
+                              <button key={p.id} onClick={() => onToggle(p.id)} aria-pressed={active} className="rounded-full px-3.5 py-2 text-[14px] font-medium active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>
+                                {p.variantName}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
+  );
+}
+
+function OpLinesEditor({ lines, onChange, addLabel, noun, size = 14 }) {
   const list = lines || [];
   const update = (i, patch) => onChange(list.map((l, j) => (j === i ? { ...l, ...patch } : l)));
   return (
@@ -28261,15 +28488,62 @@ function OpLinesEditor({ lines, onChange, addLabel, noun }) {
           <button onClick={() => update(i, { on: !l.on })} role="checkbox" aria-checked={!!l.on} aria-label={`${noun} ${i + 1}: ${l.on ? "included in the note" : "left out of the note"}`} className="shrink-0 flex items-center justify-center rounded-lg" style={{ minHeight: 44, minWidth: 44, background: l.on ? T.teal : T.slateChip, border: `1px solid ${l.on ? T.teal : T.border}` }}>
             {l.on ? <Check size={18} color="#fff" /> : null}
           </button>
-          <textarea value={l.text || ""} rows={2} aria-label={`${noun} ${i + 1}`} onChange={(e) => update(i, { text: e.target.value })} className="flex-1 min-w-0 rounded-lg px-3 py-2 text-[14px]" style={{ border: `1px solid ${T.border}`, background: T.surface, color: T.ink, minHeight: 44, opacity: l.on ? 1 : 0.55 }} />
+          <textarea value={l.text || ""} rows={Math.min(9, Math.max(2, Math.ceil((l.text || "").length / 32)))} aria-label={`${noun} ${i + 1}`} onChange={(e) => update(i, { text: e.target.value })} className="flex-1 min-w-0 rounded-lg px-3 py-2.5" style={{ fontSize: size, lineHeight: 1.45, border: `1px solid ${T.border}`, background: T.surface, color: T.ink, minHeight: 44, opacity: l.on ? 1 : 0.55 }} />
           <button onClick={() => onChange(list.filter((_, j) => j !== i))} aria-label={`Remove ${noun.toLowerCase()} ${i + 1}`} className="shrink-0 flex items-center justify-center active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
             <X size={18} color={T.inkSoft} />
           </button>
         </div>
       ))}
       <button onClick={() => onChange([...list, { text: "", on: true }])} className="flex items-center gap-1.5 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
-        <Plus size={16} /> {addLabel}
+        <Plus size={17} /> {addLabel}
       </button>
+    </div>
+  );
+}
+
+// The steps are the surgeon's own words. Nothing is loaded for them: they choose to start from the standard steps,
+// or from nothing, and then reword, delete or add as the operation went.
+function OpStepsEditor({ proc, op, procs, isPrimary, setField, onLoad }) {
+  const key = opKey(proc.id, "stepLines");
+  const removedKey = opKey(proc.id, "stepsRemoved");
+  const lines = opEffectiveSteps(op, proc, procs, isPrimary);
+  const loaded = op[opKey(proc.id, "stepsLoaded")] === true;
+  const standardCount = opStandardSteps(proc, op, procs, isPrimary).length;
+  const [confirmReload, setConfirmReload] = useState(false);
+  // What the surgeon changed: an edited standard line becomes theirs; a deleted one is remembered so it stays gone.
+  const commit = (next) => {
+    const byRef = new Map(lines.filter((l) => l.ref).map((l) => [l.ref, l]));
+    const marked = next.map((l) => (l.ref && byRef.has(l.ref) && byRef.get(l.ref).text !== l.text ? { ...l, edited: true } : l));
+    const deleted = lines.filter((l) => l.ref && !next.some((n) => n.ref === l.ref)).map((l) => l.ref);
+    setField(key, marked);
+    if (deleted.length) setField(removedKey, [...(op[removedKey] || []), ...deleted]);
+  };
+  return (
+    <div>
+      {!loaded && standardCount > 0 && (
+        <div className="mb-3">
+          <button onClick={onLoad} className="w-full rounded-xl px-4 text-[15px] font-semibold active:scale-95" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}`, minHeight: 48 }}>Use the standard steps</button>
+          <div className="text-[13px] mt-1.5" style={{ color: T.inkSoft }}>{standardCount} steps. Reword, delete or add to them once loaded.</div>
+        </div>
+      )}
+      {standardCount === 0 && lines.length === 0 && (
+        <div className="text-[14px] mb-3" style={{ color: T.inkSoft }}>No standard steps for this operation yet. Add the steps you performed.</div>
+      )}
+      <OpLinesEditor lines={lines} onChange={commit} addLabel="Add step" noun="Step" size={15} />
+      {loaded && !confirmReload && (
+        <button onClick={() => setConfirmReload(true)} className="mt-2 flex items-center gap-1.5 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
+          <RotateCcw size={17} /> Reload the standard steps
+        </button>
+      )}
+      {confirmReload && (
+        <div className="mt-2 rounded-xl p-3" style={{ background: T.redTint, border: `1px solid ${T.red}` }}>
+          <div className="text-[14px] mb-2" style={{ color: T.ink }}>Replace your steps with the standard steps? Your edits, deletions and added steps will be lost.</div>
+          <div className="flex gap-2">
+            <button onClick={() => { setConfirmReload(false); onLoad(); }} className="flex-1 rounded-xl px-4 text-[14px] font-semibold" style={{ background: T.red, color: "#fff", minHeight: 44 }}>Replace</button>
+            <button onClick={() => setConfirmReload(false)} className="flex-1 rounded-xl px-4 text-[14px] font-semibold" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>Keep mine</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -28296,7 +28570,7 @@ function OpImplantLog({ rows, onChange }) {
         </div>
       ))}
       <button onClick={() => onChange([...list, { item: "", size: "", lot: "" }])} className="flex items-center gap-1.5 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
-        <Plus size={16} /> Add implant
+        <Plus size={17} /> Add implant
       </button>
     </div>
   );
@@ -28304,34 +28578,37 @@ function OpImplantLog({ rows, onChange }) {
 
 function OpPitfalls({ items }) {
   const [open, setOpen] = useState(false);
+  if (!items.length) return null;
   return (
     <div className="mt-5">
       <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-2 rounded-xl px-3 text-left text-[14px] font-semibold active:opacity-70" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
         <span className="flex-1">Pitfalls and technical pearls (reference only, not copied)</span>
-        {open ? <ChevronDown size={18} color={T.inkSoft} /> : <ChevronRight size={18} color={T.inkSoft} />}
+        {open ? <ChevronDown size={20} color={T.inkSoft} /> : <ChevronRight size={20} color={T.inkSoft} />}
       </button>
       {open && (
-        <ul className="text-[14px] pl-5 mt-2" style={{ color: T.inkSoft, listStyle: "disc" }}>
-          {items.map((x) => <li key={x} className="mb-1">{x}</li>)}
+        <ul className="text-[14px] leading-relaxed pl-5 mt-2" style={{ color: T.ink, listStyle: "disc" }}>
+          {items.map((x) => <li key={x} className="mb-1.5">{x}</li>)}
         </ul>
       )}
     </div>
   );
 }
 
-function OpProcedureBody({ proc, op, procs, isPrimary, setField }) {
+function OpProcedureBody({ proc, op, procs, isPrimary, setField, onLoadSteps }) {
   const k = (key) => opKey(proc.id, key);
   const ref = proc.reference;
-  const steps = opStepTexts(proc, op, procs, isPrimary);
   const group = (title, fields) => (fields && fields.length ? (
     <OpGroup title={title}><OpFields fields={opNsFields(proc.id, fields)} op={op} setField={setField} region={proc.region} /></OpGroup>
   ) : null);
+  const hasReference = ref.indications.length || ref.considerations.length;
   return (
     <div>
-      <OpGroup title="Reference: tick what applies to this patient">
-        <Field field={{ type: "checkbox", key: k("indications"), label: "Indications", options: ref.indications }} state={op} setField={setField} region={proc.region} />
-        <Field field={{ type: "checkbox", key: k("considerations"), label: "Factors considered", options: ref.considerations }} state={op} setField={setField} region={proc.region} />
-      </OpGroup>
+      {hasReference ? (
+        <OpGroup title="Reference: tick what applies to this patient">
+          {ref.indications.length > 0 && <Field field={{ type: "checkbox", key: k("indications"), label: "Indications", options: ref.indications }} state={op} setField={setField} region={proc.region} />}
+          {ref.considerations.length > 0 && <Field field={{ type: "checkbox", key: k("considerations"), label: "Factors considered", options: ref.considerations }} state={op} setField={setField} region={proc.region} />}
+        </OpGroup>
+      ) : null}
       {proc.positioning.length > 0 && (
         <OpGroup title="Position">
           <Field field={{ type: "select", key: k("position"), label: "Position", options: proc.positioning, columns: 2 }} state={op} setField={setField} region={proc.region} />
@@ -28340,15 +28617,13 @@ function OpProcedureBody({ proc, op, procs, isPrimary, setField }) {
       {group("Findings", proc.findings)}
       {group("Technique and implants", proc.technique)}
       {group("Closure", proc.closure)}
-      <OpGroup title="Equipment used">
-        <Field field={{ type: "checkbox", key: k("equipment"), label: "Equipment", options: ref.equipment }} state={op} setField={setField} region={proc.region} />
-      </OpGroup>
+      {ref.equipment.length > 0 && (
+        <OpGroup title="Equipment used">
+          <Field field={{ type: "checkbox", key: k("equipment"), label: "Equipment", options: ref.equipment }} state={op} setField={setField} region={proc.region} />
+        </OpGroup>
+      )}
       <OpGroup title="Operative steps">
-        <ol className="text-[13px] pl-5 mb-3" style={{ color: T.inkSoft, listStyle: "decimal" }}>
-          {steps.map((t, i) => <li key={i} className="mb-1">{t}</li>)}
-        </ol>
-        <Field field={{ type: "select", key: k("stepsConfirmed"), label: "Confirm the steps above", options: [OP_STEPS_CONFIRMED], columns: 1 }} state={op} setField={setField} region={proc.region} />
-        <OpTextArea label="Deviations from the steps above, and additional details" value={op[k("deviations")]} onChange={(v) => setField(k("deviations"), v)} placeholder="Anything done differently, or not done" />
+        <OpStepsEditor proc={proc} op={op} procs={procs} isPrimary={isPrimary} setField={setField} onLoad={() => onLoadSteps(proc.id)} />
       </OpGroup>
       <OpPitfalls items={ref.pitfalls} />
     </div>
@@ -28356,9 +28631,10 @@ function OpProcedureBody({ proc, op, procs, isPrimary, setField }) {
 }
 
 function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved, noteComments, onNoteCommentsChange }) {
-  const [openId, setOpenId] = useState("operation");
+  const [openId, setOpenId] = useState("procedures");
   const [confirmReset, setConfirmReset] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+  const [tab, setTab] = useState("note");
   const [copied, setCopied] = useState(null);
   const [copyError, setCopyError] = useState(false);
 
@@ -28369,20 +28645,41 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
   const summary = useMemo(() => buildOperationSummary(op), [op]);
   const rehab = useMemo(() => buildRehabNote(op), [op]);
 
+  // The date of the operation is, to begin with, the day the note is written; it can be changed.
+  useEffect(() => { onChange((s) => (s.op__date ? s : { ...s, op__date: opTodayISO() })); }, [onChange]);
+
+  // The region: chosen on the body map, or (when procedures came in through search) the region of the first one.
+  const autoRegion = procs.length ? procs[0].region : null;
+  const region = op.op__region === undefined ? autoRegion : (op.op__region || null);
+
+  // Opening a section brings its top into view, as the template screens do, so nothing has to be scrolled to.
+  const sectionRefs = useRef({});
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    const el = openId && sectionRefs.current[openId];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [openId]);
+
   const preopSuggestions = useMemo(() => Array.from(new Set(procs.flatMap((p) => p.preop))), [procs]);
   const safetyKeys = new Set(OP_SAFETY_FIELDS.flatMap((f) => (f.type === "conditional" ? f.fields : [f]).map((x) => x.key)));
+  const detailKeys = new Set(["op__side", "op__surgeon", "op__assistant", "op__planned", "op__preop", "op__postop", "op__postopText"]);
 
   const sections = [
     {
-      id: "operation", title: "Operation",
-      subtitle: procs.length ? procs.map((p) => p.name).join(", ") : "Choose the procedures performed",
-      hasContent: procs.length > 0 || opHasValue(op.op__side),
+      id: "procedures", title: "Procedures",
+      subtitle: procs.length ? procs.map((p) => p.name).join(", ") : region ? "Choose the operation" : "Tap the region operated on",
+      hasContent: procs.length > 0,
+      body: <OpProcedurePicker selectedIds={selectedIds} onToggle={(id) => onChange((s) => opToggleProcedure(s, id))} region={region} onRegion={(r) => setField("op__region", r)} />,
+    },
+    {
+      id: "details", title: "Operation details", subtitle: "Side, date, team and diagnosis",
+      hasContent: opAnyValue(op, (key) => detailKeys.has(key)),
       body: (
         <>
-          <OpProcedurePicker selectedIds={selectedIds} onToggle={(id) => onChange((s) => opToggleProcedure(s, id))} />
-          <OpFields fields={OP_OPERATION_FIELDS_TOP} op={op} setField={setField} />
+          <OpFields fields={OP_DETAIL_FIELDS} op={op} setField={setField} />
           <Field field={{ type: "text", key: "op__preop", label: "Pre-operative diagnosis", suggestions: preopSuggestions, multiSelect: true }} state={op} setField={setField} />
-          <OpFields fields={OP_OPERATION_FIELDS_POSTOP} op={op} setField={setField} />
+          <OpFields fields={OP_POSTOP_FIELDS} op={op} setField={setField} />
         </>
       ),
     },
@@ -28394,7 +28691,7 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
     ...procs.map((p, i) => ({
       id: p.id, title: p.name, subtitle: i === 0 && procs.length > 1 ? "Primary procedure" : p.variantName,
       hasContent: opAnyValue(op, (key) => key.startsWith(`${p.id}__`)),
-      body: <OpProcedureBody proc={p} op={op} procs={procs} isPrimary={i === 0} setField={setField} />,
+      body: <OpProcedureBody proc={p} op={op} procs={procs} isPrimary={i === 0} setField={setField} onLoadSteps={(id) => onChange((s) => opLoadSteps(s, id))} />,
     })),
     {
       id: "implants", title: "Implants", subtitle: "Implant, size, lot or serial number",
@@ -28402,32 +28699,38 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
       body: <OpImplantLog rows={op.op__implants} onChange={(rows) => setField("op__implants", rows)} />,
     },
     {
-      id: "plan", title: "Post-operative plan", subtitle: "Pre-filled from your protocol; edit freely",
+      id: "plan", title: "Post-operative plan", subtitle: "Pre-filled from your protocol where there is one; edit freely",
       hasContent: (op.op__planLines || []).length > 0,
       body: (
         <>
-          <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>Lines are pre-filled from the protocol for the procedure above. Untick a line to leave it out of the note, or edit it.</div>
-          {(op.op__planLines || []).length === 0 && <div className="text-[14px] mb-3" style={{ color: T.inkSoft }}>Choose a procedure to pre-fill the plan.</div>}
+          {(op.op__planLines || []).length === 0 && <div className="text-[14px] mb-3" style={{ color: T.inkSoft }}>{procs.length ? "No standard plan for this operation yet. Add the lines you want." : "Choose a procedure to pre-fill the plan."}</div>}
           <OpLinesEditor lines={op.op__planLines} onChange={(l) => setField("op__planLines", l)} addLabel="Add plan line" noun="Plan line" />
-          <OpGroup title="Rehabilitation protocol (for the physiotherapist; copied separately)">
+          <OpGroup title="Rehabilitation protocol (for the physiotherapist)">
             <OpLinesEditor lines={op.op__rehabLines} onChange={(l) => setField("op__rehabLines", l)} addLabel="Add rehabilitation line" noun="Rehabilitation line" />
           </OpGroup>
           <button onClick={() => onChange((s) => opResetPlan(s))} className="mt-3 flex items-center gap-1.5 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
-            <RotateCcw size={16} /> Reset plan to the protocol
+            <RotateCcw size={17} /> Reset plan to the protocol
           </button>
         </>
       ),
     },
   ];
 
-  const copy = async (which, text) => {
-    const ok = await copyTextRobust(text);
+  const tabs = [
+    { id: "note", label: "Note", text: note, copy: "Copy note" },
+    summary ? { id: "summary", label: "Follow-up summary", text: summary, copy: "Copy summary" } : null,
+    rehab ? { id: "rehab", label: "Rehabilitation", text: rehab, copy: "Copy protocol" } : null,
+  ].filter(Boolean);
+  const current = tabs.find((t) => t.id === tab) || tabs[0];
+
+  const copy = async () => {
+    const ok = await copyTextRobust(current.text);
     if (ok) {
-      setCopied(which);
+      setCopied(current.id);
       setCopyError(false);
       setTimeout(() => setCopied(null), 1800);
-      if (which === "note" && onNoteSaved) {
-        onNoteSaved({ id: "operative-note", title: "Operative note", kind: "note", text: note, at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+      if (current.id === "note" && onNoteSaved) {
+        onNoteSaved({ id: "operative-note", title: opNoteHeadline(op) || "Operative note", kind: "operative", text: note, at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
       }
     } else {
       setCopied(null);
@@ -28436,31 +28739,35 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
     }
   };
 
+  const subtitle = procs.length ? `${procs.length} procedure${procs.length === 1 ? "" : "s"} recorded` : region ? "Choose the operation" : "Tap the region operated on";
+
   return (
     <div className="min-h-screen pb-28" style={{ background: T.bg }}>
-      <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
-        <button onClick={onGoHome} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal, minHeight: 44 }}>
-          <ArrowLeft size={16} /> Back to home
+      <div className="flex items-center gap-2 px-3 py-3 sticky z-30" style={{ top: OP_BAR_HEIGHT, background: T.surface, borderBottom: `1px solid ${T.border}` }}>
+        <button onClick={onGoHome} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Back to home">
+          <ArrowLeft size={22} color={T.ink} />
         </button>
-        <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Operative note</div>
-        <h1 className="text-[20px] font-bold mb-1" style={{ color: T.ink }}>{procs.length ? `${procs.length} procedure${procs.length === 1 ? "" : "s"} recorded` : "What was done?"}</h1>
-        <div className="text-[13px] mb-4" style={{ color: T.inkSoft }}>Nothing is pre-ticked. Only what you tick, type or confirm appears in the note.</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-[15px]" style={{ color: T.ink }}>Operative note</div>
+          <div className="text-[12px] truncate" style={{ color: T.inkSoft }}>{subtitle}</div>
+        </div>
       </div>
-      <div className="px-4 max-w-2xl lg:max-w-4xl mx-auto">
+      <div className="px-4 pt-4 max-w-2xl lg:max-w-4xl mx-auto">
         {sections.map((sec, i) => (
-          <CollapsibleSection
-            key={sec.id}
-            index={i + 1}
-            title={sec.title}
-            subtitle={sec.subtitle}
-            isOpen={openId === sec.id}
-            onToggle={() => setOpenId(openId === sec.id ? null : sec.id)}
-            hasContent={sec.hasContent}
-            nextTitle={sections[i + 1] ? sections[i + 1].title : null}
-            onNext={sections[i + 1] ? () => setOpenId(sections[i + 1].id) : null}
-          >
-            {sec.body}
-          </CollapsibleSection>
+          <div key={sec.id} ref={(el) => { sectionRefs.current[sec.id] = el; }} style={{ scrollMarginTop: 130 }}>
+            <CollapsibleSection
+              index={i + 1}
+              title={sec.title}
+              subtitle={sec.subtitle}
+              isOpen={openId === sec.id}
+              onToggle={() => setOpenId(openId === sec.id ? null : sec.id)}
+              hasContent={sec.hasContent}
+              nextTitle={sections[i + 1] ? sections[i + 1].title : null}
+              onNext={sections[i + 1] ? () => setOpenId(sections[i + 1].id) : null}
+            >
+              {sec.body}
+            </CollapsibleSection>
+          </div>
         ))}
       </div>
 
@@ -28469,7 +28776,7 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
           <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
             <RotateCcw size={17} /> New patient
           </button>
-          <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+          <button onClick={() => { setTab("note"); setNoteOpen(true); }} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
             Preview operative note
           </button>
         </div>
@@ -28497,44 +28804,95 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
                 <X size={20} color={T.inkSoft} />
               </button>
             </div>
-            <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-              {note ? <NoteBody text={note} /> : <div className="text-[14px]" style={{ color: T.inkSoft }}>Choose the procedures performed to start the note.</div>}
-              {onNoteCommentsChange && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
-              {summary && (
-                <div className="mt-4 rounded-xl p-3 text-[13px]" style={{ border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink, whiteSpace: "pre-wrap" }}>
-                  <div className="text-[12px] font-bold uppercase tracking-wide mb-1" style={{ color: T.tealDark }}>Summary for the follow-up visit</div>
-                  {summary}
-                </div>
-              )}
-            </div>
-            <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-1 gap-2">
-                <button onClick={() => copy("note", note)} disabled={!note} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48, opacity: note ? 1 : 0.5 }}>
-                  {copied === "note" ? <Check size={17} /> : <Copy size={17} />}
-                  {copied === "note" ? <span className="ut-confirm">Copied</span> : "Copy note"}
-                </button>
-                {summary && (
-                  <button onClick={() => copy("summary", summary)} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                    {copied === "summary" ? <Check size={17} /> : <Copy size={17} />}
-                    {copied === "summary" ? <span className="ut-confirm">Copied</span> : "Copy summary line"}
-                  </button>
-                )}
-                {rehab && (
-                  <button onClick={() => copy("rehab", rehab)} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
-                    {copied === "rehab" ? <Check size={17} /> : <Copy size={17} />}
-                    {copied === "rehab" ? <span className="ut-confirm">Copied</span> : "Copy rehabilitation protocol"}
-                  </button>
-                )}
+            {tabs.length > 1 && (
+              <div role="tablist" aria-label="What to preview and copy" className="grid gap-1.5 px-4 pt-3" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0,1fr))` }}>
+                {tabs.map((t) => {
+                  const active = t.id === current.id;
+                  return (
+                    <button key={t.id} role="tab" aria-selected={active} onClick={() => setTab(t.id)} className="rounded-xl px-2 py-2.5 text-[14px] font-medium active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>
+                      {t.label}
+                    </button>
+                  );
+                })}
               </div>
+            )}
+            <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+              {current.text ? <NoteBody text={current.text} /> : <div className="text-[14px]" style={{ color: T.inkSoft }}>Choose the procedures performed to start the note.</div>}
+              {current.id === "note" && onNoteCommentsChange && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
+            </div>
+            <div className="px-4 py-3" style={{ borderTop: `1px solid ${T.border}` }}>
+              <button onClick={copy} disabled={!current.text} className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48, opacity: current.text ? 1 : 0.5 }}>
+                {copied === current.id ? <Check size={17} /> : <Copy size={17} />}
+                {copied === current.id ? <span className="ut-confirm">Copied</span> : current.copy}
+              </button>
               {copyError && (
-                <div className="text-[13px] text-center" style={{ color: T.red }}>
-                  Couldn't copy automatically — tap and hold the note above to select and copy it manually.
+                <div className="text-[13px] text-center mt-2" style={{ color: T.red }}>
+                  Couldn't copy automatically — tap and hold the text above to select and copy it manually.
                 </div>
               )}
             </div>
           </DragSheet>
         </div>
       )}
+    </div>
+  );
+}
+
+// The Search button on the green bar, while an operative note is open: it searches the operations, not the diagnoses.
+function OperationSearch({ selectedIds, onToggle, onClose }) {
+  const [query, setQuery] = useState("");
+  const groups = useMemo(() => opSearchProcedures(query), [query]);
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: T.bg }}>
+      <div className="flex items-center gap-2 px-3 py-3 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
+        <button onClick={onClose} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Close search"><ArrowLeft size={22} color={T.ink} /></button>
+        <div className="ut-searchbar flex-1 flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
+          <Search size={17} color={T.inkSoft} />
+          <input autoFocus type="text" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search operations" placeholder={"Search operations by name, region or diagnosis\u2026"} className="flex-1 bg-transparent py-2.5 text-[15px] outline-none" style={{ color: T.ink }} />
+          {query && (
+            <button onClick={() => setQuery("")} className="flex items-center justify-center p-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Clear search"><X size={16} color={T.inkSoft} /></button>
+          )}
+        </div>
+      </div>
+      <div className="px-3 pt-3">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto rounded-xl px-3 py-2.5 text-[13px]" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}` }}>
+          {`Tap to add or remove from this operation \u2014 ${selectedIds.length ? `${selectedIds.length} selected so far.` : "nothing selected yet."} Close this search to continue.`}
+        </div>
+      </div>
+      <div className="px-3 pt-3 pb-8" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div className="max-w-2xl lg:max-w-4xl mx-auto">
+          {groups.length === 0 ? (
+            <div className="mt-4">
+              <EmptyState icon={Search} title={`No operations match \u201c${query}\u201d`} body="Try a shorter term, the anatomical site, or the diagnosis." action="Clear search" onAction={() => setQuery("")} />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5">
+              {groups.map((g) => (
+                <div key={g.region.id}>
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <span className="rounded-full shrink-0" style={{ width: 3, height: 14, background: (REGION_ACCENT[g.region.id] || {}).bar || T.teal }} aria-hidden="true" />
+                    <span className="text-[12px] font-bold uppercase tracking-wide" style={{ color: (REGION_ACCENT[g.region.id] || {}).ink || T.teal }}>{g.region.name}</span>
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    {g.items.map(({ proc, where }) => {
+                      const active = selectedIds.includes(proc.id);
+                      return (
+                        <button key={proc.id} onClick={() => onToggle(proc.id)} aria-pressed={active} className="ut-card rounded-2xl px-4 py-3 flex items-center justify-between text-left gap-3" style={{ background: active ? T.tealTint : T.surface, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 52, boxShadow: T.shadowCard }}>
+                          <span className="min-w-0">
+                            <span className="block font-semibold text-[15px]" style={{ color: active ? T.tealDark : T.ink }}>{proc.name}</span>
+                            <span className="block text-[13px]" style={{ color: T.inkSoft }}>{where}</span>
+                          </span>
+                          {active ? <CheckCircle2 size={20} color={T.teal} /> : <Circle size={20} color={T.borderStrong} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -29324,6 +29682,7 @@ export default function App() {
         onViewCombinedNote={() => setCombinedNoteOpen(true)}
         onEndSession={endSession}
         onOpenSearch={() => setSearchOpen(true)}
+        searchLabel={screen.view === "operativeNote" ? "Search operations" : "Search templates"}
         onOpenPanel={() => { setPanelNote(null); setPanelSection(null); setPanelVariant("panel"); setPanelOpen(true); }}
         noteCount={recentNotes.length}
         onGoHome={goHome}
@@ -29515,7 +29874,9 @@ export default function App() {
         </div>
       )}
 
-      {searchOpen && <TemplateSearch onSelect={selectFromSearch} onClose={() => setSearchOpen(false)} selectedIds={inFollowupSelection ? followupSelectedIds : undefined} />}
+      {searchOpen && (screen.view === "operativeNote"
+        ? <OperationSearch selectedIds={opNote.op__procedures || []} onToggle={(id) => updateOp((cur) => opToggleProcedure(cur, id))} onClose={() => setSearchOpen(false)} />
+        : <TemplateSearch onSelect={selectFromSearch} onClose={() => setSearchOpen(false)} selectedIds={inFollowupSelection ? followupSelectedIds : undefined} />)}
     </div>
     </ReferenceCtx.Provider>
   );
