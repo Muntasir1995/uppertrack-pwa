@@ -15233,7 +15233,7 @@ const WHATS_NEW = [
       "Operative note: clock-face positions (Bankart repair, Latarjet, capsular release) are written for the side operated on, and an operation that combined several procedures reads as one note, with preparation and closure described once and no repeated arthroscopy.",
       "Operative note: the note carries the anaesthesia and safety details (time-out, antibiotics, tranexamic acid, tourniquet or WALANT, counts, blood loss, complications), and the post-operative plan is pre-filled from the protocol for the procedure and stays editable.",
       "Operative note: the preview has one Copy button and tabs for the note, the follow-up summary and the rehabilitation protocol. The summary now says what was found and done (the tendons repaired, tear size, anchors, implant sizes), never free text or lot numbers.",
-      "Operative note: the green bar's Search finds operations, not diagnoses; the date starts as today; assistants can be several; each section opens at its top; and the Notes list names the operation and calls it an operative note.",
+      "Operative note: the green bar's Search finds operations, not diagnoses; the date starts as today; assistants can be several; each section opens at its top. Recent notes names the operation and keeps the note, the follow-up summary and the rehabilitation protocol together, each one tap away.",
       "Post-operative review by period: the review is placed at 2 weeks, 6 weeks, 3, 6 or 12 months from the date of surgery, or chosen by you. For an operation that has an operative note, the form shows its protocol at that point and the scores due from the diagnosis's own outcomes table.",
       "Post-operative review: the next review is suggested from the operation's protocol, with what is due at it (imaging, wire removal, electrodiagnostic review) as the templates state. One tap sets it from the diagnosis's own follow-up options; when the protocol has no later review, one tap sets the final visit.",
       "Post-operative review: what to assess now differs by operation (for example subscapularis precautions after a shoulder arthroplasty, pillar pain after a carpal tunnel release), and ticks from another operation never carry across.",
@@ -21471,8 +21471,8 @@ function PanelRow({ title, count, isOpen, onToggle, icon: Icon, children }) {
 // so they are listed together under one diagnosis heading - but they remain
 // two separate notes, each opened and copied on its own. Grouping here is
 // presentation only: no note's text is merged with another's.
-const NOTE_KIND_ORDER = { note: 0, operative: 0, physio: 1 };
-const NOTE_KIND_LABEL = { note: "Clinic note", operative: "Operative note", physio: "Physio referral" };
+const NOTE_KIND_ORDER = { note: 0, operative: 0, operativeSummary: 1, operativeRehab: 2, physio: 1 };
+const NOTE_KIND_LABEL = { note: "Clinic note", operative: "Operative note", operativeSummary: "Follow-up summary", operativeRehab: "Rehabilitation protocol", physio: "Physio referral" };
 
 function groupRecentNotes(recentNotes) {
   const order = [];
@@ -28729,8 +28729,14 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
       setCopied(current.id);
       setCopyError(false);
       setTimeout(() => setCopied(null), 1800);
-      if (current.id === "note" && onNoteSaved) {
-        onNoteSaved({ id: "operative-note", title: opNoteHeadline(op) || "Operative note", kind: "operative", text: note, at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+      // Copying anything is the signal the note was used, so all of it is kept for Recent notes: the note, the
+      // follow-up summary and the rehabilitation protocol, filed together under the operation's name.
+      if (onNoteSaved) {
+        const at = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const title = opNoteHeadline(op) || "Operative note";
+        if (rehab) onNoteSaved({ id: "operative-note:rehab", title, kind: "operativeRehab", text: rehab, at });
+        if (summary) onNoteSaved({ id: "operative-note:summary", title, kind: "operativeSummary", text: summary, at });
+        onNoteSaved({ id: "operative-note", title, kind: "operative", text: note, at });
       }
     } else {
       setCopied(null);
