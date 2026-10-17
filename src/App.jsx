@@ -26,6 +26,8 @@ import {
   Pencil,
   Dumbbell,
   Mail,
+  Plus,
+  Scissors,
 } from "lucide-react";
 
 /* ============================================================================
@@ -15215,7 +15217,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // The version is the date this build was made (year.month.day). A clinician can
 // read it ("is my copy today's?") and it says more than 5.31.1 ever did. Change
 // it, and add a line to WHATS_NEW, with each release.
-const APP_VERSION = "2026.10.13";
+const APP_VERSION = "2026.10.17";
 
 // Where suggestions and problems go. The one address to change if it moves.
 const CONTACT_EMAIL = "namanimuntasir@gmail.com";
@@ -15223,6 +15225,20 @@ const CONTACT_EMAIL = "namanimuntasir@gmail.com";
 // Summarised for clinicians, newest first. Not a commit log: what a user would
 // notice. Dated groups are added as releases are made.
 const WHATS_NEW = [
+  {
+    when: "17 October 2026",
+    items: [
+      "Operative note: a fourth visit type with 70 procedures across the shoulder, elbow, wrist, hand and peripheral nerve, grouped by region and family. Choose one or several, tick the indications that applied, record findings, technique and implants, and confirm the standard steps once. Nothing is pre-ticked.",
+      "Operative note: clock-face positions (Bankart repair, Latarjet, capsular release) are written for the side operated on, and an operation that combined several procedures reads as one note, with preparation and closure described once and no repeated arthroscopy.",
+      "Operative note: the note carries the anaesthesia and safety details (time-out, antibiotics, tranexamic acid, tourniquet or WALANT, counts, blood loss, complications), and the post-operative plan is pre-filled from the protocol for the procedure and stays editable.",
+      "Operative note: the preview also gives a one-line summary for the follow-up visit and a rehabilitation protocol, each copied on its own.",
+      "Post-operative review by period: the review is placed at 2 weeks, 6 weeks, 3, 6 or 12 months from the date of surgery, or chosen by you. For an operation that has an operative note, the form shows its protocol at that point and the scores due from the diagnosis's own outcomes table.",
+      "Post-operative review: the next review is suggested from the operation's protocol, with what is due at it (imaging, wire removal, electrodiagnostic review) as the templates state. One tap sets it from the diagnosis's own follow-up options; when the protocol has no later review, one tap sets the final visit.",
+      "Post-operative review: what to assess now differs by operation (for example subscapularis precautions after a shoulder arthroplasty, pillar pain after a carpal tunnel release), and ticks from another operation never carry across.",
+      "Post-operative review: paste the summary line from an operative note to fill in the procedure and the date of surgery. Tick what was assessed and the progress against the protocol; nothing is pre-ticked, and a note that does not use them is unchanged.",
+      "The product line now reads Upper Extremity Clinical Documentation, since the app covers theatre as well as clinic.",
+    ],
+  },
   {
     when: "13 October 2026",
     items: [
@@ -16881,7 +16897,7 @@ function TextField({ label, value, onChange, placeholder, suggestions, multiSele
         </div>
       )}
       <div className="flex items-center gap-2">
-        <input type="text" value={value || ""} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className="flex-1 min-w-0 rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink, minHeight: 44 }} />
+        <input type="text" value={value || ""} placeholder={placeholder} aria-label={label} onChange={(e) => onChange(e.target.value)} className="flex-1 min-w-0 rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink, minHeight: 44 }} />
         <DictateButton onResult={(text) => onChange(value ? `${value} ${text}` : text)} />
       </div>
     </div>
@@ -17557,7 +17573,7 @@ function Field({ field, state, setField, region }) {
       );
     case "text":
       if (/Finding$/.test(field.key)) return <InlineDetailField field={field} state={state} setField={setField} />;
-      return <TextField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} placeholder={field.placeholder} suggestions={field.suggestions || FIELD_SUGGESTIONS[field.key]} multiSelect={field.key === "sport"} />;
+      return <TextField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} placeholder={field.placeholder} suggestions={field.suggestions || FIELD_SUGGESTIONS[field.key]} multiSelect={field.multiSelect || field.key === "sport"} />;
     case "date":
       return <DateField label={field.label} value={state[field.key]} onChange={(v) => setField(field.key, v)} />;
     case "number":
@@ -20508,6 +20524,8 @@ const POSTOP_SHARED_KEYS = [
   "complications", "complicationsOther", "planOptions", "planOptionsOther",
   "followUpInterval", "followUpIntervalOther", "nextReviewReason", "nextReviewReasonOther",
   "returnToWork", "returnToSport",
+  // the review-by-period answers belong to the visit, so they travel with the other shared answers
+  "reviewPeriod", "protocolProgress", "assessed",
 ];
 const POSTOP_SHARED_SUMMARY = "date of surgery, reason for review, progress, complications, pain score and plan";
 
@@ -20545,6 +20563,10 @@ function buildPostopNoteParts(condition, poState) {
   const reasons = (poState.reason || []).filter((r) => r !== "Other");
   if ((poState.reason || []).includes("Other") && poState.reasonOther && poState.reasonOther.trim()) reasons.push(poState.reasonOther.trim());
   if (reasons.length) parts.push({ heading: "Reason for Review", text: `The patient was reviewed today for ${lowerFirst(humanizeList(reasons))}.` });
+
+  // Written only when the review-by-period fields are used, so existing post-operative notes are unchanged.
+  const protocolPart = opPostopProtocolPart(poState);
+  if (protocolPart) parts.push(protocolPart);
 
   const statusClauses = [];
   if (poState.woundStatus) statusClauses.push(`the wound was ${lowerFirst(poState.woundStatus)}`);
@@ -22739,7 +22761,7 @@ function VisitTypeGate({ onSelect }) {
           short windows - clipping instead would hide the third card. */}
       <div className="flex-1 flex flex-col px-4" style={{ minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", paddingTop: "clamp(8px, 3.5vh, 40px)", paddingBottom: "clamp(8px, 1.5vh, 16px)" }}>
       <div className="max-w-md md:max-w-xl mx-auto w-full" style={{ marginTop: "auto", marginBottom: "auto" }}>
-        <div className="font-semibold uppercase tracking-widest text-center" style={{ color: T.teal, fontSize: "clamp(11px, 1.7vh, 14px)", marginBottom: "clamp(4px, 0.8vh, 8px)" }}>Upper Extremity Clinic Documentation</div>
+        <div className="font-semibold uppercase tracking-widest text-center" style={{ color: T.teal, fontSize: "clamp(11px, 1.7vh, 14px)", marginBottom: "clamp(4px, 0.8vh, 8px)" }}>Upper Extremity Clinical Documentation</div>
         <h1 className="font-bold text-center" style={{ color: T.ink, fontSize: "clamp(22px, 4.6vh, 36px)", marginBottom: "clamp(2px, 0.6vh, 8px)" }}>UpperTrack</h1>
         <p className="text-center" style={{ color: T.inkSoft, fontSize: "clamp(14px, 2.1vh, 17px)", marginBottom: "clamp(8px, 3vh, 28px)" }}>What kind of visit is this?</p>
         <InstallPrompt />
@@ -22761,6 +22783,12 @@ function VisitTypeGate({ onSelect }) {
               <Slice size={30} color={T.tealDark} />
             </div>
             <div className="font-bold" style={{ color: T.ink, fontSize: "clamp(16px, 2.7vh, 21px)" }}>Post-operative Follow-up</div>
+          </button>
+          <button onClick={() => onSelect("operative")} className="ut-card rounded-2xl text-left flex items-center" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: "clamp(54px, 10.5vh, 88px)", padding: "clamp(10px, 2vh, 20px)", gap: "clamp(12px, 2vh, 16px)", boxShadow: T.shadowElevated }}>
+            <div className="ut-visit-icon flex items-center justify-center rounded-xl shrink-0" style={{ width: "clamp(38px, 7.2vh, 60px)", height: "clamp(38px, 7.2vh, 60px)", background: T.tealTint }}>
+              <Scissors size={30} color={T.tealDark} />
+            </div>
+            <div className="font-bold" style={{ color: T.ink, fontSize: "clamp(16px, 2.7vh, 21px)" }}>Operative note</div>
           </button>
         </div>
         <div className="text-center" style={{ marginTop: "clamp(8px, 3vh, 32px)" }}>
@@ -23052,7 +23080,7 @@ function RegionPicker({ onSelect, onBack }) {
           <button onClick={onBack} className="flex items-center gap-1.5 mb-4 lg:mb-8 active:opacity-60" style={{ color: T.inkSoft, minHeight: 44 }}>
             <ArrowLeft size={18} className="lg:hidden" /><ArrowLeft size={22} className="hidden lg:block" /><span className="text-[14px] lg:text-[17px] font-medium">Home</span>
           </button>
-          <div className="text-[12px] lg:text-[15px] font-semibold uppercase tracking-widest mb-1 lg:mb-2" style={{ color: T.teal }}>Upper Extremity Clinic Documentation</div>
+          <div className="text-[12px] lg:text-[15px] font-semibold uppercase tracking-widest mb-1 lg:mb-2" style={{ color: T.teal }}>Upper Extremity Clinical Documentation</div>
           <h1 className="text-[26px] lg:text-[48px] xl:text-[56px] font-bold mb-1 lg:mb-3 leading-none" style={{ color: T.ink }}>UpperTrack</h1>
           <p className="text-[14px] lg:text-[19px] mb-3 lg:mb-0" style={{ color: T.inkSoft }}>Tap the affected region.</p>
         </div>
@@ -23343,15 +23371,17 @@ function AboutSheet({ open, onClose }) {
         <div className="px-5 pb-6 pt-1" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
           <H>What it is</H>
           <P>
-            UpperTrack is a structured documentation tool for upper extremity outpatient clinics. It covers {conditionCount} condition
+            UpperTrack is a structured documentation tool for upper extremity clinics, theatre and follow-up. It covers {conditionCount} condition
             templates across the shoulder, elbow, wrist, hand and peripheral nerves, plus {generalCount} general assessments for
             presentations where the diagnosis is not yet clear. Tapping through history, examination, imaging and a
-            management pathway produces a clinic note and a physiotherapy referral ready to copy into the record.
+            management pathway produces a clinic note and a physiotherapy referral ready to copy into the record. Operative notes cover the shoulder, elbow, wrist, hand and peripheral nerve operations in the surgeon's own templates.
           </P>
 
           <H>What you can do</H>
           <ul className="mb-1">
-            <Li>Document a new patient, a follow-up or a post-operative review. Post-operative reviews adapt to the time since surgery and to the procedure performed.</Li>
+            <Li>At a post-operative review, choose the operation and the date of surgery, or paste the summary line from its operative note, to see the protocol for that review (2 weeks, 6 weeks, 3, 6 or 12 months): the current rehabilitation phase, precautions, imaging and follow-up, red flags and the scores due. It also suggests the next review and what to assess for that operation. Nothing is pre-ticked.</Li>
+            <Li>Write an operative note: choose the procedures performed (one or several), tick the indications that applied, record findings, technique, implants and the safety details, and confirm the standard steps once. Nothing is pre-ticked, and the plan is pre-filled from your protocol. Procedures are grouped by region and family, and an operation that combined several reads as one note.</Li>
+            <Li>Document a new patient, a follow-up, a post-operative review or an operation. Post-operative reviews adapt to the time since surgery and to the procedure performed.</Li>
             <Li>Cover several diagnoses in one visit. Follow-up and post-operative reviews carry the shared details (date, reason for review, progress, plan) across diagnoses and produce one combined note that lists only what differs.</Li>
             <Li>Details about the patient (age, occupation, sport, work, medical history, hand dominance) entered under one diagnosis fill in the same details under the others, in whatever form each template asks for them. Anything you type yourself is left alone, and the combined note states the patient once, using every diagnosis.</Li>
             <Li>Use a brief encounter for a quick consultation, or the full template when the case needs it.</Li>
@@ -24163,6 +24193,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
         </div>
       )}
 
+      <PostopSummaryImport onApply={(patch) => onChange({ ...ownState, ...patch })} />
       <TextField
         label="Procedure performed"
         value={poState.procedureName}
@@ -24172,6 +24203,8 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
       />
       <DateField label="Date of surgery" value={poState.surgeryDate} onChange={(v) => set("surgeryDate", v)} />
       {sinceText && <div className="text-[13px] mt-1 mb-1" style={{ color: T.inkSoft }}>{sinceText} since surgery</div>}
+
+      <PostopProtocolCard condition={condition} poState={poState} set={set} setMany={(patch) => onChange({ ...ownState, ...patch })} intervalOptions={intervalOptions} />
 
       <SubLabel>Reason for review</SubLabel>
       {stage && (
@@ -25014,6 +25047,3620 @@ function buildOutcomeScores(condition, state) {
 // carry functions (conditional field "when" checks) and are not
 // structured-cloneable, so history state stores the id and this resolves
 // it back to the live object on restore.
+/* ============================================================================
+   OPERATIVE NOTES - procedure data
+
+   Converted from the surgeon's own operative templates (shoulder set), in
+   British spelling. Bracketed ranges in the originals are the surgeon's
+   standard protocol, so they become the editable defaults of the plan.
+
+   Each procedure is data only: adding one means adding one object here.
+     reference  - indications / factors considered / equipment are tick lists
+                  (ticked items are copied into the note); pitfalls are
+                  shown on screen only and never copied.
+     findings, technique, closure - ordinary form fields (the same field
+                  vocabulary as the clinic templates).
+     prep, steps, closureSteps - the standard narrative. Nothing is ticked
+                  for the surgeon: the steps only enter the note once they
+                  are confirmed as performed as described.
+     plan, rehab - protocol defaults; pre-filled, editable.
+============================================================================ */
+
+const OP_FOOTER = "Generated with UpperTrack. For clinician review; not a diagnostic or treatment recommendation.";
+const OP_WALANT = "Local with adrenaline (WALANT)";
+const OP_STEPS_CONFIRMED = "Performed as described";
+
+// Plan lines are written once per procedure. "extra" lines are the ones that
+// every selected procedure contributes; all other kinds come from the primary
+// (highest planPriority) procedure only, so two procedures never print two
+// slings.
+const OP_PLAN_KINDS = ["immobilisation", "restriction", "general", "analgesia", "wound", "followup", "redflags", "extra"];
+
+const OP_REGIONS = [
+  { id: "shoulder", name: "Shoulder" },
+  { id: "elbow", name: "Elbow" },
+  { id: "wrist", name: "Wrist" },
+  { id: "hand", name: "Hand" },
+  { id: "peripheralNerve", name: "Peripheral nerve" },
+];
+// Families group the variants a surgeon thinks of together; the region says which tab they sit under.
+const OP_FAMILIES = [
+  { id: "rotator-cuff-repair", region: "shoulder", name: "Rotator cuff repair" },
+  { id: "subacromial-decompression", region: "shoulder", name: "Subacromial decompression" },
+  { id: "biceps-surgery", region: "shoulder", name: "Biceps surgery" },
+  { id: "instability-labrum", region: "shoulder", name: "Instability and labrum" },
+  { id: "shoulder-arthroplasty", region: "shoulder", name: "Shoulder arthroplasty" },
+  { id: "shoulder-fracture-clavicle", region: "shoulder", name: "Fracture, clavicle and AC joint" },
+  { id: "stiff-shoulder", region: "shoulder", name: "Stiff shoulder" },
+  { id: "elbow-arthroscopy-release", region: "elbow", name: "Elbow arthroscopy and release" },
+  { id: "elbow-tendon-ligament", region: "elbow", name: "Elbow tendon and ligament" },
+  { id: "epicondylitis", region: "elbow", name: "Epicondylitis" },
+  { id: "ulnar-nerve-elbow", region: "elbow", name: "Ulnar nerve at the elbow" },
+  { id: "elbow-fracture-arthroplasty", region: "elbow", name: "Elbow fracture and arthroplasty" },
+  { id: "carpal-tunnel", region: "wrist", name: "Carpal tunnel release" },
+  { id: "wrist-fracture", region: "wrist", name: "Distal radius and scaphoid fracture" },
+  { id: "wrist-arthroscopy", region: "wrist", name: "Wrist arthroscopy" },
+  { id: "carpal-ligament-salvage", region: "wrist", name: "Carpal ligament and salvage" },
+  { id: "druj", region: "wrist", name: "Distal radioulnar joint" },
+  { id: "wrist-soft-tissue", region: "wrist", name: "Wrist soft tissue" },
+  { id: "hand-tendon", region: "hand", name: "Tendon repair and reconstruction" },
+  { id: "trigger-finger", region: "hand", name: "Trigger finger release" },
+  { id: "dupuytren", region: "hand", name: "Dupuytren's disease" },
+  { id: "hand-fracture", region: "hand", name: "Metacarpal and phalanx fracture" },
+  { id: "hand-nerve-vessel", region: "hand", name: "Digital nerve and artery" },
+  { id: "finger-arthroplasty", region: "hand", name: "Finger joint arthroplasty" },
+  { id: "amputation-replantation", region: "hand", name: "Amputation and replantation" },
+  { id: "median-nerve", region: "peripheralNerve", name: "Median nerve" },
+  { id: "ulnar-nerve-wrist", region: "peripheralNerve", name: "Ulnar nerve at the wrist" },
+  { id: "radial-nerve", region: "peripheralNerve", name: "Radial nerve" },
+  { id: "shoulder-girdle-nerve", region: "peripheralNerve", name: "Shoulder girdle nerves" },
+  { id: "nerve-palsy", region: "peripheralNerve", name: "Nerve palsy reconstruction" },
+];
+
+const OP_SUTURE_SUGGESTIONS = ["Nylon", "Monocryl"];
+const OP_FIELD_OTHER_FINDINGS = { type: "text", key: "otherFindings", label: "Other findings", placeholder: "Anything else found at operation" };
+const OP_FIELD_PORTAL_SUTURE = { type: "text", key: "portalSuture", label: "Portal closure suture", suggestions: OP_SUTURE_SUGGESTIONS, placeholder: "e.g. 3-0 nylon" };
+const OP_FIELD_SKIN_CLOSURE = { type: "select", key: "skinClosure", label: "Skin closure", options: ["Subcuticular suture", "Staples"], columns: 2 };
+
+const OP_TEAR_FINDINGS = [
+  { type: "select", key: "tearPattern", label: "Tear pattern", options: ["Crescent", "U-shaped", "L-shaped", "Massive"], columns: 2 },
+  { type: "number", key: "tearSize", label: "Tear size", suffix: "cm" },
+  { type: "checkbox", key: "tendons", label: "Tendons involved", options: ["Supraspinatus", "Infraspinatus", "Subscapularis"] },
+  OP_FIELD_OTHER_FINDINGS,
+];
+
+const OP_ARTHRO_POSITIONS = ["Beach chair", "Lateral decubitus"];
+const OP_ARTHRO_PREP = [
+  "Patient positioned after successful regional block or induction of general anaesthesia",
+  "All bony prominences padded; head secured in neutral position",
+  "Shoulder prepped and draped in standard sterile fashion",
+  "Bony landmarks marked: acromion, clavicle, coracoid and portal sites",
+];
+const OP_WOUND_LINE = { kind: "wound", text: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover" };
+const OP_ICE_PAIN_LINE = { kind: "general", text: "Ice and standard post-operative pain management" };
+
+const OP_RCR_OPEN_BASE = {
+  family: "rotator-cuff-repair",
+  region: "shoulder",
+  sided: "shoulder",
+  planPriority: 100,
+  preop: ["Large rotator cuff tear", "Massive rotator cuff tear"],
+  positioning: ["Beach chair"],
+  reference: {
+    indications: [
+      "Large to massive retracted rotator cuff tear requiring extensive open mobilisation",
+      "Revision rotator cuff surgery with scarring limiting arthroscopic access",
+      "Concomitant procedure requiring open exposure (for example pectoralis major or latissimus dorsi transfer)",
+      "Surgeon preference and experience in selected chronic tears",
+    ],
+    considerations: [
+      "Irreparable tear with severe fatty infiltration (consider tendon transfer or reverse arthroplasty)",
+      "Cuff tear arthropathy",
+      "Advanced age with low functional demand and minimal symptoms",
+    ],
+    equipment: [
+      "Standard open shoulder instrument set, deltoid retractors",
+      "Diagnostic arthroscopy tower (often used first for assessment)",
+      "Suture anchors and non-absorbable high-strength suture",
+      "Electrocautery, bone tamp or burr for footprint preparation",
+    ],
+    pitfalls: [
+      "Inadequate deltoid repair is a major source of post-operative dysfunction; meticulous reattachment is critical",
+      "Axillary nerve injury risk during the deltoid split: stay within 5 cm of the acromial edge, or tag and protect the nerve directly",
+      "Ensure adequate tendon mobilisation to avoid excessive tension causing retear",
+      "Consider margin convergence or partial repair techniques for irreparable tears rather than forcing a tension-free closure",
+    ],
+  },
+  findings: OP_TEAR_FINDINGS,
+  technique: [
+    { type: "select", key: "arthroscopyFirst", label: "Diagnostic arthroscopy first", options: ["Performed", "Not performed"], columns: 2 },
+    { type: "select", key: "approach", label: "Approach", options: ["Deltopectoral", "Anterolateral deltoid-splitting"], columns: 2 },
+    { type: "number", key: "incision", label: "Incision length", suffix: "cm" },
+    { type: "number", key: "anchors", label: "Number of suture anchors" },
+    { type: "text", key: "anchorSize", label: "Anchor size and type", placeholder: "e.g. 5.5 mm" },
+    { type: "select", key: "configuration", label: "Repair configuration", options: ["Single-row", "Double-row", "Transosseous-equivalent"], columns: 1 },
+    { type: "select", key: "stitch", label: "Suture configuration through the tendon", options: ["Mason-Allen", "Simple", "Mattress"], columns: 3 },
+    { type: "checkbox", key: "releases", label: "Releases performed", options: ["Bursal-sided", "Articular-sided", "Interval slide"] },
+  ],
+  closure: [
+    { type: "text", key: "deltoidSuture", label: "Deltoid repair suture", placeholder: "e.g. heavy non-absorbable" },
+    OP_FIELD_SKIN_CLOSURE,
+    { type: "select", key: "sling", label: "Sling", options: ["Abduction pillow", "Standard sling"], columns: 2 },
+  ],
+  summary: (v) => {
+    const bits = [];
+    if (v.anchors) bits.push(`${v.anchors} anchor${Number(v.anchors) === 1 ? "" : "s"}`);
+    if (v.configuration) bits.push(v.configuration.toLowerCase());
+    return bits.join(", ");
+  },
+  prep: [
+    "Beach chair position with the arm free-draped for full range of motion intra-operatively",
+    "Bony landmarks marked: acromion, coracoid and clavicle",
+    "Standard sterile prep and drape",
+  ],
+  steps: [
+    { t: "Diagnostic arthroscopy performed first via the posterior portal to confirm the tear pattern and address concomitant pathology", if: (v) => v.arthroscopyFirst === "Performed" },
+    { t: "Incision made and the deltoid split or retracted, preserving the axillary nerve (identified and protected, typically 5 cm distal to the acromion)" },
+    { t: "Subacromial bursa excised for visualisation" },
+    { t: "Rotator cuff tear identified; edges mobilised with releases as needed to achieve a tension-free repair" },
+    { t: "Footprint prepared to bleeding bone" },
+    { t: "Suture anchors placed at the footprint" },
+    { t: "Tendon secured to bone with sutures passed and tied sequentially" },
+    { t: "Repair tension and coverage confirmed through passive range of motion" },
+  ],
+  closureSteps: [
+    "Deltoid repaired meticulously to bone and fascia with heavy non-absorbable suture to prevent post-operative deltoid dehiscence",
+    "Subcutaneous layer and skin closed",
+    "Sterile dressing applied; arm placed in a sling or abduction pillow",
+  ],
+  plan: [
+    { kind: "immobilisation", text: "Sling or abduction pillow immobilisation for 4\u20136 weeks" },
+    OP_ICE_PAIN_LINE,
+    { kind: "restriction", text: "No active motion or lifting until cleared by the surgeon" },
+    { kind: "wound", text: "Wound care: dry dressing for 48\u201372 hours" },
+    { kind: "redflags", text: "Red flags: fever, wound drainage, uncontrolled pain, new weakness" },
+    { kind: "followup", text: "Follow-up in 10\u201314 days for wound check" },
+  ],
+  rehab: {
+    phases: [
+      "Phase 1 (Protection, 0\u20136 weeks): sling or abduction pillow, passive range of motion only",
+      "Phase 2 (Early mobilisation, 6\u201312 weeks): active-assisted to active range of motion progression",
+      "Phase 3 (Strengthening, 12\u201316 weeks): progressive resistance training",
+      "Phase 4 (Return to activity, 4\u20136 months): return to sport and overhead work",
+    ],
+    returnTo: "Return to driving 4\u20136 weeks; desk work 2\u20134 weeks; manual labour 5\u20136 months",
+    redFlags: "Red flags: acute pop with pain (retear), progressive stiffness, signs of deltoid dehiscence (visible defect, weakness in abduction)",
+  },
+};
+
+const OP_PROCS_SHOULDER_1 = [
+  {
+    id: "rcr-arthroscopic",
+    family: "rotator-cuff-repair",
+    variantName: "Arthroscopic",
+    name: "Arthroscopic rotator cuff repair",
+    clinicNames: ["Arthroscopic rotator cuff repair"],
+    region: "shoulder",
+    sided: "shoulder",
+    planPriority: 100,
+    preop: ["Full-thickness rotator cuff tear", "Partial-thickness rotator cuff tear"],
+    positioning: OP_ARTHRO_POSITIONS,
+    reference: {
+      indications: [
+        "Full-thickness rotator cuff tear with persistent pain and/or weakness after 3\u20136 months of failed conservative management (physiotherapy, NSAIDs, subacromial injection)",
+        "Acute traumatic full-thickness tear in an active patient, especially with significant weakness",
+        "Partial-thickness tear (over 50% depth) refractory to conservative care",
+        "Arthroscopic repair preferred in most primary tears: lower morbidity, better visualisation of the glenohumeral joint, comparable healing rates",
+      ],
+      considerations: [
+        "Irreparable massive tear with significant fatty infiltration (Goutallier 3\u20134): consider reverse arthroplasty or superior capsular reconstruction instead",
+        "Advanced cuff tear arthropathy",
+        "Patient unable to follow post-operative restrictions",
+        "Severe glenohumeral arthritis",
+      ],
+      equipment: [
+        "Standard arthroscopy tower (camera, light source, pump, shaver, radiofrequency ablation)",
+        "Arthroscopic rotator cuff instrument set (suture passers, graspers, knot pushers)",
+        "Suture anchors",
+        "High-strength non-absorbable suture",
+        "Beach chair positioning equipment",
+        "Lateral decubitus positioning with traction setup",
+        "Arm positioner and traction device",
+      ],
+      pitfalls: [
+        "Inadequate footprint preparation leads to poor tendon-bone healing; avoid over-aggressive decortication, which weakens bone for anchor purchase",
+        "Under-tensioning or over-tensioning the repair can cause retear or stiffness respectively; assess tension dynamically through range of motion intra-operatively",
+        "Missed subscapularis tears are common; always evaluate the comma sign and the rotator interval",
+        "Anchor pull-out risk increases in osteoporotic bone; consider medialising the anchor row or using larger anchors",
+        "Ensure adequate acromioplasty if impingement contributes, but avoid excessive resection risking deltoid detachment",
+        "Open or mini-open repair is preferred for large or massive retracted tears needing extensive mobilisation, revision cases, or when a tendon transfer is planned",
+      ],
+    },
+    findings: OP_TEAR_FINDINGS,
+    technique: [
+      { type: "conditional", when: (v) => v.position === "Lateral decubitus", fields: [{ type: "number", key: "traction", label: "Traction applied", suffix: "lb" }] },
+      { type: "number", key: "anchors", label: "Number of suture anchors" },
+      { type: "text", key: "anchorSize", label: "Anchor size and type", placeholder: "e.g. 4.5 mm" },
+      { type: "select", key: "configuration", label: "Repair configuration", options: ["Single-row", "Double-row", "Suture bridge (transosseous-equivalent)"], columns: 1 },
+      { type: "select", key: "stitch", label: "Suture configuration through the tendon", options: ["Simple", "Mattress"], columns: 2 },
+      { type: "text", key: "sutureMaterial", label: "Suture material", placeholder: "e.g. #2 FiberWire or equivalent" },
+      { type: "text", key: "passer", label: "Suture passer device" },
+      { type: "text", key: "knot", label: "Knot type" },
+      { type: "checkbox", key: "releases", label: "Releases performed", options: ["Subacromial", "Articular-sided", "Coracohumeral ligament (subscapularis tears)"] },
+    ],
+    closure: [
+      OP_FIELD_PORTAL_SUTURE,
+      { type: "select", key: "sling", label: "Sling", options: ["Abduction sling", "Standard sling with pillow"], columns: 2 },
+    ],
+    summary: (v) => {
+      const bits = [];
+      if (v.anchors) bits.push(`${v.anchors} anchor${Number(v.anchors) === 1 ? "" : "s"}`);
+      if (v.configuration) bits.push(v.configuration.replace(/ \(.*\)$/, "").toLowerCase());
+      return bits.join(", ");
+    },
+    prep: OP_ARTHRO_PREP,
+    steps: [
+      { t: "Standard posterior viewing portal established; diagnostic arthroscopy of the glenohumeral joint performed, evaluating the labrum, biceps anchor, cartilage surfaces and the undersurface of the rotator cuff" },
+      { t: "Anterior working portal established under direct visualisation via an outside-in technique" },
+      { t: "Scope redirected to the subacromial space; bursectomy performed with a shaver to improve visualisation" },
+      { t: "Rotator cuff tear pattern identified and characterised" },
+      { t: "Tear mobility assessed; releases performed as needed (subacromial, articular-sided, coracohumeral ligament release for subscapularis tears)" },
+      { t: "Footprint prepared with a shaver or burr to bleeding bone, avoiding excessive decortication" },
+      { t: "Suture anchors placed at the footprint" },
+      { t: "Sutures passed through the tendon with a suture passer device" },
+      { t: "Sutures tied arthroscopically, securing the tendon to the footprint; tension and coverage confirmed dynamically with a probe" },
+      { t: "Final arthroscopic evaluation confirms a secure repair with restoration of footprint coverage and no impingement through range of motion" },
+    ],
+    closureSteps: [
+      "Portals closed with simple sutures",
+      "Steri-strips and sterile dressing applied",
+      "Shoulder placed in a sling according to repair size and tension",
+    ],
+    plan: [
+      { kind: "immobilisation", text: "Sling immobilisation for 4\u20136 weeks, removed only for hygiene and prescribed exercises" },
+      { kind: "general", text: "Ice therapy and elevation for swelling control" },
+      { kind: "analgesia", text: "Pain management: multimodal (paracetamol, NSAIDs if permitted, limited opioids); counsel on the duration of the nerve block" },
+      { kind: "restriction", text: "No active shoulder motion or lifting over 1\u20132 lb until cleared by the surgeon" },
+      { kind: "wound", text: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover" },
+      { kind: "redflags", text: "Red flags: fever, increasing redness or drainage, uncontrolled pain, sudden loss of motion (concern for stiffness) or new weakness (concern for retear)" },
+      { kind: "followup", text: "Follow-up in 10\u201314 days for wound check and suture removal if applicable, then per rehabilitation protocol" },
+    ],
+    rehab: {
+      phases: [
+        "Phase 1 (Protection, 0\u20136 weeks): sling immobilisation, passive range of motion only per protocol, pendulum exercises",
+        "Phase 2 (Early mobilisation, 6\u201312 weeks): discontinue the sling, progress to active-assisted then active range of motion, gentle stretching",
+        "Phase 3 (Strengthening, 12\u201316 weeks): initiate rotator cuff and scapular stabiliser strengthening",
+        "Phase 4 (Return to activity, 4\u20136 months): sport and overhead-specific training; return to full activity typically 4\u20136 months for small to medium tears, longer for large or massive tears",
+      ],
+      returnTo: "Return to driving 4\u20136 weeks once out of the sling with adequate control; desk work 2\u20134 weeks; manual labour 4\u20136 months",
+      redFlags: "Red flags during rehabilitation: sudden pain with a pop (possible retear), progressive stiffness beyond the expected timeline, signs of infection",
+    },
+  },
+  {
+    ...OP_RCR_OPEN_BASE,
+    id: "rcr-mini-open",
+    variantName: "Mini-open",
+    name: "Mini-open rotator cuff repair",
+    clinicNames: ["Mini-open rotator cuff repair"],
+  },
+  {
+    ...OP_RCR_OPEN_BASE,
+    id: "rcr-open",
+    variantName: "Open",
+    name: "Open rotator cuff repair",
+    clinicNames: ["Open rotator cuff repair"],
+  },
+  {
+    id: "sad-arthroscopic",
+    family: "subacromial-decompression",
+    variantName: "Arthroscopic",
+    name: "Arthroscopic subacromial decompression",
+    clinicNames: ["Arthroscopic subacromial decompression", "Acromioplasty"],
+    region: "shoulder",
+    sided: "shoulder",
+    planPriority: 10,
+    preop: ["Subacromial impingement syndrome"],
+    positioning: OP_ARTHRO_POSITIONS,
+    reference: {
+      indications: [
+        "Subacromial impingement syndrome with a type II or III acromion refractory to 3\u20136 months of conservative treatment",
+        "Symptomatic subacromial bursitis with impingement confirmed on examination and imaging",
+        "Often performed together with rotator cuff repair, and less often as an isolated procedure in current practice",
+        "Preferred when significant mechanical impingement is demonstrated on imaging and examination",
+      ],
+      considerations: [
+        "Primary adhesive capsulitis (treat the stiffness first)",
+        "Glenohumeral instability as the primary pathology",
+        "Poor correlation between imaging findings and symptoms",
+      ],
+      equipment: [
+        "Arthroscopy tower, shaver, arthroscopic burr",
+        "Standard arthroscopic portal equipment",
+        "Radiofrequency ablation device for bursectomy and haemostasis",
+      ],
+      pitfalls: [
+        "Over-resection of the acromion risks fracture or compromises the deltoid origin",
+        "Preserve the coracoacromial ligament if a concomitant large rotator cuff tear is present (it restrains superior humeral head migration)",
+        "Ensure adequate anterior acromial resection; this is the commonest site of persistent impingement if under-resected",
+      ],
+    },
+    findings: [
+      { type: "select", key: "acromion", label: "Acromial morphology before decompression", options: ["Type II", "Type III"], columns: 2 },
+      OP_FIELD_OTHER_FINDINGS,
+    ],
+    technique: [
+      { type: "select", key: "caLigament", label: "Coracoacromial ligament", options: ["Preserved", "Partially released"], columns: 2 },
+    ],
+    closure: [OP_FIELD_PORTAL_SUTURE],
+    summary: () => null,
+    prep: ["Beach chair or lateral decubitus position", "Standard prep and drape; landmarks marked"],
+    steps: [
+      { t: "Diagnostic glenohumeral arthroscopy performed via the posterior portal, addressing any concomitant intra-articular pathology", if: (v, ctx) => !ctx.has("rcr-arthroscopic") },
+      { t: "Scope redirected to the subacromial space via the same posterior portal", if: (v, ctx) => !ctx.has("rcr-arthroscopic") },
+      { t: "Lateral working portal established" },
+      { t: "Bursectomy performed with a shaver to improve visualisation of the coracoacromial ligament and the undersurface of the acromion", if: (v, ctx) => !ctx.has("rcr-arthroscopic") },
+      { t: "Coracoacromial ligament managed according to rotator cuff integrity" },
+      { t: "Acromial undersurface contoured with a bone-cutting burr from anterior to posterior, converting the acromion to a type I contour" },
+      { t: "Adequate decompression confirmed with a probe and dynamic impingement testing arthroscopically" },
+      { t: "Haemostasis achieved" },
+    ],
+    closureSteps: ["Portals closed with simple sutures", "Sterile dressing applied; sling applied for comfort"],
+    plan: [
+      { kind: "immobilisation", text: "Sling for comfort only for 1\u20132 weeks; early motion encouraged as tolerated (unlike cuff repair)" },
+      OP_ICE_PAIN_LINE,
+      OP_WOUND_LINE,
+      { kind: "redflags", text: "Red flags: fever, wound problems, uncontrolled pain" },
+      { kind: "followup", text: "Follow-up in 10\u201314 days" },
+    ],
+    rehab: {
+      phases: [
+        "Phase 1 (Protection, 0\u20131 week): sling for comfort, early pendulum and passive range of motion",
+        "Phase 2 (Early mobilisation, 1\u20134 weeks): active range of motion as tolerated",
+        "Phase 3 (Strengthening, 4\u20138 weeks): rotator cuff and scapular strengthening",
+        "Phase 4 (Return to activity, 8\u201312 weeks): full return to overhead activity and sport",
+      ],
+      returnTo: "Return to driving 1\u20132 weeks; desk work 1 week; manual labour 6\u20138 weeks",
+      redFlags: "Red flags: persistent pain beyond the expected timeline suggests incomplete decompression or underlying cuff pathology",
+    },
+  },
+  {
+    id: "biceps-tenodesis-open",
+    family: "biceps-surgery",
+    variantName: "Open subpectoral tenodesis",
+    name: "Open subpectoral biceps tenodesis",
+    clinicNames: ["Biceps tenodesis (open)"],
+    region: "shoulder",
+    sided: "shoulder",
+    planPriority: 40,
+    preop: ["Biceps tendinopathy", "SLAP lesion"],
+    positioning: ["Beach chair"],
+    reference: {
+      indications: [
+        "Biceps tendinopathy or instability refractory to conservative treatment",
+        "SLAP lesion in a patient over 35\u201340 years or a heavy labourer",
+        "Concomitant biceps pathology found during rotator cuff repair",
+        "Preferred over arthroscopic (suprapectoral) tenodesis for definitive removal of the tendon from the bicipital groove, reducing residual groove pain",
+        "Preferred over tenotomy in younger or active patients who wish to preserve elbow flexion and supination strength and avoid the \u201cPopeye\u201d deformity",
+      ],
+      considerations: [
+        "Elderly low-demand patient in whom tenotomy may suffice with less surgical time",
+        "Poor tendon quality precluding fixation",
+      ],
+      equipment: [
+        "Standard open shoulder and arm set",
+        "Interference screw (7\u20138 mm biotenodesis screw) or unicortical button device per surgeon preference",
+        "Drill or reamer for the bone tunnel",
+        "Diagnostic arthroscopy tower (often used first to release the biceps anchor arthroscopically)",
+      ],
+      pitfalls: [
+        "The musculocutaneous nerve lies medially and is at risk with aggressive medial retraction; maintain a lateral dissection plane",
+        "Tenodesis performed too proximally risks residual groove pain; too distally risks inadequate tensioning",
+        "Ensure correct tensioning matching the native muscle resting length to avoid a cosmetic or functional deficit",
+        "Confirm secure fixation intra-operatively given early rehabilitation protocols",
+      ],
+    },
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [
+      { type: "select", key: "arthroscopicRelease", label: "Diagnostic arthroscopy and arthroscopic release of the biceps first", options: ["Performed", "Not performed"], columns: 2 },
+      { type: "number", key: "incision", label: "Incision length", suffix: "cm" },
+      { type: "select", key: "fixation", label: "Fixation", options: ["Interference screw", "Cortical button"], columns: 2 },
+      { type: "text", key: "fixationSize", label: "Implant size", placeholder: "e.g. 7 x 12 mm" },
+    ],
+    closure: [OP_FIELD_SKIN_CLOSURE],
+    summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
+    prep: ["Beach chair position, arm free-draped", "Standard prep and drape"],
+    steps: [
+      { t: "Diagnostic arthroscopy performed first; biceps tendon released from the superior labral anchor arthroscopically and delivered to the bicipital groove", if: (v) => v.arthroscopicRelease === "Performed" },
+      { t: "Incision made along the inferior border of pectoralis major" },
+      { t: "Dissection carried through the deltopectoral fascia to identify the biceps tendon in the bicipital groove, deep to the pectoralis major tendon" },
+      { t: "Biceps tendon delivered into the wound and secured with a whipstitch suture" },
+      { t: "Native attachment released proximally if not already done arthroscopically" },
+      { t: "Bone socket created in the humerus at the planned tenodesis site, approximately 1 cm proximal to the pectoralis major insertion, using a drill or reamer" },
+      { t: "Tendon docked into the socket at appropriate tension (matching the contralateral resting cascade)" },
+      { t: "Fixation completed to secure the tendon-bone construct" },
+      { t: "Fixation strength confirmed with manual testing through range of motion" },
+    ],
+    closureSteps: [
+      "Deltopectoral fascia and subcutaneous layers closed with absorbable suture",
+      "Skin closed",
+      "Sterile dressing applied; sling applied for comfort",
+    ],
+    plan: [
+      { kind: "immobilisation", text: "Sling for comfort for 2\u20133 weeks" },
+      { kind: "extra", text: "Avoid resisted elbow flexion and supination for 4\u20136 weeks (biceps tenodesis)" },
+      OP_ICE_PAIN_LINE,
+      OP_WOUND_LINE,
+      { kind: "redflags", text: "Red flags: fever, wound problems" },
+      { kind: "extra", text: "Sudden pop with deformity (concern for biceps construct failure)" },
+      { kind: "followup", text: "Follow-up in 10\u201314 days" },
+    ],
+    rehab: {
+      phases: [
+        "Phase 1 (Protection, 0\u20132 weeks): sling for comfort, avoid resisted flexion and supination",
+        "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive range of motion, gentle active motion",
+        "Phase 3 (Strengthening, 6\u201312 weeks): progressive biceps strengthening",
+        "Phase 4 (Return to activity, 3\u20134 months): full return to activity and sport",
+      ],
+      returnTo: "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 8\u201312 weeks",
+      redFlags: "Red flags: sudden pop or deformity suggesting construct failure, persistent groove pain",
+    },
+  },
+  {
+    id: "biceps-tenodesis-arthroscopic",
+    family: "biceps-surgery",
+    variantName: "Arthroscopic tenodesis",
+    name: "Arthroscopic biceps tenodesis",
+    clinicNames: ["Biceps tenodesis (arthroscopic)"],
+    region: "shoulder",
+    sided: "shoulder",
+    planPriority: 40,
+    preop: ["Biceps tendinopathy", "SLAP lesion"],
+    positioning: OP_ARTHRO_POSITIONS,
+    reference: {
+      indications: [
+        "Biceps tendinopathy, partial tearing or SLAP lesion, particularly when performed with other arthroscopic procedures (rotator cuff repair)",
+        "Preferred over the open subpectoral technique as an adjunct to other arthroscopic work, to avoid an additional incision (residual groove pain may be higher than with the subpectoral technique in some series)",
+      ],
+      considerations: [
+        "Significant bicipital groove pathology or stenosis (favour subpectoral tenodesis to remove the tendon from the groove entirely)",
+      ],
+      equipment: [
+        "Arthroscopy tower and standard instrumentation",
+        "Suture anchor or interference screw system for suprapectoral fixation",
+        "Suture passing devices",
+      ],
+      pitfalls: [
+        "Residual bicipital groove pain is more common than with the subpectoral technique; counsel patients accordingly",
+        "Ensure complete release of the labral anchor before fixation to avoid residual tethering",
+        "Confirm secure fixation given the early rehabilitation demands",
+      ],
+    },
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [
+      { type: "select", key: "fixation", label: "Fixation", options: ["Interference screw", "Suture anchor"], columns: 2 },
+      { type: "text", key: "fixationSize", label: "Implant size", placeholder: "e.g. 7 x 12 mm" },
+    ],
+    closure: [OP_FIELD_PORTAL_SUTURE],
+    summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
+    prep: ["Standard prep and drape"],
+    steps: [
+      { t: "Diagnostic arthroscopy via the posterior portal; biceps tendon pathology confirmed and the tendon pulled into the joint with a probe for full-length assessment", if: (v, ctx) => !ctx.has("rcr-arthroscopic") },
+      { t: "Biceps tendon pathology confirmed and the tendon pulled into the joint with a probe for full-length assessment", if: (v, ctx) => ctx.has("rcr-arthroscopic") },
+      { t: "Biceps tendon released from the superior labral anchor with arthroscopic instruments" },
+      { t: "Anterior working portal used to deliver and whipstitch the tendon" },
+      { t: "Bicipital groove and proximal humerus prepared at the top of pectoralis major (suprapectoral location) for anchor or interference screw placement" },
+      { t: "Tendon secured with the chosen fixation at appropriate tension" },
+      { t: "Fixation confirmed arthroscopically and with manual range of motion testing" },
+    ],
+    closureSteps: ["Portals closed with simple sutures", "Sterile dressing applied; sling applied for comfort"],
+    plan: [
+      { kind: "immobilisation", text: "Sling for comfort for 2\u20133 weeks" },
+      { kind: "extra", text: "Avoid resisted elbow flexion and supination for 4\u20136 weeks (biceps tenodesis)" },
+      OP_ICE_PAIN_LINE,
+      OP_WOUND_LINE,
+      { kind: "redflags", text: "Red flags: fever, wound problems" },
+      { kind: "extra", text: "Sudden pop or deformity (concern for biceps construct failure)" },
+      { kind: "followup", text: "Follow-up in 10\u201314 days" },
+    ],
+    rehab: {
+      phases: [
+        "Phase 1 (Protection, 0\u20132 weeks): sling for comfort, avoid resisted flexion and supination",
+        "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive range of motion",
+        "Phase 3 (Strengthening, 6\u201312 weeks): progressive biceps strengthening",
+        "Phase 4 (Return to activity, 3\u20134 months): full return to activity",
+      ],
+      returnTo: "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 8\u201312 weeks",
+      redFlags: "Red flags: sudden pop or deformity, persistent groove pain",
+    },
+  },
+  {
+    id: "biceps-tenotomy",
+    family: "biceps-surgery",
+    variantName: "Arthroscopic tenotomy",
+    name: "Arthroscopic biceps tenotomy",
+    clinicNames: ["Biceps tenotomy"],
+    region: "shoulder",
+    sided: "shoulder",
+    planPriority: 30,
+    preop: ["Biceps tendinopathy"],
+    positioning: OP_ARTHRO_POSITIONS,
+    reference: {
+      indications: [
+        "Biceps tendinopathy or partial tearing in an older, lower-demand patient",
+        "Concomitant finding during rotator cuff repair in an elderly patient where minimising surgical time and rehabilitation complexity is prioritised",
+        "Preferred over tenodesis in low-demand elderly patients, or those accepting the risk of a \u201cPopeye\u201d deformity and mild cramping in exchange for a simpler, faster procedure and rehabilitation without fixation-related restrictions",
+      ],
+      considerations: [
+        "Young or active patient, manual labourer, or concern about cosmetic deformity or cramping (favour tenodesis)",
+      ],
+      equipment: [
+        "Arthroscopy tower and standard instrumentation",
+        "Arthroscopic scissors or radiofrequency device for tendon release",
+      ],
+      pitfalls: [
+        "Counsel patients before surgery about the cosmetic deformity to manage expectations",
+        "Ensure complete release to avoid a partial or incomplete tenotomy leading to persistent symptoms",
+        "Consider the patient\u2019s cosmetic and functional priorities before choosing tenotomy over tenodesis",
+      ],
+    },
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [],
+    closure: [OP_FIELD_PORTAL_SUTURE],
+    summary: () => null,
+    prep: ["Standard prep and drape"],
+    steps: [
+      { t: "Diagnostic arthroscopy via the posterior portal; biceps tendon assessed for tendinopathy, partial tearing or instability", if: (v, ctx) => !ctx.has("rcr-arthroscopic") },
+      { t: "Biceps tendon assessed for tendinopathy, partial tearing or instability", if: (v, ctx) => ctx.has("rcr-arthroscopic") },
+      { t: "Biceps tendon released sharply at its origin from the superior labrum using arthroscopic scissors or a radiofrequency device" },
+      { t: "Tendon confirmed to retract into the bicipital groove" },
+      { t: "Remaining diagnostic and concomitant procedures completed as indicated" },
+    ],
+    closureSteps: ["Portals closed with simple sutures", "Sterile dressing applied; sling applied for comfort"],
+    plan: [
+      { kind: "immobilisation", text: "Sling for comfort for 1\u20132 weeks; early motion as tolerated (no fixation to protect)" },
+      { kind: "extra", text: "Counsel the patient about the expected \u201cPopeye\u201d deformity and possible mild cramping with heavy use" },
+      OP_ICE_PAIN_LINE,
+      OP_WOUND_LINE,
+      { kind: "redflags", text: "Red flags: fever, wound problems" },
+      { kind: "followup", text: "Follow-up in 10\u201314 days" },
+    ],
+    rehab: {
+      phases: [
+        "Phase 1 (Protection, 0\u20131 week): sling for comfort only",
+        "Phase 2 (Early mobilisation, 1\u20133 weeks): early active range of motion, no restrictions on elbow use",
+        "Phase 3 (Strengthening, 3\u20136 weeks): progressive strengthening as tolerated",
+        "Phase 4 (Return to activity, 4\u20136 weeks): return to full activity",
+      ],
+      returnTo: "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 3\u20134 weeks",
+      redFlags: "Red flags: significant persistent cramping pain (uncommon), wound concerns",
+    },
+  },
+];
+
+// ---- compact constructors for the modules that follow ------------------------------------------------
+const opS = (key, label, options, columns) => ({ type: "select", key, label, options, columns });
+const opN = (key, label, suffix) => ({ type: "number", key, label, suffix });
+const opT = (key, label, placeholder, suggestions) => ({ type: "text", key, label, placeholder, suggestions });
+const opC = (key, label, options) => ({ type: "checkbox", key, label, options });
+const opG = (key, label, items, suffix) => ({ type: "numberGroup", key, label, items, suffix });
+const opWhen = (when, fields) => ({ type: "conditional", when, fields });
+const opRef = (indications, considerations, equipment, pitfalls) => ({ indications, considerations, equipment, pitfalls });
+const opRehab = (phases, returnTo, redFlags) => ({ phases, returnTo, redFlags });
+const st = (t, cond) => (cond ? { t, if: cond } : { t });
+const opProc = (o) => ({ clinicNames: [], ambiguousNames: [], positioning: [], findings: [OP_FIELD_OTHER_FINDINGS], technique: [], closure: [], summary: () => null, ...o });
+const OP_PAIN = "Standard multimodal pain management";
+const OP_W48 = "Wound care: keep the dressing dry for 48 hours, then may shower";
+const OP_W48_COVER = "Wound care: keep the dressing dry for 48 hours, then may shower with a cover";
+const OP_FU = "Follow-up in 10\u201314 days";
+const OP_DIGITS = ["Thumb", "Index", "Middle", "Ring", "Little"];
+const OP_SKIN_SUTURE = opT("skinSuture", "Skin closure suture", "e.g. 4-0 nylon", ["Nylon", "Absorbable"]);
+const OP_PREP_HAND = ["Supine position, arm on a hand table, tourniquet applied", "Standard prep and drape"];
+const opPlanLines = (o) => [
+  o.imm && { kind: "immobilisation", text: o.imm },
+  ...(o.extra || []).map((text) => ({ kind: "extra", text })),
+  o.restr && { kind: "restriction", text: o.restr },
+  o.general && { kind: "general", text: o.general },
+  { kind: "analgesia", text: o.pain || OP_PAIN },
+  o.wound !== null && { kind: "wound", text: o.wound || OP_W48 },
+  { kind: "redflags", text: o.red },
+  { kind: "followup", text: o.follow || OP_FU },
+].filter(Boolean);
+
+// ---- shoulder: instability, arthroplasty, fracture, stiffness (templates 4-6 and 10-16) --------------
+const OP_PROCS_SHOULDER_2 = [
+  opProc({
+    id: "bankart-arthroscopic", family: "instability-labrum", variantName: "Bankart repair (arthroscopic)", name: "Arthroscopic Bankart repair",
+    clinicNames: ["Arthroscopic Bankart repair"], region: "shoulder", sided: "shoulder", planPriority: 95,
+    preop: ["Recurrent anterior shoulder instability with Bankart lesion"], positioning: OP_ARTHRO_POSITIONS,
+    reference: opRef(
+      ["Recurrent anterior shoulder instability with a Bankart lesion and glenoid bone loss under 20\u201325%", "First-time dislocation in a young high-demand athlete (selective indication)", "Preferred over Latarjet when bone loss is minimal and a soft-tissue Bankart lesion is the primary pathology"],
+      ["Significant glenoid bone loss (over 20\u201325%) or an engaging Hill-Sachs lesion: favour Latarjet", "Voluntary or multidirectional instability without a structural lesion", "Poor tissue quality"],
+      ["Arthroscopy tower with standard shoulder instrumentation", "Suture anchors (typically 3\u20134, 2.4\u20133.0 mm)", "High-strength non-absorbable suture", "Lateral decubitus traction setup or beach chair with arm holder"],
+      ["A missed inferior extent of the Bankart lesion (below 6 o'clock) is a common cause of failure; ensure full circumferential evaluation", "Failure to address significant bone loss leads to high recurrence; quantify glenoid bone loss before and during surgery", "Under-tensioning the capsule leaves residual laxity; incorporate adequate capsular plication with each anchor", "Address an engaging Hill-Sachs lesion with remplissage if indicated"]),
+    findings: [opN("glenoidLoss", "Glenoid bone loss", "%"), opS("hillSachs", "Hill-Sachs lesion", ["Absent", "Present, non-engaging", "Present, engaging"], 1), OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("anchors", "Number of suture anchors"), opT("anchorSize", "Anchor size and type", "e.g. 3.0 mm knotless")],
+    closure: [OP_FIELD_PORTAL_SUTURE],
+    summary: (v) => (v.anchors ? `${v.anchors} anchor${Number(v.anchors) === 1 ? "" : "s"}` : null),
+    prep: ["Patient positioned (beach chair, or lateral decubitus with traction)", "Landmarks marked; standard prep and drape"],
+    steps: [
+      st("Diagnostic arthroscopy via the posterior portal; glenoid bone loss quantified and the Hill-Sachs lesion assessed for engagement"),
+      st("Anterosuperior and anteroinferior portals established"),
+      { t: (v, c) => `Anterior labrum and capsule identified as detached from the glenoid rim (Bankart lesion) at the ${opClockRange("3", "6", c.side)} position` },
+      st("Labrum and capsule mobilised off the glenoid neck to allow anatomic reduction"),
+      st("Glenoid rim prepared with a rasp or burr to bleeding bone"),
+      { t: (v, c) => `Suture anchors placed along the anteroinferior glenoid rim from the ${opClockRange("5:30", "3:00", c.side)} position` },
+      st("Sutures passed through the labrum and capsule in mattress fashion, capturing adequate capsular tissue for plication"),
+      st("Sutures tied sequentially from inferior to superior, restoring the labral bumper and capsular tension"),
+      st("Final probe evaluation confirms a stable repair and restored labral height"),
+    ],
+    closureSteps: ["Portals closed with simple sutures", "Sterile dressing and sling applied"],
+    plan: opPlanLines({ imm: "Sling immobilisation for 3\u20134 weeks, avoiding external rotation and abduction per protocol", wound: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover", red: "Red flags: recurrent instability sensation, fever, wound problems" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): sling immobilisation, avoid combined abduction and external rotation", "Phase 2 (Early mobilisation, 4\u20138 weeks): progressive range of motion, avoid apprehension positions initially", "Phase 3 (Strengthening, 8\u201316 weeks): rotator cuff and scapular strengthening, dynamic stability training", "Phase 4 (Return to activity, 4\u20136 months): return to contact sport typically at 5\u20136 months"], "Return to driving 3\u20134 weeks; desk work 2\u20133 weeks; contact sport 5\u20136 months", "Red flags: apprehension or recurrent subluxation or dislocation, progressive stiffness"),
+  }),
+  opProc({
+    id: "latarjet-open", family: "instability-labrum", variantName: "Latarjet (open)", name: "Open Latarjet coracoid transfer",
+    clinicNames: ["Latarjet procedure (open)"], region: "shoulder", sided: "shoulder", planPriority: 100,
+    preop: ["Recurrent anterior shoulder instability with glenoid bone loss"],
+    reference: opRef(
+      ["Recurrent anterior instability with significant glenoid bone loss (over 20\u201325%, \u201cinverted pear\u201d glenoid)", "Engaging Hill-Sachs lesion with an off-track lesion", "Failed prior arthroscopic Bankart repair (revision setting)", "Preferred over isolated Bankart repair when bone loss is present, restoring bone stock and adding a sling effect from the conjoint tendon"],
+      ["Voluntary or multidirectional instability", "Inadequate coracoid bone stock", "Prior coracoid fracture"],
+      ["Standard open shoulder set with self-retaining retractors", "Cannulated screws (2 x 3.5\u20134.0 mm) or a specialised Latarjet screw and washer system", "Oscillating saw for the coracoid osteotomy", "Fluoroscopy for screw and graft position", "Coracoid-specific guide instrumentation if using a commercial system"],
+      ["A graft positioned too lateral (\u201cproud\u201d) risks arthritis; too medial fails to restore the arc; aim for a flush position", "Screw malposition risks articular penetration; confirm with fluoroscopy in multiple planes", "The musculocutaneous nerve is at risk during medial dissection and retraction of the conjoint tendon; identify and protect it", "Non-union risk if decortication or compression is inadequate; ensure good bone-to-bone contact"]),
+    findings: [opN("glenoidLoss", "Glenoid bone loss", "%"), opS("hillSachs", "Hill-Sachs lesion", ["Absent", "Present, non-engaging", "Present, engaging"], 1), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("subscapularis", "Subscapularis", ["Split", "Takedown"], 2), opN("screws", "Number of screws"), opT("screwDetail", "Screw type and size", "e.g. 3.5 mm cannulated, 34 mm")],
+    closure: [opT("subscapularisSuture", "Subscapularis repair suture (if taken down)", "e.g. heavy non-absorbable")],
+    summary: (v) => (v.subscapularis ? `subscapularis ${v.subscapularis.toLowerCase()}` : null),
+    prep: ["Beach chair position, arm free-draped", "Bony landmarks marked (coracoid, clavicle, acromion); standard prep and drape"],
+    steps: [
+      st("Deltopectoral approach performed and the cephalic vein identified and retracted"),
+      st("Coracoid process exposed; pectoralis minor released from the medial coracoid"),
+      st("Coracoacromial ligament released and tagged for later use in capsular reconstruction"),
+      st("Coracoid osteotomy performed at the knee of the coracoid with an oscillating saw, harvesting the graft with the conjoint tendon attached"),
+      st("Undersurface of the coracoid decorticated to prepare for bony union"),
+      st("Subscapularis split (or taken down) in line with its fibres to access the glenohumeral joint"),
+      st("Capsulotomy performed and the anterior glenoid neck exposed and prepared"),
+      st("Glenoid neck decorticated at the planned graft site, flush with the articular surface"),
+      { t: (v, c) => `Coracoid graft positioned flush to the glenoid rim (typically ${opClockRange("3", "5", c.side)}) in the bare area and provisionally fixed with a K-wire` },
+      st("Position confirmed with fluoroscopy: graft flush with the glenoid surface, not proud"),
+      st("Graft fixed with bicortical cannulated screws under fluoroscopic guidance"),
+      st("Screw length and position confirmed on final fluoroscopic images"),
+      st("Capsule repaired to the native glenoid and labral remnant"),
+    ],
+    closureSteps: ["Subscapularis repaired if a takedown was performed; subscapularis split closed", "Standard layered closure of the deltopectoral interval", "Sterile dressing and sling applied"],
+    plan: opPlanLines({ imm: "Sling immobilisation for 4\u20136 weeks", restr: "Avoid external rotation past neutral for 6 weeks", wound: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover", red: "Red flags: fever, wound drainage, numbness or tingling (musculocutaneous or axillary nerve), recurrent instability", follow: "Follow-up in 10\u201314 days; repeat imaging (CT) at 3 months to confirm graft union" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): sling immobilisation, avoid external rotation past neutral", "Phase 2 (Early mobilisation, 6\u201312 weeks): progressive range of motion once union is confirmed or expected", "Phase 3 (Strengthening, 12\u201320 weeks): progressive strengthening, dynamic stabilisation", "Phase 4 (Return to activity, 5\u20136 months): return to contact or collision sport once union is confirmed on CT"], "Return to driving 4\u20136 weeks; desk work 2\u20134 weeks; contact sport 5\u20136 months", "Red flags: recurrent instability, persistent pain suggesting non-union, hardware-related symptoms"),
+  }),
+  opProc({
+    id: "slap-repair-arthroscopic", family: "instability-labrum", variantName: "SLAP repair (arthroscopic)", name: "Arthroscopic SLAP repair",
+    clinicNames: ["Arthroscopic SLAP repair"], region: "shoulder", sided: "shoulder", planPriority: 60,
+    preop: ["Type II SLAP lesion"], positioning: OP_ARTHRO_POSITIONS,
+    reference: opRef(
+      ["Symptomatic type II SLAP lesion (biceps-labral anchor detachment) confirmed on examination and imaging, refractory to conservative treatment", "Younger patient (under 35\u201340 years) with high functional or overhead demands", "Preferred over biceps tenodesis in younger patients wishing to preserve the native biceps anchor; tenodesis is often preferred in older patients or heavy labourers because of lower reoperation rates"],
+      ["Age over 35\u201340 years (consider tenodesis instead)", "Overhead athlete with a type II lesion where tenodesis may have better outcomes in some populations", "Concomitant significant biceps tendinopathy"],
+      ["Arthroscopy tower with standard instrumentation", "Suture anchors (1\u20132, 2.4\u20133.0 mm) at the biceps anchor", "High-strength suture and suture passing devices"],
+      ["Over-tightening the repair can cause stiffness (\u201ccaptured shoulder\u201d); avoid excessive medial anchor placement", "Missed concomitant pathology (rotator cuff, instability); a thorough diagnostic arthroscopy is essential", "Consider biceps tenodesis in older or heavy-labouring patients given higher SLAP repair failure and reoperation rates"]),
+    findings: [opS("slapType", "SLAP lesion type", ["Type I", "Type II", "Type III", "Type IV"], 4), OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("anchors", "Number of suture anchors"), opT("anchorSize", "Anchor size and type", "e.g. 2.4 mm knotless")],
+    closure: [OP_FIELD_PORTAL_SUTURE],
+    summary: (v) => (v.anchors ? `${v.anchors} anchor${Number(v.anchors) === 1 ? "" : "s"}` : null),
+    prep: ["Standard prep and drape; landmarks marked"],
+    steps: [
+      st("Diagnostic arthroscopy via the posterior portal; biceps anchor and superior labrum assessed with a probe for detachment (peel-back test in abduction and external rotation)", (v, c) => !c.has("rcr-arthroscopic")),
+      st("SLAP lesion classified intra-operatively"),
+      st("Anterosuperior working portal established"),
+      st("Superior labrum mobilised off the glenoid neck"),
+      st("Glenoid neck at the biceps anchor prepared to bleeding bone"),
+      st("Suture anchors placed posterior and/or anterior to the biceps anchor"),
+      st("Sutures passed around or through the superior labrum and biceps anchor complex"),
+      st("Sutures tied, restoring the anchor to its native position"),
+      st("Biceps stability confirmed with a probe; final range of motion testing performed"),
+    ],
+    closureSteps: ["Portals closed with simple sutures", "Sterile dressing and sling applied"],
+    plan: opPlanLines({ imm: "Sling immobilisation for 3\u20134 weeks; no resisted elbow flexion or supination against resistance", red: "Red flags: fever, wound problems, popping or clicking with pain" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): sling, avoid resisted elbow flexion and supination", "Phase 2 (Early mobilisation, 4\u20138 weeks): progressive range of motion", "Phase 3 (Strengthening, 8\u201316 weeks): biceps and rotator cuff strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to overhead sport"], "Return to driving 3\u20134 weeks; desk work 2\u20133 weeks; overhead athletics 5\u20136 months", "Red flags: persistent clicking or catching, stiffness beyond the expected timeline"),
+  }),
+  opProc({
+    id: "tsa-anatomic", family: "shoulder-arthroplasty", variantName: "Total shoulder (anatomic)", name: "Anatomic total shoulder arthroplasty",
+    clinicNames: ["Total shoulder arthroplasty", "Total shoulder arthroplasty (anatomic)"], region: "shoulder", sided: "shoulder", planPriority: 100,
+    preop: ["Primary glenohumeral osteoarthritis"],
+    reference: opRef(
+      ["Primary glenohumeral osteoarthritis with an intact, functioning rotator cuff", "Preferred over reverse arthroplasty when the cuff is intact and glenoid bone stock and version are amenable to an anatomic component", "Preferred over hemiarthroplasty when glenoid disease is significant enough to warrant resurfacing"],
+      ["Rotator cuff insufficiency or tear (favour reverse arthroplasty)", "Significant glenoid bone loss or version deformity beyond reconstructive capability", "Young high-demand patient (consider joint-preserving options first)", "Deltoid or axillary nerve dysfunction"],
+      ["Total shoulder arthroplasty implant system: humeral stem and broach set, glenoid component trials and finals", "Cement (cemented glenoid) or press-fit options", "Standard arthroplasty retractor set, reamers, broaches", "Fluoroscopy optional; CT-based pre-operative planning software recommended"],
+      ["Glenoid component malposition (excessive retroversion) is a leading cause of early failure; correct version meticulously during reaming", "Subscapularis repair failure leads to anterior instability and poor outcomes; protect the repair with strict post-operative precautions", "The axillary nerve is at risk during inferior capsular releases; palpate and protect it routinely", "Avoid humeral component oversizing, which overstuffs the joint and limits motion"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("subscapularisApproach", "Subscapularis approach", ["Tenotomy", "Peel", "Lesser tuberosity osteotomy"], 1), opS("glenoidComponent", "Glenoid component", ["Peg", "Keel"], 2), opS("glenoidFixation", "Glenoid fixation", ["Cemented", "Press-fit"], 2), opS("humeralFixation", "Humeral stem fixation", ["Cemented", "Press-fit"], 2), opT("implantDetail", "Implant system and sizes", "e.g. system, stem size, head size, glenoid size")],
+    closure: [opS("subscapularisRepair", "Subscapularis repair", ["Through drill holes", "Tendon-to-tendon"], 2)],
+    summary: (v) => (v.glenoidFixation ? `glenoid ${v.glenoidFixation.toLowerCase()}` : null),
+    prep: ["Beach chair position with the head secured, arm free-draped in an adjustable positioner", "Standard prep and drape; landmarks marked"],
+    steps: [
+      st("Deltopectoral incision made and the cephalic vein retracted"),
+      st("Clavipectoral fascia incised and the conjoint tendon retracted medially"),
+      st("Subscapularis identified and released for later repair, then tagged"),
+      st("Anterior capsulotomy performed and the humeral head dislocated"),
+      st("Humeral head osteotomy performed at the planned angle and version per pre-operative templating"),
+      st("Humeral canal prepared with sequential reaming and broaching to the appropriate size"),
+      st("Trial humeral component placed; attention turned to the glenoid"),
+      st("Glenoid exposed with retractors, labrum excised, and the glenoid surface reamed to the correct version"),
+      st("Glenoid component site prepared (peg or keel holes drilled per component design)"),
+      st("Final glenoid component placed, with cement pressurised and cured if applicable"),
+      st("Final humeral component (stem, with cement if used, and head) impacted or cemented into position"),
+      st("Trial reduction performed; stability, range of motion and soft-tissue balance confirmed"),
+      st("Final components placed and the joint reduced"),
+    ],
+    closureSteps: ["Subscapularis repaired", "Layered closure of the deltopectoral interval", "Sterile dressing, sling or abduction pillow applied"],
+    plan: opPlanLines({ imm: "Sling immobilisation for 4\u20136 weeks", restr: "Subscapularis precautions per protocol: avoid active internal rotation and resisted motion, limit external rotation", wound: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover", red: "Red flags: fever, wound drainage, sudden loss of internal rotation strength (subscapularis failure), numbness", follow: "Follow-up in 10\u201314 days; repeat radiographs at 6 weeks, 3 months and 1 year" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): sling immobilisation, passive range of motion only, subscapularis protection (no active internal rotation against resistance)", "Phase 2 (Early mobilisation, 6\u201312 weeks): progress to active-assisted then active range of motion", "Phase 3 (Strengthening, 12\u201320 weeks): progressive rotator cuff and deltoid strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to low-impact activity; avoid high-impact and heavy lifting indefinitely at the surgeon's discretion"], "Return to driving 4\u20136 weeks; desk work 4\u20136 weeks; light manual labour 3\u20134 months", "Red flags: sudden weakness in internal rotation (subscapularis rupture), instability sensation, signs of infection"),
+  }),
+  opProc({
+    id: "rsa-reverse", family: "shoulder-arthroplasty", variantName: "Reverse total shoulder", name: "Reverse total shoulder arthroplasty",
+    clinicNames: ["Reverse shoulder arthroplasty"], region: "shoulder", sided: "shoulder", planPriority: 100,
+    preop: ["Rotator cuff tear arthropathy", "Irreparable massive rotator cuff tear", "Proximal humerus fracture"],
+    reference: opRef(
+      ["Rotator cuff tear arthropathy", "Irreparable massive rotator cuff tear with pseudoparalysis", "Proximal humerus fracture in an elderly patient (primary or revision option)", "Failed anatomic total shoulder arthroplasty with rotator cuff insufficiency", "Preferred over anatomic arthroplasty when the cuff is deficient, since the reverse configuration relies on the deltoid rather than the cuff"],
+      ["Young high-demand patient (limited implant longevity data)", "Severe glenoid bone loss requiring bone grafting", "Active substance use affecting compliance", "Deltoid paralysis or axillary nerve palsy"],
+      ["Reverse total shoulder arthroplasty implant system: glenoid baseplate, glenosphere, humeral stem and tray, polyethylene liner", "Baseplate screws (locking and non-locking), central peg", "Standard arthroplasty retractor set, reamers, broaches", "Fluoroscopy optional; CT-based pre-operative planning recommended, especially for glenoid bone loss"],
+      ["Baseplate malposition or inadequate screw fixation risks early loosening; secure fixation in good bone, locking screws where bone stock is poor", "Scapular notching relates to inferior glenosphere overhang; position the baseplate with slight inferior tilt or overhang", "Avoid excessive humeral lengthening, which raises the risk of acromial stress fracture", "Educate the patient about dislocation-risk positions (combined adduction, internal rotation and extension)"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("subscapularisApproach", "Subscapularis", ["Tenotomy", "Peel", "Takedown"], 3), opT("glenosphere", "Glenosphere size and design", "e.g. 38 mm, lateralised"), opN("baseplateScrews", "Number of baseplate screws"), opS("humeralFixation", "Humeral stem fixation", ["Cemented", "Press-fit"], 2), opT("implantDetail", "Implant system, stem, tray and liner", "e.g. system, stem size, liner thickness")],
+    closure: [opS("subscapularisRepair", "Subscapularis", ["Repaired", "Left unrepaired"], 2)],
+    summary: (v) => (v.humeralFixation ? `humeral stem ${v.humeralFixation.toLowerCase()}` : null),
+    prep: ["Beach chair position, arm free-draped in a positioner", "Standard prep and drape; landmarks marked"],
+    steps: [
+      st("Deltopectoral incision made and the cephalic vein retracted"),
+      st("Subscapularis identified and released (tenotomy, peel or takedown depending on tissue quality)"),
+      st("Anterior capsulotomy performed and the humeral head dislocated"),
+      st("Humeral head osteotomy performed at the angle appropriate to the implant system and templating (typically less inclination than anatomic)"),
+      st("Remaining rotator cuff tissue assessed and preserved where possible"),
+      st("Humeral canal prepared with sequential broaching"),
+      st("Trial humeral component or tray placed; attention turned to the glenoid"),
+      st("Glenoid exposed, remaining labrum and cartilage removed, and the glenoid surface reamed concentrically"),
+      st("Central guide pin placed in the glenoid at the appropriate version and inclination"),
+      st("Baseplate reamed and prepared; baseplate impacted and secured with locking and non-locking screws in favourable bone (supero-inferior and antero-posterior trajectories)"),
+      st("Glenosphere impacted onto the baseplate"),
+      st("Final humeral component with the appropriate polyethylene liner; trial reduction performed"),
+      st("Stability, impingement and range of motion assessed; liner thickness and humeral height adjusted as needed"),
+      st("Final components secured and the joint reduced"),
+    ],
+    closureSteps: ["Subscapularis repaired if taken down and tissue quality allows", "Layered closure of the deltopectoral interval", "Sterile dressing and sling applied"],
+    plan: opPlanLines({ imm: "Sling immobilisation for 3\u20134 weeks (shorter than anatomic arthroplasty given deltoid-driven mechanics)", wound: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover", red: "Red flags: fever, wound drainage, sudden instability or a dislocation sensation (often with combined adduction, internal rotation and extension)", follow: "Follow-up in 10\u201314 days; repeat radiographs at 6 weeks, 3 months and 1 year" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20133 weeks): sling immobilisation, avoid combined adduction, internal rotation and extension (dislocation position)", "Phase 2 (Early mobilisation, 3\u20138 weeks): progressive passive to active-assisted range of motion", "Phase 3 (Strengthening, 8\u201316 weeks): deltoid-focused strengthening", "Phase 4 (Return to activity, 3\u20135 months): return to low-impact daily activities; avoid heavy lifting and impact long term per surgeon guidance"], "Return to driving 3\u20134 weeks; desk work 3\u20134 weeks; light activity 3 months", "Red flags: sudden pain with the arm in the at-risk position (dislocation), acromial or scapular pain (stress fracture), signs of infection"),
+  }),
+  opProc({
+    id: "hemiarthroplasty-shoulder", family: "shoulder-arthroplasty", variantName: "Hemiarthroplasty", name: "Shoulder hemiarthroplasty",
+    clinicNames: ["Hemiarthroplasty"], region: "shoulder", sided: "shoulder", planPriority: 100,
+    preop: ["Proximal humerus fracture", "Avascular necrosis", "Glenohumeral arthritis"],
+    reference: opRef(
+      ["Complex proximal humerus fracture not amenable to fixation, particularly with poor bone quality", "Avascular necrosis of the humeral head with a preserved glenoid surface", "Young patient with glenohumeral arthritis where glenoid resurfacing is undesirable (to preserve glenoid bone stock)", "Preferred over total shoulder arthroplasty when the glenoid is not diseased or resurfacing is not wanted"],
+      ["Glenoid arthritis (favour total or reverse arthroplasty; hemiarthroplasty with glenoid wear has inferior outcomes)", "Irreparable rotator cuff (favour reverse arthroplasty)"],
+      ["Humeral stem implant system (fracture-specific stem for trauma), trial heads", "Cement (cemented stem)", "Tuberosity fixation sutures, cerclage wire or mesh (fracture indication)", "Standard arthroplasty retractor set"],
+      ["Tuberosity malunion or non-union is the commonest complication in fracture cases; meticulous anatomic reduction and secure fixation are critical", "Incorrect humeral height or version leads to poor outcomes; use pre-operative templating and intra-operative landmarks (for example the bicipital groove for version)", "Consider conversion to reverse arthroplasty before surgery if cuff or tuberosity healing potential is questionable"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("indication", "Indication", ["Fracture", "Avascular necrosis", "Arthritis"], 3), opS("stemFixation", "Stem fixation", ["Cemented", "Press-fit"], 2), opN("retroversion", "Humeral retroversion", "\u00b0"), opWhen((v) => v.indication === "Fracture", [opT("tuberosityFixation", "Tuberosity fixation", "e.g. heavy sutures, cerclage")]), opT("implantDetail", "Implant system, stem and head sizes", "e.g. fracture stem, head size")],
+    closure: [],
+    summary: (v) => (v.indication ? v.indication.toLowerCase() : null),
+    prep: ["Beach chair position, arm free-draped", "Standard prep and drape"],
+    steps: [
+      st("Deltopectoral incision made and the cephalic vein retracted"),
+      st("Fracture fragments and tuberosities identified and tagged with heavy sutures for later fixation", (v) => v.indication === "Fracture"),
+      st("Subscapularis released (tenotomy or peel), or the fracture through the lesser tuberosity used as the approach"),
+      st("Humeral head removed (or fracture fragments excised) and retained for sizing reference"),
+      st("Humeral canal prepared with sequential reaming and broaching to the appropriate size and version (matched to native anatomy or the contralateral side)"),
+      st("Trial stem and head placed; height and version confirmed"),
+      st("Tuberosities reduced around the prosthesis and secured with heavy sutures or cerclage in an anatomic position, restoring cuff attachments", (v) => v.indication === "Fracture"),
+      st("Trial reduction performed; stability and range of motion assessed"),
+      st("Final stem and head impacted into position"),
+      st("Tuberosity fixation finalised with sutures passed through the prosthesis fins or fracture-specific holes", (v) => v.indication === "Fracture"),
+    ],
+    closureSteps: ["Subscapularis repaired (or tuberosity and rotator cuff repair completed as above)", "Layered closure of the deltopectoral interval", "Sterile dressing, sling or abduction pillow applied"],
+    plan: opPlanLines({ imm: "Sling or abduction pillow immobilisation for 4\u20136 weeks, particularly protective if tuberosity fixation was performed", wound: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover", red: "Red flags: fever, wound drainage, sudden weakness (tuberosity displacement), numbness", follow: "Follow-up in 10\u201314 days; repeat radiographs at 6 weeks and 3 months to monitor tuberosity healing" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): sling or abduction pillow, passive range of motion only, protect tuberosity healing if fracture", "Phase 2 (Early mobilisation, 6\u201312 weeks): progress to active-assisted range of motion once tuberosity healing is confirmed", "Phase 3 (Strengthening, 12\u201320 weeks): progressive rotator cuff and deltoid strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to low-impact activity"], "Return to driving 4\u20136 weeks; desk work 4\u20136 weeks; light manual labour 4 months", "Red flags: sudden loss of motion or strength (tuberosity displacement), signs of infection"),
+  }),
+  opProc({
+    id: "clavicle-orif", family: "shoulder-fracture-clavicle", variantName: "Clavicle ORIF", name: "Clavicle open reduction internal fixation",
+    clinicNames: ["Open reduction internal fixation (plate)"], region: "shoulder", sided: "clavicle", planPriority: 90,
+    preop: ["Displaced midshaft clavicle fracture", "Displaced distal clavicle fracture", "Displaced medial clavicle fracture"],
+    reference: opRef(
+      ["Displaced midshaft clavicle fracture with shortening over 2 cm, comminution, or complete displacement (no cortical contact)", "Open fracture, floating shoulder, neurovascular injury, or symptomatic non-union", "Preferred over non-operative management in displaced fractures given improved union rates and functional outcomes in this subgroup"],
+      ["Minimally displaced or undisplaced fracture (favour non-operative treatment)", "Significant medical comorbidity precluding surgery", "Smoking (increases non-union risk; counsel accordingly)"],
+      ["Precontoured clavicle plate system (superior or anteroinferior plate, length per fracture pattern)", "Locking and non-locking screws of various lengths", "Fluoroscopy for reduction and hardware confirmation", "Standard fracture reduction instruments (reduction clamps, drill)"],
+      ["Supraclavicular nerve injury is common with transverse incisions; place the incision along the fracture or Langer's lines to limit numbness", "The subclavian vessels and brachial plexus lie behind the clavicle; use extreme caution when drilling and protect posteriorly", "Under-contouring the plate leads to malreduction; contour to the patient's anatomy or the contralateral side", "Hardware removal is common because of the subcutaneous position; counsel accordingly"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("plateSurface", "Plate position", ["Superior", "Anteroinferior"], 2), opT("plateDetail", "Plate type and length", "e.g. precontoured, 8 holes"), opT("screwDetail", "Screws", "e.g. locking and non-locking, number"), opN("incision", "Incision length", "cm")],
+    closure: [OP_FIELD_SKIN_CLOSURE],
+    summary: (v) => (v.plateSurface ? `${v.plateSurface.toLowerCase()} plate` : null),
+    prep: ["Beach chair or semi-recumbent position, head turned away from the operative side", "Standard prep and drape; bump between the scapulae if desired for reduction"],
+    steps: [
+      st("Incision made along the long axis of the clavicle over the fracture"),
+      st("Subcutaneous dissection carried to the fracture site, preserving supraclavicular nerve branches"),
+      st("Fracture fragments identified and mobilised; haematoma evacuated"),
+      st("Fracture reduced anatomically with reduction clamps or forceps, confirmed directly and with fluoroscopy"),
+      st("Provisional fixation with a K-wire or reduction clamp maintained"),
+      st("Precontoured plate selected and applied, contoured further as needed to match the patient's anatomy"),
+      st("Plate secured with a combination of locking and non-locking screws bicortically, avoiding injury to the underlying neurovascular structures"),
+      st("Reduction and hardware position confirmed with fluoroscopy in multiple planes"),
+      st("Stability of fixation confirmed with manual stress testing"),
+    ],
+    closureSteps: ["Layered closure of the subcutaneous tissue with absorbable suture", "Skin closed", "Sterile dressing and sling applied for comfort"],
+    plan: opPlanLines({ imm: "Sling for comfort for 2\u20134 weeks; early pendulum motion encouraged", red: "Red flags: fever, wound problems, numbness in the arm or hand (brachial plexus concern), hardware prominence or irritation", follow: "Follow-up in 10\u201314 days; serial radiographs at 6 weeks and 3 months to confirm union" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): sling for comfort, pendulum exercises", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive active range of motion as fracture stability allows", "Phase 3 (Strengthening, 6\u201312 weeks): progressive strengthening once union is demonstrated", "Phase 4 (Return to activity, 3\u20134 months): return to sport and heavy activity once solid union is confirmed"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; contact sport 4 months", "Red flags: increasing pain or deformity (non-union or hardware failure), numbness, signs of infection"),
+  }),
+  opProc({
+    id: "ac-joint-reconstruction", family: "shoulder-fracture-clavicle", variantName: "AC joint reconstruction", name: "Acromioclavicular joint reconstruction",
+    clinicNames: ["AC joint stabilization / reconstruction"], region: "shoulder", sided: "shoulder", planPriority: 90,
+    preop: ["Acute AC joint separation", "Chronic AC joint separation"], positioning: [],
+    reference: opRef(
+      ["High-grade acute AC joint separation (Rockwood type IV, V or VI)", "Symptomatic chronic AC joint instability (type III in selected high-demand patients, or failed non-operative treatment)", "Preferred over non-operative management in high-grade injuries with significant displacement or instability affecting function"],
+      ["Low-grade separation (type I or II): non-operative treatment preferred", "Type III in a low-demand patient (often managed successfully without surgery)", "Significant coracoid fracture precluding graft or fixation options"],
+      ["Coracoclavicular fixation device (button-suture system) and/or free tendon graft (autograft or allograft)", "Drill guide for coracoclavicular tunnels", "Fluoroscopy for tunnel placement", "Standard shoulder retractor set; arthroscopy tower if an arthroscopically assisted technique is used"],
+      ["Tunnel malposition in the clavicle or coracoid risks fracture; use appropriately sized tunnels and confirm with fluoroscopy", "Loss of reduction is a known complication; ensure adequate initial overcorrection and secure fixation", "Suprascapular neurovascular structures are at risk near the coracoid base; meticulous dissection is required", "Consider adding AC-specific fixation (for example suture tape) in high-grade or high-demand cases"]),
+    findings: [opS("rockwood", "Rockwood type", ["Type III", "Type IV", "Type V", "Type VI"], 4), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("acuity", "Injury", ["Acute", "Chronic"], 2), opS("method", "Reconstruction", ["Tendon graft", "Button-suture device", "Graft and button-suture device"], 1), opT("graft", "Graft (type and source)", "e.g. semitendinosus allograft"), opT("fixationDetail", "Fixation and device details", "e.g. button size, interference screw"), opN("incision", "Incision length", "cm"), opS("arthroscopy", "Diagnostic arthroscopy (combined technique)", ["Performed", "Not performed"], 2), opS("distalClavicle", "Distal clavicle excision", ["Performed", "Not performed"], 2)],
+    closure: [opT("fasciaSuture", "Deltotrapezial fascia repair suture", "e.g. heavy non-absorbable")],
+    summary: (v) => (v.method ? v.method.toLowerCase() : null),
+    prep: ["Beach chair position, arm free-draped", "Standard prep and drape; landmarks marked (clavicle, coracoid, acromion)"],
+    steps: [
+      st("Diagnostic arthroscopy performed to evaluate the glenohumeral joint and confirm the coracoid location from the subacromial space", (v) => v.arthroscopy === "Performed"),
+      st("Incision made from the distal clavicle toward the coracoid"),
+      st("Deltotrapezial fascia incised and elevated for later repair"),
+      st("Distal clavicle and coracoid process identified and confirmed"),
+      st("Clavicle reduced to its anatomic position relative to the acromion and coracoid", (v) => v.acuity === "Acute"),
+      st("Drill tunnels created in the clavicle (and coracoid, if the tunnel technique is used) under direct vision or fluoroscopic guidance"),
+      st("Graft passed around the coracoid base and through or around the clavicular tunnels in the anatomic coracoclavicular ligament orientation, or the coracoclavicular button-suture device passed through the clavicular and coracoid tunnels"),
+      st("Reduction of the AC joint confirmed with fluoroscopy"),
+      st("Graft or fixation device tensioned and secured (interference screw, button or suture tying)"),
+      st("Distal clavicle excision performed for concomitant AC joint arthritis", (v) => v.distalClavicle === "Performed"),
+      st("Deltotrapezial fascia repaired over the reconstruction"),
+    ],
+    closureSteps: ["Layered subcutaneous and skin closure", "Sterile dressing and sling applied"],
+    plan: opPlanLines({ imm: "Sling immobilisation for 6 weeks; avoid heavy lifting and overhead activity", red: "Red flags: fever, wound problems, loss of reduction (recurrent deformity), numbness", follow: "Follow-up in 10\u201314 days; serial radiographs to confirm maintained reduction" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): sling immobilisation, avoid lifting and overhead motion", "Phase 2 (Early mobilisation, 6\u201312 weeks): progressive range of motion", "Phase 3 (Strengthening, 12\u201320 weeks): progressive strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to contact sport or heavy labour"], "Return to driving 4\u20136 weeks; desk work 2\u20134 weeks; contact sport 5\u20136 months", "Red flags: recurrent deformity or instability, persistent pain, signs of infection"),
+  }),
+  opProc({
+    id: "proximal-humerus-orif", family: "shoulder-fracture-clavicle", variantName: "Proximal humerus ORIF", name: "Proximal humerus open reduction internal fixation",
+    clinicNames: ["ORIF with locking plate"], region: "shoulder", sided: "shoulder", planPriority: 90,
+    preop: ["Two-part proximal humerus fracture", "Three-part proximal humerus fracture", "Four-part proximal humerus fracture"], positioning: [],
+    reference: opRef(
+      ["Displaced proximal humerus fracture (2-, 3- or 4-part by Neer) in a patient with adequate bone quality and a reducible fracture pattern", "Significant angulation or displacement affecting function in a physiologically younger or higher-demand patient", "Preferred over arthroplasty when the pattern is reducible and fixable with a reasonable expectation of tuberosity and head healing and preserved blood supply"],
+      ["Severely comminuted or unreconstructable fracture in a low-demand elderly patient (favour hemiarthroplasty or reverse arthroplasty)", "Head-splitting fracture or fracture-dislocation with high avascular necrosis risk"],
+      ["Proximal humerus locking plate system, various lengths and screw options", "Heavy non-absorbable suture for tuberosity and rotator cuff fixation augmentation", "Fluoroscopy for reduction and screw length confirmation", "Standard fracture reduction instruments"],
+      ["Screw penetration into the joint is a common complication; confirm screw lengths with multiple fluoroscopic views (the axillary view especially)", "Varus malreduction and loss of medial calcar support predispose to fixation failure; restore calcar contact or use calcar screws", "The axillary nerve is at risk during inferior plate application; palpate and protect it at the surgical neck", "Avascular necrosis risk with certain patterns (anatomic neck involvement, minimal medial hinge); counsel and consider arthroplasty in high-risk patterns"]),
+    findings: [opT("fracturePattern", "Fracture pattern and fragments", "e.g. 3-part, greater tuberosity displaced"), OP_FIELD_OTHER_FINDINGS],
+    technique: [opT("plateDetail", "Plate type and length", "e.g. locking plate, 3 holes"), opN("headScrews", "Proximal locking screws"), opS("tuberositySutures", "Tuberosity sutures", ["Passed through the plate", "Not used"], 2), opS("calcar", "Medial calcar", ["Contact restored", "Calcar screws used"], 2)],
+    closure: [OP_FIELD_SKIN_CLOSURE],
+    summary: (v) => (v.plateDetail ? v.plateDetail.toLowerCase() : null),
+    prep: ["Beach chair position, arm free-draped", "Standard prep and drape"],
+    steps: [
+      st("Deltopectoral incision made and the cephalic vein retracted"),
+      st("Fracture fragments identified; haematoma evacuated"),
+      st("Tuberosity fragments tagged with heavy non-absorbable sutures at the rotator cuff insertions for later reduction and fixation"),
+      st("Fracture fragments reduced anatomically with direct manipulation, joysticks (K-wires) and suture traction on the tuberosities"),
+      st("Reduction confirmed directly and with fluoroscopy (head-shaft angle, tuberosity height)"),
+      st("Provisional fixation with K-wires"),
+      st("Proximal humerus locking plate applied laterally, positioned relative to the bicipital groove and greater tuberosity to avoid impingement"),
+      st("Plate secured to the shaft with cortical or locking screws; proximal locking screws placed into the head fragment with fluoroscopic confirmation of length (avoiding articular penetration)"),
+      st("Tuberosity sutures passed through the plate suture holes or around the plate and tied to secure the tuberosities to the shaft and plate construct", (v) => v.tuberositySutures !== "Not used"),
+      st("Final reduction, hardware position and screw lengths confirmed with fluoroscopy in multiple planes"),
+      st("Range of motion tested intra-operatively to confirm no impingement and a stable construct"),
+    ],
+    closureSteps: ["Deltopectoral interval closed in layers with absorbable suture", "Skin closed", "Sterile dressing, sling or abduction pillow applied"],
+    plan: opPlanLines({ imm: "Sling or abduction pillow immobilisation for 4\u20136 weeks; passive range of motion only initially per protocol", wound: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover", red: "Red flags: fever, wound drainage, sudden loss of motion or strength (fixation failure), numbness (axillary nerve)", follow: "Follow-up in 10\u201314 days; serial radiographs at 2, 6 and 12 weeks to monitor healing and hardware position" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): sling or abduction pillow, passive range of motion only, no active motion", "Phase 2 (Early mobilisation, 6\u201312 weeks): progress to active-assisted then active range of motion once healing is confirmed", "Phase 3 (Strengthening, 12\u201320 weeks): progressive rotator cuff and deltoid strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to full activity once solid union is confirmed"], "Return to driving 4\u20136 weeks; desk work 4\u20136 weeks; manual labour 4\u20136 months", "Red flags: sudden loss of motion or pain (hardware failure or AVN), numbness, signs of infection"),
+  }),
+  opProc({
+    id: "capsular-release-arthroscopic", family: "stiff-shoulder", variantName: "Capsular release (arthroscopic)", name: "Arthroscopic capsular release",
+    clinicNames: ["Arthroscopic capsular release"], region: "shoulder", sided: "shoulder", planPriority: 50,
+    preop: ["Adhesive capsulitis"], positioning: [],
+    reference: opRef(
+      ["Adhesive capsulitis (frozen shoulder) refractory to 3\u20136 months of conservative management (physiotherapy, intra-articular corticosteroid, hydrodilatation)", "Persistent significant restriction of passive motion affecting function and quality of life", "Preferred over manipulation under anaesthesia alone in chronic or refractory stiffness, or dense capsular contracture in diabetic patients, since visualised release lowers the fracture and soft-tissue injury risk of forceful manipulation"],
+      ["Early-stage adhesive capsulitis (still within the window for conservative treatment)", "Uncontrolled diabetes (address glycaemic control first)", "Untreated rotator cuff pathology as the primary cause of stiffness"],
+      ["Arthroscopy tower with standard shoulder instrumentation", "Arthroscopic electrocautery or radiofrequency device and scissors or basket punch for capsular release", "Manipulation under anaesthesia is often performed as an adjunct or first step"],
+      ["Delaying post-operative physiotherapy risks recurrence of stiffness; begin aggressive motion immediately", "Axillary nerve injury risk with inferior capsular release; many surgeons avoid or minimise the inferior release", "Humeral fracture risk with forceful manipulation, particularly in osteoporotic bone; use gentle, controlled technique", "Address contributing factors (diabetes control, thyroid dysfunction) as part of comprehensive management"]),
+    findings: [opG("romBefore", "Passive range of motion before any manipulation", ["Forward flexion", "Abduction", "External rotation", "Internal rotation"], "\u00b0"), opG("romAfter", "Final range of motion", ["Forward flexion", "Abduction", "External rotation", "Internal rotation"], "\u00b0"), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("manipulation", "Manipulation under anaesthesia", ["Performed", "Not performed"], 2), opC("releases", "Capsular release performed", ["Rotator interval", "Anterior capsule", "Posterior capsule", "Inferior capsule (with care near the axillary nerve)"])],
+    closure: [OP_FIELD_PORTAL_SUTURE],
+    summary: () => null,
+    prep: ["Beach chair position, arm free-draped", "Standard prep and drape"],
+    steps: [
+      st("Gentle manipulation under anaesthesia performed first (forward flexion, external rotation, internal rotation, abduction), documenting improvement and any palpable release", (v) => v.manipulation === "Performed"),
+      st("Diagnostic arthroscopy via the posterior portal; extent of capsular thickening and adhesions assessed"),
+      st("Anterior working portal established"),
+      st("Rotator interval capsule released with electrocautery or arthroscopic scissors"),
+      { t: (v, c) => `Anterior capsule released along the glenoid from the ${opClockRange("12", "6", c.side)} position, protecting the subscapularis tendon` },
+      st("Posterior capsule released as needed if posterior stiffness predominated, with care near the axillary nerve inferiorly"),
+      st("Range of motion reassessed arthroscopically and clinically after each release stage"),
+      st("Additional gentle manipulation performed as needed to confirm restored motion", (v) => v.manipulation === "Performed"),
+    ],
+    closureSteps: ["Portals closed with simple sutures", "Sterile dressing applied; sling for comfort only"],
+    plan: opPlanLines({ imm: "Sling for comfort only; discontinue as soon as tolerated (early aggressive motion is essential to prevent recurrence)", restr: "Aggressive early physiotherapy from post-operative day 1, maintaining the motion gained at surgery", pain: "Standard multimodal pain management (adequate analgesia allows early therapy participation)", red: "Red flags: fever, wound problems, sudden weakness (consider iatrogenic injury), significant new numbness", follow: "Follow-up in 7\u201310 days; early and frequent physiotherapy follow-up" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): sling for comfort only, aggressive physiotherapy begun immediately, daily stretching", "Phase 2 (Early mobilisation, 1\u20136 weeks): continued aggressive stretching programme, multiple times daily", "Phase 3 (Strengthening, 6\u201312 weeks): progressive strengthening once motion is restored and maintained", "Phase 4 (Return to activity, 3\u20134 months): full return to activity once motion is maintained and pain has resolved"], "Return to driving 1\u20132 weeks; desk work 3\u20137 days; manual labour 6\u20138 weeks", "Red flags: recurrent stiffness (inadequate physiotherapy compliance or recurrent adhesions), new weakness, persistent pain beyond the expected timeline"),
+  }),
+];
+
+// ---- elbow: your 13 templates plus the two accepted drafts -------------------------------------------
+const OP_ELBOW_TQ_PREP = ["Supine position, arm on a hand table, tourniquet applied", "Standard prep and drape"];
+const OP_ULNAR_FIELD = opS("ulnarNerve", "Ulnar nerve", ["Identified and protected", "Decompressed in situ", "Transposed (subcutaneous)", "Transposed (submuscular)"], 2);
+const OP_PROCS_ELBOW = [
+  opProc({
+    id: "elbow-arthroscopy", family: "elbow-arthroscopy-release", variantName: "Elbow arthroscopy", name: "Elbow arthroscopy",
+    clinicNames: ["Loose body removal", "Arthroscopic debridement", "Arthroscopic debridement / microfracture (OCD)", "Arthroscopic removal of posteromedial osteophyte"], region: "elbow", sided: "elbow", planPriority: 70,
+    preop: ["Loose bodies", "Synovitis", "Osteochondritis dissecans of the capitellum"], positioning: ["Lateral decubitus", "Supine with arm holder", "Prone"],
+    reference: opRef(
+      ["Symptomatic loose bodies causing mechanical locking or catching", "Synovitis refractory to conservative treatment (inflammatory arthritis, synovial chondromatosis)", "Diagnostic evaluation of unexplained elbow pain or mechanical symptoms", "Osteochondritis dissecans of the capitellum (debridement or fixation)", "Preferred over open arthrotomy for isolated loose body removal or synovectomy: lower morbidity and faster recovery"],
+      ["Significant heterotopic ossification or severe contracture (may need an open approach)", "Ulnar nerve subluxation or prior transposition (alters portal safety)", "Prior extensive open surgery or hardware distorting anatomy"],
+      ["Elbow arthroscopy tower (camera, pump, shaver, small-joint instruments)", "Arthroscopic graspers and loose body forceps", "Arm positioner (lateral decubitus post) or traction tower if supine", "Tourniquet"],
+      ["The ulnar nerve is at significant risk with medial portal placement; always palpate and mark it and consider subluxation before surgery", "Maintain adequate joint distension throughout to keep neurovascular structures away from the instruments", "The radial nerve is at risk with proximal anterolateral and lateral portals; stay anterior to the intermuscular septum", "Incomplete loose body removal is a common cause of persistent symptoms; inspect each compartment thoroughly"]),
+    findings: [opC("pathology", "Pathology found", ["Loose bodies", "Synovitis", "Osteochondritis dissecans lesion", "Olecranon osteophytes"]), opT("looseBodies", "Loose bodies: number and location", "e.g. 3, posterior compartment"), OP_FIELD_OTHER_FINDINGS],
+    technique: [opC("procedures", "Procedures performed", ["Loose body removal", "Synovectomy", "Osteochondritis dissecans debridement", "Microfracture", "Fixation of the lesion", "Olecranon osteophyte excision"])],
+    closure: [OP_FIELD_PORTAL_SUTURE, opS("dressing", "Dressing", ["Posterior splint", "Soft dressing with early motion"], 2)],
+    prep: ["Non-sterile tourniquet applied to the proximal arm", "Bony landmarks marked: epicondyles, olecranon, radial head; ulnar nerve palpated and marked", "Standard prep and drape; limb exsanguinated and tourniquet inflated"],
+    steps: [
+      st("Elbow joint distended with saline via the soft spot"),
+      st("Proximal anteromedial portal established, staying anterior to the intermuscular septum and superficial to brachialis"),
+      st("Diagnostic arthroscopy of the anterior compartment: radiocapitellar joint, coronoid and anterior capsule"),
+      st("Proximal anterolateral portal established under direct visualisation"),
+      st("Loose bodies identified and removed with a grasper", (v) => !v.pathology || v.pathology.includes("Loose bodies")),
+      st("Synovectomy performed with a shaver as indicated, avoiding aggressive resection near neurovascular structures", (v) => v.pathology && v.pathology.includes("Synovitis")),
+      st("Osteochondritis dissecans lesion of the capitellum assessed and treated as indicated", (v) => v.pathology && v.pathology.includes("Osteochondritis dissecans lesion")),
+      st("Scope redirected to the posterior compartment via posterocentral and posterolateral portals"),
+      st("Posterior compartment evaluated; olecranon tip and fossa assessed for osteophytes and loose bodies, removed as indicated"),
+      st("Posterolateral gutter and radiocapitellar joint assessed from the posterior view for additional loose bodies"),
+      st("Final range of motion tested arthroscopically to confirm no residual mechanical block"),
+    ],
+    closureSteps: ["Portals closed with simple sutures", "Sterile dressing applied", "Tourniquet released and extremity perfusion confirmed"],
+    plan: opPlanLines({ imm: "Soft dressing with early active and active-assisted range of motion encouraged, or a brief splint for comfort", general: "Ice and elevation for swelling control", red: "Red flags: fever, wound drainage, uncontrolled pain, numbness or tingling in the ulnar nerve distribution" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing, early gentle active range of motion as tolerated", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion, gentle stretching", "Phase 3 (Strengthening, 3\u20136 weeks): progressive strengthening", "Phase 4 (Return to activity, 6\u20138 weeks): return to full activity and sport"], "Return to driving 1 week; desk work 3\u20137 days; manual labour or throwing sport 6\u20138 weeks", "Red flags: persistent locking or catching (residual loose body), new numbness (nerve injury), significant stiffness beyond the expected timeline"),
+  }),
+  opProc({
+    id: "ucl-reconstruction", family: "elbow-tendon-ligament", variantName: "UCL reconstruction", name: "Ulnar collateral ligament reconstruction",
+    clinicNames: ["UCL reconstruction", "Ulnar collateral ligament reconstruction (tendon graft)"], region: "elbow", sided: "elbow", planPriority: 100,
+    preop: ["UCL insufficiency or tear"],
+    reference: opRef(
+      ["Symptomatic UCL insufficiency with valgus instability in an overhead throwing athlete, refractory to 3\u20136 months of conservative management or rest", "Complete UCL tear confirmed on valgus stress testing and MRI in a competitive thrower wishing to return to sport", "Preferred over primary repair in chronic attenuated tears with poor tissue quality; primary repair with internal brace augmentation may suit acute avulsions with good tissue"],
+      ["Low-demand non-throwing patient (often managed non-operatively)", "Concomitant valgus extension overload needing more extensive posteromedial debridement", "Ulnar nerve symptoms needing concomitant transposition (technique modification)"],
+      ["Graft: autograft (palmaris longus, gracilis) or allograft tendon", "Drill and tunnel guide system for humeral and ulnar tunnels", "Suture passing devices; interference fixation if using a docking technique", "Tourniquet"],
+      ["Ulnar nerve injury is the commonest complication; identify and protect it throughout, especially during tunnel drilling", "Tunnel convergence or fracture risk with humeral tunnels too close together or too small a bone bridge; plan trajectories carefully", "Over-constraining graft tension limits motion; tension at the appropriate flexion angle with physiologic valgus stress", "Address concomitant posteromedial olecranon impingement if present"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("technique", "Technique", ["Docking", "Figure-of-8", "DANE TJ"], 3), opS("graftType", "Graft", ["Palmaris longus autograft", "Gracilis autograft", "Allograft"], 1), opT("graftSite", "Graft harvest site", "e.g. ipsilateral wrist"), OP_ULNAR_FIELD, opT("fixation", "Fixation and tunnel details", "e.g. interference screw, tunnel sizes")],
+    closure: [opT("splintAngle", "Splint position", "e.g. posterior splint at 90 degrees flexion"), OP_SKIN_SUTURE],
+    summary: (v) => (v.technique ? v.technique.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table, tourniquet applied", "Graft harvest site prepped concurrently if autograft is used", "Standard prep and drape; landmarks marked (medial epicondyle, olecranon, ulnar nerve)"],
+    steps: [
+      st("Graft harvested, whipstitched at both ends, sized and prepared on the back table", (v) => v.graftType && v.graftType !== "Allograft"),
+      st("Medial incision made centred over the medial epicondyle, curving slightly posterior to avoid a scar directly over the epicondyle"),
+      st("Medial antebrachial cutaneous nerve branches identified and protected"),
+      st("Ulnar nerve identified proximally at the arcade of Struthers, followed distally through the cubital tunnel, and mobilised with a vessel loop for protection throughout"),
+      st("Flexor-pronator mass split (muscle-splitting approach) to expose the native UCL"),
+      st("Native UCL assessed; attenuation or tear pattern confirmed"),
+      st("Humeral tunnel(s) drilled at the anatomic origin of the anterior bundle and ulnar tunnel(s) at the sublime tubercle, avoiding tunnel convergence and articular penetration"),
+      st("Graft passed through the tunnels, tensioned with the elbow at about 30 degrees of flexion and valgus stress applied"),
+      st("Graft secured (sutures tied over the bone bridge, or interference screw fixation per technique)"),
+      st("Native ligament tissue imbricated over the graft for reinforcement"),
+      st("Valgus stability retested manually through range of motion to confirm restored stability"),
+      st("Ulnar nerve left in its anatomic position after decompression, or transposed anteriorly, as recorded"),
+    ],
+    closureSteps: ["Flexor-pronator fascia repaired", "Layered subcutaneous and skin closure", "Sterile dressing and posterior splint applied"],
+    plan: opPlanLines({ imm: "Posterior splint or brace immobilisation for 1\u20132 weeks, then hinged brace with progressive range of motion per protocol", red: "Red flags: fever, wound drainage, numbness or tingling in the ring and small fingers (ulnar nerve), uncontrolled pain" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation, then hinged brace initiated", "Phase 2 (Early mobilisation, 2\u20138 weeks): progressive range of motion in the hinged brace, gradually increasing the arc", "Phase 3 (Strengthening, 2\u20136 months): progressive strengthening; start the interval throwing programme per protocol once cleared", "Phase 4 (Return to activity, 9\u201314 months): gradual return to competitive throwing after the structured interval throwing programme"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; competitive throwing 9\u201314 months", "Red flags: recurrent valgus instability sensation, new or worsening ulnar nerve symptoms, medial elbow pain during throwing progression"),
+  }),
+  opProc({
+    id: "distal-biceps-repair", family: "elbow-tendon-ligament", variantName: "Distal biceps repair", name: "Distal biceps tendon repair",
+    clinicNames: ["Primary repair, single-incision technique", "Primary repair, two-incision technique"], region: "elbow", sided: "elbow", planPriority: 90,
+    preop: ["Distal biceps tendon rupture"],
+    reference: opRef(
+      ["Acute distal biceps tendon rupture in a functional patient wishing to restore supination and flexion strength", "Ideally performed within 2\u20133 weeks of injury, before retraction and scarring complicate repair", "Preferred over non-operative management in active patients given the strength deficit, supination particularly"],
+      ["Chronic rupture with significant retraction (may need graft reconstruction)", "Low-demand or elderly sedentary patient who may tolerate non-operative management", "Significant medical comorbidities"],
+      ["Cortical button fixation device and/or interference screw system for fixation to the radial tuberosity", "Drill or reamer for the bone tunnel at the radial tuberosity", "Tourniquet", "Fluoroscopy optional for tunnel confirmation"],
+      ["Posterior interosseous nerve injury risk is significant with the single-incision technique; keep the forearm in full supination during radial tuberosity exposure", "The lateral antebrachial cutaneous nerve is at risk superficially; identify and protect it during the initial dissection", "Tendon retraction or inadequate mobilisation in delayed presentations may need graft augmentation; assess excursion intra-operatively", "Secure fixation is critical given early motion protocols; confirm construct strength with gentle range of motion testing"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("technique", "Technique", ["Single-incision", "Two-incision"], 2), opS("fixation", "Fixation", ["Cortical button", "Interference screw"], 2), opT("fixationDetail", "Implant details", "e.g. button type, screw size"), opN("incision", "Incision length", "cm")],
+    closure: [opT("splintAngle", "Splint position", "e.g. 90 degrees flexion, neutral to supinated forearm"), OP_SKIN_SUTURE],
+    summary: (v) => (v.technique ? v.technique.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table, tourniquet applied", "Standard prep and drape; elbow flexed to 90 degrees with the forearm supinated for exposure"],
+    steps: [
+      st("Anterior incision made at the elbow flexion crease"),
+      st("Lacertus fibrosus identified and incised; ruptured biceps tendon identified and retrieved from surrounding haematoma and scar"),
+      st("Tendon end debrided and whipstitched with heavy non-absorbable suture"),
+      st("Radial tuberosity exposed with the forearm held in full supination to protect the posterior interosseous nerve, using a retractor placed carefully along the radial neck"),
+      st("Bone socket or trough created at the radial tuberosity footprint with a drill or burr"),
+      st("Tendon secured within the bone socket (cortical button passed through a bicortical drill hole and flipped, or interference screw technique)"),
+      st("Tendon secured at appropriate tension; forearm rotation confirmed intra-operatively (full pronation and supination without impingement)"),
+      st("Separate posterolateral incision made to expose the ulnar aspect of the radial tuberosity; tendon passed through the interosseous space and secured similarly", (v) => v.technique === "Two-incision"),
+    ],
+    closureSteps: ["Lacertus fibrosus and fascia closed with absorbable suture if applicable", "Layered subcutaneous and skin closure", "Sterile dressing and posterior splint applied"],
+    plan: opPlanLines({ imm: "Splint or hinged brace immobilisation for 1\u20132 weeks, then progressive range of motion per protocol", red: "Red flags: fever, wound drainage, numbness in the dorsal forearm or hand (posterior interosseous or lateral antebrachial cutaneous nerve), sudden pop (repair failure)" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint or brace immobilisation, avoid active elbow flexion and supination", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive active-assisted range of motion in a hinged brace, gradually increasing extension", "Phase 3 (Strengthening, 6\u201312 weeks): progressive resistance training beginning with light loads", "Phase 4 (Return to activity, 4\u20136 months): return to heavy lifting and sport once strength is restored"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 3\u20134 months", "Red flags: sudden pop or weakness (repair failure), persistent numbness, signs of infection"),
+  }),
+  opProc({
+    id: "distal-triceps-repair", family: "elbow-tendon-ligament", variantName: "Distal triceps repair", name: "Distal triceps tendon repair",
+    clinicNames: ["Primary repair"], region: "elbow", sided: "elbow", planPriority: 90,
+    preop: ["Distal triceps tendon rupture"], positioning: ["Prone", "Lateral decubitus"],
+    reference: opRef(
+      ["Acute complete distal triceps tendon rupture with significant extension weakness or a palpable defect", "Partial tear with significant functional deficit refractory to conservative treatment", "Preferred over non-operative management in complete ruptures given poor functional outcomes without repair"],
+      ["Chronic rupture with significant retraction (may need graft or allograft augmentation)", "Low-demand patient with minimal functional deficit from a partial tear"],
+      ["Suture anchors (2\u20133, 4.5\u20135.5 mm), or a transosseous tunnel technique with heavy non-absorbable suture", "Drill for bone tunnels or anchor placement at the olecranon", "Tourniquet"],
+      ["The ulnar nerve lies close throughout the posterior approach; identify and protect it early", "Over-tensioning the repair limits flexion; under-tensioning risks re-rupture; balance tension with intra-operative range of motion testing", "Ensure adequate footprint preparation for solid tendon-bone healing", "Consider fascial augmentation (anconeus flap) for poor tissue quality or chronic retracted tears"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("fixation", "Fixation", ["Suture anchors", "Transosseous tunnels"], 2), opN("anchors", "Number of anchors"), opT("fixationDetail", "Implant details", "e.g. 5.5 mm anchors"), opS("stitch", "Tendon suture", ["Krackow", "Mattress"], 2), OP_ULNAR_FIELD],
+    closure: [opT("splintAngle", "Splint position", "e.g. 30\u201345 degrees flexion"), OP_SKIN_SUTURE],
+    summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
+    prep: ["Arm supported with the tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Posterior longitudinal incision made over the olecranon and distal triceps"),
+      st("Ulnar nerve identified and protected throughout (mobilised with a vessel loop if dissection proximity warrants)"),
+      st("Ruptured triceps tendon identified; retracted end debrided to healthy tissue and whipstitched with heavy non-absorbable suture"),
+      st("Olecranon footprint prepared to bleeding bone"),
+      st("Suture anchors placed at the footprint, or transosseous tunnels drilled through the olecranon, for tendon fixation"),
+      st("Tendon secured to the footprint with sutures tied with the elbow in slight flexion to avoid over-constraining extension"),
+      st("Repair integrity and tension confirmed through gentle range of motion testing"),
+    ],
+    closureSteps: ["Fascial layer closed over the repair with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and posterior splint applied"],
+    plan: opPlanLines({ imm: "Splint or hinged brace immobilisation for 2\u20134 weeks with limited flexion per protocol, then progressive range of motion", red: "Red flags: fever, wound drainage, numbness in the ring and small fingers (ulnar nerve), sudden weakness or recurrence of a defect" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): splint or brace immobilisation, limited flexion arc per protocol", "Phase 2 (Early mobilisation, 4\u20138 weeks): progressive active-assisted range of motion, gradually increasing flexion", "Phase 3 (Strengthening, 8\u201316 weeks): progressive resistance training", "Phase 4 (Return to activity, 4\u20136 months): return to heavy lifting and sport"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 4 months", "Red flags: sudden weakness or a defect (re-rupture), persistent numbness, signs of infection"),
+  }),
+  opProc({
+    id: "radial-head-excision", family: "elbow-fracture-arthroplasty", variantName: "Radial head excision", name: "Radial head excision",
+    clinicNames: ["Radial head excision"], region: "elbow", sided: "elbow", planPriority: 80,
+    preop: ["Comminuted radial head fracture (Mason type III or IV)", "Radial head arthritis"],
+    reference: opRef(
+      ["Isolated, severely comminuted radial head fracture (Mason type III or IV) not amenable to fixation, without associated ligamentous instability or forearm axis injury", "Symptomatic radial head arthritis without instability, refractory to conservative treatment", "Preferred over ORIF when too comminuted for stable fixation, and over replacement when there is no associated instability (no Essex-Lopresti or ligamentous injury)"],
+      ["Associated elbow instability (MCL or LCL injury)", "Interosseous membrane injury or Essex-Lopresti lesion", "Forearm axis instability (all favour replacement to preserve the radiocapitellar buttress)"],
+      ["Standard elbow and fracture instrument set", "Oscillating saw or osteotome for resection", "Tourniquet"],
+      ["The posterior interosseous nerve is at risk; keep the forearm pronated during lateral exposure", "Always assess for occult ligamentous or interosseous membrane injury before excision; excision in an unstable elbow can lead to proximal radial migration and wrist pain (Essex-Lopresti)", "Avoid excessive resection into the neck, which compromises later reconstruction", "Document intra-operative stability testing clearly, given its implications for rehabilitation"]),
+    findings: [opS("mason", "Mason type", ["Type III", "Type IV"], 2), opS("stability", "Stability after excision", ["Stable", "Unstable"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [], closure: [OP_SKIN_SUTURE],
+    prep: OP_ELBOW_TQ_PREP,
+    steps: [
+      st("Lateral (Kocher) approach performed (interval between anconeus and extensor carpi ulnaris), protecting the posterior interosseous nerve by keeping the forearm pronated and staying anterior to the supinator"),
+      st("Annular ligament and joint capsule incised longitudinally to expose the radial head"),
+      st("Comminuted fragments assessed; stability of the annular ligament and interosseous membrane confirmed"),
+      st("Radial head resected at the level of the annular ligament with an oscillating saw, preserving as much of the neck as reasonable"),
+      st("Resection surface smoothed with a rasp; joint irrigated to remove debris and loose fragments"),
+      st("Elbow taken through range of motion and forearm rotation to confirm no mechanical impingement and to reassess stability"),
+    ],
+    closureSteps: ["Annular ligament and capsule repaired with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and posterior splint applied"],
+    plan: opPlanLines({ imm: "Splint for comfort for 1 week; early range of motion encouraged since there is no fixation to protect", red: "Red flags: fever, wound drainage, numbness (posterior interosseous nerve distribution), new instability sensation" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): splint for comfort, early gentle range of motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion", "Phase 3 (Strengthening, 3\u20136 weeks): progressive strengthening", "Phase 4 (Return to activity, 6\u20138 weeks): full return to activity"], "Return to driving 1\u20132 weeks; desk work 3\u20137 days; manual labour 6\u20138 weeks", "Red flags: new instability or giving way, wrist pain (concern for a missed Essex-Lopresti injury), persistent weakness"),
+  }),
+  opProc({
+    id: "radial-head-replacement", family: "elbow-fracture-arthroplasty", variantName: "Radial head replacement", name: "Radial head replacement",
+    clinicNames: ["Radial head arthroplasty"], region: "elbow", sided: "elbow", planPriority: 95,
+    preop: ["Comminuted radial head fracture with instability", "Terrible triad injury", "Essex-Lopresti lesion"],
+    reference: opRef(
+      ["Comminuted radial head fracture (Mason type III or IV) with associated elbow instability (MCL or LCL injury), terrible triad injury, or Essex-Lopresti lesion", "Failed prior radial head excision with proximal radial migration or instability", "Preferred over excision when radiocapitellar contact is needed to maintain valgus and longitudinal forearm stability"],
+      ["Significant capitellar or articular damage precluding adequate implant articulation", "Chronic malunion with altered anatomy complicating sizing"],
+      ["Modular radial head implant system (monopolar or bipolar), trial and final head and stem sizes", "Broaches and reamers for radial neck preparation", "Standard elbow instrument set", "Tourniquet"],
+      ["Overstuffing the radiocapitellar joint with an oversized implant is the commonest technical error, leading to stiffness and capitellar wear; careful sizing and trialling are critical", "The posterior interosseous nerve is protected by keeping the forearm pronated during exposure", "Always assess and address concomitant ligamentous injury (LCL most common); isolated replacement without addressing instability leads to poor outcomes", "Ensure the stem is not oversized relative to the native radial neck, which risks fracture during broaching and impaction"]),
+    findings: [opS("mason", "Mason type", ["Type III", "Type IV"], 2), opC("associated", "Associated injuries", ["LCL injury", "MCL injury", "Coronoid fracture", "Essex-Lopresti lesion"]), OP_FIELD_OTHER_FINDINGS],
+    technique: [opT("implantDetail", "Implant system, head and stem sizes", "e.g. monopolar, 22 mm head"), opS("stemFixation", "Stem fixation", ["Press-fit", "Cemented"], 2), opS("lcl", "LCL complex", ["Repaired with suture anchors", "Not repaired"], 1), opS("mcl", "MCL", ["Repaired", "Not repaired"], 2)],
+    closure: [opT("splintAngle", "Splint position", "e.g. 90 degrees flexion"), OP_SKIN_SUTURE],
+    summary: (v) => (v.stemFixation ? `stem ${v.stemFixation.toLowerCase()}` : null),
+    prep: OP_ELBOW_TQ_PREP,
+    steps: [
+      st("Lateral (Kocher) approach performed with the forearm pronated to protect the posterior interosseous nerve"),
+      st("Joint capsule and annular ligament incised; comminuted radial head fragments identified, excised and preserved for sizing reference"),
+      st("Associated ligamentous injuries (LCL, MCL, coronoid) assessed and addressed as indicated"),
+      st("Radial neck prepared with sequential reaming and broaching; resection level confirmed at the annular ligament and lesser sigmoid notch"),
+      st("Trial stem and head placed; radiocapitellar and proximal radioulnar joint congruency assessed, avoiding overstuffing (head diameter and thickness matched to the excised fragments and confirmed with fluoroscopy or direct vision)"),
+      st("Elbow taken through full range of motion and forearm rotation to confirm no impingement and restored stability"),
+      st("Final implant impacted or cemented into position"),
+      st("LCL complex repaired to the lateral epicondyle with suture anchors", (v) => v.lcl === "Repaired with suture anchors"),
+      st("MCL repaired", (v) => v.mcl === "Repaired"),
+      st("Stability reassessed through full range of motion after all associated repairs"),
+    ],
+    closureSteps: ["Annular ligament and capsule repaired with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and posterior splint applied"],
+    plan: opPlanLines({ imm: "Splint or hinged brace immobilisation for 1\u20132 weeks, then progressive range of motion per protocol and associated ligament repair status", red: "Red flags: fever, wound drainage, numbness (posterior interosseous nerve distribution), new instability" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint or brace immobilisation per the associated ligament repair", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive range of motion in a hinged brace", "Phase 3 (Strengthening, 6\u201312 weeks): progressive strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to full activity"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 3\u20134 months", "Red flags: new instability or giving way, persistent numbness, signs of infection"),
+  }),
+  opProc({
+    id: "total-elbow-arthroplasty", family: "elbow-fracture-arthroplasty", variantName: "Total elbow arthroplasty", name: "Total elbow arthroplasty",
+    clinicNames: ["Total elbow arthroplasty"], region: "elbow", sided: "elbow", planPriority: 100,
+    preop: ["Rheumatoid arthritis of the elbow", "Post-traumatic arthritis", "Distal humerus fracture"], positioning: ["Lateral decubitus", "Supine with arm across the chest"],
+    reference: opRef(
+      ["End-stage rheumatoid arthritis of the elbow with significant pain and functional limitation", "Post-traumatic arthritis, or distal humerus fracture not amenable to fixation in a low-demand elderly patient", "Failed prior fracture fixation with painful non-union or arthritis", "Preferred over fixation in comminuted distal humerus fractures in elderly, low-demand patients with osteoporotic bone where stable fixation is unlikely"],
+      ["Young high-demand patient (implant longevity concerns with lifting restrictions)", "Poor soft-tissue envelope or multiple prior surgeries", "Active infection elsewhere"],
+      ["Total elbow arthroplasty implant system (linked semi-constrained or unlinked), humeral and ulnar component sizes", "Cement and cement restrictor", "Standard elbow retractor set, broaches and reamers", "Tourniquet"],
+      ["Lifetime lifting restrictions must be explained before surgery given implant longevity limits", "Triceps insufficiency after takedown approaches is a known complication; meticulous repair is required", "Ulnar nerve transposition at closure reduces the risk of post-operative neuropathy from scarring near hardware", "Component malalignment or oversizing risks early loosening; careful canal preparation and sizing are essential", "Skin flap viability is a concern, especially in rheumatoid patients; handle tissue gently and consider a tourniquet-free technique if skin quality is poor"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("implantType", "Implant", ["Linked (semi-constrained)", "Unlinked"], 2), opS("triceps", "Triceps approach", ["Sparing", "Splitting", "Reflecting (Bryan-Morrey)"], 1), opT("implantDetail", "Implant system and component sizes", "e.g. system, humeral and ulnar sizes"), opT("cementDetail", "Cement and restrictor", "e.g. antibiotic cement, restrictors placed")],
+    closure: [opT("tricepsSuture", "Triceps repair suture (if taken down)", "e.g. heavy non-absorbable"), opT("splintAngle", "Splint position", "e.g. 70\u201390 degrees flexion"), OP_SKIN_SUTURE],
+    summary: (v) => (v.implantType ? v.implantType.toLowerCase() : null),
+    prep: ["Arm positioned with the tourniquet applied (or avoided in inflammatory arthritis with fragile skin, per surgeon preference)", "Standard prep and drape"],
+    steps: [
+      st("Posterior midline incision made; full-thickness flaps raised to protect skin viability"),
+      st("Ulnar nerve identified, mobilised and protected throughout (transposed anteriorly at closure)"),
+      st("Triceps approach performed to access the joint"),
+      st("Distal humerus and proximal ulna exposed; fracture fragments excised (trauma indication) or arthritic joint surfaces prepared"),
+      st("Humeral canal prepared with sequential reaming and broaching, sized per templating"),
+      st("Ulnar canal prepared with sequential reaming and broaching"),
+      st("Trial humeral and ulnar components placed, linked (semi-constrained system) or reduced (unlinked); range of motion and stability assessed"),
+      st("Final components cemented into the humeral and ulnar canals in turn, with cement restrictors placed to control the cement mantle"),
+      st("Components linked or reduced; final stability and range of motion confirmed"),
+      st("Triceps mechanism repaired if a takedown was performed"),
+      st("Ulnar nerve transposed anteriorly (subcutaneous) at closure"),
+    ],
+    closureSteps: ["Ulnar nerve secured in the subcutaneous position", "Layered subcutaneous and skin closure", "Sterile dressing and posterior splint applied"],
+    plan: opPlanLines({ imm: "Splint immobilisation for 1\u20132 weeks, then progressive range of motion within lifting restrictions", restr: "Lifetime lifting restriction, typically 5\u201310 lb for a single event and 1\u20132 lb for repetitive lifting, to protect implant longevity", red: "Red flags: fever, wound drainage, numbness (ulnar nerve), sudden instability or dislocation (unlinked implants)", follow: "Follow-up in 10\u201314 days; serial radiographs to monitor component position and loosening" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation, gentle motion as directed", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive active-assisted range of motion", "Phase 3 (Strengthening, 6\u201312 weeks): gentle strengthening within lifetime lifting restrictions", "Phase 4 (Return to activity, 3\u20134 months): return to daily activities within permanent lifting restrictions"], "Return to driving 3\u20134 weeks; desk work 3\u20134 weeks; avoid heavy or repetitive lifting indefinitely", "Red flags: sudden instability (dislocation in unlinked systems), increasing pain (loosening or infection), new numbness"),
+  }),
+  opProc({
+    id: "lateral-epicondylitis-release", family: "epicondylitis", variantName: "Lateral epicondylitis release", name: "Lateral epicondylitis debridement and release",
+    clinicNames: ["Open debridement/repair (ECRB)"], region: "elbow", sided: "elbow", planPriority: 60,
+    preop: ["Lateral epicondylitis (ECRB tendinopathy)"],
+    reference: opRef(
+      ["Chronic lateral epicondylitis (ECRB tendinopathy) refractory to 6\u201312 months of conservative management (therapy, bracing, injections)", "Degenerative changes at the ECRB origin on imaging correlating with the clinical findings", "Preferred over continued conservative management once an adequate non-operative trial has failed and symptoms significantly limit function"],
+      ["Incomplete conservative treatment trial", "Concomitant posterolateral rotatory instability (address concurrently if present)", "Symptoms more consistent with radial tunnel syndrome or posterior interosseous nerve entrapment"],
+      ["Standard soft-tissue set (open) or arthroscopy tower (arthroscopic)", "Tourniquet"],
+      ["Overly aggressive debridement risks destabilising the lateral ulnar collateral ligament, which lies deep to the ECRB origin; keep its location in mind", "Ensure the diagnosis is correct; radial tunnel syndrome or posterior interosseous nerve entrapment can mimic lateral epicondylitis and needs a different approach", "Adequate decortication of the epicondyle improves the healing response but should not weaken the bone"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("technique", "Technique", ["Open", "Arthroscopic"], 2), opN("incision", "Incision length (open)", "cm")],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.technique ? v.technique.toLowerCase() : null),
+    prep: OP_ELBOW_TQ_PREP,
+    steps: [
+      st("Incision made centred over the lateral epicondyle, extending distally along the extensor mass", (v) => v.technique !== "Arthroscopic"),
+      st("Interval between extensor carpi radialis longus and extensor digitorum communis identified", (v) => v.technique !== "Arthroscopic"),
+      st("ECRB origin identified, appearing grey and degenerative compared with healthy tendon", (v) => v.technique !== "Arthroscopic"),
+      st("Diseased tendon tissue sharply excised and debrided from its origin", (v) => v.technique !== "Arthroscopic"),
+      st("Lateral epicondyle decorticated with a rasp or burr to promote a healing response", (v) => v.technique !== "Arthroscopic"),
+      st("Healthy extensor origin preserved and repaired to the epicondyle if significant detachment was created by the debridement", (v) => v.technique !== "Arthroscopic"),
+      st("Diagnostic arthroscopy performed via standard portals; the ECRB undersurface visualised from within the joint and released or debrided with a shaver or radiofrequency device from the capsular side, with evaluation of the joint for intra-articular pathology", (v) => v.technique === "Arthroscopic"),
+    ],
+    closureSteps: ["Fascial layer closed with absorbable suture if applicable", "Layered subcutaneous and skin closure", "Sterile soft dressing or brief splint applied for comfort"],
+    plan: opPlanLines({ imm: "Soft dressing or brief splint for comfort for 3\u20137 days; early motion encouraged", red: "Red flags: fever, wound drainage, uncontrolled pain" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion, gentle stretching", "Phase 3 (Strengthening, 3\u20138 weeks): progressive eccentric strengthening programme", "Phase 4 (Return to activity, 3\u20134 months): return to sport and heavy grip activity"], "Return to driving 3\u20137 days; desk work 3\u20137 days; racquet sport or manual labour 3\u20134 months", "Red flags: new instability sensation (concern for LCL injury), persistent pain beyond the expected timeline"),
+  }),
+  opProc({
+    id: "medial-epicondylitis-release", family: "epicondylitis", variantName: "Medial epicondylitis release", name: "Medial epicondylitis debridement and release",
+    clinicNames: ["Open debridement/repair (flexor-pronator origin)"], region: "elbow", sided: "elbow", planPriority: 60,
+    preop: ["Medial epicondylitis (flexor-pronator tendinopathy)"],
+    reference: opRef(
+      ["Chronic medial epicondylitis (common flexor-pronator tendinopathy, mainly pronator teres and FCR) refractory to 6\u201312 months of conservative management", "Degenerative changes at the flexor-pronator origin correlating with the clinical findings", "Preferred over continued conservative management once an adequate non-operative trial has failed"],
+      ["Incomplete conservative treatment trial", "Concomitant unaddressed ulnar neuropathy or medial instability", "Cervical radiculopathy or ulnar nerve pathology mimicking the symptoms"],
+      ["Standard soft-tissue set", "Tourniquet"],
+      ["The ulnar nerve lies immediately posterior to the operative field; identify and protect it early", "Overly aggressive debridement risks destabilising the medial collateral ligament, which lies deep to the flexor-pronator origin, particularly in throwers; preserve the MCL", "Ensure the diagnosis is correct; cervical radiculopathy and cubital tunnel syndrome can mimic or coexist with medial epicondylitis"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("incision", "Incision length", "cm"), OP_ULNAR_FIELD],
+    closure: [OP_SKIN_SUTURE],
+    prep: ["Supine position, arm on a hand table externally rotated, tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Incision made centred over the medial epicondyle, extending distally along the flexor-pronator mass"),
+      st("Ulnar nerve identified and protected posteriorly (marked and monitored throughout; transposition only if symptomatic ulnar neuropathy is present)"),
+      st("Flexor-pronator origin (mainly pronator teres and FCR) identified; diseased, grey degenerative tissue distinguished from healthy tendon"),
+      st("Diseased tissue sharply excised and debrided from its origin"),
+      st("Medial epicondyle decorticated with a rasp or burr to promote healing"),
+      st("Healthy flexor-pronator origin repaired back to the epicondyle if significant detachment was created"),
+    ],
+    closureSteps: ["Fascial layer closed with absorbable suture", "Layered subcutaneous and skin closure", "Sterile soft dressing or brief splint applied for comfort"],
+    plan: opPlanLines({ imm: "Soft dressing or brief splint for comfort for 3\u20137 days; early motion encouraged", red: "Red flags: fever, wound drainage, numbness or tingling in the ring and small fingers (ulnar nerve)" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion", "Phase 3 (Strengthening, 3\u20138 weeks): progressive eccentric strengthening programme", "Phase 4 (Return to activity, 3\u20134 months): return to sport and grip-intensive activity"], "Return to driving 3\u20137 days; desk work 3\u20137 days; throwing sport or manual labour 3\u20134 months", "Red flags: new or worsening ulnar nerve symptoms, new valgus instability sensation (throwing athletes)"),
+  }),
+  opProc({
+    id: "cubital-tunnel-release", family: "ulnar-nerve-elbow", variantName: "Cubital tunnel release (open)", name: "Cubital tunnel release with ulnar nerve decompression",
+    clinicNames: ["Ulnar nerve decompression", "Ulnar nerve transposition", "In situ decompression (open)", "Anterior transposition (subcutaneous)", "Anterior transposition (submuscular)"], region: "elbow", sided: "elbow", planPriority: 70,
+    preop: ["Cubital tunnel syndrome (ulnar neuropathy at the elbow)"],
+    reference: opRef(
+      ["Cubital tunnel syndrome with clinical or electrodiagnostic confirmation, refractory to conservative management (activity modification, night splinting)", "Progressive motor weakness, intrinsic atrophy or significant sensory deficit warranting more urgent decompression", "In situ decompression preferred when there is no nerve subluxation, minimal scarring, and mild to moderate symptoms without significant valgus deformity", "Anterior transposition preferred for nerve subluxation over the medial epicondyle, revision surgery, significant cubitus valgus, or concomitant medial epicondylitis or a mass"],
+      ["Mild, purely sensory symptoms without electrodiagnostic confirmation (consider an extended conservative trial first)"],
+      ["Standard soft-tissue set, nerve dissection instruments (fine scissors, nerve hooks)", "Tourniquet", "Additional instrumentation for flexor-pronator elevation and repair if submuscular transposition"],
+      ["Incomplete distal release (the deep flexor-pronator aponeurosis and FCU fascia) is a common cause of persistent symptoms; extend the decompression well distal to the medial epicondyle", "Medial antebrachial cutaneous nerve injury causes a painful neuroma or numbness; identify and protect it", "In transposition, ensure a smooth, tension-free course without new kinking, particularly at the intermuscular septum (excise if transposing) and at the distal exit of the new bed", "Overly aggressive medial epicondylectomy, if performed, can destabilise the MCL"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("technique", "Technique", ["In situ decompression", "Anterior subcutaneous transposition", "Anterior submuscular transposition"], 1), opN("incision", "Incision length", "cm"), opS("subluxation", "Nerve stability on flexion and extension", ["Stable", "Subluxes"], 2)],
+    closure: [opS("dressing", "Dressing", ["Soft dressing", "Brief posterior splint"], 2), OP_SKIN_SUTURE],
+    summary: (v) => (v.technique ? v.technique.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table externally rotated, tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Incision made posterior to the medial epicondyle, from the proximal arm to the proximal forearm"),
+      st("Medial antebrachial cutaneous nerve branches identified and protected"),
+      st("Ulnar nerve identified proximally at the arcade of Struthers and released"),
+      st("Osborne's ligament (roof of the cubital tunnel) incised to decompress the nerve at the elbow"),
+      st("Nerve followed distally through the two heads of flexor carpi ulnaris, releasing the deep flexor-pronator aponeurosis to ensure full decompression"),
+      st("Nerve inspected for compression points and its tendency to subluxate assessed through flexion and extension"),
+      st("Nerve left in its anatomic bed after confirming stability and no subluxation through range of motion; medial epicondyle left intact", (v) => v.technique === "In situ decompression"),
+      st("Nerve mobilised preserving its vascular branches; medial intermuscular septum excised or partly resected to prevent kinking; nerve transposed anterior to the medial epicondyle and secured in a subcutaneous fascial sling; elbow ranged to confirm no new kinking or tension", (v) => v.technique === "Anterior subcutaneous transposition"),
+      st("Flexor-pronator mass elevated off the medial epicondyle; nerve transposed deep to the muscle mass; flexor-pronator origin repaired over the transposed nerve (Z-lengthening if needed for tension-free closure); elbow ranged to confirm adequate decompression and no impingement", (v) => v.technique === "Anterior submuscular transposition"),
+    ],
+    closureSteps: ["Fascial sling or flexor-pronator repair completed as applicable", "Layered subcutaneous and skin closure", "Sterile dressing applied"],
+    plan: opPlanLines({ imm: "Soft dressing (in situ or subcutaneous transposition) or brief splint for 1\u20132 weeks (submuscular transposition); early gentle motion encouraged", red: "Red flags: fever, wound drainage, worsening numbness or weakness, new elbow flexion contracture" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): soft dressing or brief splint, early gentle motion", "Phase 2 (Early mobilisation, 1\u20134 weeks): progressive active range of motion", "Phase 3 (Strengthening, 4\u20138 weeks): progressive grip and intrinsic strengthening as nerve recovery allows", "Phase 4 (Return to activity, 6\u201312 weeks): return to full activity; sensory and motor recovery may continue for 6\u201312 months depending on preoperative severity"], "Return to driving 1\u20132 weeks; desk work 1 week; manual labour 4\u20138 weeks", "Red flags: worsening rather than improving numbness or weakness, new subluxation sensation (in situ cases), signs of infection"),
+  }),
+  opProc({
+    id: "medial-epicondylectomy", family: "ulnar-nerve-elbow", variantName: "Medial epicondylectomy", name: "Partial medial epicondylectomy for cubital tunnel syndrome",
+    clinicNames: ["Medial epicondylectomy"], region: "elbow", sided: "elbow", planPriority: 75,
+    preop: ["Cubital tunnel syndrome (ulnar neuropathy at the elbow)"],
+    reference: opRef(
+      ["Cubital tunnel syndrome confirmed clinically and/or electrodiagnostically, refractory to conservative management (activity modification, night splinting)", "Ulnar nerve irritation or instability over a prominent medial epicondyle, or persistent symptoms after in situ decompression", "No clear outcome advantage over in situ decompression or anterior transposition; the choice rests on nerve stability, prior surgery, the soft-tissue bed and surgeon preference, and epicondylectomy leaves the nerve in its bed and preserves its segmental blood supply"],
+      ["Medial elbow instability or UCL insufficiency, particularly in throwers (favour transposition)", "Mild, purely sensory symptoms without electrodiagnostic confirmation", "A nerve that remains unstable after resection (transposition then needed)"],
+      ["Standard soft-tissue set, nerve dissection instruments (fine scissors, nerve hooks, vessel loops)", "Osteotome and rongeur or burr for epicondyle resection; bone wax", "Suture anchor if the flexor-pronator origin needs reattachment", "Tourniquet or WALANT"],
+      ["The anterior bundle of the medial collateral ligament arises from the anterior-inferior epicondyle; resect only the posterior portion to avoid valgus instability, particularly in throwers", "Incomplete proximal or distal decompression is a common cause of persistent symptoms; epicondylectomy does not replace a full release", "Medial antebrachial cutaneous nerve injury causes a painful neuroma or numbness; identify and protect it", "Reassess stability after resection and repair: a nerve that still subluxates needs transposition", "Epicondylar tenderness and haematoma are recognised early problems; haemostasis and sealing the cut bone surface help"]),
+    findings: [opS("subluxation", "Nerve stability before resection", ["Stable", "Subluxes"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("incision", "Incision length", "cm"), opS("resection", "Epicondyle resected", ["Posterior portion", "Other (describe in deviations)"], 2), opS("surface", "Cut bone surface", ["Bone wax", "Periosteal flap", "Neither"], 3), opS("finalStability", "Nerve stability after resection and repair", ["Stable", "Subluxes (transposed)"], 2)],
+    closure: [opS("dressing", "Dressing", ["Soft dressing", "Brief posterior splint"], 2), OP_SKIN_SUTURE],
+    summary: () => null,
+    prep: ["Supine position, arm on a hand table externally rotated, tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Incision made posterior to the medial epicondyle, centred over the cubital tunnel"),
+      st("Medial antebrachial cutaneous nerve branches identified and protected"),
+      st("Ulnar nerve identified proximally and decompressed from the arcade of Struthers (if present) and medial intermuscular septum through the cubital tunnel (Osborne's ligament) to between the two heads of flexor carpi ulnaris, releasing the deep flexor-pronator aponeurosis"),
+      st("Nerve gently mobilised, protected with a vessel loop, and its stability over the epicondyle assessed through full flexion and extension"),
+      st("Flexor-pronator origin elevated subperiosteally from the posterior and medial surfaces of the epicondyle, leaving the anterior-inferior portion (origin of the anterior bundle of the MCL) undisturbed"),
+      st("Partial epicondylectomy performed with an osteotome or burr, resecting the posterior portion of the epicondyle flush with the humeral sulcus, with the nerve protected throughout"),
+      st("Cut surface smoothed with a rasp and sealed as recorded"),
+      st("Flexor-pronator origin and periosteum repaired over the resected surface"),
+      st("Nerve stability reassessed through full range of motion, confirming no subluxation and no kinking"),
+      st("Haemostasis confirmed"),
+    ],
+    closureSteps: ["Flexor-pronator and periosteal repair completed with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing applied"],
+    plan: opPlanLines({ imm: "Soft dressing, or a brief splint for 1 week; early gentle motion encouraged", red: "Red flags: fever, wound drainage or haematoma, worsening numbness or weakness, sensation of medial elbow instability, persistent tenderness over the resected epicondyle" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or brief splint, early gentle motion", "Phase 2 (Early mobilisation, 1\u20134 weeks): progressive active range of motion", "Phase 3 (Strengthening, 4\u20138 weeks): progressive grip and intrinsic strengthening as nerve recovery allows", "Phase 4 (Return to activity, 6\u201312 weeks): return to full activity; sensory and motor recovery may continue for 6\u201312 months"], "Return to driving 1\u20132 weeks; desk work 1 week; manual labour 4\u20138 weeks", "Red flags: worsening rather than improving numbness or weakness, new valgus instability (throwers), signs of infection"),
+  }),
+  opProc({
+    id: "endoscopic-cubital-tunnel-release", family: "ulnar-nerve-elbow", variantName: "Endoscopic cubital tunnel release", name: "Endoscopic cubital tunnel release",
+    clinicNames: ["Endoscopic decompression"], region: "elbow", sided: "elbow", planPriority: 70,
+    preop: ["Cubital tunnel syndrome (ulnar neuropathy at the elbow)"],
+    reference: opRef(
+      ["Cubital tunnel syndrome, mild to moderate, confirmed clinically and/or electrodiagnostically, refractory to conservative management", "Stable ulnar nerve (no subluxation on elbow flexion), no previous elbow surgery, no significant deformity and no space-occupying lesion", "Smaller incision than open in situ release, which may reduce wound problems and scar tenderness; outcomes are generally reported as comparable"],
+      ["Nerve subluxation or instability (favour transposition)", "Prior surgery or scarring, cubitus valgus or other deformity", "A mass or osteophyte compressing the nerve", "Anatomy that cannot be visualised safely (convert to open)"],
+      ["Endoscopic cubital tunnel release system (lighted retractor or endoscope and dissecting instruments, per manufacturer)", "Standard soft-tissue set for conversion to open release", "Tourniquet or WALANT"],
+      ["Incomplete distal release (deep flexor-pronator aponeurosis, FCU fascia) is the commonest reason for persisting symptoms; confirm the full extent under direct view", "Medial antebrachial cutaneous nerve branches can lie in the working space; identify them before introducing instruments", "Check nerve stability after release; a nerve that subluxates is not suited to simple release", "Have a low threshold to convert to open release if the view is poor or the anatomy unclear", "Bleeding from the posterior ulnar recurrent vessels can obscure the view; control it before continuing"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("portals", "Technique", ["Single-portal", "Two-portal"], 2), opN("incision", "Incision length", "cm"), opN("releaseLength", "Release length each way", "cm"), opS("stability", "Nerve stability after release", ["Stable", "Subluxes (converted to open)"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: () => null,
+    prep: ["Supine position, arm abducted on a hand table and externally rotated, tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Incision made posterior to the medial epicondyle over the cubital tunnel"),
+      st("Dissection carried to the fascia; medial antebrachial cutaneous nerve branches, which may cross the field, identified and protected"),
+      st("Roof of the cubital tunnel (Osborne's ligament) opened and the ulnar nerve identified; working space created along the nerve proximally and distally under direct vision with the system's instruments"),
+      st("Endoscope or lighted retractor introduced and the fascia over the nerve released under direct endoscopic view, including any proximal fascial band or septum and, distally, the deep flexor-pronator aponeurosis and flexor carpi ulnaris fascia"),
+      st("Complete release confirmed endoscopically, with the nerve lying free along its course and no residual constricting band"),
+      st("Nerve stability assessed through full flexion and extension"),
+      st("Wound irrigated; haemostasis confirmed"),
+    ],
+    closureSteps: ["Skin closed", "Sterile soft dressing applied"],
+    plan: opPlanLines({ imm: "Soft dressing; early elbow motion encouraged", red: "Red flags: fever, wound drainage or haematoma, worsening numbness or weakness, new sensation of the nerve snapping over the epicondyle" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion", "Phase 3 (Strengthening, 3\u20136 weeks): progressive grip and intrinsic strengthening", "Phase 4 (Return to activity, 4\u20138 weeks): return to full activity; recovery of sensation and strength may continue for 6\u201312 months"], "Return to driving 1 week; desk work 3\u20137 days; manual labour 3\u20136 weeks", "Red flags: worsening numbness or weakness, subluxation sensation, signs of infection"),
+  }),
+  opProc({
+    id: "olecranon-orif", family: "elbow-fracture-arthroplasty", variantName: "Olecranon ORIF", name: "Olecranon open reduction internal fixation",
+    clinicNames: ["Tension band wiring", "ORIF of proximal ulna"], ambiguousNames: ["Plate fixation"], region: "elbow", sided: "elbow", planPriority: 90,
+    preop: ["Displaced olecranon fracture"], positioning: ["Lateral decubitus", "Prone", "Supine with arm across the chest"],
+    reference: opRef(
+      ["Displaced olecranon fracture with disruption of the extensor mechanism", "Intra-articular displacement affecting elbow congruency", "Preferred over non-operative management (reserved for minimally displaced, stable fractures with an intact extensor mechanism)"],
+      ["Severe comminution in a low-demand elderly patient (consider fragment excision with triceps advancement, or arthroplasty)", "Significant osteoporosis limiting fixation options (choose tension band or plate by bone quality)"],
+      ["Precontoured olecranon plate system, or tension band wiring construct (K-wires and 18-gauge wire)", "Fluoroscopy for reduction and hardware confirmation", "Standard fracture reduction instruments", "Tourniquet"],
+      ["The ulnar nerve is at risk throughout the posterior approach; identify and protect it early, particularly during drilling and wire passage", "Tension band wiring in comminuted fractures can lead to fragment collapse; plate fixation is generally preferred for comminuted or oblique patterns", "Hardware prominence is common with the subcutaneous location; counsel about possible hardware removal", "Ensure the articular reduction is anatomic, since the olecranon forms a large part of the greater sigmoid notch"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("fixation", "Fixation", ["Tension band wiring", "Plate fixation"], 2), opT("implantDetail", "Implant details", "e.g. precontoured plate, 18-gauge wire, K-wire size"), OP_ULNAR_FIELD],
+    closure: [opT("splintAngle", "Splint position", "e.g. 70\u201390 degrees flexion"), OP_SKIN_SUTURE],
+    summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
+    prep: ["Arm positioned with the tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Posterior midline incision made over the olecranon, curving slightly around the tip"),
+      st("Ulnar nerve identified and protected throughout (mobilised with a vessel loop as needed)"),
+      st("Fracture site exposed, haematoma evacuated, fragments identified"),
+      st("Articular surface visualised and reduced anatomically under direct vision"),
+      st("Provisional fixation with K-wires placed longitudinally down the ulnar canal"),
+      st("18-gauge wire passed in a figure-of-8 around the K-wires and through a transverse drill hole distal to the fracture, tensioned to convert extensor tension into compression across the fracture", (v) => v.fixation === "Tension band wiring"),
+      st("Precontoured olecranon plate applied along the subcutaneous border of the ulna, secured proximally into the olecranon fragment and distally along the ulnar shaft with locking and non-locking screws", (v) => v.fixation === "Plate fixation"),
+      st("Reduction and hardware position confirmed with fluoroscopy in multiple planes"),
+      st("Elbow taken through range of motion to confirm stable fixation without hardware impingement"),
+    ],
+    closureSteps: ["Triceps insertion and fascia repaired over the hardware as needed with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and posterior splint applied"],
+    plan: opPlanLines({ imm: "Splint immobilisation for 1\u20132 weeks, then progressive range of motion per protocol", red: "Red flags: fever, wound drainage, numbness (ulnar nerve), hardware prominence or irritation", follow: "Follow-up in 10\u201314 days; serial radiographs to confirm healing" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive active-assisted range of motion", "Phase 3 (Strengthening, 6\u201312 weeks): progressive strengthening once union is demonstrated", "Phase 4 (Return to activity, 3\u20134 months): return to full activity once solid union is confirmed"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 3\u20134 months", "Red flags: hardware failure or loss of reduction, numbness, signs of infection"),
+  }),
+  opProc({
+    id: "radial-head-orif", family: "elbow-fracture-arthroplasty", variantName: "Radial head ORIF", name: "Radial head open reduction internal fixation",
+    clinicNames: ["ORIF of radial head"], region: "elbow", sided: "elbow", planPriority: 90,
+    preop: ["Displaced radial head fracture (Mason type II)", "Displaced radial head fracture (Mason type III)"],
+    reference: opRef(
+      ["Displaced radial head fracture (Mason type II, and selected type III) amenable to stable anatomic fixation, preserving the native radial head", "Fracture with over 2 mm displacement or a mechanical block to forearm rotation", "Preferred over excision or replacement when the pattern allows stable, anatomic reduction preserving the native articular surface (typically three or fewer major fragments)"],
+      ["Severe comminution (more than three fragments) precluding stable fixation (favour replacement)", "Significant osteoporosis limiting screw purchase"],
+      ["Small fragment fixation set: mini-fragment screws (1.5\u20132.7 mm), low-profile plates as needed", "Fluoroscopy for reduction confirmation", "Standard fracture reduction instruments", "Tourniquet"],
+      ["Hardware must sit within the safe zone (the non-articulating portion of the radial head) to avoid proximal radioulnar joint impingement; identify the zone by rotating the forearm before fixation", "The posterior interosseous nerve is protected by keeping the forearm pronated during lateral exposure", "Always assess for associated ligamentous injury (LCL, MCL) or an Essex-Lopresti lesion, which may need additional treatment", "Screw heads must be countersunk or low-profile to avoid mechanical impingement with rotation"]),
+    findings: [opS("mason", "Mason type", ["Type II", "Type III"], 2), opN("fragments", "Number of fragments"), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("fixation", "Fixation", ["Headless compression screws", "Low-profile plate", "Screws and plate"], 1), opT("implantDetail", "Implant details", "e.g. 2.0 mm headless screws x 2")],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
+    prep: OP_ELBOW_TQ_PREP,
+    steps: [
+      st("Lateral (Kocher) approach performed with the forearm pronated to protect the posterior interosseous nerve"),
+      st("Joint capsule and annular ligament incised longitudinally; fracture fragments identified and haematoma evacuated"),
+      st("Fracture fragments reduced anatomically under direct vision, with provisional fixation using K-wires"),
+      st("Reduction confirmed by direct visualisation of the articular surface and with fluoroscopy"),
+      st("Fixation achieved in the safe zone (non-articulating arc of the radial head) to avoid impingement with the proximal radioulnar joint"),
+      st("Screw and hardware position confirmed to avoid articular penetration and impingement, with fluoroscopy in multiple planes"),
+      st("Forearm rotated through full pronation and supination to confirm no mechanical block or hardware impingement"),
+    ],
+    closureSteps: ["Annular ligament and capsule repaired with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and posterior splint applied"],
+    plan: opPlanLines({ imm: "Splint for comfort for 1 week; early range of motion as tolerated with stable fixation", red: "Red flags: fever, wound drainage, numbness (posterior interosseous nerve distribution), mechanical block to rotation", follow: "Follow-up in 10\u201314 days; serial radiographs to confirm healing" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): splint for comfort, early gentle range of motion", "Phase 2 (Early mobilisation, 1\u20134 weeks): progressive active range of motion", "Phase 3 (Strengthening, 4\u20138 weeks): progressive strengthening once healing is progressing well", "Phase 4 (Return to activity, 3\u20134 months): return to full activity once solid healing is confirmed"], "Return to driving 1\u20132 weeks; desk work 3\u20137 days; manual labour 3\u20134 months", "Red flags: mechanical block to rotation (hardware impingement), new instability, signs of infection"),
+  }),
+  opProc({
+    id: "elbow-contracture-release", family: "elbow-arthroscopy-release", variantName: "Contracture release", name: "Elbow contracture release",
+    clinicNames: ["Arthroscopic capsular release", "Open capsular release (column procedure)"], region: "elbow", sided: "elbow", planPriority: 80,
+    preop: ["Post-traumatic elbow contracture"], positioning: ["Supine with arm on a hand table", "Lateral decubitus"],
+    reference: opRef(
+      ["Post-traumatic or degenerative elbow contracture with significant functional loss of motion refractory to therapy, splinting and static progressive bracing", "Heterotopic ossification causing a mechanical block (after maturation is confirmed)", "Preferred over continued conservative management once an adequate structured therapy trial has failed; an open approach is generally preferred when there is significant heterotopic ossification, prior hardware or extensive capsular scarring"],
+      ["Immature heterotopic ossification (wait for maturation, typically 6 months to 1 year from the injury)", "Unrealistic patient expectations about attainable motion", "Active inflammatory arthritis flare"],
+      ["Standard elbow soft-tissue and osteotome and rongeur set for heterotopic ossification excision", "Arthroscopy tower if the arthroscopic technique is chosen", "Tourniquet", "Nerve exploration instruments (ulnar nerve at particular risk)"],
+      ["Delaying post-operative motion is the single greatest risk factor for recurrence; an aggressive, well-analgesed early motion protocol is essential", "The ulnar nerve is at high risk throughout, particularly with medial releases and heterotopic ossification excision; identify and protect it, with a low threshold for transposition", "Incomplete excision of anterior or posterior impinging bone or capsule is a common cause of persistent limitation; address both compartments", "Recurrence of heterotopic ossification is a risk; consider prophylaxis (NSAIDs, single-dose radiotherapy) in high-risk patients"]),
+    findings: [opG("romBefore", "Range of motion before release", ["Flexion", "Extension"], "\u00b0"), opG("romAfter", "Final range of motion", ["Flexion", "Extension"], "\u00b0"), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("technique", "Approach", ["Open", "Arthroscopic"], 2), opC("procedures", "Procedures performed", ["Anterior capsulectomy", "Posterior capsulectomy", "Heterotopic ossification excision", "Collateral ligament release (posterior bundle of the MCL)"]), OP_ULNAR_FIELD, opS("haProphylaxis", "Heterotopic ossification prophylaxis", ["None", "NSAID", "Radiotherapy"], 3)],
+    closure: [opS("postopMotion", "Post-operative motion", ["Hinged brace with immediate motion", "Static progressive splinting", "Continuous passive motion"], 1), OP_SKIN_SUTURE],
+    summary: (v) => (v.technique ? v.technique.toLowerCase() : null),
+    prep: ["Tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Combined medial and lateral, or posterior universal, incision made according to the contracture pattern and the need for nerve decompression", (v) => v.technique !== "Arthroscopic"),
+      st("Ulnar nerve identified and protected (decompressed, with or without transposition, if a medial release was performed or the nerve was at risk)", (v) => v.technique !== "Arthroscopic"),
+      st("Anterior capsule exposed through the interval anterior to the collateral ligaments; anterior capsulectomy performed, excising scarred capsule from the coronoid and radial fossae", (v) => v.technique !== "Arthroscopic"),
+      st("Coronoid and radial fossae debrided of impinging osteophytes and heterotopic bone", (v) => v.technique !== "Arthroscopic"),
+      st("Heterotopic ossification excised with an osteotome or rongeur, identifying and protecting neurovascular structures embedded in or adjacent to the ectopic bone", (v) => v.procedures && v.procedures.includes("Heterotopic ossification excision")),
+      st("Posterior compartment addressed similarly: posterior capsulectomy and clearance of impinging bone from the olecranon fossa and tip", (v) => v.technique !== "Arthroscopic"),
+      st("Collateral ligaments assessed for contracture; the posterior bundle of the MCL released selectively if flexion remained limited, preserving the anterior bundle for stability", (v) => v.procedures && v.procedures.includes("Collateral ligament release (posterior bundle of the MCL)")),
+      st("Standard arthroscopic portals established with careful distension technique given the contracted capsule; anterior and posterior capsulectomy performed arthroscopically with a shaver or basket punch, staying superficial to brachialis and triceps to protect neurovascular structures", (v) => v.technique === "Arthroscopic"),
+      st("Range of motion retested after each stage of release to confirm improvement and guide further release"),
+    ],
+    closureSteps: ["Ligament repair and ulnar nerve transposition secured if performed", "Layered subcutaneous and skin closure", "Sterile dressing applied"],
+    plan: opPlanLines({ imm: "Continuous passive motion or aggressive early active and active-assisted range of motion started on post-operative day 0\u20131; early motion is critical to prevent recurrence", general: "Indwelling regional catheter or multimodal analgesia is often used to allow aggressive early therapy", wound: "Standard wound care", red: "Red flags: fever, wound drainage, numbness or tingling (ulnar nerve distribution), significant swelling limiting motion progress", follow: "Follow-up in 7\u201310 days; frequent early physiotherapy follow-up" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): aggressive early motion started immediately, CPM if used, adequate analgesia to permit compliance", "Phase 2 (Early mobilisation, 1\u20136 weeks): continued aggressive active and active-assisted range of motion, static progressive or dynamic splinting for residual stiffness", "Phase 3 (Strengthening, 6\u201312 weeks): progressive strengthening once motion gains have stabilised", "Phase 4 (Return to activity, 3\u20134 months): return to full activity once motion has plateaued and is maintained"], "Return to driving 1\u20132 weeks; desk work 1 week; manual labour 2\u20133 months", "Red flags: progressive loss of motion gains (recurrence), new numbness or weakness, signs of heterotopic ossification recurrence (increasing stiffness with pain)"),
+  }),
+];
+
+// ---- wrist: your 13 templates (Darrach and Sauvé-Kapandji separate) plus the mini-open carpal tunnel draft --
+const OP_ARTHRO_TRACTION = opN("traction", "Traction applied", "lb");
+const OP_PROCS_WRIST = [
+  opProc({
+    id: "ctr-open", family: "carpal-tunnel", variantName: "Open", name: "Open carpal tunnel release",
+    clinicNames: ["Open carpal tunnel release"], region: "wrist", sided: "wrist", planPriority: 50,
+    preop: ["Carpal tunnel syndrome"],
+    reference: opRef(
+      ["Carpal tunnel syndrome confirmed by clinical examination and/or electrodiagnostic studies, refractory to conservative management (splinting, injection, activity modification)", "Progressive motor weakness, thenar atrophy or severe sensory loss warranting more urgent decompression", "Preferred over endoscopic release in revision cases, anatomic variants, or when concomitant procedures (tenosynovectomy, mass excision) need open exposure"],
+      ["Mild, intermittent symptoms without electrodiagnostic confirmation (consider an extended conservative trial)", "Significant hand oedema, or anticoagulation not optimised for elective surgery"],
+      ["Standard hand instrument set", "Tourniquet (or WALANT)", "Loupe magnification recommended"],
+      ["The recurrent motor branch of the median nerve has variable anatomy (extraligamentous, subligamentous, transligamentous); identify and protect it", "Incomplete release, particularly of the distal antebrachial fascia proximally or the distal ligament fibres, is a common cause of persistent symptoms", "Palmar cutaneous branch injury causes a painful scar or numbness; keep the incision ulnar to the thenar crease", "Avoid injury to the superficial palmar arch, which crosses just distal to the ligament"]),
+    findings: [opS("nerve", "Median nerve appearance", ["Normal", "Hourglass constriction", "Swollen", "Other (describe)"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("incision", "Incision length", "cm"), opS("tenosynovectomy", "Tenosynovectomy", ["Performed", "Not performed"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Longitudinal incision made in line with the radial border of the ring finger, from the distal wrist crease into the palm, ulnar to the thenar crease"),
+      st("Dissection carried through subcutaneous tissue and palmar fascia, protecting the palmar cutaneous branch of the median nerve"),
+      st("Transverse carpal ligament identified and incised longitudinally along its ulnar border under direct vision, from distal to proximal"),
+      st("Median nerve identified and inspected throughout its course within the tunnel, confirming complete release with no residual constriction"),
+      st("Motor branch (recurrent thenar branch) identified and confirmed intact"),
+      st("Tenosynovectomy performed for flexor tenosynovitis", (v) => v.tenosynovectomy === "Performed"),
+      st("Complete release confirmed by direct visualisation of the proximal and distal extent of the transverse carpal ligament"),
+    ],
+    closureSteps: ["Skin closed; transverse carpal ligament left open (not repaired) to prevent recurrence", "Sterile bulky soft dressing applied"],
+    plan: opPlanLines({ imm: "Soft dressing; early finger motion encouraged to prevent stiffness", pain: "Standard pain management (typically minimal opioid requirement)", wound: OP_W48_COVER, red: "Red flags: fever, wound drainage, worsening numbness or weakness, uncontrolled pain", follow: "Follow-up in 10\u201314 days for suture removal" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing, early finger motion encouraged immediately", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive wrist range of motion, scar massage once the incision has healed", "Phase 3 (Strengthening, 3\u20136 weeks): progressive grip strengthening", "Phase 4 (Return to activity, 6\u20138 weeks): return to full activity and heavy gripping"], "Return to driving 3\u20137 days; desk work and light typing 1 week; manual labour 4\u20136 weeks", "Red flags: worsening rather than improving symptoms, new weakness, pillar pain persisting beyond the expected timeline"),
+  }),
+  opProc({
+    id: "ctr-endoscopic", family: "carpal-tunnel", variantName: "Endoscopic", name: "Endoscopic carpal tunnel release",
+    clinicNames: ["Endoscopic carpal tunnel release"], region: "wrist", sided: "wrist", planPriority: 50,
+    preop: ["Carpal tunnel syndrome"],
+    reference: opRef(
+      ["Carpal tunnel syndrome confirmed by clinical examination and/or electrodiagnostic studies, refractory to conservative management", "Patient preference for a smaller incision and faster return to activity, without anatomic factors favouring an open approach", "Preferred over open release for faster return to work and less pillar pain in appropriately selected primary cases without anatomic complexity"],
+      ["Revision surgery", "Significant flexor tenosynovitis needing direct visualisation and tenosynovectomy", "Anatomic variants (bifid median nerve, persistent median artery) or a thenar or hypothenar mass: favour open"],
+      ["Endoscopic carpal tunnel release system (single-portal or dual-portal per surgeon preference)", "Tourniquet", "Standard hand instrument set as backup for conversion"],
+      ["Incomplete visualisation during ligament division risks incomplete release or nerve or tendon injury; convert to open if visualisation is inadequate at any point", "The ulnar neurovascular bundle and superficial palmar arch are at risk if the device deviates ulnarly; keep the correct orientation", "Confirm complete proximal and distal release under direct endoscopic view before withdrawing the device", "Not appropriate for distorted anatomy; have a low threshold to convert to open"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("portals", "Technique", ["Single-portal", "Dual-portal"], 2), opN("incision", "Incision length", "cm"), opS("conversion", "Conversion", ["Not required", "Converted to open release"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.portals ? v.portals.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table with the wrist extended on a bump, tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Transverse or oblique incision made at the wrist flexion crease, between palmaris longus and flexor carpi ulnaris (or per device-specific landmarks)"),
+      st("Blunt dissection carried down to the transverse carpal ligament; synovial elevator used to create a plane superficial to the flexor tendons and deep to the ligament"),
+      st("Endoscope introduced into the tunnel, confirming clear visualisation of the undersurface of the ligament and the absence of the median nerve and flexor tendons in the cutting path"),
+      st("Ligament divided from the endoscopic device under direct visualisation, working proximal to distal (or per device technique)"),
+      st("Complete release of the ligament confirmed endoscopically, with fat and fibres separating on both sides"),
+      st("Device withdrawn; median nerve and flexor tendons inspected for injury"),
+    ],
+    closureSteps: ["Skin closed", "Sterile soft dressing applied"],
+    plan: opPlanLines({ imm: "Soft dressing; early finger and wrist motion encouraged", pain: "Standard pain management (typically minimal)", wound: OP_W48_COVER, red: "Red flags: fever, wound drainage, worsening numbness or weakness" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing, early finger and wrist motion encouraged immediately", "Phase 2 (Early mobilisation, 1\u20132 weeks): progressive wrist range of motion", "Phase 3 (Strengthening, 2\u20134 weeks): progressive grip strengthening", "Phase 4 (Return to activity, 4\u20136 weeks): return to full activity, generally faster than the open technique"], "Return to driving 1\u20133 days; desk work and light typing 3\u20135 days; manual labour 3\u20134 weeks", "Red flags: worsening symptoms, new weakness, signs of infection"),
+  }),
+  opProc({
+    id: "ctr-mini-open", family: "carpal-tunnel", variantName: "Mini-open", name: "Mini-open carpal tunnel release",
+    clinicNames: ["Mini-open carpal tunnel release"], region: "wrist", sided: "wrist", planPriority: 50,
+    preop: ["Carpal tunnel syndrome"],
+    reference: opRef(
+      ["Carpal tunnel syndrome confirmed by clinical examination and/or electrodiagnostic studies, refractory to conservative management (splinting, injection, activity modification)", "Progressive motor weakness, thenar atrophy or severe sensory loss warranting decompression", "Preferred over standard open release by surgeons wishing to limit palmar scar and pillar pain while keeping direct vision of the ligament and nerve; open release remains preferred for revision surgery, anatomic variants, tenosynovectomy or a mass"],
+      ["Revision surgery", "Significant flexor tenosynovitis or a mass needing direct exposure", "Anatomic variants (bifid median nerve, persistent median artery)", "Mild intermittent symptoms without electrodiagnostic confirmation"],
+      ["Standard hand instrument set, small retractors", "Loupe magnification", "Tourniquet or WALANT"],
+      ["The proximal extent is the commonest site of incomplete release through a short incision; confirm division of the distal antebrachial fascia under direct vision", "The recurrent motor branch has variable anatomy; identify and protect it", "Keep the incision ulnar to the thenar crease to avoid the palmar cutaneous branch", "Convert to a standard open release if the view of the nerve is inadequate at any stage", "The superficial palmar arch lies just distal to the ligament; avoid injury at the distal end"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("incision", "Incision length", "cm"), opS("conversion", "Conversion", ["Not required", "Converted to standard open release"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Short longitudinal incision made in the palm in line with the radial border of the ring finger, ulnar to the thenar crease"),
+      st("Dissection carried through subcutaneous tissue and palmar fascia, protecting the palmar cutaneous branch of the median nerve"),
+      st("Distal edge of the transverse carpal ligament identified and the ligament divided along its ulnar border from distal to proximal under direct vision, with small retractors protecting the nerve"),
+      st("Proximal release completed through the same incision under direct vision, dividing the distal antebrachial fascia with scissors passed in a protected plane"),
+      st("Median nerve inspected and its recurrent motor branch confirmed intact"),
+      st("Complete release confirmed by direct inspection and palpation of the proximal and distal extent of the ligament"),
+      st("Haemostasis confirmed"),
+    ],
+    closureSteps: ["Skin closed; transverse carpal ligament left open", "Sterile soft dressing applied"],
+    plan: opPlanLines({ imm: "Soft dressing; early finger motion encouraged", pain: "Standard pain management (typically minimal)", wound: OP_W48_COVER, red: "Red flags: fever, wound drainage, worsening numbness or weakness, uncontrolled pain", follow: "Follow-up in 10\u201314 days for suture removal" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing, early finger motion immediately", "Phase 2 (Early mobilisation, 1\u20132 weeks): progressive wrist range of motion, scar massage once healed", "Phase 3 (Strengthening, 2\u20134 weeks): progressive grip strengthening", "Phase 4 (Return to activity, 4\u20136 weeks): return to full activity"], "Return to driving 3\u20135 days; desk work 3\u20137 days; manual labour 3\u20135 weeks", "Red flags: worsening symptoms, new weakness, persisting pillar pain, signs of infection"),
+  }),
+  opProc({
+    id: "distal-radius-orif", family: "wrist-fracture", variantName: "Distal radius ORIF (volar plate)", name: "Distal radius open reduction internal fixation (volar plating)",
+    clinicNames: ["ORIF with volar locking plate"], region: "wrist", sided: "wrist", planPriority: 90,
+    preop: ["Displaced distal radius fracture"],
+    reference: opRef(
+      ["Displaced distal radius fracture with unacceptable radiographic parameters (dorsal tilt, radial shortening, articular step-off or gap) after attempted closed reduction", "Intra-articular fracture with significant displacement or comminution", "Preferred over closed reduction and casting when the fracture is unstable, significantly displaced or comminuted, or intra-articular with step-off over 1\u20132 mm"],
+      ["Low-demand elderly patient with acceptable alignment tolerable without surgery", "Severe medical comorbidities precluding surgery", "Significant soft-tissue compromise requiring staged treatment"],
+      ["Volar locking distal radius plate system, various lengths and sizes", "Fluoroscopy for reduction and hardware confirmation", "Standard fracture reduction instruments, K-wires", "Tourniquet"],
+      ["Check distal screw and peg length with a tangential (skyline) fluoroscopic view to avoid dorsal cortical penetration, which risks extensor tendon rupture (particularly EPL)", "A plate positioned too distal to the watershed line risks FPL irritation or rupture; confirm its position proximal to this landmark", "Acute carpal tunnel syndrome can occur post-operatively from swelling or haematoma; keep a low threshold for carpal tunnel release", "Repair the pronator quadratus when possible to provide a soft-tissue barrier between plate and flexor tendons"]),
+    findings: [opS("articular", "Articular involvement", ["Extra-articular", "Intra-articular"], 2), opN("stepOff", "Articular step-off before reduction", "mm"), OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("incision", "Incision length", "cm"), opT("plateDetail", "Plate system and size", "e.g. volar locking plate, 3 holes"), opN("distalScrews", "Distal screws or pegs"), opN("proximalScrews", "Proximal shaft screws"), opS("kwires", "Provisional K-wires", ["Used", "Not used"], 2)],
+    closureSteps: ["Pronator quadratus repaired over the plate if possible with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and volar splint applied"],
+    closure: [opS("pq", "Pronator quadratus", ["Repaired", "Not repaired"], 2), OP_SKIN_SUTURE],
+    summary: (v) => (v.plateDetail ? v.plateDetail.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Volar approach performed through the interval between the flexor carpi radialis tendon and the radial artery (modified Henry approach)"),
+      st("Flexor pollicis longus retracted ulnarly; pronator quadratus incised along its radial border and elevated subperiosteally off the distal radius"),
+      st("Fracture site exposed, haematoma evacuated, fragments identified"),
+      st("Fracture reduced under direct vision and fluoroscopic guidance, restoring radial length, inclination and volar tilt"),
+      st("Provisional fixation with K-wires as needed to maintain reduction", (v) => v.kwires !== "Not used"),
+      st("Volar locking plate selected and positioned along the volar surface, proximal to the watershed line to avoid flexor tendon irritation"),
+      st("Plate provisionally secured to the shaft; distal locking screws or pegs placed into the distal fragment(s) under fluoroscopic guidance, capturing subchondral bone for articular support"),
+      st("Proximal shaft screws placed to secure the plate"),
+      st("Final reduction and hardware position (including screw lengths, to avoid dorsal cortex penetration and extensor tendon irritation) confirmed with fluoroscopy in multiple views including a tangential skyline view"),
+      st("Wrist and forearm taken through range of motion to confirm no tendon impingement"),
+    ],
+    plan: opPlanLines({ imm: "Splint immobilisation for 1\u20132 weeks, then a removable brace with progressive range of motion", red: "Red flags: fever, wound drainage, numbness or tingling (median nerve: acute carpal tunnel syndrome), pain out of proportion (compartment syndrome), finger stiffness", follow: "Follow-up in 10\u201314 days; serial radiographs to confirm maintained reduction and healing" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation, encourage finger motion throughout", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive wrist range of motion in a removable brace", "Phase 3 (Strengthening, 6\u201312 weeks): progressive grip and wrist strengthening", "Phase 4 (Return to activity, 3\u20134 months): return to full activity once solid union is confirmed"], "Return to driving 2\u20134 weeks; desk work 1\u20132 weeks; manual labour 3\u20134 months", "Red flags: new numbness (median nerve), tendon rupture symptoms (sudden inability to flex the thumb IP joint (FPL) or extend the fingers (EDC)), hardware-related pain"),
+  }),
+  opProc({
+    id: "wrist-arthroscopy", family: "wrist-arthroscopy", variantName: "Wrist arthroscopy", name: "Wrist arthroscopy",
+    clinicNames: ["Arthroscopic debridement", "TFCC debridement"], ambiguousNames: ["Arthroscopic debridement / pinning"], region: "wrist", sided: "wrist", planPriority: 40,
+    preop: ["Unexplained wrist pain", "Loose bodies", "Synovitis"],
+    reference: opRef(
+      ["Unexplained wrist pain with suspected intra-articular pathology not fully characterised by imaging", "Symptomatic loose bodies, synovitis or chondral lesions", "Adjunct to other procedures (TFCC repair, scapholunate repair, distal radius fracture assessment)", "Preferred over open arthrotomy for diagnostic evaluation and minor debridement: lower morbidity and superior visualisation of the intercarpal ligaments"],
+      ["Severe wrist contracture limiting joint distension", "Significant pre-existing arthritis limiting instrument access"],
+      ["Small-joint arthroscopy tower (2.7 mm or 2.9 mm scope typically)", "Wrist traction tower with finger traps", "Fluoroscopy optional", "Tourniquet"],
+      ["Portal placement can injure superficial sensory nerve branches (radial sensory nerve near the 1-2 portal, dorsal ulnar cutaneous nerve near the 6U portal); use blunt dissection and spread the soft tissue", "Adequate traction is essential for safe instrument passage and visualisation; confirm joint distension before introducing sharp instruments", "Evaluate both radiocarpal and midcarpal compartments; a radiocarpal-only evaluation can miss subtle instability"]),
+    findings: [opT("slLigament", "Scapholunate ligament", "", ["Intact", "Partial tear", "Complete tear"]), opT("ltLigament", "Lunotriquetral ligament", "", ["Intact", "Partial tear", "Complete tear"]), opT("tfcc", "TFCC", "", ["Intact", "Central tear", "Peripheral tear", "Degenerative"]), opT("cartilage", "Articular cartilage", "", ["Normal", "Chondral lesion"]), OP_FIELD_OTHER_FINDINGS],
+    technique: [OP_ARTHRO_TRACTION, opC("procedures", "Procedures performed", ["Diagnostic evaluation", "Loose body removal", "Synovectomy", "Chondral debridement"])],
+    closure: [OP_FIELD_PORTAL_SUTURE],
+    prep: ["Supine position, arm suspended in a traction tower with finger traps on the index and long fingers", "Tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Radiocarpal joint distended with saline via the 3-4 portal"),
+      st("3-4 portal established between the third and fourth extensor compartments under direct palpation; scope introduced"),
+      st("Diagnostic arthroscopy of the radiocarpal joint performed, evaluating the scapholunate and lunotriquetral ligaments, the TFCC and the articular cartilage"),
+      st("Additional portals established as needed (4-5, 6R, 6U, midcarpal radial and ulnar) for complete visualisation and instrument access"),
+      st("Loose bodies and synovitis addressed with a grasper or shaver as indicated"),
+      st("Midcarpal joint evaluated via the midcarpal portals for ligamentous instability not apparent from the radiocarpal view"),
+      st("Chondral lesions graded and debrided as indicated"),
+      st("Final assessment of joint stability and completion of the planned debridement or synovectomy confirmed"),
+    ],
+    closureSteps: ["Portals closed with simple sutures", "Sterile dressing, soft dressing or splint for comfort applied", "Traction released and tourniquet deflated"],
+    plan: opPlanLines({ imm: "Soft dressing or splint for comfort for 3\u20137 days; early motion encouraged thereafter", pain: "Standard pain management", red: "Red flags: fever, wound drainage, uncontrolled swelling or pain" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or splint for comfort, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion", "Phase 3 (Strengthening, 3\u20136 weeks): progressive strengthening", "Phase 4 (Return to activity, 6\u20138 weeks): full return to activity"], "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 4\u20136 weeks", "Red flags: persistent mechanical symptoms, new numbness, signs of infection"),
+  }),
+  opProc({
+    id: "tfcc-repair-arthroscopic", family: "wrist-arthroscopy", variantName: "TFCC repair (arthroscopic)", name: "Arthroscopic TFCC repair",
+    clinicNames: [], ambiguousNames: ["Arthroscopic repair"], region: "wrist", sided: "wrist", planPriority: 85,
+    preop: ["TFCC tear (Palmer type 1B)"],
+    reference: opRef(
+      ["Symptomatic peripheral (Palmer type 1B) TFCC tear with ulnar-sided wrist pain, refractory to conservative management", "Traumatic TFCC injury with DRUJ instability", "Preferred over debridement alone when the tear is peripheral (vascularised, repairable) rather than central (avascular: favour debridement); preferred over open repair for isolated peripheral tears given the healing potential and lower morbidity"],
+      ["Central or radial-sided tear in the avascular zone (favour debridement)", "Chronic degenerative tear (Palmer class 2, ulnar impaction) better addressed with ulnar shortening", "Significant DRUJ arthritis"],
+      ["Small-joint arthroscopy tower", "Outside-in or inside-out suture repair instrumentation, or an all-inside suture anchor or device system", "Wrist traction tower", "Tourniquet"],
+      ["The dorsal ulnar cutaneous nerve is at risk with the 6U portal and outside-in suture passage; use blunt dissection and identify the nerve", "Central avascular tears should be debrided, not repaired; classify tear location and vascularity accurately first", "Immobilise for longer than after most arthroscopic procedures, given the tissue healing requirements", "Address any concomitant DRUJ instability, which may need additional stabilisation"]),
+    findings: [opS("palmer", "Palmer classification", ["Type 1B", "Other (describe in findings)"], 2), opS("trampoline", "Trampoline test", ["Reduced", "Normal"], 2), opS("drujStability", "DRUJ stability after repair", ["Stable", "Residual instability"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [OP_ARTHRO_TRACTION, opS("technique", "Repair technique", ["Outside-in", "Inside-out", "All-inside"], 3), opN("sutures", "Number of sutures"), opT("implantDetail", "Suture and device details", "e.g. 2-0 braided, device name")],
+    closure: [OP_FIELD_PORTAL_SUTURE],
+    summary: (v) => (v.technique ? v.technique.toLowerCase() : null),
+    prep: ["Supine position, arm suspended in a traction tower with finger traps, tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Radiocarpal joint distended, 3-4 portal established and diagnostic arthroscopy performed", (v, c) => !c.has("wrist-arthroscopy")),
+      st("TFCC assessed with a probe (trampoline test), confirming the peripheral tear location and instability"),
+      st("6R portal established for instrument access"),
+      st("Peripheral rim prepared with a rasp or shaver to promote a healing response"),
+      st("Spinal needles passed through the peripheral TFCC and capsule from outside; sutures shuttled and tied over the capsule", (v) => v.technique === "Outside-in"),
+      st("Cannula and suture passer used to pass sutures through the TFCC from within the joint, retrieved through a separate incision and tied", (v) => v.technique === "Inside-out"),
+      st("Specialised device used to pass and secure suture directly through the TFCC arthroscopically", (v) => v.technique === "All-inside"),
+      st("Sutures placed along the peripheral tear, capturing adequate tissue on both sides"),
+      st("Sutures tied; TFCC stability reassessed with a probe, confirming restored tension"),
+      st("DRUJ stability assessed manually to confirm no residual instability"),
+    ],
+    closureSteps: ["Portal and small-incision closure", "Sterile dressing and sugar-tong or long-arm splint applied for initial immobilisation"],
+    plan: opPlanLines({ imm: "Splint or long-arm cast immobilisation for 4\u20136 weeks with the forearm in neutral rotation to protect the repair", red: "Red flags: fever, wound drainage, numbness (dorsal ulnar cutaneous nerve distribution), uncontrolled pain" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): splint or cast immobilisation, forearm rotation restricted", "Phase 2 (Early mobilisation, 6\u201310 weeks): progressive wrist and forearm range of motion", "Phase 3 (Strengthening, 10\u201316 weeks): progressive grip and forearm strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to full activity and sport"], "Return to driving 4\u20136 weeks; desk work 3\u20134 weeks; manual labour 4\u20135 months", "Red flags: recurrent ulnar-sided pain or instability, new numbness, signs of infection"),
+  }),
+  opProc({
+    id: "scaphoid-orif", family: "wrist-fracture", variantName: "Scaphoid ORIF", name: "Scaphoid open reduction internal fixation",
+    clinicNames: [], ambiguousNames: ["Open reduction internal fixation"], region: "wrist", sided: "wrist", planPriority: 90,
+    preop: ["Displaced scaphoid fracture", "Undisplaced scaphoid fracture"],
+    reference: opRef(
+      ["Displaced scaphoid fracture (over 1 mm displacement, angulation or comminution)", "Proximal pole fracture (higher non-union risk without fixation given the tenuous blood supply)", "Undisplaced fracture in a patient wishing an earlier return to activity and to avoid prolonged cast immobilisation", "Preferred over cast immobilisation for displaced fractures, proximal pole fractures, and high-demand patients wishing to avoid prolonged immobilisation"],
+      ["Established non-union with an avascular proximal pole (may need vascularised bone grafting)", "Significant carpal collapse or arthritic change (consider a salvage procedure)"],
+      ["Headless compression screw system, various lengths", "Fluoroscopy (essential for the percutaneous or mini-open technique)", "Standard hand instrument set", "Tourniquet"],
+      ["Central screw placement is critical for biomechanical fixation; off-axis placement reduces strength and risks cortical penetration", "Size the screw to avoid protrusion into the radiocarpal or scaphotrapezial joint; confirm on multiple fluoroscopic views", "Proximal pole fractures have a tenuous retrograde blood supply; handle fragments gently", "The radial artery is at risk with the volar approach near the FCR sheath; identify and protect it"]),
+    findings: [opS("location", "Fracture location", ["Waist", "Proximal pole", "Distal pole"], 3), opS("displacement", "Displacement", ["Displaced", "Undisplaced"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("approach", "Approach", ["Volar", "Dorsal"], 2), opT("screwDetail", "Screw type and length", "e.g. headless compression screw, 22 mm"), opS("graft", "Bone graft", ["Used", "Not used"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.approach ? `${v.approach.toLowerCase()} approach` : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Volar approach: longitudinal incision over the FCR tendon extending toward the scaphoid tubercle; FCR sheath opened and retracted; radioscaphocapitate ligament incised for later repair", (v) => v.approach !== "Dorsal"),
+      st("Dorsal approach: longitudinal incision just distal to Lister's tubercle over the scaphoid; third extensor compartment retracted; dorsal capsule incised", (v) => v.approach === "Dorsal"),
+      st("Fracture site identified, haematoma evacuated, and the fracture reduced anatomically under direct vision and fluoroscopic guidance"),
+      st("Guidewire placed down the central axis of the scaphoid under fluoroscopic guidance in multiple planes, confirming central placement on AP and lateral views"),
+      st("Guidewire position and length measured; appropriate headless compression screw length selected"),
+      st("Cannulated drill passed over the guidewire and the headless compression screw inserted, achieving compression across the fracture"),
+      st("Screw position and fracture reduction confirmed with fluoroscopy in multiple planes, ensuring the screw is fully buried and central without violating either pole"),
+      st("Stability of fixation confirmed with gentle wrist range of motion"),
+    ],
+    closureSteps: ["Capsule and ligament repair as applicable with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and thumb spica splint applied"],
+    plan: opPlanLines({ imm: "Thumb spica splint or cast immobilisation, shorter with rigid fixation (typically 1\u20132 weeks for soft-tissue healing, then a removable brace)", red: "Red flags: fever, wound drainage, uncontrolled pain, numbness", follow: "Follow-up in 10\u201314 days; serial radiographs and CT to confirm union, given the limits of plain films for scaphoid healing" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation", "Phase 2 (Early mobilisation, 2\u20138 weeks): removable brace, progressive wrist range of motion once early healing is demonstrated", "Phase 3 (Strengthening, 8\u201312 weeks): progressive grip and wrist strengthening once union is confirmed", "Phase 4 (Return to activity, 3\u20134 months): return to full activity and contact sport once solid union is confirmed on CT"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; contact sport or manual labour 3\u20134 months", "Red flags: persistent pain suggesting non-union, new numbness, signs of infection"),
+  }),
+  opProc({
+    id: "scapholunate-repair-reconstruction", family: "carpal-ligament-salvage", variantName: "Scapholunate repair or reconstruction", name: "Scapholunate ligament repair or reconstruction",
+    clinicNames: [], ambiguousNames: ["Open ligament repair", "Ligament reconstruction (tenodesis)"], region: "wrist", sided: "wrist", planPriority: 85,
+    preop: ["Acute scapholunate ligament instability", "Chronic scapholunate ligament instability"],
+    reference: opRef(
+      ["Acute scapholunate ligament injury with instability confirmed on examination and imaging (widened SL gap, abnormal SL angle), amenable to primary repair", "Chronic scapholunate instability without significant arthritic change (reconstruction, for example a modified Brunelli or bone-retinaculum-bone technique, in selected cases)", "Preferred over reconstruction when the injury is acute (within 3\u20136 weeks) and tissue quality allows repair; reconstruction is favoured for chronic injuries with attenuated or absent ligament but preserved cartilage"],
+      ["Established SLAC wrist arthritis (favour a salvage procedure such as PRC or four-corner fusion)", "Chronic injury with poor tissue quality precluding repair (favour reconstruction)"],
+      ["Suture anchors (1\u20132, 1.4\u20132.4 mm) for ligament repair to bone", "K-wires for provisional carpal fixation", "Tendon graft instrumentation (for example an FCR strip) if reconstruction is performed", "Fluoroscopy; diagnostic arthroscopy tower often used adjunctively", "Tourniquet"],
+      ["Anatomic reduction of the scapholunate relationship is critical before fixation; confirm with fluoroscopy in multiple views before placing K-wires", "Dorsal sensory branches of the radial and ulnar nerves are at risk with dorsal incisions; use careful dissection", "K-wire placement must avoid excessive constraint of adjacent joints beyond what is needed for SL stabilisation", "Counsel about the risk of progression to SLAC arthritis even after appropriately performed repair or reconstruction"]),
+    findings: [opS("geissler", "Geissler grade (if arthroscopy performed)", ["Grade I", "Grade II", "Grade III", "Grade IV"], 4), opS("cartilage", "Cartilage", ["Preserved", "Degenerate"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("procedure", "Procedure", ["Repair", "Reconstruction"], 2), opN("anchors", "Number of suture anchors (repair)"), opT("graft", "Graft (reconstruction)", "e.g. FCR strip"), opN("kwires", "Number of K-wires"), opS("kwireEnds", "K-wire ends", ["Percutaneous, bent and capped", "Buried"], 2), opS("capsulodesis", "Dorsal capsulodesis", ["Performed", "Not performed"], 2), opS("arthroscopy", "Diagnostic arthroscopy first", ["Performed", "Not performed"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.procedure ? v.procedure.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table (with a traction tower if arthroscopically assisted), tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Diagnostic arthroscopy performed to confirm and grade the SL instability (Geissler classification) and assess cartilage", (v) => v.arthroscopy === "Performed"),
+      st("Dorsal approach performed: incision centred over the SL interval, extensor tendons retracted, dorsal capsule incised (ligament-sparing capsulotomy per surgeon preference)"),
+      st("Scapholunate joint exposed; ligament injury confirmed and characterised"),
+      st("Scaphoid and lunate reduced into anatomic alignment under direct vision and fluoroscopic guidance"),
+      st("Native ligament remnant identified and repaired back to the scaphoid or lunate with suture anchors at the ligament origin", (v) => v.procedure !== "Reconstruction"),
+      st("Tendon graft harvested and passed through bone tunnels in the scaphoid and lunate in a figure-of-8 or similar pattern to recreate the stabilising function of the ligament", (v) => v.procedure === "Reconstruction"),
+      st("Provisional K-wire fixation placed across the scapholunate and scaphocapitate joints to maintain reduction during healing"),
+      st("Reduction confirmed with fluoroscopy (normal SL gap and angle restored)"),
+      st("Dorsal capsulodesis performed as an adjunct for additional stability", (v) => v.capsulodesis === "Performed"),
+    ],
+    closureSteps: ["Capsule repaired with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and thumb spica or long-arm splint applied"],
+    plan: opPlanLines({ imm: "Splint or cast immobilisation for 6\u20138 weeks with K-wires in place", wound: "Wound care and pin site care: keep dry, then as instructed", red: "Red flags: fever, pin site drainage or infection, numbness, uncontrolled pain", follow: "Follow-up in 10\u201314 days; serial radiographs; K-wire removal typically at 8 weeks" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20138 weeks): splint or cast immobilisation with K-wires in place, no wrist motion", "Phase 2 (Early mobilisation, 8\u201312 weeks): K-wires removed, progressive wrist range of motion in a removable brace", "Phase 3 (Strengthening, 12\u201320 weeks): progressive grip and wrist strengthening", "Phase 4 (Return to activity, 4\u20136 months): return to full activity and sport"], "Return to driving 6\u20138 weeks; desk work 6\u20138 weeks; contact sport or manual labour 5\u20136 months", "Red flags: recurrent instability sensation, new numbness, pin site infection"),
+  }),
+  opProc({
+    id: "proximal-row-carpectomy", family: "carpal-ligament-salvage", variantName: "Proximal row carpectomy", name: "Proximal row carpectomy",
+    clinicNames: ["Proximal row carpectomy"], region: "wrist", sided: "wrist", planPriority: 90,
+    preop: ["SLAC wrist arthritis", "SNAC wrist arthritis", "Kienböck's disease"],
+    reference: opRef(
+      ["SLAC or SNAC wrist arthritis limited to the radioscaphoid and midcarpal joints, with a preserved capitate head and lunate fossa of the radius", "Kienböck's disease with lunate collapse (selected stages) without significant radiocapitate arthritis", "Preferred over four-corner fusion when preserving some wrist motion is prioritised and the capitate head and lunate fossa cartilage are well preserved; four-corner fusion is generally preferred in younger, higher-demand manual labourers"],
+      ["Significant arthritic change at the capitate head or the lunate fossa (favour four-corner fusion or total wrist arthrodesis)", "Young high-demand manual labourer (higher failure and conversion rates)"],
+      ["Standard hand and wrist instrument set, osteotomes and rongeurs for carpal bone excision", "Fluoroscopy", "Tourniquet"],
+      ["Preserve the volar extrinsic radiocarpal ligaments during carpal bone excision to prevent volar subluxation of the carpus", "Assess the capitate head and lunate fossa cartilage carefully; unexpectedly poor cartilage should prompt conversion to four-corner fusion or another salvage procedure", "Radial styloid impingement against the trapezium is a recognised complication; consider radial styloidectomy if any bony impingement is noted"]),
+    findings: [opS("capitateCartilage", "Capitate head and lunate fossa cartilage", ["Good", "Poor"], 2), opS("conversion", "Conversion to salvage fusion", ["Not required", "Converted"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("styloidectomy", "Radial styloidectomy", ["Performed", "Not performed"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Dorsal longitudinal incision made centred over Lister's tubercle"),
+      st("Third extensor compartment opened, EPL retracted, and the dorsal capsule incised in a ligament-sparing fashion to expose the carpus"),
+      st("Scaphoid, lunate and triquetrum identified and excised in turn, preserving the volar radiocarpal ligaments to prevent post-operative volar carpal subluxation"),
+      st("Capitate head and lunate fossa of the distal radius inspected for cartilage quality, confirming suitability for the procedure"),
+      st("Capitate head reduced into the lunate fossa, confirming a smooth, congruent articulation through range of motion"),
+      st("Radial styloidectomy performed for impingement between the trapezium and the radial styloid", (v) => v.styloidectomy === "Performed"),
+      st("Range of motion and stability tested intra-operatively"),
+    ],
+    closureSteps: ["Dorsal capsule repaired with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and volar splint applied"],
+    plan: opPlanLines({ imm: "Splint immobilisation for 1\u20132 weeks, then a removable brace with progressive range of motion", red: "Red flags: fever, wound drainage, uncontrolled pain, numbness" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive wrist range of motion in a removable brace", "Phase 3 (Strengthening, 6\u201312 weeks): progressive grip and wrist strengthening", "Phase 4 (Return to activity, 3\u20134 months): return to full activity within reduced expected wrist motion and grip strength compared with the native wrist"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 3 months", "Red flags: new instability sensation, persistent pain suggesting progression of arthritis, signs of infection"),
+  }),
+  opProc({
+    id: "wrist-arthrodesis-total", family: "carpal-ligament-salvage", variantName: "Total wrist arthrodesis", name: "Total wrist arthrodesis",
+    clinicNames: ["Total wrist arthrodesis (fusion)", "Wrist arthrodesis"], ambiguousNames: ["Partial or total wrist fusion (advanced stage)"], region: "wrist", sided: "wrist", planPriority: 100,
+    preop: ["Pancarpal wrist arthritis"],
+    reference: opRef(
+      ["Pancarpal arthritis (rheumatoid, post-traumatic, SLAC or SNAC with capitate or radial involvement) with pain refractory to conservative or motion-preserving surgical options", "Failed prior motion-preserving procedures (PRC, four-corner fusion, arthroplasty)", "Preferred over motion-preserving procedures when the arthritis is pancarpal or diffuse"],
+      ["Patient requiring wrist motion for specific occupational or functional needs (counsel extensively about the trade-offs)", "Bilateral involvement requiring consideration of functional positioning for daily activities"],
+      ["Dorsal wrist fusion plate system, or intramedullary fusion rod system per surgeon preference", "Bone graft (autograft from the distal radius or iliac crest, or allograft)", "Fluoroscopy", "Tourniquet"],
+      ["Adequate decortication of all fusion surfaces to bleeding bone is essential; inadequate preparation is a common cause of non-union", "Individualise the wrist position to the patient's functional and occupational needs", "Assess and avoid hardware prominence or impingement with adjacent joints, particularly the third CMC joint distally", "Bone grafting significantly improves fusion rates, particularly with poor bone quality (rheumatoid arthritis) or larger defects"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("fixation", "Fixation", ["Dorsal plate", "Intramedullary rod"], 2), opS("graft", "Bone graft", ["Distal radius autograft", "Iliac crest autograft", "Allograft"], 1), opN("extension", "Wrist position: extension", "\u00b0"), opS("deviation", "Wrist position: deviation", ["Neutral", "Slight radial", "Slight ulnar"], 3), opS("epl", "EPL", ["Left in situ", "Transposed radially"], 2), opT("implantDetail", "Implant details", "e.g. plate system and length")],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Dorsal longitudinal incision made centred over Lister's tubercle, from the distal radius to the base of the third metacarpal"),
+      st("Third extensor compartment opened, EPL retracted, and the dorsal capsule incised and elevated as a flap for later repair"),
+      st("Remaining articular cartilage at the radiocarpal and midcarpal joints denuded to bleeding subchondral bone with osteotomes, rongeurs or a burr"),
+      st("Bone graft packed into the prepared joint surfaces to promote fusion"),
+      st("Wrist positioned for the fusion (or per the patient's functional needs) and provisionally held"),
+      st("Dorsal plate contoured and applied spanning the radius to the third metacarpal and secured with screws proximally and distally", (v) => v.fixation !== "Intramedullary rod"),
+      st("Intramedullary fusion rod passed retrograde through the third metacarpal, across the fusion mass and into the radial canal, secured per device-specific technique", (v) => v.fixation === "Intramedullary rod"),
+      st("Final position and hardware placement confirmed with fluoroscopy in multiple planes"),
+      st("Adjacent joints (DRUJ, CMC) assessed to ensure no unexpected impingement from hardware"),
+    ],
+    closureSteps: ["Dorsal capsule and retinaculum repaired over the hardware with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and volar splint applied"],
+    plan: opPlanLines({ imm: "Splint or cast immobilisation for 4\u20136 weeks until early fusion progress is confirmed, then a removable brace", red: "Red flags: fever, wound drainage, uncontrolled pain, numbness, sudden loss of position (hardware failure)", follow: "Follow-up in 10\u201314 days; serial radiographs to confirm fusion progress at 6 weeks, 3 months and 6 months" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): splint or cast immobilisation", "Phase 2 (Early mobilisation, 6\u201312 weeks): removable brace, gentle activity as fusion progresses; adjacent joint motion (fingers, forearm rotation, elbow) encouraged throughout", "Phase 3 (Strengthening, 12\u201320 weeks): progressive grip strengthening once solid fusion is confirmed", "Phase 4 (Return to activity, 4\u20136 months): return to full activity within the permanent limitation of wrist motion"], "Return to driving 4\u20136 weeks; desk work 4\u20136 weeks; manual labour 4\u20136 months", "Red flags: persistent pain suggesting non-union, hardware-related symptoms, signs of infection"),
+  }),
+  opProc({
+    id: "darrach", family: "druj", variantName: "Darrach", name: "Darrach procedure",
+    clinicNames: ["Darrach procedure", "Distal ulna excision (Darrach)"], region: "wrist", sided: "wrist", planPriority: 85,
+    preop: ["DRUJ arthritis", "DRUJ instability", "Distal ulna malunion or non-union"],
+    reference: opRef(
+      ["Symptomatic DRUJ arthritis or instability refractory to conservative management", "Distal ulna fracture malunion or non-union causing DRUJ dysfunction", "Distal ulna resection preferred in lower-demand, typically older patients where the reduced forearm stability from loss of the ulnar head is functionally acceptable"],
+      ["Young high-demand patient (favour Sauvé-Kapandji or another stabilisation procedure given the risk of radioulnar convergence and instability after simple resection)"],
+      ["Standard hand and wrist instrument set, oscillating saw for ulnar resection", "Fluoroscopy", "Tourniquet"],
+      ["The dorsal sensory branch of the ulnar nerve is at risk throughout the dorso-ulnar approach; identify and protect it", "Radioulnar convergence and instability of the ulnar stump is the most feared complication; adequate soft-tissue stabilisation at resection is essential, particularly in younger or higher-demand patients", "The procedure alters the load-sharing mechanics of the forearm; counsel about expected changes in grip strength and forearm stability"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("resection", "Length of ulna resected", "mm"), opS("stabilisation", "Stump stabilisation", ["ECU tenodesis sling", "Pronator quadratus interposition", "Both"], 3), opS("styloid", "Ulnar styloid and TFCC attachment", ["Preserved", "Not preserved"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.resection ? `${v.resection} mm resected` : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Dorso-ulnar longitudinal incision made over the distal ulna, protecting the dorsal sensory branch of the ulnar nerve"),
+      st("Extensor carpi ulnaris sheath identified and the distal ulna exposed subperiosteally"),
+      st("Distal ulna resected at the appropriate level with an oscillating saw, removing enough to eliminate DRUJ impingement while avoiding excessive resection"),
+      st("Resection surface smoothed; soft-tissue stabilisation of the ulnar stump performed to reduce the risk of radioulnar convergence and instability"),
+      st("Forearm rotation tested intra-operatively to confirm resolution of impingement and adequate stability of the ulnar stump"),
+    ],
+    closureSteps: ["Soft-tissue stabilisation secured with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and sugar-tong or long-arm splint applied"],
+    plan: opPlanLines({ imm: "Splint immobilisation for 2\u20134 weeks, then progressive forearm rotation exercises", red: "Red flags: fever, wound drainage, numbness (dorsal ulnar cutaneous nerve), new instability or clunking at the ulnar stump", follow: "Follow-up in 10\u201314 days; serial radiographs to confirm a stable stump position" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): splint immobilisation", "Phase 2 (Early mobilisation, 4\u20138 weeks): progressive forearm rotation and wrist range of motion", "Phase 3 (Strengthening, 8\u201316 weeks): progressive grip and forearm strengthening", "Phase 4 (Return to activity, 3\u20134 months): return to full activity"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 3\u20134 months", "Red flags: new clunking or instability, persistent pain, signs of infection"),
+  }),
+  opProc({
+    id: "sauve-kapandji", family: "druj", variantName: "Sauvé-Kapandji", name: "Sauvé-Kapandji procedure",
+    clinicNames: ["Sauvé-Kapandji procedure"], region: "wrist", sided: "wrist", planPriority: 90,
+    preop: ["DRUJ arthritis", "DRUJ instability"],
+    reference: opRef(
+      ["Symptomatic DRUJ arthritis or instability refractory to conservative management", "Distal ulna fracture malunion or non-union causing DRUJ dysfunction", "Preferred in younger, higher-demand patients where preserving the ulnocarpal buttress (via fusion) while still allowing forearm rotation (via the proximal pseudarthrosis) is desired"],
+      ["Inadequate proximal ulnar segment for creating a stable pseudarthrosis"],
+      ["Standard hand and wrist instrument set, oscillating saw for ulnar osteotomy", "Small fragment fixation set and screws for DRUJ arthrodesis, with soft-tissue interposition instrumentation for the pseudarthrosis", "Fluoroscopy", "Tourniquet"],
+      ["The dorsal sensory branch of the ulnar nerve is at risk throughout the dorso-ulnar approach; identify and protect it", "The pseudarthrosis can develop painful instability or clunking if the resected segment is too small or soft-tissue interposition is inadequate; ensure an adequate gap and robust interposition", "The procedure alters the load-sharing mechanics of the forearm; counsel about expected changes in grip strength and forearm stability"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("fixation", "DRUJ fixation", ["Screws", "Plate"], 2), opN("segment", "Ulnar segment resected", "mm"), opT("interposition", "Soft-tissue interposition", "e.g. pronator quadratus"), opT("implantDetail", "Implant details", "e.g. screw type and size")],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.fixation ? `${v.fixation.toLowerCase()} fixation` : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Dorso-ulnar longitudinal incision made over the distal ulna and DRUJ, protecting the dorsal sensory branch of the ulnar nerve"),
+      st("DRUJ exposed; articular cartilage denuded from the sigmoid notch and distal ulna to promote fusion"),
+      st("DRUJ provisionally reduced and held with K-wires in the appropriate position"),
+      st("Fusion site fixed with screws or a plate, achieving compression across the DRUJ"),
+      st("Segmental osteotomy of the ulna performed proximal to the fusion site to create the pseudarthrosis that allows continued forearm rotation"),
+      st("Soft tissue (pronator quadratus or other local tissue) interposed at the pseudarthrosis to prevent bony bridging"),
+      st("Fusion hardware position and pseudarthrosis gap confirmed with fluoroscopy"),
+      st("Forearm rotation tested intra-operatively to confirm free rotation at the pseudarthrosis with a stable, fused DRUJ"),
+    ],
+    closureSteps: ["Soft-tissue interposition secured with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and sugar-tong or long-arm splint applied"],
+    plan: opPlanLines({ imm: "Splint immobilisation for 2\u20134 weeks, then progressive forearm rotation exercises", red: "Red flags: fever, wound drainage, numbness (dorsal ulnar cutaneous nerve), new instability or clunking at the pseudarthrosis", follow: "Follow-up in 10\u201314 days; serial radiographs to confirm fusion progress" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): splint immobilisation", "Phase 2 (Early mobilisation, 4\u20138 weeks): progressive forearm rotation and wrist range of motion", "Phase 3 (Strengthening, 8\u201316 weeks): progressive grip and forearm strengthening", "Phase 4 (Return to activity, 3\u20134 months): return to full activity"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 3\u20134 months", "Red flags: new clunking or instability, persistent pain, signs of infection"),
+  }),
+  opProc({
+    id: "de-quervain-release", family: "wrist-soft-tissue", variantName: "de Quervain's release", name: "First dorsal compartment release (de Quervain's release)",
+    clinicNames: ["Open first dorsal compartment release"], region: "wrist", sided: "wrist", planPriority: 40,
+    preop: ["De Quervain's tenosynovitis"],
+    reference: opRef(
+      ["De Quervain's tenosynovitis (first dorsal compartment stenosis affecting APL and EPB) refractory to conservative management (splinting, corticosteroid injection, activity modification)", "Preferred over continued conservative management once an adequate non-operative trial (typically 1\u20132 corticosteroid injections plus splinting) has failed"],
+      ["Incomplete conservative treatment trial", "Undiagnosed intersection syndrome or CMC arthritis mimicking the symptoms"],
+      ["Standard hand instrument set", "Tourniquet, or local anaesthesia with adrenaline (wide-awake technique), per surgeon preference", "Loupe magnification recommended"],
+      ["Superficial radial sensory nerve branches cross the operative field and are the commonest source of complications (painful neuroma); identify and protect them meticulously", "A separate EPB subcompartment is present in a significant proportion of patients and is the commonest cause of incomplete release if not specifically identified and released", "Avoid volar subluxation of the tendons by not excising the compartment roof entirely; a simple longitudinal release is sufficient"]),
+    findings: [opS("epb", "EPB subcompartment", ["Present and released", "Absent"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("incision", "Incision length", "cm"), opS("incisionType", "Incision", ["Transverse", "Longitudinal"], 2), opS("tenosynovitis", "Tenosynovitis debrided", ["Yes", "No"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    prep: ["Supine position, arm on a hand table, tourniquet applied (or local anaesthesia with adrenaline, wide-awake technique)", "Standard prep and drape"],
+    steps: [
+      st("Incision made over the first dorsal compartment at the level of the radial styloid"),
+      st("Superficial branch of the radial nerve identified and carefully protected throughout the dissection (multiple branches are often present in this region)"),
+      st("First dorsal compartment (containing APL and EPB tendons) identified"),
+      st("Compartment roof incised longitudinally along its dorsal aspect, releasing the constriction"),
+      st("Tendons inspected to confirm that both APL and EPB are free and gliding; a separate EPB subcompartment, if present, specifically released"),
+      st("Tendons inspected for associated tenosynovitis and debrided as needed", (v) => v.tenosynovitis === "Yes"),
+    ],
+    closureSteps: ["Skin closed; compartment roof left open (not repaired) to prevent recurrent stenosis", "Sterile dressing, soft dressing or thumb spica splint for comfort applied"],
+    plan: opPlanLines({ imm: "Soft dressing or splint for comfort for 3\u20137 days; early thumb and wrist motion encouraged thereafter", pain: "Standard pain management", red: "Red flags: fever, wound drainage, numbness (radial sensory nerve distribution), uncontrolled pain" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or splint for comfort, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive thumb and wrist range of motion", "Phase 3 (Strengthening, 3\u20136 weeks): progressive pinch and grip strengthening", "Phase 4 (Return to activity, 6 weeks): return to full activity"], "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 3\u20134 weeks", "Red flags: persistent triggering or pain (incomplete release), new numbness, tendon subluxation with a snapping sensation"),
+  }),
+  opProc({
+    id: "ganglion-excision", family: "wrist-soft-tissue", variantName: "Ganglion excision", name: "Wrist ganglion excision",
+    clinicNames: [], ambiguousNames: ["Open excision"], region: "wrist", sided: "wrist", planPriority: 40,
+    preop: ["Dorsal wrist ganglion", "Volar wrist ganglion"],
+    reference: opRef(
+      ["Symptomatic ganglion cyst (pain, mechanical limitation, cosmetic concern) refractory to conservative management (observation, aspiration)", "Recurrent ganglion after prior aspiration", "Preferred over aspiration alone given the lower recurrence rate with formal excision including the stalk and adjacent capsule"],
+      ["Asymptomatic cyst (many resolve spontaneously)", "Incompletely characterised mass on imaging (confirm the diagnosis first, particularly for volar masses given the radial artery)"],
+      ["Standard hand instrument set", "Tourniquet", "Loupe magnification recommended, particularly for the volar approach"],
+      ["Failure to excise the stalk and a cuff of adjacent capsule is the commonest cause of recurrence; trace the cyst to its capsular origin", "Volar ganglia lie close to the radial artery; meticulous dissection with loupe magnification is essential", "Recurrence rates remain notable even with meticulous technique (particularly dorsal ganglia); counsel accordingly"]),
+    findings: [opS("site", "Ganglion", ["Dorsal", "Volar"], 2), opT("stalk", "Origin of the stalk", "e.g. scapholunate ligament"), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("capsule", "Capsular defect", ["Left open", "Repaired loosely"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.site ? v.site.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Incision made directly over the cyst, typically overlying the scapholunate interval", (v) => v.site !== "Volar"),
+      st("Incision made directly over the cyst, taking care to identify and protect the radial artery, which often lies close by", (v) => v.site === "Volar"),
+      st("Dissection carried through subcutaneous tissue, protecting the dorsal branches of the radial and ulnar nerves", (v) => v.site !== "Volar"),
+      st("Dissection carried through subcutaneous tissue, protecting the palmar cutaneous branch of the median nerve and the radial artery", (v) => v.site === "Volar"),
+      st("Cyst dissected circumferentially, tracing the stalk to its origin at the joint capsule"),
+      st("Cyst excised en bloc with a cuff of surrounding capsule at its origin to minimise recurrence"),
+      st("Underlying joint and ligament inspected for additional pathology"),
+      st("Wound irrigated and haemostasis confirmed"),
+    ],
+    closureSteps: ["Layered subcutaneous and skin closure", "Sterile dressing, soft dressing or splint for comfort applied"],
+    plan: opPlanLines({ imm: "Soft dressing or splint for comfort for 3\u20137 days; early motion encouraged thereafter", pain: "Standard pain management", red: "Red flags: fever, wound drainage, numbness, uncontrolled pain" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or splint for comfort, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive wrist range of motion", "Phase 3 (Strengthening, 3\u20136 weeks): progressive grip strengthening", "Phase 4 (Return to activity, 6 weeks): return to full activity"], "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 3\u20134 weeks", "Red flags: recurrent mass, new numbness, signs of infection"),
+  }),
+  opProc({
+    id: "four-corner-fusion", family: "carpal-ligament-salvage", variantName: "Scaphoid excision and four-corner fusion", name: "Scaphoid excision and four-corner fusion",
+    clinicNames: ["Limited (e.g. four-corner) fusion"], ambiguousNames: ["Scapholunate or limited fusion (salvage)"], region: "wrist", sided: "wrist", planPriority: 95,
+    preop: ["SLAC wrist arthritis", "SNAC wrist arthritis"],
+    reference: opRef(
+      ["SLAC or SNAC wrist arthritis with radioscaphoid involvement but preserved radiolunate cartilage", "Preferred over proximal row carpectomy in younger, higher-demand manual labourers for better long-term load-bearing capacity and grip strength; also preferred when the capitate head or lunate fossa cartilage is compromised, since this procedure relies on the preserved radiolunate joint"],
+      ["Significant radiolunate joint arthritis (favour total wrist arthrodesis)", "Inadequate bone stock for fusion hardware"],
+      ["Four-corner fusion hardware: circular fusion plate, headless compression screws or K-wires per surgeon preference", "Bone graft (local from the excised scaphoid, or distal radius or iliac crest autograft)", "Fluoroscopy", "Tourniquet"],
+      ["Correct any pre-existing DISI deformity before final fixation: reduce the lunate to neutral or slightly flexed and confirm with fluoroscopy", "Adequate decortication of all four fusion surfaces is essential; inadequate preparation is the commonest cause of non-union", "Hardware must not impinge on the radiolunate joint, which this procedure relies on; confirm clearance through range of motion", "Preserve the radioscaphocapitate and long radiolunate ligaments during capsular exposure", "Confirm the cartilage quality of the lunate fossa intra-operatively; if unexpectedly poor, consider conversion to total wrist arthrodesis"]),
+    findings: [opS("radiolunate", "Radiolunate joint cartilage", ["Preserved", "Poor (converted to total arthrodesis)"], 1), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("fixation", "Fixation", ["Circular plate", "Headless compression screws", "K-wires"], 3), opT("graft", "Bone graft", "e.g. local graft from the scaphoid"), opS("disi", "DISI deformity", ["Corrected", "Not corrected"], 2), opT("implantDetail", "Implant details", "e.g. plate system, screw sizes")],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Dorsal longitudinal incision made centred over Lister's tubercle"),
+      st("Third extensor compartment opened, EPL retracted, and the dorsal capsule incised (ligament-sparing capsulotomy) to expose the carpus"),
+      st("Scaphoid identified and excised piecemeal or en bloc, preserving fragments for use as local bone graft"),
+      st("Lunate, triquetrum, capitate and hamate articular surfaces denuded of remaining cartilage to bleeding subchondral bone at the four-corner junction"),
+      st("Carpus reduced into corrected alignment (correcting any DISI deformity), confirmed with fluoroscopy"),
+      st("Local bone graft packed into the prepared fusion surfaces, supplemented with additional autograft or allograft as needed"),
+      st("Provisional fixation with K-wires placed across the four bones to maintain the corrected reduction"),
+      st("Definitive fixation applied under fluoroscopic guidance"),
+      st("Radiolunate joint inspected to confirm preserved cartilage and no impingement from hardware"),
+      st("Final position, alignment and hardware placement confirmed with fluoroscopy in multiple planes; wrist taken through range of motion to confirm no impingement"),
+    ],
+    closureSteps: ["Dorsal capsule repaired with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and volar splint applied"],
+    plan: opPlanLines({ imm: "Splint or cast immobilisation for 4\u20136 weeks until early fusion progress is confirmed, then a removable brace", red: "Red flags: fever, wound drainage, uncontrolled pain, numbness, sudden loss of position", follow: "Follow-up in 10\u201314 days; serial radiographs to confirm fusion progress at 6 weeks, 3 months and 6 months" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): splint or cast immobilisation", "Phase 2 (Early mobilisation, 6\u201312 weeks): removable brace, progressive wrist range of motion as fusion progresses (expected arc reduced compared with the native wrist, centred at the radiolunate joint)", "Phase 3 (Strengthening, 12\u201320 weeks): progressive grip and wrist strengthening once solid fusion is confirmed", "Phase 4 (Return to activity, 4\u20136 months): return to full activity including manual labour once the fusion is solid"], "Return to driving 4\u20136 weeks; desk work 3\u20134 weeks; manual labour 4\u20136 months", "Red flags: persistent pain suggesting non-union, hardware-related symptoms, new numbness, signs of infection"),
+  }),
+];
+
+// ---- hand: your 13 templates plus the accepted FPL, EPL and digital artery drafts ---------------------------
+const OP_DIGIT_FIELD = opC("digits", "Digit(s)", OP_DIGITS);
+const OP_SINGLE_DIGIT = opS("digit", "Digit", OP_DIGITS, 5);
+const OP_PROCS_HAND = [
+  opProc({
+    id: "flexor-tendon-repair", family: "hand-tendon", variantName: "Flexor tendon repair", name: "Flexor tendon repair",
+    clinicNames: ["Primary flexor tendon repair", "Primary tendon repair / reinsertion"], region: "hand", sided: "hand", planPriority: 85,
+    preop: ["Flexor tendon laceration or rupture"],
+    reference: opRef(
+      ["Complete or significant partial (over 50%) laceration or rupture of flexor digitorum superficialis and/or profundus, confirmed by loss of active flexion and often exploration", "Ideally performed within 7\u201314 days of injury (acute); delayed repair up to several weeks is still feasible with more extensive mobilisation", "Preferred over non-operative management, tendon graft or staged reconstruction whenever the tendon ends can be approximated without excessive tension"],
+      ["Extensive segmental tendon loss precluding primary repair (consider staged reconstruction with a silicone rod or tendon graft)", "Severely contaminated wound requiring a staged approach", "Significant associated injury (fracture, vascular) requiring sequenced treatment first"],
+      ["Standard hand instrument set, tendon retrieval instruments", "Core suture (3-0 or 4-0 braided polyester or equivalent) and epitendinous suture (6-0)", "Tourniquet", "Loupe magnification or microscope, particularly for zone I and II repairs"],
+      ["Zone II (\u201cno man's land\u201d) repairs carry the highest risk of adhesions and stiffness; meticulous atraumatic technique and early controlled motion protocols are essential", "Excessive bulk at the repair or an overly tight sheath closure impedes gliding; consider venting the sheath or pulley rather than forcing a tight repair through an intact tunnel", "Choose the core suture strand number to support the planned motion protocol (early active motion needs a stronger multi-strand repair)", "Preserve as much of the A2 and A4 pulleys as possible to prevent bowstringing"]),
+    findings: [OP_DIGIT_FIELD, opS("zone", "Zone", ["Zone I", "Zone II", "Zone III", "Zone IV", "Zone V"], 5), opC("tendons", "Tendons injured", ["FDP", "FDS"]), OP_FIELD_OTHER_FINDINGS],
+    technique: [opT("core", "Core suture technique and size", "e.g. 4-strand cruciate, 3-0 braided"), opT("epitendinous", "Epitendinous suture", "e.g. 6-0 running"), opS("venting", "Pulley venting", ["Performed", "Not required"], 2), opT("motionProtocol", "Post-operative motion protocol", "e.g. early active motion")],
+    closure: [OP_SKIN_SUTURE, opT("splint", "Splint", "e.g. dorsal blocking splint, wrist slightly flexed, MCP flexed, IP extended")],
+    summary: (v) => (v.zone ? v.zone.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Existing laceration extended proximally and/or distally using Bruner-type zigzag incisions as needed for exposure"),
+      st("Flexor sheath and pulley system identified; A2 and A4 pulleys preserved and protected as critical for tendon mechanics"),
+      st("Proximal and distal tendon stumps identified and retrieved (a retracted proximal stump retrieved with gentle milking of the forearm, or through a separate proximal incision)"),
+      st("Tendon ends debrided minimally to healthy tissue"),
+      st("Zone II injury with both FDS and FDP lacerated: FDP repaired first as the primary functional tendon, and FDS repaired preserving its decussation and chiasm where possible to maintain PIP stability", (v) => v.zone === "Zone II" && v.tendons && v.tendons.length === 2),
+      st("Core suture repair performed with the recorded technique"),
+      st("Epitendinous running suture placed circumferentially to smooth the repair surface and add strength"),
+      st("Pulley venting performed (partial release of A2 or A4) because repair bulk prevented smooth gliding, without compromising overall pulley function", (v) => v.venting === "Performed"),
+      st("Tendon excursion and gliding at the repair tested through passive range of motion, confirming no gapping or triggering at the pulleys"),
+    ],
+    closureSteps: ["Flexor sheath left open or loosely approximated per surgeon preference", "Skin closed", "Sterile dressing and dorsal blocking splint applied per the early motion protocol"],
+    plan: opPlanLines({ imm: "Dorsal blocking splint per protocol for 6\u20138 weeks; structured hand therapy within 3\u20135 days (early active or passive motion per surgeon and therapist preference)", red: "Red flags: fever, wound drainage, sudden loss of active motion (repair rupture), increasing swelling or pain", follow: "Follow-up in 5\u20137 days to start hand therapy, then regular therapy follow-up" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): dorsal blocking splint, controlled passive or early active motion per the surgeon and therapy programme (for example modified Duran, Kleinert or early active motion)", "Phase 2 (Early mobilisation, 4\u20136 weeks): progressive active range of motion, discontinue the blocking splint per protocol", "Phase 3 (Strengthening, 6\u201312 weeks): progressive strengthening once tendon healing is sufficiently advanced", "Phase 4 (Return to activity, 3\u20134 months): return to full unrestricted use and heavy gripping"], "Return to driving 2\u20133 weeks; desk work and light typing 2\u20133 weeks; manual labour 3\u20134 months", "Red flags: sudden loss of active flexion (rupture), increasing stiffness beyond the expected timeline (adhesions), signs of infection"),
+  }),
+  opProc({
+    id: "extensor-tendon-repair", family: "hand-tendon", variantName: "Extensor tendon repair", name: "Extensor tendon repair",
+    clinicNames: ["Primary extensor tendon repair"], region: "hand", sided: "hand", planPriority: 80,
+    preop: ["Extensor tendon laceration or rupture", "Sagittal band rupture"],
+    reference: opRef(
+      ["Complete or significant partial laceration or rupture of an extensor tendon at any zone (I\u2013VIII), confirmed by extensor lag or loss of active extension", "Sagittal band rupture with tendon subluxation at the MCP joint", "Preferred over splinting alone (adequate for closed zone I injuries and selected closed central slip injuries) when the tendon is lacerated, discontinuous or subluxated"],
+      ["Closed, undisplaced injury amenable to splinting alone (for example closed mallet finger without significant bony involvement)", "Severely contaminated wound requiring staged treatment"],
+      ["Standard hand instrument set", "Core suture (4-0 or 5-0 non-absorbable), with fine suture for thin distal tendon segments", "Tourniquet", "K-wire for temporary joint transfixion if needed (for example DIP pinning in zone I repairs)"],
+      ["The thin tendon distally (zones I\u2013IV) makes core suture techniques difficult; a figure-of-8 or horizontal mattress technique is often more practical and equally effective", "Adhesions are common, particularly over the dorsal hand and wrist; early protected motion (where repair strength allows) can reduce stiffness", "Sagittal band injuries are easily missed unless MCP tendon subluxation with active extension is specifically examined", "Address any associated joint injury (DIP in zone I, PIP in zone III and central slip injuries) at the same time"]),
+    findings: [OP_DIGIT_FIELD, opS("zone", "Zone", ["Zone I", "Zone II", "Zone III", "Zone IV", "Zone V", "Zone VI", "Zone VII", "Zone VIII"], 4), opS("sagittal", "Sagittal band", ["Intact", "Injured and repaired or reconstructed"], 1), OP_FIELD_OTHER_FINDINGS],
+    technique: [opT("suture", "Suture technique and size", "e.g. figure-of-8, 4-0 non-absorbable"), opS("kwire", "K-wire across the DIP joint", ["Placed", "Not placed"], 2), opT("splintProtocol", "Post-operative protocol", "e.g. static extension splint, early controlled motion")],
+    closure: [OP_SKIN_SUTURE, opT("splint", "Splint", "e.g. splint with the joint(s) in extension")],
+    summary: (v) => (v.zone ? v.zone.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Existing laceration extended as needed for adequate exposure of the tendon injury"),
+      st("Tendon ends identified and mobilised; joint explored to rule out associated osteochondral injury"),
+      st("Figure-of-8 or modified running suture technique with fine suture, as the thin tendon in zones I\u2013IV makes flexor-type core sutures impractical", (v) => ["Zone I", "Zone II", "Zone III", "Zone IV"].includes(v.zone)),
+      st("Core suture technique (for example modified Kessler) performed with non-absorbable suture, as the tendon over the dorsal hand and wrist is thicker", (v) => ["Zone V", "Zone VI", "Zone VII", "Zone VIII"].includes(v.zone)),
+      st("Sagittal band repaired or reconstructed, restoring central tendon position over the MCP joint", (v) => v.sagittal === "Injured and repaired or reconstructed"),
+      st("Repair site tested through passive range of motion to confirm secure approximation without gapping"),
+      st("K-wire placed across the DIP joint in slight extension to protect the repair", (v) => v.kwire === "Placed"),
+    ],
+    closureSteps: ["Skin closed", "Sterile dressing and splint applied with the relevant joint(s) in extension (position depends on the zone)"],
+    plan: opPlanLines({ imm: "Splint immobilisation in extension for 4\u20136 weeks depending on zone, with a structured therapy protocol per surgeon preference (static extension splinting or early controlled motion depending on zone and repair security)", red: "Red flags: fever, wound drainage, sudden extensor lag (repair rupture), increasing swelling or pain", follow: "Follow-up in 10\u201314 days; hand therapy per protocol" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20136 weeks): splint immobilisation in extension per the zone-specific protocol", "Phase 2 (Early mobilisation, 4\u20138 weeks): progressive active and active-assisted flexion per protocol, extension splint often continued at night", "Phase 3 (Strengthening, 8\u201312 weeks): progressive strengthening", "Phase 4 (Return to activity, 3\u20134 months): return to full unrestricted use"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 3 months", "Red flags: sudden loss of active extension (rupture), extensor lag developing during therapy progression, signs of infection"),
+  }),
+  opProc({
+    id: "fpl-repair", clinicGap: true, family: "hand-tendon", variantName: "FPL repair (thumb)", name: "Flexor pollicis longus tendon repair",
+    clinicNames: [], region: "hand", sided: "thumb", planPriority: 90,
+    preop: ["Flexor pollicis longus laceration or rupture"],
+    reference: opRef(
+      ["Complete or significant partial (over 50%) laceration or rupture of flexor pollicis longus, confirmed by loss of active thumb interphalangeal flexion", "Ideally performed within 7\u201314 days of injury; the FPL retracts proximally more than a finger flexor, so early repair is preferred", "Preferred over non-operative management, graft or staged reconstruction whenever the ends can be brought together without excessive tension"],
+      ["Segmental tendon loss, or a delayed presentation with a retracted musculotendinous unit (graft, staged reconstruction or tendon transfer)", "Severely contaminated wound requiring a staged approach", "Associated injury (fracture, vascular) needing priority"],
+      ["Standard hand instrument set, tendon retriever or passer", "Core suture (3-0 or 4-0 braided) and epitendinous suture (6-0)", "Suture anchor or pull-out button set for zone T-I avulsion", "Tourniquet or WALANT; loupe magnification"],
+      ["The proximal stump commonly retracts into the thenar region or carpal tunnel; retrieve it atraumatically through a separate incision, not blind traction that damages the sheath", "Preserve the A1 and oblique pulleys to prevent bowstringing", "Over-tensioning causes IP flexion contracture and loss of extension; under-tensioning leaves a flexion lag; set tension against the contralateral thumb", "The radial digital nerve is superficial and at risk with incisions over the proximal phalanx", "Zone T-II repairs are prone to adhesions; controlled early motion is important"]),
+    findings: [opS("zone", "Zone", ["Zone T-I", "Zone T-II", "Zone T-III", "Zone T-IV", "Zone T-V"], 5), OP_FIELD_OTHER_FINDINGS],
+    technique: [opT("core", "Core suture technique and size", "e.g. 4-strand cruciate, 3-0 braided"), opT("epitendinous", "Epitendinous suture", "e.g. 6-0 running"), opS("venting", "A1 pulley venting", ["Performed", "Not required"], 2), opT("avulsionFixation", "Zone T-I fixation (anchor or button)", "e.g. suture anchor")],
+    closure: [OP_SKIN_SUTURE, opT("splint", "Splint", "e.g. dorsal blocking splint, wrist 20\u201330 degrees flexion, thumb MCP and IP slightly flexed")],
+    summary: (v) => (v.zone ? v.zone.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Existing laceration extended using a Bruner-type zigzag or mid-lateral incision over the thumb, extended into the thenar region if the proximal stump is retracted"),
+      st("Both digital nerves of the thumb identified and protected (the radial digital nerve crosses the field superficially)"),
+      st("Flexor sheath and pulleys identified; A1 and oblique pulleys preserved as critical to thumb flexion mechanics"),
+      st("Distal stump identified; proximal stump retrieved (tendon retriever or feeding tube passed distal to proximal, gentle milking of the thenar eminence and forearm, or a separate incision at the thenar or carpal level)"),
+      st("Tendon ends debrided minimally to healthy tissue"),
+      st("Tendon reattached to the distal phalanx with a suture anchor or pull-out button technique", (v) => v.zone === "Zone T-I"),
+      st("Core suture repair with a running epitendinous suture", (v) => v.zone !== "Zone T-I"),
+      st("Tension set with the wrist and thumb positioned to match the resting posture of the contralateral thumb, avoiding over-shortening"),
+      st("A1 pulley vented (preserving the oblique pulley) because bulk prevented smooth gliding", (v) => v.venting === "Performed"),
+      st("Excursion and gliding tested through passive range of motion and wrist tenodesis, confirming no gapping or triggering"),
+      st("Median nerve and recurrent motor branch identified and protected", (v) => ["Zone T-III", "Zone T-IV", "Zone T-V"].includes(v.zone)),
+    ],
+    closureSteps: ["Sheath left open or loosely approximated per surgeon preference", "Skin closed", "Sterile dressing and dorsal blocking splint applied"],
+    plan: opPlanLines({ imm: "Dorsal blocking splint for 4\u20136 weeks; hand therapy within 3\u20135 days (controlled passive or early active motion per surgeon and therapist protocol)", red: "Red flags: fever, wound drainage, sudden loss of IP flexion (rupture), increasing swelling or pain", follow: "Follow-up in 5\u20137 days to start hand therapy" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): dorsal blocking splint, controlled passive or early active motion per protocol", "Phase 2 (Early mobilisation, 4\u20136 weeks): progressive active range of motion, wean the splint per protocol", "Phase 3 (Strengthening, 6\u201312 weeks): progressive pinch and grip strengthening once healing is advanced", "Phase 4 (Return to activity, 3\u20134 months): return to full unrestricted use"], "Return to driving 3\u20134 weeks; desk work 2\u20133 weeks; manual labour 3\u20134 months", "Red flags: sudden loss of IP flexion (rupture), progressive stiffness (adhesions), signs of infection"),
+  }),
+  opProc({
+    id: "epl-repair", clinicGap: true, family: "hand-tendon", variantName: "EPL repair (thumb)", name: "Extensor pollicis longus tendon repair",
+    clinicNames: [], region: "hand", sided: "thumb", planPriority: 80,
+    preop: ["Extensor pollicis longus laceration or rupture"],
+    reference: opRef(
+      ["Acute complete or significant partial laceration of extensor pollicis longus, confirmed by loss of active thumb interphalangeal extension", "Preferred over splinting alone when the tendon is discontinuous", "Direct repair is for acute open injuries with healthy tendon ends; attritional or closed ruptures (for example after a distal radius fracture, or in rheumatoid disease) usually have frayed ends and need an extensor indicis proprius transfer or interposition graft"],
+      ["Closed or attritional rupture (use transfer or graft)", "Segmental tendon loss", "Severely contaminated wound requiring a staged approach", "Delayed presentation with a contracted tendon"],
+      ["Standard hand instrument set", "Non-absorbable suture (4-0 or 5-0 for the thin distal tendon, 3-0 or 4-0 for the thicker proximal tendon)", "K-wire for temporary IP joint pinning if needed", "Tourniquet or WALANT; loupe magnification"],
+      ["Frayed or attritional tendon ends will not hold a repair; recognise this early and use an extensor indicis proprius transfer or interposition graft", "The proximal end retracts toward the third compartment; retrieve it without blind traction", "Superficial radial nerve branches cross the operative field; protect them", "Adhesions over the dorsal thumb and wrist are common; early protected motion helps where the repair is secure", "Over-tightening limits flexion, and under-tightening leaves an extensor lag"]),
+    findings: [opS("zone", "Zone", ["Zone T-I", "Zone T-II", "Zone T-III", "Zone T-IV", "Zone T-V"], 5), OP_FIELD_OTHER_FINDINGS],
+    technique: [opT("suture", "Suture technique and size", "e.g. figure-of-8, 4-0"), opS("kwire", "K-wire across the IP joint", ["Placed", "Not placed"], 2)],
+    closure: [OP_SKIN_SUTURE, opT("splint", "Splint", "e.g. wrist 30 degrees extension, thumb MCP and IP extended")],
+    summary: (v) => (v.zone ? v.zone.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Existing laceration extended as needed for exposure of the tendon injury"),
+      st("Dorsal sensory branches of the radial nerve identified and protected"),
+      st("Tendon ends identified; the proximal end commonly retracts and is retrieved (tendon retriever, or proximal extension of the incision)"),
+      st("Ends freshened to healthy tendon"),
+      st("Figure-of-8 or modified running suture technique with fine suture, as the tendon is thin over the thumb", (v) => ["Zone T-I", "Zone T-II", "Zone T-III"].includes(v.zone)),
+      st("Core suture technique (for example modified Kessler) with non-absorbable suture, as the tendon is thicker over the metacarpal and wrist", (v) => ["Zone T-IV", "Zone T-V"].includes(v.zone)),
+      st("Retinaculum of the third compartment left open or only partly closed to avoid constricting the repair", (v) => v.zone === "Zone T-V"),
+      st("Repair tested through passive range of motion, confirming secure approximation without gapping"),
+      st("K-wire placed across the IP joint in extension to protect the repair", (v) => v.kwire === "Placed"),
+    ],
+    closureSteps: ["Skin closed", "Sterile dressing and splint applied with the wrist and thumb in extension"],
+    plan: opPlanLines({ imm: "Splint immobilisation in extension for 4\u20136 weeks depending on zone, with a structured therapy protocol per surgeon preference", red: "Red flags: fever, wound drainage, sudden extensor lag (repair rupture), increasing swelling or pain" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 to 6 weeks): splint immobilisation in extension per zone", "Phase 2 (Early mobilisation, 4\u20138 weeks): progressive active and active-assisted flexion per protocol, extension splint often continued at night", "Phase 3 (Strengthening, 8\u201312 weeks): progressive strengthening", "Phase 4 (Return to activity, 3 months): return to full use"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 3 months", "Red flags: sudden loss of IP extension (rupture), extensor lag during therapy progression, signs of infection"),
+  }),
+  opProc({
+    id: "boutonniere-repair", family: "hand-tendon", variantName: "Boutonni\u00e8re repair", name: "Boutonni\u00e8re deformity repair",
+    clinicNames: ["Central slip repair", "Central slip reconstruction (chronic)"], region: "hand", sided: "hand", planPriority: 70,
+    preop: ["Boutonni\u00e8re deformity"],
+    reference: opRef(
+      ["Chronic or established boutonni\u00e8re deformity (central slip insufficiency with PIP flexion and DIP hyperextension) refractory to splinting, with a supple, passively correctable PIP joint", "Acute central slip injury or laceration with confirmed discontinuity not amenable to splinting alone", "Preferred over continued splinting once the deformity is established and passively correctable but the central slip mechanism needs surgical reconstruction to prevent a fixed deformity"],
+      ["Fixed PIP contracture (address stiffness first by therapy or joint release before or as part of the same procedure)", "Significant PIP arthritis (consider arthroplasty or arthrodesis)"],
+      ["Standard hand instrument set", "Fine non-absorbable suture for tendon reconstruction or repair", "Tourniquet", "K-wire for temporary PIP transfixion if needed"],
+      ["Restoring the dorsal position of the lateral bands relative to the PIP joint axis is the critical technical goal; inadequate correction leads to recurrence", "Address any fixed PIP flexion contracture before or during the same procedure; the joint must reach full passive extension for the reconstruction to succeed", "DIP motion is often intentionally allowed early (differential or relative motion splinting) to draw the lateral bands dorsally during healing", "Recurrence risk remains notable even with sound reconstruction, particularly for chronic, long-standing deformities"]),
+    findings: [OP_SINGLE_DIGIT, opS("injury", "Injury", ["Acute central slip injury", "Chronic deformity"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("reconstruction", "Reconstruction", ["Central slip repair to bone", "Local tendon advancement", "Lateral band relocation"], 1), opS("contracture", "PIP contracture release", ["Performed", "Not required"], 2), opS("kwire", "K-wire across the PIP joint", ["Placed in extension", "Not placed"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.reconstruction ? v.reconstruction.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Dorsal longitudinal or curvilinear incision made over the PIP joint"),
+      st("Extensor mechanism exposed; central slip attenuation or discontinuity and the volarly subluxated lateral bands identified and confirmed"),
+      st("Central slip repaired primarily to its insertion at the base of the middle phalanx with a suture anchor or transosseous suture", (v) => v.injury === "Acute central slip injury" || v.reconstruction === "Central slip repair to bone"),
+      st("Chronic deformity reconstructed using local tendon advancement, or the lateral bands mobilised and relocated dorsally to re-establish the central extensor mechanism (for example a modified Matev technique)", (v) => v.injury === "Chronic deformity"),
+      st("Lateral bands repositioned dorsal to the PIP joint axis of rotation to restore their extensor function"),
+      st("Triangular ligament (if attenuated) repaired or reefed to maintain the relocated lateral bands in their corrected dorsal position"),
+      st("Associated PIP contracture addressed with capsular and checkrein release to allow full passive extension", (v) => v.contracture === "Performed"),
+      st("PIP stability and extensor mechanism function tested through range of motion"),
+      st("K-wire placed across the PIP joint in extension to protect the repair during early healing", (v) => v.kwire === "Placed in extension"),
+    ],
+    closureSteps: ["Extensor retinaculum and mechanism closed with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and splint applied with the PIP joint in extension"],
+    plan: opPlanLines({ imm: "Splint immobilisation with the PIP joint in extension for 4\u20136 weeks; DIP typically left free per protocol (lateral band excursion, relative motion)", red: "Red flags: fever, wound drainage, recurrent deformity, uncontrolled pain", follow: "Follow-up in 10\u201314 days; hand therapy per protocol" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 to 6 weeks): splint immobilisation with the PIP in extension, DIP motion often encouraged per protocol", "Phase 2 (Early mobilisation, 6\u20138 weeks): progressive active PIP flexion introduced gradually", "Phase 3 (Strengthening, 8\u201312 weeks): progressive strengthening", "Phase 4 (Return to activity, 3\u20134 months): return to full activity"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 10\u201312 weeks", "Red flags: recurrent extensor lag or flexion deformity, progressive stiffness, signs of infection"),
+  }),
+  opProc({
+    id: "mallet-finger-repair", family: "hand-tendon", variantName: "Mallet finger repair", name: "Mallet finger repair",
+    clinicNames: ["Extension block pinning", "ORIF (large bony fragment)"], region: "hand", sided: "hand", planPriority: 60,
+    preop: ["Bony mallet finger with DIP joint subluxation"],
+    reference: opRef(
+      ["Bony mallet finger with a large articular fragment (typically over 30\u201350% of the articular surface) and/or volar subluxation of the distal phalanx", "Failed conservative (splinting) treatment of a soft-tissue or small bony mallet injury", "Chronic mallet deformity causing functional or cosmetic concern", "Preferred over splinting alone (first-line for most acute soft-tissue and small-fragment injuries) when there is a large fragment with joint subluxation, or splinting has failed or is not feasible"],
+      ["Small bony fragment without joint subluxation (favour splinting)", "Soft-tissue mallet injury without displacement (splinting first-line)", "Significant pre-existing DIP arthritis (may favour arthrodesis)"],
+      ["K-wires for extension block pinning and/or DIP transfixion", "Mini-fragment screw(s) or a hook plate system for selected bony fragment fixation", "Fluoroscopy", "Tourniquet"],
+      ["An extension block wire placed too dorsal or proximal can fail to block and reduce the fragment; confirm fragment reduction fluoroscopically before placing the definitive extension pin", "Skin necrosis over the dorsal DIP joint is a risk with excessive hyperextension; avoid extreme hyperextension when reducing the joint", "Pin placement too close to the germinal matrix risks nail bed injury or growth disturbance; confirm the pin trajectory", "Even well-treated bony mallet injuries may have some residual extensor lag; counsel accordingly"]),
+    findings: [OP_SINGLE_DIGIT, opN("fragment", "Articular fragment", "% of the joint surface"), opS("subluxation", "DIP joint", ["Reduced", "Volar subluxation"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("method", "Technique", ["Extension block pinning", "ORIF of the bony fragment"], 1), opT("fixationDetail", "Implant details", "e.g. K-wire size, mini-fragment screw, hook plate")],
+    closure: [opT("splint", "Splint or pin protection", "e.g. splint with the DIP joint in extension")],
+    summary: (v) => (v.method ? v.method.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("DIP joint flexed under fluoroscopic guidance; K-wire placed dorsally into the head of the middle phalanx just proximal to the bony fragment to act as an extension block; DIP joint then extended, reducing the fragment against the block; a second K-wire placed longitudinally across the DIP joint in extension to maintain reduction", (v) => v.method !== "ORIF of the bony fragment"),
+      st("Dorsal longitudinal incision made over the DIP joint; extensor tendon and bony fragment complex identified; fragment reduced anatomically under direct vision and fluoroscopic guidance; fixation with mini-fragment screw(s) or a hook plate construct, compressing the fragment against the distal phalanx", (v) => v.method === "ORIF of the bony fragment"),
+      st("Reduction of both the articular fragment and the DIP subluxation confirmed with fluoroscopy in multiple planes"),
+      st("DIP stability and fragment fixation confirmed with gentle range of motion testing (if not otherwise pinned in extension)"),
+    ],
+    closureSteps: ["K-wires left percutaneous, bent and capped, or standard layered closure if the open technique was used", "Sterile dressing and splint applied for additional protection"],
+    plan: opPlanLines({ imm: "Splint or pin protection for 4\u20136 weeks, keeping the DIP joint in extension throughout", wound: "Wound and pin site care: keep dry, then as instructed", pain: "Standard pain management", red: "Red flags: fever, pin site drainage, numbness, loss of reduction", follow: "Follow-up in 10\u201314 days; serial radiographs; K-wire removal typically at 4\u20136 weeks" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 to 6 weeks): splint or pin immobilisation with the DIP in extension continuously", "Phase 2 (Early mobilisation, 4\u20136 to 8 weeks): pins removed, progressive active DIP flexion introduced gradually, often with continued night extension splinting", "Phase 3 (Strengthening, 8\u201312 weeks): progressive strengthening", "Phase 4 (Return to activity, 3 months): return to full activity"], "Return to driving 1\u20132 weeks; desk work 1 week; manual labour 8\u201310 weeks", "Red flags: recurrent extensor lag, pin site infection, new deformity"),
+  }),
+  opProc({
+    id: "trigger-finger-open", family: "trigger-finger", variantName: "Open", name: "Open trigger finger release",
+    clinicNames: ["Open A1 pulley release"], region: "hand", sided: "hand", planPriority: 30,
+    preop: ["Trigger finger or thumb"],
+    reference: opRef(
+      ["Symptomatic trigger finger or thumb (stenosing flexor tenosynovitis at the A1 pulley) refractory to conservative management (splinting, corticosteroid injection)", "Locked or fixed flexion deformity not responsive to injection", "Preferred over percutaneous release when direct visualisation is needed (for example the thumb, given the radial digital nerve; revision cases; or a flexor tendon nodule needing inspection or debridement)"],
+      ["Incomplete conservative treatment trial (typically 1\u20132 corticosteroid injections first)", "Uncontrolled diabetes (higher recurrence and infection risk; optimise glycaemic control if possible)"],
+      ["Standard hand instrument set", "Local anaesthesia with adrenaline (wide-awake technique), or tourniquet with sedation, per surgeon preference", "Loupe magnification recommended"],
+      ["The radial digital nerve to the thumb is particularly at risk given its superficial, oblique course near the A1 pulley; meticulous dissection is critical for thumb trigger release", "Incomplete release of the A1 pulley (proximal or distal edge) is the commonest cause of persistent symptoms; confirm full-length release and smooth tendon gliding", "Avoid violating the A2 pulley, which is critical for preventing bowstringing"]),
+    findings: [OP_DIGIT_FIELD, opS("nodule", "Flexor tendon nodule", ["Present", "Absent"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("incision", "Incision length", "cm"), opS("tenosynovium", "Tenosynovium debrided", ["Yes", "No"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    prep: ["Supine position, arm on a hand table", "Standard prep and drape"],
+    steps: [
+      st("Transverse incision made at the level of the distal palmar crease (or over the MCP joint) overlying the A1 pulley"),
+      st("Dissection carried through subcutaneous tissue, protecting the neurovascular bundles on either side (particular care with the radial digital nerve for thumb triggers)"),
+      st("A1 pulley identified overlying the flexor tendon sheath"),
+      st("A1 pulley incised longitudinally in its entirety under direct vision, preserving the more distal A2 pulley"),
+      st("Flexor tendons inspected; passive and active finger flexion and extension performed to confirm smooth gliding without residual triggering or catching"),
+      st("Flexor tenosynovium and nodularity debrided as indicated because they contributed to triggering", (v) => v.tenosynovium === "Yes"),
+    ],
+    closureSteps: ["Skin closed", "Sterile soft dressing applied"],
+    plan: opPlanLines({ imm: "Soft dressing; early active finger motion encouraged immediately", pain: "Standard pain management (typically minimal)", red: "Red flags: fever, wound drainage, uncontrolled pain, numbness", follow: "Follow-up in 10\u201314 days for suture removal" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20137 days): soft dressing, early active motion encouraged immediately", "Phase 2 (Early mobilisation, 1\u20132 weeks): progressive full active range of motion", "Phase 3 (Strengthening, 2\u20134 weeks): progressive grip strengthening as tolerated", "Phase 4 (Return to activity, 3\u20134 weeks): full return to activity"], "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 2\u20133 weeks", "Red flags: persistent triggering or locking (incomplete release), new numbness, signs of infection"),
+  }),
+  opProc({
+    id: "trigger-finger-percutaneous", family: "trigger-finger", variantName: "Percutaneous", name: "Percutaneous trigger finger release",
+    clinicNames: ["Percutaneous A1 pulley release"], region: "hand", sided: "hand", planPriority: 30,
+    preop: ["Trigger finger"],
+    reference: opRef(
+      ["Symptomatic trigger finger (A1 pulley stenosis) in the fingers (not typically the thumb, given nerve proximity), refractory to conservative management", "Patient preference for a minimally invasive, needle-based technique without a formal incision", "Preferred over open release for uncomplicated primary trigger finger of the digits where quick recovery is prioritised and the anatomy is straightforward"],
+      ["Thumb trigger (higher nerve injury risk; many surgeons prefer open release)", "Revision or recurrent case", "Significant flexor tenosynovitis or nodularity needing direct visualisation and debridement", "Small finger (variable anatomy)"],
+      ["Large-bore needle (for example 18\u201320 gauge) or a specialised percutaneous release device", "Local anaesthetic", "No tourniquet typically required"],
+      ["The blind technique carries a real risk of incomplete release or neurovascular injury; confirm needle position by observing synchronous movement with tendon excursion before cutting", "Not recommended for the thumb by most practitioners, given the close, variable course of the radial digital nerve across the A1 pulley", "Incomplete release is more common than with the open technique; counsel that conversion to open release may be needed if symptoms persist", "Confirm resolution of triggering with active motion before concluding the procedure"]),
+    findings: [opC("digits", "Digit(s)", ["Index", "Middle", "Ring", "Little"]), OP_FIELD_OTHER_FINDINGS],
+    technique: [opT("device", "Needle or device", "e.g. 18-gauge needle"), opS("triggering", "Triggering after release", ["Resolved", "Residual"], 2), opS("nerve", "Digital nerve function", ["Intact", "Altered"], 2)],
+    closure: [],
+    prep: ["Seated or supine position, hand supported on a flat surface with the finger held in extension", "Standard skin prep"],
+    steps: [
+      st("A1 pulley location identified by palpation at the level of the MCP joint and distal palmar crease, at the point of maximal tenderness or the palpable nodule"),
+      st("Local anaesthetic infiltrated at the planned needle entry site and along the course of the A1 pulley"),
+      st("Needle introduced through the skin at the proximal aspect of the A1 pulley, with the bevel oriented for a longitudinal cutting motion along the pulley fibres"),
+      st("Needle positioned within the tendon sheath, confirmed by passive finger flexion and extension moving the needle with the tendon"),
+      st("Sawing motion performed longitudinally along the A1 pulley, working proximal to distal, while periodically checking finger motion for resolution of triggering"),
+      st("Complete release confirmed by full, smooth active finger flexion and extension without catching or triggering"),
+      st("Digital nerve function assessed (sensation intact) to confirm no inadvertent nerve injury"),
+    ],
+    closureSteps: ["Adhesive bandage applied over the needle entry point"],
+    plan: opPlanLines({ imm: "No immobilisation: adhesive bandage only, immediate return to normal hand use", pain: "Minimal pain management typically required", wound: null, red: "Red flags: numbness or weakness (concern for nerve injury), increasing swelling or pain, signs of infection", follow: "Follow-up as needed if symptoms persist or recur" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 days): adhesive bandage, immediate normal use encouraged", "Phase 2 (Early mobilisation, 2 days\u20131 week): full active use", "Phase 3 (Strengthening, as needed): typically not required given minimal tissue disruption", "Phase 4 (Return to activity, immediate to 1 week): full return to activity"], "Return to driving same day to 1\u20132 days; desk work same day; manual labour 3\u20137 days", "Red flags: persistent triggering (incomplete release), numbness (nerve injury), signs of infection"),
+  }),
+  opProc({
+    id: "dupuytren-fasciectomy", family: "dupuytren", variantName: "Limited fasciectomy", name: "Limited fasciectomy for Dupuytren's contracture",
+    clinicNames: ["Limited/regional fasciectomy"], region: "hand", sided: "hand", planPriority: 60,
+    preop: ["Dupuytren's contracture"],
+    reference: opRef(
+      ["Symptomatic Dupuytren's contracture with MCP contracture typically over 30 degrees, or any PIP contracture, causing functional impairment (positive tabletop test)", "Progressive disease affecting hand function or hygiene", "Preferred over less invasive options (needle aponeurotomy, collagenase) when the contracture is more severe or recurrent, multiple rays are involved, or there is significant PIP involvement, where formal fasciectomy allows more thorough excision and direct joint release"],
+      ["Minimal contracture not yet functionally limiting (may observe or consider less invasive options)", "Significant medical comorbidity affecting wound healing", "Diffuse or aggressive disease (Dupuytren's diathesis) with a high recurrence risk regardless of technique"],
+      ["Standard hand instrument set, fine dissecting scissors", "Tourniquet", "Loupe magnification recommended", "Skin graft instrumentation if an open palm technique is used for severe disease"],
+      ["Displacement of the neurovascular bundle is the hallmark challenge of Dupuytren's surgery; never assume normal position, and identify the bundles proximal to the disease before working distally", "Skin necrosis from overly aggressive flap thinning or tension is a recognised complication; handle flaps gently and consider an open palm technique or skin grafting for severe contractures", "PIP contractures are harder to correct fully and more prone to recurrence than MCP contractures; counsel accordingly", "Post-operative splinting and therapy compliance are critical to maintaining correction and minimising recurrence"]),
+    findings: [opC("rays", "Ray(s) operated", OP_DIGITS), opG("preContracture", "Pre-operative contracture", ["MCP", "PIP"], "\u00b0"), opG("postContracture", "Residual contracture after release", ["MCP", "PIP"], "\u00b0"), opS("bundles", "Neurovascular bundles", ["Normal position", "Displaced (spiral cord)"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("incision", "Incision", ["Zigzag (Bruner-type)", "Y-V"], 2), opS("pipRelease", "PIP joint", ["Checkrein ligament and volar plate released", "Not required"], 1), opS("skin", "Skin", ["Direct closure with Z-plasty", "Open palm (secondary intention)", "Skin graft"], 1)],
+    closure: [OP_SKIN_SUTURE, opT("splint", "Splint", "e.g. static extension splint for night use")],
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Zigzag (Bruner-type) or Y-V incisions planned and made along the affected ray(s), designed to allow adequate exposure with tension-free closure or Z-plasty as needed"),
+      st("Skin flaps elevated carefully, as the diseased cords are frequently adherent to the overlying dermis, particularly at the digital creases"),
+      st("Neurovascular bundles identified and protected throughout, noting that Dupuytren's disease commonly displaces them (centrally, superficially or spirally around the cord); identified before proceeding with cord excision"),
+      st("Diseased palmar and/or digital cords identified and excised (partial or selective fasciectomy), removing the pathologic tissue while preserving normal fascial and neurovascular structures"),
+      st("Joint contracture reassessed after cord excision; checkrein ligament and volar plate released at the PIP joint because a fixed flexion contracture persisted", (v) => v.pipRelease && v.pipRelease !== "Not required"),
+      st("Digit passively extended to confirm improved correction and adequate skin coverage for closure"),
+    ],
+    closureSteps: ["Skin closed (with Z-plasty, or leaving portions open to heal by secondary intention) as recorded", "Sterile bulky soft dressing applied with the digit in extension"],
+    plan: opPlanLines({ imm: "Bulky dressing, transitioning to a static extension splint (typically night use, with daytime use per surgeon and therapist protocol) for several months to maintain correction", wound: "Wound care as instructed; open palm wounds need more involved dressing changes", red: "Red flags: fever, wound drainage, numbness or vascular compromise of the digit, uncontrolled pain", follow: "Follow-up in 10\u201314 days; hand therapy typically within 1\u20132 weeks" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): bulky dressing transitioning to an extension splint, oedema control", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive active range of motion with continued night extension splinting", "Phase 3 (Strengthening, 6\u201312 weeks): progressive grip strengthening", "Phase 4 (Return to activity, 3 months): return to full activity; night splinting often continued for 3\u20136 months or longer to minimise recurrence"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 6\u20138 weeks", "Red flags: vascular compromise of the digit, wound healing complications, progressive loss of correction (recurrence)"),
+  }),
+  opProc({
+    id: "metacarpal-orif", family: "hand-fracture", variantName: "Metacarpal fixation", name: "Metacarpal open reduction internal fixation or percutaneous pinning",
+    clinicNames: ["ORIF (plate/screws)", "Intramedullary fixation"], ambiguousNames: ["Closed reduction percutaneous pinning"], region: "hand", sided: "hand", planPriority: 90,
+    preop: ["Displaced metacarpal fracture (shaft)", "Displaced metacarpal fracture (neck)", "Displaced metacarpal fracture (base)"],
+    reference: opRef(
+      ["Displaced or unstable metacarpal fracture (shaft, neck or base) with unacceptable angulation, rotation (any malrotation is functionally unacceptable) or shortening", "Multiple metacarpal fractures (less stable given loss of adjacent bone support)", "Intra-articular metacarpal base or head fracture with significant displacement", "Preferred over closed reduction when the fracture is unstable, rotationally malaligned, intra-articular with displacement, or open"],
+      ["Stable, minimally displaced fracture without rotational deformity (favour closed treatment)", "Isolated boxer's fracture (fifth metacarpal neck) with acceptable angulation (commonly treated non-operatively)"],
+      ["Mini-fragment plate and screw system (1.5\u20132.4 mm), or K-wires for percutaneous or intramedullary fixation", "Fluoroscopy", "Standard hand fracture instrument set", "Tourniquet"],
+      ["Rotational malalignment is the most functionally significant and under-recognised error; assess digit alignment through active and passive flexion (fingers pointing toward the scaphoid tubercle, no scissoring) intra-operatively and post-operatively", "Extensor tendon adhesion to dorsal plates is a recognised complication; early protected motion and adequate periosteal or tendon coverage over hardware help", "Multiple adjacent metacarpal fractures should generally all be fixed, as the stability from adjacent intact metacarpals is lost", "K-wire migration or loosening is more common with the percutaneous technique; ensure adequate purchase and decide between burying and leaving percutaneous by fracture stability"]),
+    findings: [opC("metacarpals", "Metacarpal(s)", ["Thumb", "Index", "Middle", "Ring", "Little"]), opS("site", "Fracture site", ["Shaft", "Neck", "Base", "Head"], 4), opS("rotation", "Rotational alignment after fixation (nail and tenodesis check, no scissoring)", ["Aligned", "Residual malrotation"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("fixation", "Fixation", ["Plate and screws", "K-wires", "Intramedullary implant"], 1), opT("implantDetail", "Implant details", "e.g. 2.0 mm plate, K-wire size"), opS("kwireEnds", "K-wire ends (if used)", ["Percutaneous, bent and capped", "Buried"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Dorsal longitudinal incision made over the affected metacarpal; extensor tendon retracted to expose the fracture site", (v) => v.fixation !== "K-wires"),
+      st("Fracture site identified, haematoma evacuated, fragments mobilised", (v) => v.fixation !== "K-wires"),
+      st("Fracture reduced anatomically, correcting angulation, rotation (confirmed by fingernail alignment and the tenodesis effect with passive wrist motion) and length, under direct vision and fluoroscopic guidance"),
+      st("Provisional fixation with K-wires as needed to maintain reduction", (v) => v.fixation === "Plate and screws"),
+      st("Plate contoured to the dorsal or lateral surface of the metacarpal and secured with screws proximal and distal to the fracture", (v) => v.fixation === "Plate and screws"),
+      st("K-wires or an intramedullary implant passed in antegrade or retrograde fashion across the fracture under fluoroscopic guidance, achieving stable fixation", (v) => v.fixation === "K-wires" || v.fixation === "Intramedullary implant"),
+      st("Reduction and hardware position confirmed with fluoroscopy in multiple planes"),
+      st("Rotational alignment reconfirmed with full active and passive finger flexion, ensuring no digit crossover (scissoring)"),
+    ],
+    closureSteps: ["Extensor mechanism and periosteum repaired over the hardware as feasible with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and splint applied"],
+    plan: opPlanLines({ imm: "Splint immobilisation for 1\u20133 weeks depending on fixation stability, then progressive range of motion", red: "Red flags: fever, wound drainage, numbness, malrotation noticed by the patient or family, uncontrolled pain", follow: "Follow-up in 10\u201314 days; serial radiographs to confirm maintained reduction and healing" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20133 weeks): splint immobilisation, adjacent joint motion (IP joints if the MCP is splinted) encouraged throughout", "Phase 2 (Early mobilisation, 3\u20136 weeks): progressive active range of motion", "Phase 3 (Strengthening, 6\u201310 weeks): progressive grip strengthening once healing is confirmed", "Phase 4 (Return to activity, 3 months): return to full activity and contact sport once solid union is confirmed"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour or contact sport 10\u201312 weeks", "Red flags: new rotational deformity, hardware-related symptoms, persistent pain suggesting non-union"),
+  }),
+  opProc({
+    id: "phalanx-orif", family: "hand-fracture", variantName: "Phalanx fixation", name: "Phalanx open reduction internal fixation or percutaneous pinning",
+    clinicNames: ["ORIF", "Percutaneous pinning"], region: "hand", sided: "hand", planPriority: 90,
+    preop: ["Displaced proximal phalanx fracture", "Displaced middle phalanx fracture"],
+    reference: opRef(
+      ["Displaced or unstable proximal or middle phalanx fracture with unacceptable angulation, rotation or intra-articular displacement", "Fracture unstable after closed reduction, or unable to achieve or maintain acceptable alignment with splinting", "Preferred over closed treatment when unstable, malrotated, intra-articular with significant displacement, or associated with soft-tissue injury needing open treatment"],
+      ["Stable, minimally displaced fracture without rotational deformity (favour buddy taping or splinting)", "Severe comminution where extensive open dissection may worsen stiffness (consider closed or percutaneous fixation)"],
+      ["Mini-fragment plate and screw system (1.3\u20132.0 mm), or K-wires for percutaneous fixation", "Fluoroscopy", "Standard hand fracture instrument set", "Tourniquet"],
+      ["Phalanx fractures, particularly proximal, carry a high stiffness risk from extensor mechanism adhesion; stable fixation allowing the earliest protected motion is prioritised over prolonged immobilisation", "Meticulously assess and correct rotational malalignment, as for metacarpal fractures", "Dorsal plates over the proximal phalanx are prone to causing extensor adhesions; consider lateral plate placement or percutaneous techniques when the pattern allows", "Intra-articular extension at the PIP joint needs particular attention to anatomic reduction given its unforgiving nature"]),
+    findings: [OP_SINGLE_DIGIT, opS("phalanx", "Phalanx", ["Proximal", "Middle"], 2), opS("rotation", "Rotational alignment after fixation (nail and tenodesis check, no scissoring)", ["Aligned", "Residual malrotation"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("approach", "Approach", ["Dorsal midline (tendon splitting)", "Mid-lateral", "Percutaneous"], 1), opS("fixation", "Fixation", ["Plate and screws", "K-wires"], 2), opT("implantDetail", "Implant details", "e.g. 1.5 mm plate, K-wire size")],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Dorsal (mid-lateral, or dorsal midline with extensor tendon splitting) approach performed over the affected phalanx", (v) => v.approach !== "Percutaneous"),
+      st("Fracture site identified, haematoma evacuated, fragments mobilised", (v) => v.approach !== "Percutaneous"),
+      st("Fracture reduced anatomically, correcting angulation and rotation (fingernail alignment and passive tenodesis with wrist motion), under direct vision and fluoroscopic guidance"),
+      st("Provisional fixation with K-wires as needed", (v) => v.fixation === "Plate and screws"),
+      st("Low-profile mini-fragment plate contoured and applied to the lateral or dorsal surface, secured with screws proximal and distal to the fracture", (v) => v.fixation === "Plate and screws"),
+      st("K-wires passed in crossed or intramedullary fashion under fluoroscopic guidance", (v) => v.fixation === "K-wires"),
+      st("Reduction and hardware position confirmed with fluoroscopy in multiple planes"),
+      st("Adjacent joint (PIP and DIP) motion tested intra-operatively to confirm no tendon tethering or hardware impingement"),
+      st("Rotational alignment reconfirmed with active and passive finger flexion"),
+    ],
+    closureSteps: ["Extensor mechanism repaired if incised, with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and splint applied"],
+    plan: opPlanLines({ imm: "Splint immobilisation for 1\u20132 weeks depending on fixation stability, then progressive range of motion with close hand therapy involvement given the high stiffness risk", red: "Red flags: fever, wound drainage, numbness, malrotation, significant stiffness", follow: "Follow-up in 10\u201314 days; serial radiographs; early hand therapy referral" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation", "Phase 2 (Early mobilisation, 2\u20134 weeks): early progressive active and active-assisted range of motion, closely supervised by hand therapy given the stiffness risk", "Phase 3 (Strengthening, 4\u20138 weeks): progressive grip strengthening once healing is confirmed", "Phase 4 (Return to activity, 10\u201312 weeks): return to full activity once solid union and motion are restored"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 8\u201310 weeks", "Red flags: new rotational deformity, progressive stiffness beyond the expected timeline, hardware-related symptoms"),
+  }),
+  opProc({
+    id: "digital-nerve-repair", clinicGap: true, family: "hand-nerve-vessel", variantName: "Digital nerve repair", name: "Digital nerve repair",
+    clinicNames: [], region: "hand", sided: "hand", planPriority: 70,
+    preop: ["Digital nerve laceration"],
+    reference: opRef(
+      ["Complete laceration of a digital nerve with sensory deficit distal to the injury, confirmed on examination", "Ideally repaired acutely, within the first 7\u201314 days, before nerve retraction and scarring complicate primary repair", "Preferred over observation whenever primary tension-free coaptation is achievable; nerve grafting is considered when a segmental gap precludes tension-free direct repair"],
+      ["Significant segmental nerve gap requiring graft or conduit (not a contraindication, but changes technique)", "Delayed presentation with significant proximal retraction or scarring (may need more mobilisation or grafting)"],
+      ["Microsurgical instrument set (fine forceps, needle holders, microscissors)", "Operating microscope or high-power loupe magnification", "Fine non-absorbable suture (8-0 to 10-0)", "Tourniquet", "Nerve conduit or allograft available if a segmental gap precludes direct repair"],
+      ["Tension at the repair site is the primary determinant of poor outcomes; do not force a direct repair under tension, use a conduit or graft if a gap exists", "Approximate fascicular rotation as closely as possible using visible internal topography and vessel landmarks", "Handle nerve tissue with extreme gentleness; avoid grasping the nerve substance with forceps, handle the epineurium or surrounding tissue", "Sensory recovery is often incomplete even with technically excellent repair; set realistic expectations about two-point discrimination and protective sensation"]),
+    findings: [OP_SINGLE_DIGIT, opS("nerve", "Nerve", ["Radial digital nerve", "Ulnar digital nerve", "Both"], 3), opN("gap", "Gap after trimming", "mm"), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("repair", "Repair", ["Direct epineural repair", "Conduit", "Nerve graft"], 3), opT("suture", "Suture size", "e.g. 9-0 nylon"), opN("sutures", "Number of sutures"), opT("conduitDetail", "Conduit or graft details", "e.g. conduit type, graft source")],
+    closure: [OP_SKIN_SUTURE, opT("splint", "Splint", "e.g. adjacent joints in slight flexion to protect the repair")],
+    summary: (v) => (v.repair ? v.repair.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table, tourniquet applied", "Standard prep and drape; operating microscope draped and positioned"],
+    steps: [
+      st("Existing laceration extended using Bruner-type zigzag incisions as needed for exposure"),
+      st("Proximal and distal nerve stumps identified and gently mobilised, avoiding excessive traction or devascularisation"),
+      st("Nerve ends trimmed minimally under magnification to healthy fascicular tissue with a sharp blade, confirming a clean cross-sectional surface"),
+      st("Nerve ends approximated without tension; gap assessed to confirm the feasibility of direct repair against the need for a graft or conduit"),
+      st("Epineural repair performed under magnification, placing sutures to achieve a tension-free, rotationally aligned coaptation and matching the fascicular pattern or vessel landmarks between the stumps where visible"),
+      st("Nerve conduit or graft interposed and secured with fine suture at both coaptation sites because a segmental gap precluded tension-free repair", (v) => v.repair === "Conduit" || v.repair === "Nerve graft"),
+      st("Repair site inspected to confirm no kinking or tension through a full range of digital motion"),
+    ],
+    closureSteps: ["Skin closed", "Sterile dressing and splint applied to protect the repair from tension (typically with the adjacent joint(s) in slight flexion)"],
+    plan: opPlanLines({ imm: "Splint immobilisation for 2\u20133 weeks with the adjacent joints positioned to minimise nerve tension, then progressive range of motion", red: "Red flags: fever, wound drainage, vascular compromise, uncontrolled pain" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20133 weeks): splint immobilisation with joint positioning to protect the repair from tension", "Phase 2 (Early mobilisation, 3\u20136 weeks): progressive range of motion, gentle desensitisation and sensory re-education started", "Phase 3 (Strengthening, 6\u201312 weeks): progressive activity as sensation allows, continued sensory re-education", "Phase 4 (Return to activity, 3\u20134 months for functional use): return to full activity with protective awareness; sensory recovery continues for 12\u201318 months"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 8\u201312 weeks", "Red flags: cold intolerance or hypersensitivity (neuroma formation), no sensory recovery by the expected milestones, signs of infection"),
+  }),
+  opProc({
+    id: "digital-artery-repair", clinicGap: true, family: "hand-nerve-vessel", variantName: "Digital artery repair", name: "Digital artery repair",
+    clinicNames: [], region: "hand", sided: "hand", planPriority: 75,
+    preop: ["Digital artery laceration"],
+    reference: opRef(
+      ["Digital artery laceration with a devascularised or ischaemic digit, or compromised perfusion after injury", "Injury to both digital arteries, thumb injuries, and injuries to multiple digits", "Repair at the same site as a concomitant nerve or tendon repair, where it can be done without added morbidity", "For a single-artery injury in an otherwise well-perfused digit, repair is optional: it may reduce cold intolerance and protect against later vascular compromise, but the evidence is limited"],
+      ["Crush or avulsion with segmental vessel damage (vein graft, or revision amputation if non-salvageable)", "Well-perfused digit with a single-artery injury (repair optional)", "Patient factors affecting microvascular patency (smoking in particular)"],
+      ["Microsurgical instrument set, operating microscope", "Microsurgical suture (9-0 to 11-0), vessel dilator, heparinised saline irrigation", "Vein graft set (volar wrist or forearm) if a gap precludes tension-free repair", "Hand-held Doppler; tourniquet"],
+      ["Resect to healthy intima; repairing across a damaged segment leads to thrombosis", "A tense anastomosis is likely to fail; use a vein graft or shorten bone rather than accept tension", "Handle vessels atraumatically; vasospasm and intimal injury are the common causes of failed repair; use topical warm irrigation and avoid grasping the vessel wall", "Avoid constrictive dressings and tight closure", "Smoking and cold exposure markedly increase the risk of failure and cold intolerance"]),
+    findings: [OP_SINGLE_DIGIT, opS("artery", "Artery", ["Radial digital artery", "Ulnar digital artery", "Both"], 3), opS("perfusion", "Digital perfusion before repair", ["Perfused", "Compromised", "Devascularised"], 3), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("repair", "Repair", ["Direct repair", "Vein graft"], 2), opT("suture", "Suture size", "e.g. 10-0 nylon"), opN("sutures", "Number of sutures"), opS("patency", "Patency after repair", ["Confirmed", "Not confirmed"], 2), opS("perfusionAfter", "Digital perfusion after repair", ["Good", "Compromised"], 2), opT("antithrombotic", "Antithrombotic therapy", "e.g. aspirin")],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.repair ? v.repair.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table, tourniquet applied", "Standard prep and drape; operating microscope draped and positioned"],
+    steps: [
+      st("Existing laceration extended with Bruner-type zigzag incisions as needed for exposure"),
+      st("Digital nerves identified and protected"),
+      st("Arterial stumps identified under the microscope and the extent of vessel injury assessed"),
+      st("Tourniquet released briefly to identify the proximal stump by pulsatile inflow"),
+      st("Vessel ends trimmed back under magnification to healthy intima with a normal-looking wall and good inflow; lumen irrigated with heparinised saline and gently dilated"),
+      st("Ends approximated without tension; vein graft harvested from the volar wrist or forearm, reversed and interposed because a gap precluded tension-free repair", (v) => v.repair === "Vein graft"),
+      st("Anastomosis performed with interrupted microsutures, avoiding catching the back wall"),
+      st("Patency confirmed (visible pulsation, empty-and-refill test) and digital perfusion assessed (colour, capillary refill) after tourniquet release"),
+      st("Haemostasis confirmed"),
+    ],
+    closureSteps: ["Loose skin closure, avoiding circumferential tightness", "Sterile non-constrictive dressing and bulky protective splint applied", "Digital perfusion documented before leaving the operating theatre"],
+    plan: opPlanLines({ imm: "Elevation, warm environment, avoidance of vasoconstrictors (smoking, caffeine, cold exposure); smoking cessation counselling", restr: "Digital perfusion monitoring (colour, capillary refill, temperature) per protocol, hourly initially", pain: "Standard multimodal pain management; antithrombotic therapy per surgeon protocol", wound: "Wound care without any external pressure on the digit", red: "Red flags: pallor, cyanosis, delayed or absent capillary refill, cool digit: immediate re-evaluation and possible return to theatre" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): elevation, warm environment, protective splint", "Phase 2 (Early mobilisation, 2\u20134 weeks): gradual active motion once perfusion is stable, per concomitant repairs", "Phase 3 (Strengthening, 4\u20138 weeks): progressive activity, cold-protection advice", "Phase 4 (Return to activity, 6\u201312 weeks): return to full activity; cold intolerance may persist for months"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 8\u201312 weeks", "Red flags: any new sign of vascular compromise, persisting cold intolerance, signs of infection"),
+  }),
+  opProc({
+    id: "finger-joint-arthroplasty", family: "finger-arthroplasty", variantName: "PIP or MCP arthroplasty", name: "Finger joint arthroplasty",
+    clinicNames: ["MCP joint arthroplasty"], ambiguousNames: ["Joint arthroplasty (implant)"], region: "hand", sided: "hand", planPriority: 100,
+    preop: ["PIP joint arthritis", "MCP joint arthritis"],
+    reference: opRef(
+      ["End-stage PIP or MCP joint arthritis (osteoarthritis, post-traumatic or rheumatoid) with significant pain and functional limitation refractory to conservative management", "Preferred over arthrodesis when preserving joint motion is a priority and there is adequate bone stock and soft-tissue support, particularly for the MCP joints and the radial and border digits that need more mobility for pinch and grip"],
+      ["Poor bone stock precluding stable implant fixation (favour arthrodesis or consider grafting)", "Unstable collateral ligament support (particularly problematic at the PIP joint)", "Young high-demand patient with heavy manual demands (implant longevity)", "Index finger PIP or MCP joint under high lateral pinch stress (arthrodesis often favoured)"],
+      ["Implant system (silicone, pyrocarbon or surface replacement), sizes per intra-operative trialling", "Standard hand instrument set, reamers and broaches sized to the implant system", "Tourniquet", "Fluoroscopy optional"],
+      ["Adequate collateral ligament balancing is essential for implant stability and longevity; asymmetric tension can lead to subluxation or angular deformity", "The extensor mechanism must be well centralised over the joint at closure to prevent extensor lag or lateral deviation", "Silicone implants are prone to fracture with high lateral stress; counsel about activity modification", "Early protected motion (per protocol) is generally preferred over prolonged immobilisation to minimise stiffness"]),
+    findings: [OP_SINGLE_DIGIT, opS("joint", "Joint", ["PIP", "MCP"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("implant", "Implant", ["Silicone", "Pyrocarbon", "Surface replacement"], 3), opT("implantDetail", "Implant system and sizes", "e.g. system, size"), opS("approach", "Approach", ["Central slip splitting (PIP)", "Extensor tendon splitting or sagittal band takedown (MCP)"], 1)],
+    closure: [OP_SKIN_SUTURE, opT("splint", "Splint", "e.g. dynamic extension splint per implant protocol")],
+    summary: (v) => (v.implant ? v.implant.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Dorsal approach performed over the affected joint"),
+      st("Joint capsule incised; collateral ligaments released or tagged as needed for exposure and later repair"),
+      st("Diseased articular surfaces of both sides of the joint resected and prepared per the implant system requirements"),
+      st("Medullary canals of both sides prepared with sequential reaming or broaching to the appropriate size for the trial implant"),
+      st("Trial implant placed, joint reduced, and range of motion and stability assessed, including collateral ligament tension and tracking"),
+      st("Final implant (size determined by trialling) placed on both sides of the joint"),
+      st("Collateral ligaments and joint capsule repaired to provide stability and appropriate soft-tissue tensioning"),
+      st("Extensor mechanism and sagittal bands repaired, with the tendon centralised over the joint"),
+      st("Final range of motion and stability confirmed"),
+    ],
+    closureSteps: ["Collateral ligament, capsule and extensor mechanism repair completed with absorbable suture", "Layered subcutaneous and skin closure", "Sterile dressing and splint applied per the implant protocol"],
+    plan: opPlanLines({ imm: "Splint immobilisation or protective splinting for 1\u20132 weeks, then early controlled motion per the implant system and surgeon preference", red: "Red flags: fever, wound drainage, sudden instability or dislocation, uncontrolled pain", follow: "Follow-up in 10\u201314 days; hand therapy per protocol" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): splint immobilisation or protective positioning", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive controlled active and active-assisted range of motion per the implant-specific protocol", "Phase 3 (Strengthening, 6\u201312 weeks): gentle progressive strengthening, avoiding excessive lateral stress", "Phase 4 (Return to activity, 3 months): return to most activities with permanent avoidance of heavy repetitive lateral pinch and impact loading"], "Return to driving 2\u20133 weeks; desk work 1\u20132 weeks; manual labour 10\u201312 weeks with permanent modifications for heavy lateral stress", "Red flags: sudden instability or deformity (implant subluxation or fracture), progressive stiffness, signs of infection"),
+  }),
+  opProc({
+    id: "digit-amputation", family: "amputation-replantation", variantName: "Digit amputation", name: "Digit amputation",
+    clinicNames: ["Ray amputation", "Revision amputation", "Terminalisation"], region: "hand", sided: "hand", planPriority: 80,
+    preop: ["Non-salvageable digit injury", "Digit infection", "Digit ischaemia", "Digit tumour"],
+    reference: opRef(
+      ["Non-salvageable digit due to severe trauma, infection, ischaemia or tumour", "Failed replantation or revascularisation attempt", "Severely dysfunctional digit causing greater functional impairment than amputation would (for example a stiff, insensate, painful digit interfering with overall hand function)", "Preferred over attempted salvage when the digit is non-viable, reconstruction would yield a functionally worse outcome, or the patient's medical status precludes lengthy reconstruction"],
+      ["Potential for salvage or replantation not yet fully assessed (assess vascularity and viability thoroughly first)", "Thumb amputation (higher threshold, given the thumb's contribution to hand function; replantation or reconstruction pursued much more aggressively)"],
+      ["Standard hand instrument set, oscillating saw or bone cutter for osteotomy", "Tourniquet", "Rongeur for bone contouring"],
+      ["Transect nerve stumps under gentle tension so they retract well proximal to the bone and closure level, minimising symptomatic neuroma", "Preserve as much functional length as possible while ensuring adequate coverage; a well-padded, sensate stump is more valuable than maximal length with poor coverage", "For border digits (particularly the small finger and thumb), consider the impact on grip, pinch and grip width when choosing the level", "Counsel before surgery about phantom sensation and pain, which is common"]),
+    findings: [OP_SINGLE_DIGIT, opS("level", "Level", ["Distal phalanx", "Middle phalanx", "Proximal phalanx", "Ray amputation"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opT("flap", "Flap design", "e.g. longer volar flap"), opS("nerves", "Digital nerves", ["Transected under tension and allowed to retract"], 1), opS("intermetacarpal", "Intermetacarpal ligament repair (ray amputation)", ["Performed", "Not performed"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.level ? v.level.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Skin flaps designed (typically a longer volar flap) to allow tension-free closure over the residual bone end, incorporating existing traumatic wound margins as needed"),
+      st("Digital neurovascular bundles identified bilaterally; digital nerves gently retracted distally and transected sharply under tension to let the stump retract proximal to the bone resection level; vessels ligated or cauterised"),
+      st("Flexor and extensor tendons identified and transected under gentle tension to retract proximal to the bone level, minimising tendon adhesion to the stump"),
+      st("Bone transected at the planned level with an oscillating saw; cut surface contoured to remove sharp edges; length preserved as far as is functionally reasonable while ensuring adequate soft-tissue coverage"),
+      st("Entire ray including the metacarpal removed, with intermetacarpal ligament repair between adjacent metacarpals to preserve hand width and prevent a gap deformity", (v) => v.level === "Ray amputation" || v.intermetacarpal === "Performed"),
+      st("Wound copiously irrigated"),
+      st("Remaining necrotic or non-viable tissue debrided as indicated"),
+    ],
+    closureSteps: ["Volar flap advanced over the bone end and secured, ensuring a tension-free, well-padded closure", "Sterile dressing, soft dressing or splint applied"],
+    plan: opPlanLines({ imm: "Soft dressing or splint; elevation to control swelling", pain: "Standard multimodal pain management; counsel about phantom sensation and pain, which is common after digit amputation", red: "Red flags: fever, wound drainage or dehiscence, uncontrolled pain, signs of stump infection" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): soft dressing or splint, elevation, oedema control", "Phase 2 (Early mobilisation, 2\u20134 weeks): desensitisation programme for the stump, progressive use of the hand", "Phase 3 (Strengthening, 4\u20138 weeks): progressive grip and hand strengthening, adaptation to altered hand mechanics", "Phase 4 (Return to activity, 8\u201312 weeks): return to full activity with adaptation to the digit loss"], "Return to driving 1\u20132 weeks; desk work 1\u20132 weeks; manual labour 6\u20138 weeks", "Red flags: symptomatic neuroma (focal hypersensitivity or pain at the stump), wound healing complications, persistent significant phantom pain warranting further evaluation"),
+  }),
+  opProc({
+    id: "digit-replantation", family: "amputation-replantation", variantName: "Digit replantation", name: "Digit replantation",
+    clinicNames: ["Replantation"], region: "hand", sided: "hand", planPriority: 100,
+    preop: ["Traumatic digit amputation"],
+    reference: opRef(
+      ["Sharp, clean digit amputation, particularly of the thumb (given its functional importance), multiple digits, or in children", "Amputation at a level allowing a reasonable expectation of functional recovery", "Preferred over revision amputation when the part is viable (properly cooled and transported), the mechanism is favourable (sharp or guillotine rather than severe crush or avulsion), and patient factors favour attempting salvage"],
+      ["Severely crushed, mangled or avulsed segment with extensive unreconstructable vessel or nerve damage, or prolonged warm ischaemia without adequate cooling", "Single non-thumb digit amputation, particularly at more proximal levels (outcomes may not exceed revision amputation, and rehabilitation is much longer)", "Smoking (a strong relative contraindication given its effect on microvascular patency), significant comorbidity, severe associated injuries needing priority, contamination"],
+      ["Microsurgical instrument set, operating microscope", "Microsurgical suture (9-0 to 11-0 for vessels, 8-0 to 9-0 for nerves)", "K-wires for bone fixation", "Vessel dilators, irrigation with heparinised saline", "Tourniquet", "Vein graft instrumentation if needed for a vessel gap"],
+      ["Adequate venous outflow is often the more challenging aspect and the more common cause of failure; have a low threshold to repair a second vein or use adjuncts (leech therapy, controlled bleeding) if venous congestion develops", "Meticulous atraumatic handling of vessels under the microscope is essential; vasospasm and intimal injury from rough handling are common causes of anastomotic failure", "Adequate bone shortening to allow tension-free vessel and nerve repair is often necessary and should not be viewed as a compromise", "Smoking and nicotine significantly increase the failure risk through vasospasm; counselling and cessation support are essential", "A two-team approach (preparing the part and the stump at the same time) reduces ischaemia time and improves success"]),
+    findings: [OP_SINGLE_DIGIT, opT("level", "Level of amputation", "e.g. proximal phalanx"), opN("coldTime", "Cold ischaemia time", "hours"), opN("warmTime", "Warm ischaemia time", "minutes"), opT("revascularisation", "Time of revascularisation", "e.g. 14:35"), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("bone", "Bone fixation", ["K-wires", "Mini-plate"], 2), opN("arteries", "Arteries repaired"), opN("veins", "Veins repaired"), opN("nerves", "Nerves repaired"), opS("veinGraft", "Vein graft", ["Used", "Not used"], 2), opS("flexor", "Flexor tendon repair", ["FDP only", "FDS and FDP"], 2), opT("anticoagulation", "Anticoagulation and monitoring", "e.g. aspirin, hourly perfusion checks")],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.level ? v.level.toLowerCase() : null),
+    prep: ["Supine position, both the stump and the amputated part prepared on the field, tourniquet applied to the extremity", "Standard prep and drape; amputated part kept cooled until preparation begins", "Operating microscope draped and positioned; two-team approach where possible to minimise ischaemia time"],
+    steps: [
+      st("Amputated part and stump both debrided and structures identified and tagged under magnification (bone, flexor and extensor tendons, digital arteries, digital nerves, dorsal veins)"),
+      st("Bone shortened as needed on both sides to allow tension-free vessel and nerve repair, and fixed to restore skeletal stability and appropriate length"),
+      st("Extensor tendon repaired first (if applicable at this level) using standard extensor repair technique"),
+      st("Flexor tendon(s) repaired using core suture technique, typically at least the FDP"),
+      st("Digital arteries identified and repaired under the microscope with interrupted microsutures, restoring arterial inflow"),
+      st("Vein graft interposed because a segmental arterial gap precluded tension-free repair", (v) => v.veinGraft === "Used"),
+      st("Arterial repair patency confirmed (visible pulsatile flow, appropriate colour return to the digit)"),
+      st("Digital nerves repaired using microsurgical epineural technique"),
+      st("Adequate venous outflow established by repairing dorsal veins under the microscope; if inadequate venous repair was achievable, alternative techniques (controlled bleeding, medicinal leech therapy) considered post-operatively"),
+      st("Skin closed loosely to avoid any external constriction of the repaired vessels, leaving areas open as needed for decompression and monitoring"),
+    ],
+    closureSteps: ["Loose skin closure, avoiding circumferential tight closure", "Sterile non-constrictive dressing and bulky protective splint applied", "Digit perfusion (colour, capillary refill, temperature) confirmed and documented before leaving the operating theatre"],
+    plan: opPlanLines({ imm: "Strict post-operative protocol: bed rest initially, extremity elevation, warm ambient room temperature, avoidance of vasoconstrictive triggers (caffeine, nicotine, cold exposure); smoking cessation counselling is critical", restr: "Frequent digit perfusion monitoring (colour, capillary refill, turgor, temperature) per nursing protocol, typically hourly initially", pain: "Standard multimodal pain management; anticoagulation or antiplatelet therapy per surgeon protocol (for example aspirin, and in some protocols a heparin infusion) to support microvascular patency", wound: "Wound care with careful attention to avoid any external pressure on the digit", red: "Red flags: any sign of vascular compromise (pallor, cyanosis, delayed or absent capillary refill, cool temperature) requires immediate re-evaluation and potential return to theatre", follow: "Close inpatient monitoring initially, then frequent outpatient follow-up" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20133 weeks): strict immobilisation and protection, inpatient monitoring initially, warm environment, no motion of the replanted digit", "Phase 2 (Early mobilisation, 3\u20136 weeks): gentle protected motion once vascular stability and early tendon and bone healing are confirmed, under close hand therapy supervision", "Phase 3 (Strengthening, 6\u201316 weeks): progressive, carefully monitored strengthening and desensitisation as healing allows", "Phase 4 (Return to activity, 6\u201312 months): functional recovery continues over an extended timeline; expect residual stiffness, altered sensation and cold intolerance in many cases"], "Return to driving 4\u20136 weeks; desk work 4\u20136 weeks; manual labour 4\u20136 months or longer depending on recovery", "Red flags: any new sign of vascular compromise at any point in recovery, significant unremitting cold intolerance or pain, signs of infection, hardware issues"),
+  }),
+];
+
+// ---- peripheral nerve: the seven accepted drafts (mini-open carpal tunnel release sits with the other two) ----
+const OP_PROCS_NERVE = [
+  opProc({
+    id: "median-nerve-decompression", family: "median-nerve", variantName: "Elbow and forearm", name: "Median nerve decompression at the elbow and forearm",
+    clinicNames: ["Open lacertus fibrosus release / proximal median nerve decompression", "Open decompression of the anterior interosseous nerve"], region: "peripheralNerve", sided: "arm", planPriority: 60,
+    preop: ["Lacertus syndrome", "Pronator syndrome", "Anterior interosseous nerve syndrome"],
+    reference: opRef(
+      ["Lacertus or pronator syndrome: proximal median nerve compression at the lacertus fibrosus, pronator teres or FDS arch, with forearm pain and median-distributed symptoms provoked by resisted elbow flexion or forearm pronation, refractory to 3\u20136 months of conservative management (electrodiagnostic studies are often normal)", "Anterior interosseous nerve syndrome (weakness of FPL, FDP to the index finger and pronator quadratus) with an identified compressive cause (mass, anomalous muscle or vessel, trauma), or no recovery after 3\u20136 months of observation", "Many anterior interosseous palsies are idiopathic or neuralgic amyotrophy and recover spontaneously; early surgery is not preferred unless a compressive cause is found"],
+      ["Acute-onset anterior interosseous palsy in the first 3 months (observe with serial examination and electrodiagnostic studies)", "Mild symptoms without objective signs", "Alternative or coexisting cause (cervical radiculopathy, carpal tunnel syndrome: treat both)", "FPL rupture mimicking the palsy (for example in rheumatoid disease)"],
+      ["Standard hand and forearm set, nerve dissection instruments, vessel loops, bipolar diathermy", "Loupe magnification", "Tourniquet (or WALANT for lacertus release alone)"],
+      ["The lateral antebrachial cutaneous nerve and the brachial artery are close to the field; identify both before dividing the lacertus", "Incomplete release of the distal sites (FDS arch, deep head of pronator teres) is a common cause of persisting symptoms; follow the nerve distally until it runs free", "Look for anatomical variants (accessory muscle, crossing vessels) that may be the compressive cause", "Confirm the diagnosis before operating on an anterior interosseous palsy: neuralgic amyotrophy usually recovers and tendon rupture can mimic it", "Treat coexisting carpal tunnel syndrome at the same time if present"]),
+    findings: [opC("compression", "Compression found at", ["Lacertus fibrosus", "Pronator teres (superficial head)", "Pronator teres (deep head)", "FDS arch", "Crossing vessels", "Accessory muscle", "Mass"]), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("level", "Decompression", ["Lacertus fibrosus release", "Lacertus release with pronator teres and FDS arch release", "Anterior interosseous nerve decompression"], 1), opN("incision", "Incision length", "cm"), opS("neurolysis", "Internal neurolysis", ["Performed", "Not performed"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.level ? v.level.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table in supination, tourniquet applied (or WALANT)", "Standard prep and drape"],
+    steps: [
+      st("Incision made over the anterior elbow and proximal forearm, crossing the flexion crease obliquely"),
+      st("Superficial veins and the lateral antebrachial cutaneous nerve identified and protected"),
+      st("Lacertus fibrosus identified and divided along its length over the median nerve and brachial artery"),
+      st("Median nerve identified proximally, medial to the brachial artery, and followed distally into the pronator teres"),
+      st("Fibrous edge of the superficial head and fibrous bands of the deep head of pronator teres released; proximal edge of the FDS arch divided", (v) => v.level && v.level !== "Lacertus fibrosus release"),
+      st("Crossing vessels, accessory muscle (for example an accessory head of FPL) and fibrous bands identified; vessels ligated or divided and bands released"),
+      st("Anterior interosseous nerve identified arising from the posterolateral median nerve and followed distally; all sites of constriction released", (v) => v.level === "Anterior interosseous nerve decompression"),
+      st("Internal neurolysis performed under magnification because a constriction or hourglass deformity was found", (v) => v.neurolysis === "Performed"),
+      st("Nerve inspected for constriction, swelling or mass; free gliding confirmed through full elbow and forearm range of motion"),
+      st("Haemostasis confirmed"),
+    ],
+    closureSteps: ["Layered subcutaneous and skin closure", "Sterile dressing, soft dressing or brief splint applied"],
+    plan: opPlanLines({ imm: "Soft dressing or brief splint for up to 1 week; early gentle motion encouraged", red: "Red flags: fever, wound drainage, expanding haematoma (brachial artery), worsening numbness or weakness", follow: "Follow-up in 10\u201314 days; for anterior interosseous nerve syndrome, clinical and electrodiagnostic review at 3 and 6 months and a decision on tendon transfer if there is no recovery by 6\u201312 months" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or brief splint, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion, scar care", "Phase 3 (Strengthening, 3\u20138 weeks): progressive strengthening as nerve recovery allows", "Phase 4 (Return to activity, 6\u201312 weeks): return to full activity; recovery after AIN decompression may take 6\u201312 months"], "Return to driving 1\u20132 weeks; desk work 1 week; manual labour 4\u20138 weeks", "Red flags: worsening numbness or weakness, no motor recovery by the expected milestones, signs of infection"),
+  }),
+  opProc({
+    id: "guyons-canal-decompression", family: "ulnar-nerve-wrist", variantName: "Guyon's canal", name: "Guyon's canal (ulnar tunnel) decompression",
+    clinicNames: ["Open decompression of Guyon's canal", "Endoscopic decompression"], region: "peripheralNerve", sided: "wrist", planPriority: 50,
+    preop: ["Ulnar tunnel syndrome"],
+    reference: opRef(
+      ["Ulnar tunnel syndrome with sensory and/or motor deficit in the ulnar hand, confirmed clinically and electrodiagnostically", "An identified cause: ganglion or other mass, hook of hamate fracture or non-union, ulnar artery thrombosis or aneurysm, anomalous muscle, or a thickened fibrous arch", "Refractory to conservative management in idiopathic cases; earlier surgery when a mass, trauma or vascular cause is found", "Open release preferred when a mass, vascular lesion or trauma is suspected or all three zones must be inspected; endoscopic release is used in selected idiopathic cases"],
+      ["Cubital tunnel syndrome as the true site of compression (examine the elbow; consider double crush)", "Cervical radiculopathy", "Vascular lesion needing reconstruction (vascular surgery support or a staged approach)"],
+      ["Standard hand instrument set, bipolar diathermy, loupe magnification", "Hand-held Doppler", "Endoscopic carpal or ulnar tunnel release system if the endoscopic technique is used", "Tourniquet or WALANT"],
+      ["The deep motor branch is at risk during release of the hypothenar arch; identify it before dividing the arch", "Incomplete release of the hypothenar arch is a common cause of persisting motor symptoms", "Inspect the ulnar artery and the hook of the hamate: a missed vascular lesion or hamate pathology is a recognised cause of failure", "Always examine the elbow and neck beforehand; a double crush is common", "Counsel that recovery depends on the preoperative severity and may take months"]),
+    findings: [opC("cause", "Cause found", ["Ganglion or mass", "Hook of hamate fracture or prominence", "Ulnar artery thrombosis or aneurysm", "Anomalous muscle", "Thickened fibrous arch", "None identified"]), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("technique", "Technique", ["Open", "Endoscopic"], 2), opC("zones", "Zones decompressed", ["Zone 1 (proximal to the bifurcation)", "Zone 2 (deep motor branch)", "Zone 3 (superficial branch)"]), opS("ctr", "Concomitant carpal tunnel release", ["Performed", "Not performed"], 2)],
+    closure: [OP_SKIN_SUTURE],
+    summary: (v) => (v.technique ? v.technique.toLowerCase() : null),
+    prep: OP_PREP_HAND,
+    steps: [
+      st("Curvilinear or zigzag incision made on the ulnar side of the distal forearm and palm, crossing the wrist crease obliquely and running radial to the pisiform and flexor carpi ulnaris", (v) => v.technique !== "Endoscopic"),
+      st("Subcutaneous dissection carried down, protecting cutaneous nerve branches", (v) => v.technique !== "Endoscopic"),
+      st("Roof of the canal (volar carpal ligament and palmaris brevis) divided under direct vision", (v) => v.technique !== "Endoscopic"),
+      st("Small incision made at the wrist crease; endoscope introduced into the canal and the roof divided under visualisation", (v) => v.technique === "Endoscopic"),
+      st("Ulnar nerve and artery identified proximally and followed distally to the bifurcation of the nerve into its superficial (sensory) and deep (motor) branches"),
+      st("Each zone decompressed: proximal to the bifurcation, the deep branch (the fibrous arch of the hypothenar muscles divided, taking care of the deep motor branch), and the superficial branch"),
+      st("Floor and margins inspected: hook of the hamate, mass or ganglion (excised), anomalous muscle or fibrous band (divided), and the ulnar artery"),
+      st("Concomitant carpal tunnel release performed", (v) => v.ctr === "Performed"),
+      st("Tourniquet released and perfusion of the hand confirmed, particularly through the ulnar artery; haemostasis confirmed"),
+    ],
+    closureSteps: ["Skin closed", "Sterile bulky soft dressing (or volar wrist splint for comfort) applied"],
+    plan: opPlanLines({ imm: "Soft dressing; early finger motion encouraged", red: "Red flags: fever, wound drainage, vascular compromise of the hand, worsening numbness or weakness" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or splint for comfort, early finger motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive wrist range of motion, scar care", "Phase 3 (Strengthening, 3\u20136 weeks): progressive grip and intrinsic strengthening", "Phase 4 (Return to activity, 6\u201312 weeks): return to full activity; recovery may continue for 6\u201312 months"], "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 4\u20138 weeks", "Red flags: worsening numbness or weakness, vascular compromise, signs of infection"),
+  }),
+  opProc({
+    id: "radial-nerve-decompression", family: "radial-nerve", variantName: "Radial tunnel or PIN", name: "Radial nerve decompression at the elbow",
+    clinicNames: ["Open radial tunnel decompression", "Open decompression of the posterior interosseous nerve"], region: "peripheralNerve", sided: "arm", planPriority: 50,
+    preop: ["Radial tunnel syndrome", "Posterior interosseous nerve syndrome"],
+    reference: opRef(
+      ["Radial tunnel syndrome: lateral forearm pain with tenderness over the radial tunnel and no motor deficit, refractory to 3\u20136 months of conservative management (a clinical diagnosis; electrodiagnostic studies are usually normal)", "Posterior interosseous nerve syndrome: finger and thumb extension weakness with preserved wrist extension, from compression at the arcade of Frohse, a mass (ganglion, lipoma), synovitis or trauma, with no recovery after 3\u20136 months of observation, or earlier when a mass or trauma is identified", "Preferred over continued conservative management once an adequate trial has failed and the diagnosis is secure"],
+      ["Uncertain diagnosis (radial tunnel syndrome is controversial; exclude lateral epicondylitis and cervical radiculopathy)", "Acute posterior interosseous palsy consistent with neuralgic amyotrophy (observe with serial examination and electrodiagnostic studies)"],
+      ["Standard hand and forearm set, nerve dissection instruments, vessel loops, bipolar diathermy", "Loupe magnification", "Tourniquet"],
+      ["Incomplete decompression at the arcade of Frohse or the distal edge of supinator is a common cause of failure; follow the nerve until it runs free", "Radial recurrent vessels cross the field and bleed; control them before dissecting the nerve", "The superficial radial nerve and the posterior interosseous nerve both lie in the field; protect each", "An uncertain diagnosis is the main cause of dissatisfaction after radial tunnel release; confirm the diagnosis and set realistic expectations", "Look for a mass in posterior interosseous nerve syndrome"]),
+    findings: [opS("constriction", "Nerve appearance", ["Normal", "Hourglass constriction", "Swollen"], 3), opS("mass", "Mass", ["None", "Mass excised"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("diagnosis", "Decompression", ["Radial tunnel", "Posterior interosseous nerve"], 2), opS("approach", "Approach", ["Anterior (brachioradialis and ECRL interval)", "Brachioradialis-splitting", "Posterior (Thompson)"], 1), opC("sites", "Compression sites released", ["Fibrous bands anterior to the radial head", "Radial recurrent vessels", "Medial edge of ECRB", "Arcade of Frohse", "Distal edge of supinator"]), opS("neurolysis", "Internal neurolysis", ["Performed", "Not performed"], 2)],
+    closure: [opS("splint", "Splint", ["Soft dressing", "Wrist and finger extension splint"], 2), OP_SKIN_SUTURE],
+    summary: (v) => (v.diagnosis ? v.diagnosis.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table, forearm supinated (pronated for the posterior approach), tourniquet applied", "Standard prep and drape"],
+    steps: [
+      st("Incision made over the lateral elbow and proximal forearm and the working interval developed"),
+      st("Lateral antebrachial cutaneous nerve and the superficial radial nerve identified and protected"),
+      st("Radial recurrent vessels (the leash of Henry) identified and ligated or coagulated"),
+      st("Radial nerve identified proximally between brachialis and brachioradialis and followed distally to its division into the superficial radial nerve and posterior interosseous nerve"),
+      st("Potential sites of compression inspected and released in turn: fibrous bands anterior to the radial head and capsule, the radial recurrent vessels, the tendinous medial edge of ECRB, the arcade of Frohse, and the distal edge of supinator"),
+      st("Supinator opened in line with the nerve along its course to decompress the posterior interosseous nerve fully"),
+      st("Nerve inspected for hourglass constriction, swelling or mass; mass excised; internal neurolysis performed under magnification if indicated", (v) => v.diagnosis === "Posterior interosseous nerve"),
+      st("Nerve gliding confirmed through full forearm rotation and elbow motion"),
+      st("Haemostasis confirmed"),
+    ],
+    closureSteps: ["Layered subcutaneous and skin closure", "Sterile dressing applied"],
+    plan: opPlanLines({ imm: "Soft dressing with early motion, elevation (wrist and finger extension splint for a posterior interosseous palsy)", red: "Red flags: fever, wound drainage or haematoma, new or worsening weakness of wrist or finger extension, new numbness over the dorsal radial hand", follow: "Follow-up in 10\u201314 days; for posterior interosseous nerve syndrome, clinical and electrodiagnostic review at 3 and 6 months and a decision on tendon transfer if there is no recovery" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing or splint, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion", "Phase 3 (Strengthening, 3\u20138 weeks): progressive strengthening as nerve recovery allows", "Phase 4 (Return to activity, 6\u201312 weeks): return to full activity; recovery after posterior interosseous palsy may take 6\u201312 months"], "Return to driving 1\u20132 weeks; desk work 1 week; manual labour 4\u20138 weeks", "Red flags: persisting or worsening weakness, no motor recovery by the expected milestones, signs of infection"),
+  }),
+  opProc({
+    id: "superficial-radial-nerve-decompression", family: "radial-nerve", variantName: "Superficial radial nerve (Wartenberg)", name: "Superficial radial nerve decompression",
+    clinicNames: ["Superficial radial nerve decompression"], region: "peripheralNerve", sided: "forearm", planPriority: 40,
+    preop: ["Wartenberg syndrome (superficial radial nerve compression)"],
+    reference: opRef(
+      ["Wartenberg syndrome: pain, burning or paraesthesia over the dorsoradial hand and thumb with a positive Tinel sign where the nerve emerges between brachioradialis and ECRL, refractory to 3\u20136 months of conservative management (removing external compression, splinting, injection)", "Preferred over continued conservative management once an adequate trial has failed and the diagnosis is confirmed (a diagnostic nerve block can help)"],
+      ["Coexisting de Quervain's tenosynovitis or radial-sided wrist pathology mimicking the symptoms", "Traumatic or iatrogenic neuroma (needs excision and stump management)", "Complex regional pain syndrome"],
+      ["Standard hand instrument set, fine dissection instruments, loupe magnification", "Nerve wrap or vein for protection if scarring is severe", "Tourniquet or WALANT"],
+      ["Several nerve branches are often present; preserve all of them and avoid traction", "A neuroma-in-continuity or a previous scar can be the real cause; recognise this and manage the stump appropriately", "Hypersensitivity can persist or worsen after surgery; counsel that dysaesthesia may take months to settle", "Confirm the diagnosis and exclude de Quervain's tenosynovitis before operating", "Avoid tight circumferential dressings and splints that re-compress the nerve"]),
+    findings: [opS("nerve", "Nerve", ["Compressed by fascia", "Neuroma in continuity", "Normal"], 3), OP_FIELD_OTHER_FINDINGS],
+    technique: [opN("incision", "Incision length", "cm"), opN("distance", "Distance of the emergence proximal to the radial styloid", "cm"), opS("management", "Nerve management", ["External neurolysis", "Neuroma excised and stump relocated into muscle"], 1)],
+    closure: [OP_SKIN_SUTURE],
+    prep: ["Supine position, arm on a hand table in neutral rotation, tourniquet applied (or WALANT)", "Standard prep and drape"],
+    steps: [
+      st("Longitudinal incision made over the distal radial forearm at the interval between brachioradialis and ECRL"),
+      st("Subcutaneous dissection carried down, protecting the lateral antebrachial cutaneous nerve branches"),
+      st("Superficial radial nerve identified where it emerges from beneath the brachioradialis tendon and traced proximally and distally"),
+      st("Fascial bands and the edge of brachioradialis compressing the nerve released along its course"),
+      st("Nerve inspected for constriction, adhesions, swelling or a neuroma; external neurolysis performed under magnification as needed"),
+      st("Nerve gliding confirmed through forearm pronation and supination and wrist flexion and ulnar deviation"),
+      st("Haemostasis confirmed"),
+    ],
+    closureSteps: ["Layered subcutaneous and skin closure", "Sterile soft dressing applied (avoiding any tight or circumferential dressing at the wrist)"],
+    plan: opPlanLines({ imm: "Soft dressing; early wrist and forearm motion encouraged", pain: "Standard pain management", red: "Red flags: fever, wound drainage, new or worsening hypersensitivity or burning pain (neuroma, complex regional pain syndrome)" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week): soft dressing, early gentle motion", "Phase 2 (Early mobilisation, 1\u20133 weeks): progressive active range of motion, scar massage once healed, desensitisation as needed", "Phase 3 (Strengthening, 3\u20136 weeks): progressive grip strengthening", "Phase 4 (Return to activity, 4\u20138 weeks): return to full activity; sensory recovery and desensitisation may continue for months"], "Return to driving 3\u20137 days; desk work 3\u20137 days; manual labour 3\u20136 weeks", "Red flags: persistent or worsening hypersensitivity, signs of complex regional pain syndrome, signs of infection"),
+  }),
+  opProc({
+    id: "suprascapular-nerve-decompression", family: "shoulder-girdle-nerve", variantName: "Suprascapular nerve (arthroscopic)", name: "Arthroscopic suprascapular nerve decompression",
+    clinicNames: ["Arthroscopic suprascapular nerve decompression", "Arthroscopic cyst decompression"], region: "peripheralNerve", sided: "shoulder", planPriority: 60,
+    preop: ["Suprascapular neuropathy at the suprascapular notch", "Suprascapular neuropathy at the spinoglenoid notch with paralabral cyst"], positioning: OP_ARTHRO_POSITIONS,
+    reference: opRef(
+      ["Suprascapular neuropathy with pain and/or weakness and atrophy of supraspinatus and/or infraspinatus, confirmed by electrodiagnostic studies and imaging, refractory to 3\u20136 months of conservative management", "Compression at the suprascapular notch (transverse scapular ligament) or at the spinoglenoid notch (usually a ganglion or paralabral cyst associated with a posterosuperior labral tear)", "Arthroscopic decompression preferred for cyst decompression with labral repair, and for release of the transverse scapular ligament in experienced hands; open release is an alternative"],
+      ["Acute neuralgic amyotrophy (observe with serial examination)", "Large retracted rotator cuff tear causing traction on the nerve (address the cuff)", "Cervical or brachial plexus pathology as the true cause"],
+      ["Arthroscopy tower with standard shoulder instrumentation", "Arthroscopic scissors, hook knife or radiofrequency device for ligament division", "Suture anchors if a labral repair is performed", "Neuromonitoring if used"],
+      ["The suprascapular artery runs over the ligament and the nerve beneath it; divide the ligament under direct view, protecting the nerve", "Dissection in the supraspinatus fossa is deep and close to the nerve; avoid blind use of shavers or radiofrequency devices", "A paralabral cyst recurs if the labral tear that feeds it is not addressed", "Recovery of muscle bulk is slow and often incomplete with long-standing atrophy; set realistic expectations", "Confirm the level of compression before surgery (notch or spinoglenoid), since they need different procedures"]),
+    findings: [opS("level", "Level of compression", ["Suprascapular notch", "Spinoglenoid notch with paralabral cyst"], 1), opS("labrum", "Posterosuperior labral tear", ["Present", "Absent"], 2), OP_FIELD_OTHER_FINDINGS],
+    technique: [opC("procedures", "Procedures performed", ["Suprascapular notch release (transverse scapular ligament division)", "Spinoglenoid cyst decompression", "Labral repair"]), opN("anchors", "Number of suture anchors (labral repair)")],
+    closure: [OP_FIELD_PORTAL_SUTURE],
+    prep: ["Standard prep and drape; landmarks marked"],
+    steps: [
+      st("Diagnostic arthroscopy of the glenohumeral joint via the posterior portal; labrum assessed, in particular for a posterosuperior tear associated with a paralabral cyst"),
+      st("Cyst decompressed from within the joint through the labral tear by debridement or aspiration", (v) => v.procedures && v.procedures.includes("Spinoglenoid cyst decompression")),
+      st("Labral tear repaired with suture anchors", (v) => v.procedures && v.procedures.includes("Labral repair")),
+      st("Scope directed to the supraspinatus fossa and working portals established; supraspinatus muscle mobilised to expose the suprascapular notch", (v) => v.procedures && v.procedures.includes("Suprascapular notch release (transverse scapular ligament division)")),
+      st("Suprascapular artery and vein identified (they pass over the transverse scapular ligament) and protected; the nerve lies beneath the ligament", (v) => v.procedures && v.procedures.includes("Suprascapular notch release (transverse scapular ligament division)")),
+      st("Transverse scapular ligament divided with arthroscopic scissors or a hook knife, protecting the nerve beneath it, until the nerve is seen to be free", (v) => v.procedures && v.procedures.includes("Suprascapular notch release (transverse scapular ligament division)")),
+      st("Decompression confirmed arthroscopically; haemostasis confirmed"),
+    ],
+    closureSteps: ["Portals closed with simple sutures", "Sterile dressing applied; sling for comfort"],
+    plan: opPlanLines({ imm: "Sling for comfort for 1\u20132 weeks if no labral repair; if a labral repair was performed, sling and restrictions per the repair protocol for 3\u20134 weeks", wound: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover", red: "Red flags: fever, wound drainage, new weakness or numbness, uncontrolled pain", follow: "Follow-up in 10\u201314 days; clinical and electrodiagnostic review at 3 and 6 months" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20131 week; 3\u20134 weeks if labral repair): sling for comfort, early pendulum exercises", "Phase 2 (Early mobilisation, 1\u20134 weeks; 4\u20138 weeks if labral repair): progressive range of motion", "Phase 3 (Strengthening, 4\u201312 weeks): progressive rotator cuff and scapular strengthening as nerve recovery allows", "Phase 4 (Return to activity, 3\u20136 months): return to overhead activity and sport; recovery of strength may continue for 6\u201312 months"], "Return to driving 1\u20132 weeks; desk work 1 week; overhead or manual labour 8\u201312 weeks", "Red flags: no recovery of strength by the expected milestones, new numbness, recurrent cyst symptoms, signs of infection"),
+  }),
+  opProc({
+    id: "thoracic-outlet-decompression", family: "shoulder-girdle-nerve", variantName: "Thoracic outlet", name: "Thoracic outlet decompression",
+    clinicNames: ["First rib resection", "Scalenectomy", "Combined first rib resection and scalenectomy"], region: "peripheralNerve", sided: "side", planPriority: 100,
+    preop: ["Neurogenic thoracic outlet syndrome", "Neurogenic thoracic outlet syndrome with cervical rib"],
+    reference: opRef(
+      ["Neurogenic thoracic outlet syndrome with objective findings (thenar or intrinsic wasting, abnormal electrodiagnostic studies) or disabling symptoms refractory to at least 3\u20136 months of structured physiotherapy", "Cervical rib or fibrous band compressing the lower trunk or the C8 and T1 roots", "Venous or arterial thoracic outlet syndrome is usually managed with vascular surgical input; this module covers the neurogenic decompression", "Surgery is preferred only when the diagnosis is secure and conservative treatment has failed, because outcomes are less predictable in non-specific neurogenic cases"],
+      ["Non-specific symptoms without objective findings", "Inadequate trial of physiotherapy", "Previous neck or chest radiotherapy", "No vascular or thoracic surgical back-up available", "Psychosocial factors affecting outcome"],
+      ["Standard neck and chest set, retractors, bipolar diathermy", "First rib instruments (periosteal elevators, rib shears or Leksell rongeur)", "Vascular instruments and vascular surgical back-up immediately available; chest drain", "Nerve stimulator"],
+      ["Phrenic nerve, long thoracic nerve, lower trunk and T1 root are all at risk; identify and protect each, and avoid traction on the plexus", "The subclavian artery and vein and the pleura lie close to the rib; protect with a retractor and check for a pleural breach before closure", "A residual posterior rib stump or incomplete scalenectomy is a recognised cause of recurrence", "On the left side the thoracic duct can be injured, causing a chyle leak", "Outcomes are less predictable in non-specific neurogenic cases; selection and counselling are essential"]),
+    findings: [opC("anatomy", "Anatomy found", ["Cervical rib", "Fibrous band", "Anomalous scalene muscle", "Compression of the lower trunk"]), OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("approach", "Approach", ["Supraclavicular", "Transaxillary"], 2), opC("procedures", "Procedures performed", ["Anterior scalenectomy", "Middle scalenectomy", "First rib resection", "Cervical rib or band excision", "Neurolysis of the plexus"]), opS("pleura", "Pleura", ["Intact", "Breached"], 2), opS("drain", "Chest drain", ["Placed", "Not placed"], 2)],
+    closure: [opT("drainDetail", "Wound drain", "e.g. suction drain, removal plan"), OP_FIELD_SKIN_CLOSURE],
+    summary: (v) => (v.approach ? v.approach.toLowerCase() : null),
+    prep: ["Supine with the neck extended and the head turned away and a bolster between the scapulae (supraclavicular), or lateral decubitus with the arm suspended (transaxillary)", "Arm and neck prepped and draped; vascular back-up and chest drain available"],
+    steps: [
+      st("Transverse incision made above the clavicle; platysma divided", (v) => v.approach !== "Transaxillary"),
+      st("Supraclavicular fat pad mobilised and the omohyoid divided or retracted", (v) => v.approach !== "Transaxillary"),
+      st("Phrenic nerve identified on the anterior scalene and protected throughout; long thoracic nerve identified and protected behind the middle scalene"),
+      st("Anterior scalene divided at its insertion on the first rib and resected; subclavian artery and the brachial plexus (C8, T1 and the lower trunk) identified", (v) => !v.procedures || v.procedures.includes("Anterior scalenectomy")),
+      st("Cervical rib, fibrous bands and abnormal muscle identified and excised", (v) => v.procedures && v.procedures.includes("Cervical rib or band excision")),
+      st("Middle scalene resected", (v) => v.procedures && v.procedures.includes("Middle scalenectomy")),
+      st("First rib freed by subperiosteal dissection with the plexus, subclavian vessels and pleura protected; rib divided and removed with rib shears or a rongeur including the posterior portion, and sharp edges smoothed", (v) => v.procedures && v.procedures.includes("First rib resection")),
+      st("Neurolysis of the plexus performed as indicated", (v) => v.procedures && v.procedures.includes("Neurolysis of the plexus")),
+      st("Pleura checked for violation (water test) and a chest drain placed if breached; haemostasis confirmed"),
+    ],
+    closureSteps: ["Layered closure with absorbable suture, drain placed if used", "Sterile dressing applied"],
+    plan: opPlanLines({ imm: "Sling for comfort only; early shoulder motion per protocol", general: "Chest radiograph in recovery to exclude pneumothorax; observe breathing and the neurovascular status of the arm", red: "Red flags: dyspnoea or chest pain (pneumothorax), expanding neck haematoma or limb ischaemia, hoarse voice or elevated hemidiaphragm (phrenic or recurrent laryngeal nerve), scapular winging (long thoracic nerve), Horner's syndrome, chyle leak (left side), new weakness or numbness", follow: "Follow-up in 10\u201314 days; drain removal as planned" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20132 weeks): sling for comfort, gentle shoulder and neck motion", "Phase 2 (Early mobilisation, 2\u20136 weeks): progressive shoulder range of motion, posture and scapular retraining", "Phase 3 (Strengthening, 6\u201312 weeks): progressive scapular and upper limb strengthening", "Phase 4 (Return to activity, 3\u20136 months): return to full activity and work; recovery of symptoms may continue for months"], "Return to driving 2\u20133 weeks; desk work 2\u20134 weeks; manual labour 3\u20134 months", "Red flags: dyspnoea, wound haematoma, new neurological deficit, recurrent symptoms"),
+  }),
+  opProc({
+    id: "tendon-transfers-ain-pin", family: "nerve-palsy", variantName: "AIN or PIN palsy transfers", name: "Tendon transfers for AIN or PIN palsy",
+    clinicNames: ["Tendon transfer (if no recovery)"], region: "peripheralNerve", sided: "forearm", planPriority: 90,
+    preop: ["Anterior interosseous nerve palsy", "Posterior interosseous nerve palsy"],
+    reference: opRef(
+      ["Persistent AIN palsy (loss of thumb IP flexion and index and middle distal flexion) or PIN palsy (loss of finger MCP extension and thumb extension with preserved wrist extension) with no recovery after the expected recovery window (typically 9\u201312 months), or after an irreparable or failed nerve repair", "Supple joints, adequate donor muscle strength (at least grade 4) and a patient able to take part in rehabilitation", "Preferred over further observation once the expected time for reinnervation has passed"],
+      ["Stiff joints or contractures (treat with therapy first)", "Donor muscles weak or also paralysed", "Ongoing recovery on serial examination or electrodiagnostic studies", "A patient unable to take part in rehabilitation"],
+      ["Standard hand and forearm set, tendon passers, braided suture (3-0 or 4-0) for tendon weaves", "Loupe magnification", "Tourniquet"],
+      ["Tension is the critical judgement: too tight limits passive motion, too loose gives weak or absent function; set it with the tenodesis effect and check passive range of motion", "Mobilise the donor muscle fully to gain excursion and avoid adhesions along the route", "Choose donors with adequate strength and avoid sacrificing both wrist flexors", "A secure, well-spread Pulvertaft weave is essential before starting early motion", "Muscle re-education takes time; counsel that function improves over months"]),
+    findings: [OP_FIELD_OTHER_FINDINGS],
+    technique: [opS("palsy", "Palsy", ["AIN palsy", "PIN palsy"], 2), opT("donors", "Donor and recipient tendons", "e.g. brachioradialis to FPL; ECRL to FDP index and middle"), opS("weave", "Tendon junctions", ["Pulvertaft weave"], 1), opT("tension", "Tension and wrist position at setting", "e.g. tenodesis effect, wrist neutral"), opS("eplTransposition", "EPL transposed out of the third compartment (PIN palsy)", ["Performed", "Not performed"], 2)],
+    closure: [opT("splint", "Splint position", "e.g. wrist 30 degrees extension, MCP joints neutral"), OP_SKIN_SUTURE],
+    summary: (v) => (v.palsy ? v.palsy.toLowerCase() : null),
+    prep: ["Supine position, arm on a hand table, tourniquet applied", "Standard prep and drape; donor and recipient tendons marked"],
+    steps: [
+      st("Incisions planned over the donor and recipient tendons"),
+      st("Brachioradialis released from its insertion and freed from its fascial attachments to gain excursion; superficial radial nerve protected", (v) => v.palsy === "AIN palsy"),
+      st("Flexor pollicis longus identified in the distal volar forearm; brachioradialis passed to the recipient tendon and woven to flexor pollicis longus with a Pulvertaft weave", (v) => v.palsy === "AIN palsy"),
+      st("Extensor carpi radialis longus released at the base of the second metacarpal, withdrawn proximally, passed around the radial border of the forearm to the volar forearm and sutured to the flexor digitorum profundus tendons of the index and middle fingers", (v) => v.palsy === "AIN palsy"),
+      st("Flexor carpi radialis harvested through a volar distal forearm incision, passed around the radial border (or through the interosseous membrane) to the dorsal forearm and woven to the extensor digitorum communis tendons with a Pulvertaft weave", (v) => v.palsy === "PIN palsy"),
+      st("Palmaris longus harvested and woven to extensor pollicis longus, which was transposed out of the third compartment", (v) => v.palsy === "PIN palsy" && v.eplTransposition === "Performed"),
+      st("Palmaris longus harvested and woven to extensor pollicis longus", (v) => v.palsy === "PIN palsy" && v.eplTransposition !== "Performed"),
+      st("Tension set using the tenodesis effect: fingers and thumb resting in an appropriate cascade, with full passive range of motion preserved"),
+      st("Weave security and gliding confirmed; no kinking or constriction along the transfer route"),
+      st("Haemostasis confirmed"),
+    ],
+    closureSteps: ["Tourniquet released and perfusion confirmed", "Layered subcutaneous and skin closure", "Sterile dressing and splint applied"],
+    plan: opPlanLines({ imm: "Splint immobilisation for 3\u20134 weeks, then supervised therapy (re-education of the transferred muscle) per protocol", red: "Red flags: fever, wound drainage, sudden loss of the transferred function (weave failure), vascular compromise, uncontrolled pain", follow: "Follow-up in 10\u201314 days; hand therapy within 3\u20134 weeks" }),
+    rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): splint immobilisation, gentle finger motion as directed", "Phase 2 (Early mobilisation, 4\u20136 weeks): active motion and re-education of the transferred muscle under hand therapy", "Phase 3 (Strengthening, 6\u201312 weeks): progressive strengthening", "Phase 4 (Return to activity, 3\u20134 months): return to full activity"], "Return to driving 4\u20136 weeks; desk work 2\u20134 weeks; manual labour 3\u20134 months", "Red flags: sudden loss of function (weave failure), progressive stiffness or contracture, signs of infection"),
+  }),
+];
+
+const OPERATIVE_PROCEDURES = [...OP_PROCS_SHOULDER_1, ...OP_PROCS_SHOULDER_2, ...OP_PROCS_ELBOW, ...OP_PROCS_WRIST, ...OP_PROCS_HAND, ...OP_PROCS_NERVE];
+
+/* ============================================================================
+   OPERATIVE NOTES - logic (pure functions: state in, state or text out)
+
+   One flat state object, like the rest of the app. Keys are "op__x" for the
+   operation as a whole, and "<procedureId>__x" for a procedure's own fields,
+   so two procedures can never collide.
+============================================================================ */
+
+function opProcedureById(id) { return OPERATIVE_PROCEDURES.find((p) => p.id === id) || null; }
+function opSelected(state) { return ((state && state.op__procedures) || []).map(opProcedureById).filter(Boolean); }
+// The primary procedure is the one that sets the plan: highest planPriority,
+// ties broken by the order the surgeon selected them.
+function opOrderProcs(procs) {
+  return procs.map((p, i) => ({ p, i })).sort((a, b) => (b.p.planPriority - a.p.planPriority) || (a.i - b.i)).map((x) => x.p);
+}
+function opKey(procId, key) { return `${procId}__${key}`; }
+function opLocalView(state, procId) {
+  const prefix = `${procId}__`;
+  const out = {};
+  Object.keys(state || {}).forEach((k) => { if (k.startsWith(prefix)) out[k.slice(prefix.length)] = state[k]; });
+  return out;
+}
+function opNsFields(procId, fields) {
+  return (fields || []).map((f) => {
+    if (f.type === "conditional") return { ...f, when: (s) => f.when(opLocalView(s, procId)), fields: opNsFields(procId, f.fields) };
+    return f.key ? { ...f, key: opKey(procId, f.key) } : f;
+  });
+}
+function opJoin(items) {
+  const a = (items || []).filter(Boolean);
+  if (a.length <= 1) return a.join("");
+  return `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`;
+}
+function opContext(procs, side) {
+  const ids = procs.map((p) => p.id);
+  return { ids, side: side || "", has: (id) => ids.includes(id) };
+}
+// Clock-face positions are written for a right shoulder and mirrored for a left one, so a note never
+// quotes the wrong side. "3", "5:30" and "12" are right-shoulder positions; the order of a range is kept.
+function opClockMinutes(text) { const [h, m] = String(text).split(":"); return (Number(h) % 12) * 60 + Number(m || 0); }
+function opClockFormat(minutes) { const h = Math.floor(minutes / 60) || 12; const m = minutes % 60; return { h, m, text: `${h}:${String(m).padStart(2, "0")}` }; }
+function opClockRange(from, to, side) {
+  const left = String(side || "").toLowerCase() === "left";
+  const f = opClockFormat(left ? (720 - opClockMinutes(from)) % 720 : opClockMinutes(from));
+  const t = opClockFormat(left ? (720 - opClockMinutes(to)) % 720 : opClockMinutes(to));
+  const range = f.m === 0 && t.m === 0 ? `${f.h} to ${t.h} o'clock` : `${f.text} to ${t.text}`;
+  return side ? range : `${range} (right-shoulder clock face)`;
+}
+function opStepText(step, v, ctx) { return typeof step.t === "function" ? step.t(v, ctx) : step.t; }
+function opHasValue(v) {
+  if (Array.isArray(v)) return v.length > 0;
+  if (v === undefined || v === null) return false;
+  return String(v).trim() !== "";
+}
+
+// The plan: lines of the primary procedure, plus every procedure's "extra"
+// lines placed after its restrictions. Pre-filled and editable.
+function opMergedPlan(procs) {
+  const ordered = opOrderProcs(procs);
+  const primary = ordered[0];
+  if (!primary) return [];
+  const base = primary.plan.filter((l) => l.kind !== "extra").map((l) => ({ text: l.text, on: true }));
+  const extras = [];
+  ordered.forEach((p) => p.plan.filter((l) => l.kind === "extra").forEach((l) => extras.push({ text: l.text, on: true })));
+  let at = -1;
+  primary.plan.filter((l) => l.kind !== "extra").forEach((l, i) => { if (l.kind === "immobilisation" || l.kind === "restriction") at = i; });
+  if (at === -1) return [...extras, ...base];
+  return [...base.slice(0, at + 1), ...extras, ...base.slice(at + 1)];
+}
+function opMergedRehab(procs) {
+  const primary = opOrderProcs(procs)[0];
+  if (!primary) return [];
+  return [...primary.rehab.phases, primary.rehab.returnTo, primary.rehab.redFlags].filter(Boolean).map((text) => ({ text, on: true }));
+}
+
+function opSelectProcedures(state, ids) {
+  const next = { ...state, op__procedures: ids };
+  const procs = ids.map(opProcedureById).filter(Boolean);
+  if (!state.op__planEdited) next.op__planLines = opMergedPlan(procs);
+  if (!state.op__rehabEdited) next.op__rehabLines = opMergedRehab(procs);
+  return next;
+}
+function opToggleProcedure(state, id) {
+  const cur = state.op__procedures || [];
+  return opSelectProcedures(state, cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+}
+function opResetPlan(state) {
+  const procs = opSelected(state);
+  return { ...state, op__planLines: opMergedPlan(procs), op__planEdited: false, op__rehabLines: opMergedRehab(procs), op__rehabEdited: false };
+}
+function opSetValue(state, key, value) {
+  const next = { ...state, [key]: value };
+  // Local anaesthetic with adrenaline is a tourniquet-free technique.
+  if (key === "op__anaesthesia" && value === OP_WALANT) next.op__tourniquet = "Not used";
+  if (key === "op__planLines") next.op__planEdited = true;
+  if (key === "op__rehabLines") next.op__rehabEdited = true;
+  return next;
+}
+
+// Field lines for one group of a procedure's own fields ("Label: value").
+function opFieldLines(proc, fields, state) {
+  const v = opLocalView(state, proc.id);
+  const lines = [];
+  resolveFields(fields || [], v).forEach((f) => {
+    if (!f.key) return;
+    const raw = v[f.key];
+    if (!opHasValue(raw) && f.type !== "numberGroup") return;
+    let text;
+    if (f.type === "checkbox") text = opJoin(raw);
+    else if (f.type === "numberGroup") {
+      const parts = (f.items || []).filter((it) => raw && opHasValue(raw[it])).map((it) => `${it.replace(/^([A-Z])([a-z])/, (m, a, b) => a.toLowerCase() + b)} ${raw[it]}${f.suffix ? f.suffix : ""}`);
+      if (!parts.length) return;
+      text = parts.join(", ");
+    }
+    else if (f.type === "number") text = `${raw}${f.suffix ? ` ${f.suffix}` : ""}`;
+    else text = String(raw).trim();
+    lines.push(`\u2022 ${f.label}: ${text}`);
+  });
+  return lines;
+}
+// The numbered steps of one procedure, as they will read in the note.
+function opStepTexts(proc, state, procs, isPrimary) {
+  const v = opLocalView(state, proc.id);
+  const ctx = opContext(procs, opSideWord(state));
+  const body = proc.steps.filter((s) => !s.if || s.if(v, ctx)).map((s) => opStepText(s, v, ctx));
+  return isPrimary ? [...proc.prep, ...body, ...proc.closureSteps] : body;
+}
+function opSideWord(state) { return state.op__side ? String(state.op__side) : ""; }
+function opProcedureLabel(proc, state) {
+  const side = opSideWord(state).toLowerCase();
+  return side ? `${proc.name}, ${side} ${proc.sided}` : proc.name;
+}
+function opLowerFirstName(name) { return name.charAt(0).toLowerCase() + name.slice(1); }
+function opCap(text) { return text ? text.charAt(0).toUpperCase() + text.slice(1) : text; }
+
+function buildOperativeNote(s) {
+  const procs = opOrderProcs(opSelected(s));
+  if (!procs.length) return "";
+  const out = [];
+  const section = (lines) => { if (lines.length) { if (out.length) out.push(""); out.push(...lines); } };
+  const side = opSideWord(s);
+  out.push(`OPERATIVE NOTE \u2014 ${opCap([side, opJoin(procs.map((p) => opLowerFirstName(p.name)))].filter(Boolean).join(" "))}`);
+
+  const op = [];
+  if (s.op__date) op.push(`Date of operation: ${formatDateDMY(s.op__date)}`);
+  if (side) op.push(`Side: ${side}`);
+  op.push("Procedure" + (procs.length > 1 ? "s" : "") + " performed:");
+  procs.forEach((p) => op.push(`\u2022 ${opProcedureLabel(p, s)}`));
+  if (opHasValue(s.op__planned)) op.push(`Planned procedure (different from the one performed): ${String(s.op__planned).trim()}`);
+  if (opHasValue(s.op__preop)) op.push(`Pre-operative diagnosis: ${String(s.op__preop).trim()}`);
+  if (s.op__postop === "Same as pre-operative diagnosis") op.push("Post-operative diagnosis: same as the pre-operative diagnosis");
+  else if (s.op__postop === "Revised") op.push(`Post-operative diagnosis: ${opHasValue(s.op__postopText) ? String(s.op__postopText).trim() : "revised"}`);
+  if (opHasValue(s.op__surgeon)) op.push(`Surgeon: ${String(s.op__surgeon).trim()}`);
+  if (opHasValue(s.op__assistant)) op.push(`Assistant: ${String(s.op__assistant).trim()}`);
+  section(["OPERATION", ...op.slice(0)].filter((l, i) => i > 0 || op.length));
+
+  const safe = [];
+  const withDetail = (label, val, detail, joiner) => {
+    if (!opHasValue(val)) return;
+    safe.push(opHasValue(detail) ? `${label}: ${String(val).toLowerCase()}${joiner}${String(detail).trim()}` : `${label}: ${String(val).toLowerCase()}`);
+  };
+  if (opHasValue(s.op__anaesthesia)) {
+    const detail = s.op__anaesthesia === OP_WALANT ? s.op__walantDetail : /block/i.test(s.op__anaesthesia) ? s.op__blockDetail : "";
+    safe.push(opHasValue(detail) ? `Anaesthesia: ${s.op__anaesthesia} (${String(detail).trim()})` : `Anaesthesia: ${s.op__anaesthesia}`);
+  }
+  withDetail("Surgical safety time-out", s.op__timeout, null, "");
+  withDetail("Antibiotic prophylaxis", s.op__antibiotic, s.op__antibioticDetail, " \u2014 ");
+  withDetail("Tranexamic acid", s.op__txa, s.op__txaDetail, " \u2014 ");
+  if (s.op__tourniquet === "Used") {
+    const bits = [];
+    if (opHasValue(s.op__tqPressure)) bits.push(`${s.op__tqPressure} mmHg`);
+    if (opHasValue(s.op__tqTime)) bits.push(`${s.op__tqTime} minutes`);
+    safe.push(bits.length ? `Tourniquet: used (${bits.join(", ")})` : "Tourniquet: used");
+  } else if (s.op__tourniquet === "Not used") safe.push("Tourniquet: not used");
+  withDetail("Counts", s.op__counts, null, "");
+  if (opHasValue(s.op__ebl)) safe.push(`Estimated blood loss: ${String(s.op__ebl).trim()}`);
+  withDetail("Specimens", s.op__specimens, s.op__specimensDetail, " \u2014 ");
+  withDetail("Drains", s.op__drains, s.op__drainsDetail, " \u2014 ");
+  withDetail("Complications", s.op__complications, s.op__complicationsDetail, " \u2014 ");
+  if (safe.length) section(["ANAESTHESIA AND SAFETY", ...safe]);
+
+  procs.forEach((p, idx) => {
+    const L = [];
+    const pick = (key, heading) => {
+      const arr = s[opKey(p.id, key)];
+      if (Array.isArray(arr) && arr.length) { L.push(heading); arr.forEach((x) => L.push(`\u2022 ${x}`)); }
+    };
+    pick("indications", "Indications:");
+    pick("considerations", "Factors considered:");
+    if (opHasValue(s[opKey(p.id, "position")])) L.push(`Position: ${s[opKey(p.id, "position")]}`);
+    const findings = opFieldLines(p, p.findings, s);
+    if (findings.length) { L.push("Findings:"); L.push(...findings); }
+    const technique = opFieldLines(p, p.technique, s);
+    if (technique.length) { L.push("Technique and implants:"); L.push(...technique); }
+    const closure = opFieldLines(p, p.closure, s);
+    if (closure.length) { L.push("Closure:"); L.push(...closure); }
+    pick("equipment", "Equipment used:");
+    if (s[opKey(p.id, "stepsConfirmed")] === OP_STEPS_CONFIRMED) {
+      L.push("Operative steps (performed as described):");
+      opStepTexts(p, s, procs, idx === 0).forEach((t, i) => L.push(`${i + 1}. ${t}`));
+    }
+    const dev = s[opKey(p.id, "deviations")];
+    if (opHasValue(dev)) L.push(`Deviations from the described steps, and additional details: ${String(dev).trim()}`);
+    if (L.length) section([p.name.toUpperCase(), ...L]);
+  });
+
+  const implants = (s.op__implants || []).filter((r) => r && (opHasValue(r.item) || opHasValue(r.size) || opHasValue(r.lot)));
+  if (implants.length) {
+    section(["IMPLANTS", ...implants.map((r) => {
+      const head = [opHasValue(r.item) ? String(r.item).trim() : "Implant", opHasValue(r.size) ? String(r.size).trim() : ""].filter(Boolean).join(", ");
+      return `\u2022 ${head}${opHasValue(r.lot) ? ` (lot/serial ${String(r.lot).trim()})` : ""}`;
+    })]);
+  }
+
+  const plan = (s.op__planLines || []).filter((l) => l && l.on && opHasValue(l.text));
+  if (plan.length) section(["POST-OPERATIVE PLAN", ...plan.map((l) => `\u2022 ${String(l.text).trim()}`)]);
+
+  out.push("", "---", OP_FOOTER);
+  return out.join("\n");
+}
+
+// One identifier-free line for the follow-up visit, plus a compact token the
+// post-operative screen can read back. Nothing here names the patient.
+function buildOperationSummary(s) {
+  const procs = opOrderProcs(opSelected(s));
+  if (!procs.length) return "";
+  const side = opSideWord(s);
+  const parts = procs.map((p, i) => {
+    const detail = i === 0 && p.summary ? p.summary(opLocalView(s, p.id)) : null;
+    return opLowerFirstName(p.name) + (detail ? ` (${detail})` : "");
+  });
+  const when = s.op__date ? `${formatDateDMY(s.op__date)}, ` : "";
+  const sentence = `Operation summary: ${when}${[side.toLowerCase(), opJoin(parts)].filter(Boolean).join(" ")}.`;
+  const token = `UT-OP v1 | ${s.op__date || "-"} | ${side ? side.charAt(0).toUpperCase() : "-"} | ${procs.map((p) => p.id).join(",")}`;
+  return `${sentence}\n${token}`;
+}
+function parseOperationSummaryToken(text) {
+  const m = /UT-OP v1 \| (\d{4}-\d{2}-\d{2}|-) \| ([RL-]) \| ([a-z0-9,-]+)/.exec(String(text || ""));
+  if (!m) return null;
+  const ids = m[3].split(",").filter((id) => opProcedureById(id));
+  return ids.length ? { version: 1, date: m[1] === "-" ? null : m[1], side: m[2] === "-" ? null : m[2] === "R" ? "Right" : "Left", ids } : null;
+}
+
+function buildRehabNote(s) {
+  const procs = opOrderProcs(opSelected(s));
+  const lines = (s.op__rehabLines || []).filter((l) => l && l.on && opHasValue(l.text));
+  if (!procs.length || !lines.length) return "";
+  const side = opSideWord(s);
+  const names = opJoin(procs.map((p) => opLowerFirstName(p.name)));
+  return [`POST-OPERATIVE REHABILITATION PROTOCOL \u2014 ${opCap([side, names].filter(Boolean).join(" "))}`, "", ...lines.map((l) => `\u2022 ${String(l.text).trim()}`), "", "---", OP_FOOTER].join("\n");
+}
+
+/* ============================================================================
+   POST-OPERATIVE REVIEW BY PERIOD (logic)
+
+   Layered on the existing post-operative flow, not replacing it: nothing here
+   changes a note unless one of the new fields is used. The protocol comes from
+   the same module data as the operative note (plan lines and rehabilitation
+   phases), so the two cannot disagree.
+============================================================================ */
+
+// The review schedule: 2 weeks, 6 weeks, 3, 6 and 12 months. A visit belongs to the first period whose
+// "to" (days since surgery) it has not passed.
+const OP_REVIEW_PERIODS = [
+  { id: "2w", label: "2-week review", to: 27, from: 0 },
+  { id: "6w", label: "6-week review", to: 62, from: 28 },
+  { id: "3m", label: "3-month review", to: 135, from: 63 },
+  { id: "6m", label: "6-month review", to: 270, from: 136 },
+  { id: "12m", label: "12-month review or later", to: Infinity, from: 271 },
+];
+const OP_PROGRESS_OPTIONS = ["Ahead of the protocol", "On track", "Behind the protocol"];
+// Prompts for what to look at, by period. They are prompts, never pre-ticked, and only ticked items reach the note.
+const OP_REVIEW_PROMPTS = {
+  "2w": ["Wound and dressing", "Suture or staple removal", "Neurovascular status", "Splint or immobilisation compliance", "Swelling and pain control", "Therapy arranged"],
+  "6w": ["Wound healed", "Range of motion against the protocol", "Immobilisation weaned or continued per the protocol", "Neurovascular status", "Imaging reviewed (position, fixation or union)", "Rehabilitation progress with the therapist"],
+  "3m": ["Range of motion and strength against the protocol", "Imaging reviewed (union, position or implant)", "Rehabilitation progress with the therapist", "Return to work or sport discussed", "Outcome scores recorded"],
+  "6m": ["Range of motion and strength", "Imaging reviewed if indicated", "Return to work or sport status", "Outcome scores recorded", "Residual symptoms or complications"],
+  "12m": ["Final range of motion and strength", "Outcome scores recorded", "Return to full activity", "Late complications (stiffness, hardware, recurrence)"],
+};
+const OP_SCORE_LABELS = { "2w": /^(2\u20134 weeks|2 weeks)/i, "6w": /^6( weeks|\u20138 weeks)/i, "3m": /^3 months/i, "6m": /^6 months/i, "12m": /^12 months/i };
+const OP_UNIT_DAYS = { day: 1, week: 7, month: 30.44 };
+
+function opReviewPeriodById(id) { return OP_REVIEW_PERIODS.find((p) => p.id === id) || null; }
+function opReviewPeriodForDays(days) { return days == null ? null : OP_REVIEW_PERIODS.find((p) => days <= p.to) || null; }
+
+// "Phase 2 (Early mobilisation, 6-12 weeks): ..." -> the day the phase starts. Only the start matters: a
+// phase is current from its start until the next one starts, which survives the loose ranges in the originals
+// ("0-4 to 6 weeks", "2 days-1 week", "immediate to 1 week", "as needed").
+function opPhaseStartDays(timeText) {
+  const head = String(timeText).split(/;| for | if /)[0];
+  if (/^\s*immediate/i.test(head)) return 0;
+  const toks = [...head.matchAll(/(\d+(?:\.\d+)?)\s*(days?|weeks?|months?)?/gi)];
+  if (!toks.length) return null;
+  let unit = null;
+  const units = [];
+  for (let i = toks.length - 1; i >= 0; i--) { if (toks[i][2]) unit = toks[i][2].toLowerCase().replace(/s$/, ""); units[i] = unit || "week"; }
+  return Math.round(Number(toks[0][1]) * OP_UNIT_DAYS[units[0]]);
+}
+function opParsePhases(proc) {
+  const out = [];
+  let prev = 0;
+  (proc.rehab.phases || []).forEach((text) => {
+    const m = /^Phase (\d+) \(([^,]+), (.+?)\): (.*)$/.exec(text);
+    if (!m) return;
+    let start = out.length === 0 ? 0 : opPhaseStartDays(m[3]);
+    if (start == null) start = prev;
+    start = Math.max(start, prev);
+    prev = start;
+    out.push({ number: Number(m[1]), name: m[2], timeText: m[3], start, text });
+  });
+  return out;
+}
+function opCurrentPhase(proc, days) {
+  const phases = opParsePhases(proc);
+  if (days == null || !phases.length) return { current: null, next: null };
+  let idx = 0;
+  phases.forEach((ph, i) => { if (ph.start <= days) idx = i; });
+  const next = phases.slice(idx + 1).find((ph) => ph.start > phases[idx].start) || null;
+  return { current: phases[idx], next };
+}
+
+// An operation name in the post-operative form is linked to a module only when that cannot be wrong; the rules
+// live in the catalogue (catalogueForClinicName). A pasted summary names the module explicitly.
+let opClinicNameRegionsCache = null;
+function opClinicNameRegions() {
+  if (opClinicNameRegionsCache) return opClinicNameRegionsCache;
+  const map = new Map();
+  Object.keys(REGIONS).forEach((r) => REGIONS[r].subsections.forEach((sub) => sub.conditions.forEach((c) => surgicalOptionsFor(c.id).forEach((n) => {
+    const key = n.toLowerCase();
+    if (!map.has(key)) map.set(key, new Set());
+    map.get(key).add(r);
+  }))));
+  opClinicNameRegionsCache = map;
+  return map;
+}
+function opModuleForName(name) {
+  const entry = catalogueForClinicName(name);
+  return entry ? opProcedureById(entry.operativeModule) : null;
+}
+// Modules for a post-operative form: the ones a pasted summary named, as long as the procedure text is still
+// what that paste wrote; otherwise whatever the typed name unambiguously means.
+function opModulesForPostop(po) {
+  const state = po || {};
+  if (Array.isArray(state.opModuleIds) && state.opModuleIds.length && state.procedureName === state.opModuleProcedureName) {
+    const mods = state.opModuleIds.map(opProcedureById).filter(Boolean);
+    if (mods.length) return mods;
+  }
+  const m = opModuleForName(state.procedureName);
+  return m ? [m] : [];
+}
+
+function opProtocolForReview(procs, days, periodId) {
+  const ordered = opOrderProcs(procs);
+  const primary = ordered[0];
+  if (!primary) return null;
+  const period = periodId ? opReviewPeriodById(periodId) : opReviewPeriodForDays(days);
+  const at = days != null ? days : period ? period.from : null;
+  const { current, next } = opCurrentPhase(primary, at);
+  const kind = (k) => primary.plan.filter((l) => l.kind === k).map((l) => l.text);
+  const extras = [];
+  ordered.forEach((p) => p.plan.filter((l) => l.kind === "extra").forEach((l) => { if (!extras.includes(l.text)) extras.push(l.text); }));
+  const redFlags = [];
+  [...kind("redflags"), primary.rehab.redFlags].forEach((t) => { if (t && !redFlags.includes(t)) redFlags.push(t); });
+  return {
+    period, primary, phase: current, nextPhase: next,
+    immobilisation: kind("immobilisation"), precautions: [...kind("restriction"), ...extras],
+    followup: kind("followup")[0] || null, redFlags, returnTo: primary.rehab.returnTo || null,
+  };
+}
+function opScoresDue(condition, periodId) {
+  const sec = condition && (condition.sections || []).find((s) => s.id === "outcomes");
+  const table = sec && (sec.fields || []).find((f) => f.type === "table");
+  const re = OP_SCORE_LABELS[periodId];
+  const row = table && re && table.rows.find((r) => re.test(r.left));
+  return row ? { when: row.left, scores: row.right } : null;
+}
+function opAssessedFor(po) {
+  const period = po && po.reviewPeriod ? opReviewPeriodById(po.reviewPeriod) : opReviewPeriodForDays(daysSinceSurgery(po && po.surgeryDate));
+  const prompts = period ? opPromptsFor(opModulesForPostop(po), period.id) : [];
+  return { period, prompts, items: ((po && po.assessed) || []).filter((a) => prompts.includes(a)) };
+}
+
+// The extra note section. Written only when one of the new fields is used, so every existing post-operative
+// note stays exactly as it was.
+function opPostopProtocolPart(po) {
+  const { period, items } = opAssessedFor(po);
+  const progress = po.protocolProgress;
+  if (!po.reviewPeriod && !progress && !items.length) return null;
+  const bits = [];
+  if (period) bits.push(`This was the ${period.label.toLowerCase()}.`);
+  if (progress) bits.push(`Progress against the rehabilitation protocol: ${lowerFirst(progress)}.`);
+  if (items.length) bits.push(`Assessed at this visit: ${humanizeList(items)}.`);
+  return bits.length ? { heading: "Review Against Protocol", text: bits.join(" ") } : null;
+}
+
+// What pasting an operative note summary fills in. The side is reported but not applied: it belongs to the
+// diagnosis, which the clinician set when the patient was first seen.
+function opPostopPatchFromSummary(text) {
+  const parsed = parseOperationSummaryToken(text);
+  if (!parsed) return null;
+  const procs = opOrderProcs(parsed.ids.map(opProcedureById).filter(Boolean));
+  if (!procs.length) return null;
+  const procedureName = opCap(opJoin(procs.map((p) => opLowerFirstName(p.name))));
+  const patch = { procedureName, opModuleIds: procs.map((p) => p.id), opModuleProcedureName: procedureName };
+  if (parsed.date) patch.surgeryDate = parsed.date;
+  const description = `Filled in: ${procedureName}${parsed.date ? `, on ${formatDateDMY(parsed.date)}` : ""}${parsed.side ? ` (${parsed.side.toLowerCase()} side in the summary; the side itself is not changed here)` : ""}.`;
+  return { patch, description, side: parsed.side };
+}
+
+/* ============================================================================
+   POST-OPERATIVE REVIEW: WHICH REVIEWS EACH OPERATION HAS, AND WHAT TO ASSESS
+
+   Three layers, so that what comes from the surgeon's own protocols stays
+   separate from what was added:
+     milestones - imaging, wire removal and electrodiagnostic review, taken
+                  only from each template's own follow-up line. Where the
+                  template says "serial radiographs" without dates, that is
+                  what is shown ("each").
+     classes    - how long a kind of operation is followed and what is
+                  assessed at each review. Drafted, not from the templates;
+                  one table, meant to be edited.
+     extras     - a few operation-specific prompts on top of the class.
+============================================================================ */
+
+const OP_PERIOD_INTERVAL = { "2w": "2 weeks", "6w": "6 weeks", "3m": "3 months", "6m": "6 months", "12m": "12 months" };
+
+const OP_REVIEW_CLASSES = {
+  "minimal": { reviews: ["2w"], prompts: { "2w": ["Symptom the operation was for: resolved or improving", "Scar and wound comfort"] } },
+  "minor": { reviews: ["2w", "6w"], prompts: { "2w": ["Symptom relieved or improving", "Scar tenderness"], "6w": ["Symptom relieved", "Scar and local tenderness", "Grip or functional use returning"] } },
+  "soft-moderate": { reviews: ["2w", "6w", "3m"], prompts: { "2w": ["Immobilisation or sling as the protocol"], "6w": ["Passive and active motion against the protocol", "Pain pattern (activity against rest)"], "3m": ["Range of motion and strength recovering", "Return to light activity"] } },
+  "soft-major": { reviews: ["2w", "6w", "3m", "6m"], prompts: { "2w": ["Immobilisation worn as the protocol", "Pain control and sleep"], "6w": ["Passive motion within the protocol limits", "Decision on weaning the immobilisation"], "3m": ["Active motion and strength starting", "Stiffness"], "6m": ["Strength and function", "Plan for return to work or sport"] } },
+  "ligament-long": { reviews: ["2w", "6w", "3m", "6m", "12m"], prompts: { "2w": ["Immobilisation worn as the protocol", "Pain control and sleep"], "6w": ["Passive motion within the protocol limits", "Decision on weaning the immobilisation"], "3m": ["Active motion and strength starting", "Stiffness"], "6m": ["Strength and stability", "Stage of the return-to-sport programme"], "12m": ["Return-to-sport decision", "Final strength and stability"] } },
+  "tendon-hand": { reviews: ["2w", "6w", "3m"], prompts: { "2w": ["Splint and hand therapy as the protocol", "Active motion within the protocol limits", "Signs of repair rupture"], "6w": ["Active motion and tendon gliding", "Extensor or flexor lag", "Adhesions or stiffness"], "3m": ["Grip and pinch strength", "Return to work"] } },
+  "fracture": { reviews: ["2w", "6w", "3m"], prompts: { "2w": ["Alignment on the post-operative radiograph", "Immobilisation compliance"], "6w": ["Callus and alignment on radiograph", "Hardware position"], "3m": ["Union on radiograph (continue to review if not united)", "Hardware symptoms"] } },
+  "fusion": { reviews: ["2w", "6w", "3m", "6m"], prompts: { "2w": ["Splint or cast intact and worn"], "6w": ["Fusion progress on radiograph", "Hardware position"], "3m": ["Fusion progress on radiograph", "Adjacent joint motion"], "6m": ["Union on radiograph", "Position and function of the fused joint"] } },
+  "arthroplasty": { reviews: ["2w", "6w", "3m", "12m"], prompts: { "2w": ["Precautions understood", "Immobilisation as the protocol"], "6w": ["Radiographs: component position", "Signs of dislocation or instability"], "3m": ["Radiographs: component position and alignment", "Motion and strength progress"], "12m": ["Radiographs: loosening or wear", "Function and activity limits understood"] } },
+  "nerve-decompression": { reviews: ["2w", "6w", "3m", "6m"], prompts: { "2w": ["Symptom change since surgery"], "6w": ["Sensory change", "Weakness (grade)"], "3m": ["Sensory recovery", "Motor recovery", "Tinel sign"], "6m": ["Residual deficit", "Electrodiagnostic review if indicated"] } },
+  "nerve-repair": { reviews: ["2w", "6w", "3m", "6m", "12m"], prompts: { "2w": ["Splint position protecting the repair"], "6w": ["Advance of the Tinel sign", "Desensitisation started"], "3m": ["Sensory recovery (two-point discrimination)", "Cold intolerance or hypersensitivity"], "6m": ["Sensory recovery", "Neuroma symptoms"], "12m": ["Final sensory recovery"] } },
+  "vascular": { reviews: ["2w", "6w", "3m"], prompts: { "2w": ["Digital perfusion (colour, capillary refill, temperature)", "Cold exposure advice"], "6w": ["Perfusion and cold intolerance"], "3m": ["Cold intolerance and function"] } },
+  "replant": { reviews: ["2w", "6w", "3m", "6m", "12m"], prompts: { "2w": ["Perfusion (colour, capillary refill, temperature)", "Wound and pin sites"], "6w": ["Bone fixation on radiograph", "Tendon therapy progress", "Sensation"], "3m": ["Bone union", "Active motion and stiffness", "Cold intolerance"], "6m": ["Sensory recovery", "Stiffness and the need for secondary surgery"], "12m": ["Final function", "Cold intolerance"] } },
+};
+// A short core for an operation that has a class; the longer generic list (OP_REVIEW_PROMPTS) stays for an
+// operation that is not linked to a protocol.
+const OP_REVIEW_CORE = { "2w": ["Wound and dressing", "Neurovascular status"], "6w": ["Wound healed", "Neurovascular status"], "3m": ["Outcome scores recorded"], "6m": ["Outcome scores recorded"], "12m": ["Outcome scores recorded"] };
+
+const OP_REVIEW_CLASS_BY_ID = {
+  "trigger-finger-open": "minimal", "trigger-finger-percutaneous": "minimal",
+  "sad-arthroscopic": "minor", "biceps-tenotomy": "minor", "elbow-arthroscopy": "minor", "radial-head-excision": "minor", "ctr-open": "minor", "ctr-endoscopic": "minor", "ctr-mini-open": "minor", "wrist-arthroscopy": "minor", "de-quervain-release": "minor", "ganglion-excision": "minor",
+  "biceps-tenodesis-open": "soft-moderate", "biceps-tenodesis-arthroscopic": "soft-moderate", "capsular-release-arthroscopic": "soft-moderate", "lateral-epicondylitis-release": "soft-moderate", "medial-epicondylitis-release": "soft-moderate", "elbow-contracture-release": "soft-moderate", "proximal-row-carpectomy": "soft-moderate", "darrach": "soft-moderate", "sauve-kapandji": "soft-moderate", "digit-amputation": "soft-moderate",
+  "rcr-arthroscopic": "soft-major", "rcr-mini-open": "soft-major", "rcr-open": "soft-major", "bankart-arthroscopic": "soft-major", "latarjet-open": "soft-major", "slap-repair-arthroscopic": "soft-major", "ac-joint-reconstruction": "soft-major", "distal-biceps-repair": "soft-major", "distal-triceps-repair": "soft-major", "tfcc-repair-arthroscopic": "soft-major", "scapholunate-repair-reconstruction": "soft-major", "dupuytren-fasciectomy": "soft-major", "thoracic-outlet-decompression": "soft-major", "tendon-transfers-ain-pin": "soft-major",
+  "ucl-reconstruction": "ligament-long",
+  "clavicle-orif": "fracture", "proximal-humerus-orif": "fracture", "radial-head-replacement": "fracture", "radial-head-orif": "fracture", "olecranon-orif": "fracture", "distal-radius-orif": "fracture", "scaphoid-orif": "fracture", "metacarpal-orif": "fracture", "phalanx-orif": "fracture",
+  "wrist-arthrodesis-total": "fusion", "four-corner-fusion": "fusion",
+  "tsa-anatomic": "arthroplasty", "rsa-reverse": "arthroplasty", "hemiarthroplasty-shoulder": "arthroplasty", "total-elbow-arthroplasty": "arthroplasty", "finger-joint-arthroplasty": "arthroplasty",
+  "flexor-tendon-repair": "tendon-hand", "extensor-tendon-repair": "tendon-hand", "fpl-repair": "tendon-hand", "epl-repair": "tendon-hand", "boutonniere-repair": "tendon-hand", "mallet-finger-repair": "tendon-hand",
+  "cubital-tunnel-release": "nerve-decompression", "medial-epicondylectomy": "nerve-decompression", "endoscopic-cubital-tunnel-release": "nerve-decompression", "median-nerve-decompression": "nerve-decompression", "guyons-canal-decompression": "nerve-decompression", "radial-nerve-decompression": "nerve-decompression", "superficial-radial-nerve-decompression": "nerve-decompression", "suprascapular-nerve-decompression": "nerve-decompression",
+  "digital-nerve-repair": "nerve-repair", "digital-artery-repair": "vascular", "digit-replantation": "replant",
+};
+
+// From each template's own follow-up line. "each" means the template asks for serial imaging without dates.
+const OP_EACH_RADIOGRAPHS = (text) => [{ at: "each", text }];
+const OP_REVIEW_MILESTONES = {
+  "latarjet-open": [{ at: "3m", text: "CT to confirm graft union" }],
+  "tsa-anatomic": [{ at: "6w", text: "Radiographs" }, { at: "3m", text: "Radiographs" }, { at: "12m", text: "Radiographs" }],
+  "rsa-reverse": [{ at: "6w", text: "Radiographs" }, { at: "3m", text: "Radiographs" }, { at: "12m", text: "Radiographs" }],
+  "hemiarthroplasty-shoulder": [{ at: "6w", text: "Radiographs (tuberosity healing)" }, { at: "3m", text: "Radiographs (tuberosity healing)" }],
+  "clavicle-orif": [{ at: "6w", text: "Radiographs to confirm union" }, { at: "3m", text: "Radiographs to confirm union" }],
+  "proximal-humerus-orif": [{ at: "2w", text: "Radiographs (healing and hardware position)" }, { at: "6w", text: "Radiographs (healing and hardware position)" }, { at: "3m", text: "Radiographs at 12 weeks (healing and hardware position)" }],
+  "wrist-arthrodesis-total": [{ at: "6w", text: "Radiographs (fusion progress)" }, { at: "3m", text: "Radiographs (fusion progress)" }, { at: "6m", text: "Radiographs (fusion progress)" }],
+  "four-corner-fusion": [{ at: "6w", text: "Radiographs (fusion progress)" }, { at: "3m", text: "Radiographs (fusion progress)" }, { at: "6m", text: "Radiographs (fusion progress)" }],
+  "scapholunate-repair-reconstruction": [{ at: "6w", text: "K-wire removal is due at about 8 weeks" }],
+  "mallet-finger-repair": [{ at: "6w", text: "K-wire removal is due at about 4\u20136 weeks" }],
+  "median-nerve-decompression": [{ at: "3m", text: "Clinical and electrodiagnostic review (anterior interosseous nerve syndrome)" }, { at: "6m", text: "Clinical and electrodiagnostic review (anterior interosseous nerve syndrome)" }],
+  "radial-nerve-decompression": [{ at: "3m", text: "Clinical and electrodiagnostic review (posterior interosseous nerve syndrome)" }, { at: "6m", text: "Clinical and electrodiagnostic review (posterior interosseous nerve syndrome)" }],
+  "suprascapular-nerve-decompression": [{ at: "3m", text: "Clinical and electrodiagnostic review" }, { at: "6m", text: "Clinical and electrodiagnostic review" }],
+  "olecranon-orif": OP_EACH_RADIOGRAPHS("Serial radiographs to confirm healing (the protocol gives no fixed dates)"),
+  "radial-head-orif": OP_EACH_RADIOGRAPHS("Serial radiographs to confirm healing (the protocol gives no fixed dates)"),
+  "distal-radius-orif": OP_EACH_RADIOGRAPHS("Serial radiographs to confirm reduction and healing (the protocol gives no fixed dates)"),
+  "metacarpal-orif": OP_EACH_RADIOGRAPHS("Serial radiographs to confirm reduction and healing (the protocol gives no fixed dates)"),
+  "phalanx-orif": OP_EACH_RADIOGRAPHS("Serial radiographs (the protocol gives no fixed dates)"),
+  "ac-joint-reconstruction": OP_EACH_RADIOGRAPHS("Serial radiographs to confirm maintained reduction (the protocol gives no fixed dates)"),
+  "total-elbow-arthroplasty": OP_EACH_RADIOGRAPHS("Serial radiographs of component position and loosening (the protocol gives no fixed dates)"),
+  "darrach": OP_EACH_RADIOGRAPHS("Serial radiographs of the stump position (the protocol gives no fixed dates)"),
+  "sauve-kapandji": OP_EACH_RADIOGRAPHS("Serial radiographs of fusion progress (the protocol gives no fixed dates)"),
+  "scaphoid-orif": OP_EACH_RADIOGRAPHS("Serial radiographs and CT to confirm union (the protocol gives no fixed dates)"),
+};
+
+// Operation-specific prompts, on top of the class. { id: { period: [prompts] } }
+const OP_REVIEW_EXTRA = {
+  "tsa-anatomic": { "2w": ["Subscapularis precautions observed"], "6w": ["Subscapularis precautions observed"], "3m": ["Subscapularis integrity (internal rotation strength)"] },
+  "rsa-reverse": { "2w": ["Dislocation precautions understood (adduction, internal rotation, extension)"], "6w": ["Dislocation precautions understood (adduction, internal rotation, extension)"] },
+  "hemiarthroplasty-shoulder": { "6w": ["Tuberosity healing on radiograph"], "3m": ["Tuberosity healing on radiograph"] },
+  "latarjet-open": { "3m": ["Graft union on CT"] },
+  "bankart-arthroscopic": { "3m": ["Apprehension or recurrent instability"], "6m": ["Apprehension or recurrent instability"] },
+  "capsular-release-arthroscopic": { "2w": ["Range of motion gained and kept"], "6w": ["Range of motion gained and kept"] },
+  "elbow-contracture-release": { "2w": ["Range of motion gained and kept (flexion and extension)"], "6w": ["Range of motion gained and kept (flexion and extension)"] },
+  "distal-biceps-repair": { "2w": ["Posterior interosseous nerve and lateral antebrachial cutaneous nerve function"] },
+  "cubital-tunnel-release": { "6w": ["Ulnar nerve symptoms and nerve stability"], "3m": ["Ulnar nerve symptoms and nerve stability"] },
+  "medial-epicondylectomy": { "6w": ["Ulnar nerve symptoms and nerve stability"], "3m": ["Ulnar nerve symptoms and nerve stability"] },
+  "endoscopic-cubital-tunnel-release": { "6w": ["Ulnar nerve symptoms and nerve stability"], "3m": ["Ulnar nerve symptoms and nerve stability"] },
+  "ctr-open": { "6w": ["Pillar pain and thenar strength"] }, "ctr-endoscopic": { "6w": ["Pillar pain and thenar strength"] }, "ctr-mini-open": { "6w": ["Pillar pain and thenar strength"] },
+  "de-quervain-release": { "2w": ["Radial sensory nerve symptoms"] },
+  "trigger-finger-open": { "2w": ["Digital nerve sensation (radial digital nerve in the thumb)"] },
+  "trigger-finger-percutaneous": { "2w": ["Digital nerve sensation"] },
+  "scapholunate-repair-reconstruction": { "2w": ["K-wire pin sites"], "6w": ["K-wire pin sites"] },
+  "mallet-finger-repair": { "2w": ["K-wire pin site"], "6w": ["K-wire pin site and extensor lag"] },
+  "dupuytren-fasciectomy": { "2w": ["Flaps and skin healing"], "6w": ["Extension splint use"], "3m": ["Residual contracture"], "6m": ["Recurrence"] },
+  "thoracic-outlet-decompression": { "2w": ["Breathing, and chest radiograph if indicated", "Phrenic and long thoracic nerve function"] },
+  "tendon-transfers-ain-pin": { "6w": ["Re-education of the transferred muscle"], "3m": ["Active motion of the transferred muscle"] },
+  "total-elbow-arthroplasty": { "6w": ["Triceps function and lifting limits understood"], "3m": ["Triceps function and lifting limits understood"] },
+  "finger-joint-arthroplasty": { "6w": ["Collateral ligament stability and alignment"], "3m": ["Collateral ligament stability and alignment"] },
+};
+
+function opReviewClassOf(proc) { const e = proc && catalogueEntry(proc.id); return e && e.reviewClass ? OP_REVIEW_CLASSES[e.reviewClass] || null : null; }
+function opPeriodOrder(id) { return OP_REVIEW_PERIODS.findIndex((p) => p.id === id); }
+
+// The reviews an operation expects: its class's list, or for several procedures the union (the longest follow-up governs).
+function opReviewsFor(procs) {
+  const ids = new Set();
+  (procs || []).forEach((p) => { const c = opReviewClassOf(p); if (c) c.reviews.forEach((r) => ids.add(r)); });
+  return OP_REVIEW_PERIODS.map((p) => p.id).filter((id) => ids.has(id));
+}
+function opMilestonesFor(procs, periodId) {
+  const out = [];
+  (procs || []).forEach((p) => ((catalogueEntry(p.id) || {}).milestones || []).forEach((m) => { if ((m.at === periodId || m.at === "each") && !out.includes(m.text)) out.push(m.text); }));
+  return out;
+}
+// What follows the current review: the next scheduled one and what is due at it, or "final" when the protocol has no
+// later review for this operation.
+function opNextReview(procs, periodId) {
+  const reviews = opReviewsFor(procs);
+  const here = opPeriodOrder(periodId);
+  if (!reviews.length || here === -1) return null;
+  const nextId = reviews.find((id) => opPeriodOrder(id) > here) || null;
+  if (!nextId) return { next: null, final: true, milestones: [] };
+  return { next: OP_REVIEW_PERIODS[opPeriodOrder(nextId)], final: false, milestones: opMilestonesFor(procs, nextId) };
+}
+// The interval option of the diagnosis's follow-up table that matches a period, or "Other" with the plain interval.
+function opNextReviewOption(options, periodId) {
+  const re = OP_SCORE_LABELS[periodId];
+  const hit = re && (options || []).find((o) => o !== "Other" && o !== "Final" && re.test(o));
+  return hit ? { interval: hit } : { interval: "Other", other: OP_PERIOD_INTERVAL[periodId] };
+}
+// What to assess: the short core, the class prompts and the operation's own extras, without repeats. With no linked
+// operation the longer generic list is used, exactly as before.
+function opPromptsFor(procs, periodId) {
+  if (!periodId) return [];
+  if (!procs || !procs.length) return OP_REVIEW_PROMPTS[periodId] || [];
+  const out = [];
+  const add = (list) => (list || []).forEach((t) => { if (!out.includes(t)) out.push(t); });
+  add(OP_REVIEW_CORE[periodId]);
+  opOrderProcs(procs).forEach((p) => { const c = opReviewClassOf(p); if (c) add(c.prompts[periodId]); });
+  procs.forEach((p) => add((((catalogueEntry(p.id) || {}).extras) || {})[periodId]));
+  return out.length ? out : OP_REVIEW_PROMPTS[periodId] || [];
+}
+
+/* ============================================================================
+   PROCEDURE CATALOGUE (phase A)
+
+   One registry that everything about an operation is looked up through. It is
+   assembled at load from what already exists, so no entry is typed twice:
+     name, region, family, aliases    - from the operative module
+     ambiguousAliases                 - the generic clinic labels a module covers
+                                        but that cannot safely identify it
+     review class, milestones, extras - from the review tables, which are read
+                                        only here
+   The clinic side is NOT copied in. Its procedure lists stay where they are;
+   the bridge below classifies every clinic name against the catalogue, and an
+   operation takes over by gaining an entry when it gains an operative note.
+============================================================================ */
+
+const PROCEDURE_CATALOGUE = OPERATIVE_PROCEDURES.map((m) => ({
+  id: m.id,
+  name: m.name,
+  region: m.region,
+  family: m.family,
+  variantName: m.variantName,
+  aliases: m.clinicNames.slice(),
+  ambiguousAliases: (m.ambiguousNames || []).slice(),
+  clinicGap: !!m.clinicGap,
+  reviewClass: OP_REVIEW_CLASS_BY_ID[m.id] || null,
+  milestones: OP_REVIEW_MILESTONES[m.id] || [],
+  extras: OP_REVIEW_EXTRA[m.id] || {},
+  operativeModule: m.id,
+}));
+
+function catalogueEntry(id) { return PROCEDURE_CATALOGUE.find((e) => e.id === id) || null; }
+// Every entry that lists this clinic name, as an alias or as a generic label.
+function catalogueClaims(name) {
+  const n = String(name || "").trim().toLowerCase();
+  if (!n) return [];
+  return PROCEDURE_CATALOGUE.filter((e) => e.aliases.some((a) => a.toLowerCase() === n) || e.ambiguousAliases.some((a) => a.toLowerCase() === n));
+}
+function catalogueAmbiguousNames() {
+  const out = new Set();
+  PROCEDURE_CATALOGUE.forEach((e) => e.ambiguousAliases.forEach((a) => out.add(a.toLowerCase())));
+  return out;
+}
+// The one entry a typed or clicked name may be linked to, or null. Linked only when that cannot be wrong: the
+// entry's own name when no other entry also claims it, or a clinic name that exactly one entry claims, that no
+// entry marks as generic, and that is offered under exactly one region.
+function catalogueForClinicName(name) {
+  const n = String(name || "").trim().toLowerCase();
+  if (!n) return null;
+  if (catalogueAmbiguousNames().has(n)) return null;
+  const owners = PROCEDURE_CATALOGUE.filter((e) => e.name.toLowerCase() === n);
+  const claims = catalogueClaims(name);
+  // an entry whose own name this is, claimed by no other entry, is that operation wherever the name is offered
+  const everyone = new Set([...owners, ...claims]);
+  if (everyone.size !== 1) return null;
+  if (owners.length === 1) return owners[0];
+  const regions = opClinicNameRegions().get(n);
+  return regions && regions.size === 1 ? claims[0] : null;
+}
+// Every clinic procedure name, region by region, and where it stands against the catalogue:
+//   linked  - resolves to one entry
+//   claimed - an entry covers it, but it cannot be linked by name (generic label, several entries, several regions)
+//   none    - no operative note yet
+function catalogueBridge() {
+  const rows = [];
+  Object.keys(REGIONS).forEach((region) => {
+    const seen = new Set();
+    REGIONS[region].subsections.forEach((sub) => sub.conditions.forEach((c) => surgicalOptionsFor(c.id).forEach((n) => seen.add(n))));
+    [...seen].sort().forEach((name) => {
+      const claims = catalogueClaims(name);
+      const linked = catalogueForClinicName(name);
+      let state = "none", why = "";
+      if (linked) state = "linked";
+      else if (claims.length) {
+        state = "claimed";
+        why = catalogueAmbiguousNames().has(name.toLowerCase()) ? "generic label" : claims.length > 1 ? "claimed by several entries" : "offered under several regions";
+      }
+      rows.push({ region, name, state, why, entries: claims.map((e) => e.id) });
+    });
+  });
+  return rows;
+}
+
+/* ============================================================================
+   OPERATIVE NOTES - screen
+============================================================================ */
+
+const OP_OPERATION_FIELDS_TOP = [
+  { type: "select", key: "op__side", label: "Side", options: ["Right", "Left"], columns: 2 },
+  { type: "date", key: "op__date", label: "Date of operation" },
+  { type: "text", key: "op__surgeon", label: "Surgeon" },
+  { type: "text", key: "op__assistant", label: "Assistant" },
+  { type: "text", key: "op__planned", label: "Planned procedure (only if different from the one performed)" },
+];
+const OP_OPERATION_FIELDS_POSTOP = [
+  { type: "select", key: "op__postop", label: "Post-operative diagnosis", options: ["Same as pre-operative diagnosis", "Revised"], columns: 1 },
+  { type: "conditional", when: (s) => s.op__postop === "Revised", fields: [{ type: "text", key: "op__postopText", label: "Revised diagnosis" }] },
+];
+const OP_SAFETY_FIELDS = [
+  { type: "select", key: "op__anaesthesia", label: "Anaesthesia", options: ["General", "General with regional block", "Regional block", "Local with sedation", OP_WALANT], columns: 2 },
+  { type: "conditional", when: (s) => /block/i.test(s.op__anaesthesia || ""), fields: [{ type: "text", key: "op__blockDetail", label: "Block type", placeholder: "e.g. interscalene" }] },
+  { type: "conditional", when: (s) => s.op__anaesthesia === OP_WALANT, fields: [{ type: "text", key: "op__walantDetail", label: "Local anaesthetic, concentration, adrenaline dilution and total volume" }] },
+  { type: "select", key: "op__timeout", label: "Surgical safety time-out", options: ["Performed", "Not performed"], columns: 2 },
+  { type: "select", key: "op__antibiotic", label: "Antibiotic prophylaxis", options: ["Given", "Not given", "Not indicated"], columns: 3 },
+  { type: "conditional", when: (s) => s.op__antibiotic === "Given", fields: [{ type: "text", key: "op__antibioticDetail", label: "Agent, dose and timing" }] },
+  { type: "select", key: "op__txa", label: "Tranexamic acid", options: ["Used", "Not used"], columns: 2 },
+  { type: "conditional", when: (s) => s.op__txa === "Used", fields: [{ type: "text", key: "op__txaDetail", label: "Dose and route" }] },
+  { type: "select", key: "op__tourniquet", label: "Tourniquet", options: ["Not used", "Used"], columns: 2 },
+  { type: "conditional", when: (s) => s.op__tourniquet === "Used", fields: [
+    { type: "number", key: "op__tqPressure", label: "Tourniquet pressure", suffix: "mmHg" },
+    { type: "number", key: "op__tqTime", label: "Tourniquet time", suffix: "minutes" },
+  ] },
+  { type: "select", key: "op__counts", label: "Counts", options: ["Correct", "Incorrect", "Not applicable"], columns: 3 },
+  { type: "text", key: "op__ebl", label: "Estimated blood loss", suggestions: ["Minimal", "Less than 50 mL", "50\u2013100 mL"] },
+  { type: "select", key: "op__specimens", label: "Specimens", options: ["None", "Sent"], columns: 2 },
+  { type: "conditional", when: (s) => s.op__specimens === "Sent", fields: [{ type: "text", key: "op__specimensDetail", label: "Specimen details" }] },
+  { type: "select", key: "op__drains", label: "Drains", options: ["None", "Placed"], columns: 2 },
+  { type: "conditional", when: (s) => s.op__drains === "Placed", fields: [{ type: "text", key: "op__drainsDetail", label: "Drain details" }] },
+  { type: "select", key: "op__complications", label: "Complications", options: ["None", "Occurred"], columns: 2 },
+  { type: "conditional", when: (s) => s.op__complications === "Occurred", fields: [{ type: "text", key: "op__complicationsDetail", label: "Describe" }] },
+];
+
+function opAnyValue(state, test) {
+  return Object.keys(state || {}).some((k) => test(k) && opHasValue(state[k]));
+}
+
+function OpGroup({ title, children }) {
+  return (
+    <div className="mt-5 first:mt-0">
+      <div className="h-px w-full mb-3" style={{ background: T.border }} aria-hidden="true" />
+      <div className="text-[12px] font-bold uppercase tracking-wide mb-2" style={{ color: T.tealDark }}>{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function OpFields({ fields, op, setField, region }) {
+  return <>{fields.map((f, i) => <Field key={f.key || i} field={f} state={op} setField={setField} region={region} />)}</>;
+}
+
+function OpInput({ value, onChange, placeholder, ariaLabel }) {
+  return (
+    <input type="text" value={value || ""} placeholder={placeholder} aria-label={ariaLabel} onChange={(e) => onChange(e.target.value)} className="w-full min-w-0 rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.surface, color: T.ink, minHeight: 44 }} />
+  );
+}
+
+function OpTextArea({ label, value, onChange, placeholder }) {
+  return (
+    <div className="mb-3">
+      <div className="text-[13px] mb-1" style={{ color: T.inkSoft }}>{label}</div>
+      <textarea value={value || ""} placeholder={placeholder} aria-label={label} rows={3} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.surface, color: T.ink, minHeight: 88, resize: "vertical" }} />
+    </div>
+  );
+}
+
+// Procedures are offered by region, then by family, so a surgeon who thinks "cuff repair" finds
+// arthroscopic, mini-open and open side by side. The selected procedures stay visible whichever
+// region is showing, because one operation can cross regions.
+function OpProcedurePicker({ selectedIds, onToggle }) {
+  const first = OPERATIVE_PROCEDURES.find((p) => selectedIds.includes(p.id));
+  const [region, setRegion] = useState(first ? first.region : "shoulder");
+  const countIn = (r) => OPERATIVE_PROCEDURES.filter((p) => p.region === r && selectedIds.includes(p.id)).length;
+  const regions = OP_REGIONS.filter((r) => OPERATIVE_PROCEDURES.some((p) => p.region === r.id));
+  const chipStyle = (active) => ({ background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 44 });
+  return (
+    <div>
+      <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>Tap every procedure performed. Add more than one if the operation combined them.</div>
+      {selectedIds.length > 0 && (
+        <div className="mb-3">
+          <div className="text-[12px] font-bold uppercase tracking-wide mb-1.5" style={{ color: T.tealDark }}>Selected</div>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedIds.map((id) => {
+              const p = opProcedureById(id);
+              return p ? (
+                <button key={id} onClick={() => onToggle(id)} aria-label={`Remove ${p.name}`} className="rounded-full pl-3.5 pr-2.5 py-2 text-[13px] font-medium active:scale-95 transition flex items-center gap-1.5" style={chipStyle(true)}>
+                  {p.name} <X size={14} color="#fff" />
+                </button>
+              ) : null;
+            })}
+          </div>
+        </div>
+      )}
+      <div role="tablist" aria-label="Region" className="flex flex-wrap gap-1.5 mb-3">
+        {regions.map((r) => {
+          const n = countIn(r.id);
+          return (
+            <button key={r.id} role="tab" aria-selected={region === r.id} onClick={() => setRegion(r.id)} className="rounded-xl px-3.5 py-2 text-[14px] font-semibold active:scale-95 transition" style={{ background: region === r.id ? T.tealDark : T.surface, color: region === r.id ? "#fff" : T.ink, border: `1px solid ${region === r.id ? T.tealDark : T.border}`, minHeight: 44 }}>
+              {r.name}{n > 0 ? ` (${n})` : ""}
+            </button>
+          );
+        })}
+      </div>
+      {OP_FAMILIES.filter((f) => f.region === region).map((fam) => {
+        const procs = OPERATIVE_PROCEDURES.filter((p) => p.family === fam.id);
+        if (!procs.length) return null;
+        return (
+          <div key={fam.id} className="mb-3">
+            <div className="text-[12px] font-bold uppercase tracking-wide mb-1.5" style={{ color: T.ink, opacity: 0.72 }}>{fam.name}</div>
+            <div className="flex flex-wrap gap-1.5">
+              {procs.map((p) => {
+                const active = selectedIds.includes(p.id);
+                return (
+                  <button key={p.id} onClick={() => onToggle(p.id)} aria-pressed={active} className="rounded-full px-3.5 py-2 text-[13px] font-medium active:scale-95 transition" style={chipStyle(active)}>
+                    {p.variantName}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function OpLinesEditor({ lines, onChange, addLabel, noun }) {
+  const list = lines || [];
+  const update = (i, patch) => onChange(list.map((l, j) => (j === i ? { ...l, ...patch } : l)));
+  return (
+    <div>
+      {list.map((l, i) => (
+        <div key={i} className="flex items-start gap-2 mb-2">
+          <button onClick={() => update(i, { on: !l.on })} role="checkbox" aria-checked={!!l.on} aria-label={`${noun} ${i + 1}: ${l.on ? "included in the note" : "left out of the note"}`} className="shrink-0 flex items-center justify-center rounded-lg" style={{ minHeight: 44, minWidth: 44, background: l.on ? T.teal : T.slateChip, border: `1px solid ${l.on ? T.teal : T.border}` }}>
+            {l.on ? <Check size={18} color="#fff" /> : null}
+          </button>
+          <textarea value={l.text || ""} rows={2} aria-label={`${noun} ${i + 1}`} onChange={(e) => update(i, { text: e.target.value })} className="flex-1 min-w-0 rounded-lg px-3 py-2 text-[14px]" style={{ border: `1px solid ${T.border}`, background: T.surface, color: T.ink, minHeight: 44, opacity: l.on ? 1 : 0.55 }} />
+          <button onClick={() => onChange(list.filter((_, j) => j !== i))} aria-label={`Remove ${noun.toLowerCase()} ${i + 1}`} className="shrink-0 flex items-center justify-center active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+            <X size={18} color={T.inkSoft} />
+          </button>
+        </div>
+      ))}
+      <button onClick={() => onChange([...list, { text: "", on: true }])} className="flex items-center gap-1.5 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
+        <Plus size={16} /> {addLabel}
+      </button>
+    </div>
+  );
+}
+
+function OpImplantLog({ rows, onChange }) {
+  const list = rows || [];
+  const update = (i, patch) => onChange(list.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  return (
+    <div>
+      {list.map((r, i) => (
+        <div key={i} className="rounded-xl p-3 mb-2" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0 flex flex-col gap-2">
+              <OpInput value={r.item} onChange={(v) => update(i, { item: v })} placeholder="Implant (e.g. suture anchor)" ariaLabel={`Implant ${i + 1}`} />
+              <div className="grid grid-cols-2 gap-2">
+                <OpInput value={r.size} onChange={(v) => update(i, { size: v })} placeholder="Size" ariaLabel={`Implant ${i + 1} size`} />
+                <OpInput value={r.lot} onChange={(v) => update(i, { lot: v })} placeholder="Lot / serial" ariaLabel={`Implant ${i + 1} lot or serial number`} />
+              </div>
+            </div>
+            <button onClick={() => onChange(list.filter((_, j) => j !== i))} aria-label={`Remove implant ${i + 1}`} className="shrink-0 flex items-center justify-center active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+              <X size={18} color={T.inkSoft} />
+            </button>
+          </div>
+        </div>
+      ))}
+      <button onClick={() => onChange([...list, { item: "", size: "", lot: "" }])} className="flex items-center gap-1.5 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
+        <Plus size={16} /> Add implant
+      </button>
+    </div>
+  );
+}
+
+function OpPitfalls({ items }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-5">
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center gap-2 rounded-xl px-3 text-left text-[14px] font-semibold active:opacity-70" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
+        <span className="flex-1">Pitfalls and technical pearls (reference only, not copied)</span>
+        {open ? <ChevronDown size={18} color={T.inkSoft} /> : <ChevronRight size={18} color={T.inkSoft} />}
+      </button>
+      {open && (
+        <ul className="text-[14px] pl-5 mt-2" style={{ color: T.inkSoft, listStyle: "disc" }}>
+          {items.map((x) => <li key={x} className="mb-1">{x}</li>)}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function OpProcedureBody({ proc, op, procs, isPrimary, setField }) {
+  const k = (key) => opKey(proc.id, key);
+  const ref = proc.reference;
+  const steps = opStepTexts(proc, op, procs, isPrimary);
+  const group = (title, fields) => (fields && fields.length ? (
+    <OpGroup title={title}><OpFields fields={opNsFields(proc.id, fields)} op={op} setField={setField} region={proc.region} /></OpGroup>
+  ) : null);
+  return (
+    <div>
+      <OpGroup title="Reference: tick what applies to this patient">
+        <Field field={{ type: "checkbox", key: k("indications"), label: "Indications", options: ref.indications }} state={op} setField={setField} region={proc.region} />
+        <Field field={{ type: "checkbox", key: k("considerations"), label: "Factors considered", options: ref.considerations }} state={op} setField={setField} region={proc.region} />
+      </OpGroup>
+      {proc.positioning.length > 0 && (
+        <OpGroup title="Position">
+          <Field field={{ type: "select", key: k("position"), label: "Position", options: proc.positioning, columns: 2 }} state={op} setField={setField} region={proc.region} />
+        </OpGroup>
+      )}
+      {group("Findings", proc.findings)}
+      {group("Technique and implants", proc.technique)}
+      {group("Closure", proc.closure)}
+      <OpGroup title="Equipment used">
+        <Field field={{ type: "checkbox", key: k("equipment"), label: "Equipment", options: ref.equipment }} state={op} setField={setField} region={proc.region} />
+      </OpGroup>
+      <OpGroup title="Operative steps">
+        <ol className="text-[13px] pl-5 mb-3" style={{ color: T.inkSoft, listStyle: "decimal" }}>
+          {steps.map((t, i) => <li key={i} className="mb-1">{t}</li>)}
+        </ol>
+        <Field field={{ type: "select", key: k("stepsConfirmed"), label: "Confirm the steps above", options: [OP_STEPS_CONFIRMED], columns: 1 }} state={op} setField={setField} region={proc.region} />
+        <OpTextArea label="Deviations from the steps above, and additional details" value={op[k("deviations")]} onChange={(v) => setField(k("deviations"), v)} placeholder="Anything done differently, or not done" />
+      </OpGroup>
+      <OpPitfalls items={ref.pitfalls} />
+    </div>
+  );
+}
+
+function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved, noteComments, onNoteCommentsChange }) {
+  const [openId, setOpenId] = useState("operation");
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [copied, setCopied] = useState(null);
+  const [copyError, setCopyError] = useState(false);
+
+  const setField = useCallback((key, value) => onChange((s) => opSetValue(s, key, value)), [onChange]);
+  const selectedIds = op.op__procedures || [];
+  const procs = useMemo(() => opOrderProcs(opSelected(op)), [op]);
+  const note = useMemo(() => withAdditionalComments(buildOperativeNote(op), noteComments), [op, noteComments]);
+  const summary = useMemo(() => buildOperationSummary(op), [op]);
+  const rehab = useMemo(() => buildRehabNote(op), [op]);
+
+  const preopSuggestions = useMemo(() => Array.from(new Set(procs.flatMap((p) => p.preop))), [procs]);
+  const safetyKeys = new Set(OP_SAFETY_FIELDS.flatMap((f) => (f.type === "conditional" ? f.fields : [f]).map((x) => x.key)));
+
+  const sections = [
+    {
+      id: "operation", title: "Operation",
+      subtitle: procs.length ? procs.map((p) => p.name).join(", ") : "Choose the procedures performed",
+      hasContent: procs.length > 0 || opHasValue(op.op__side),
+      body: (
+        <>
+          <OpProcedurePicker selectedIds={selectedIds} onToggle={(id) => onChange((s) => opToggleProcedure(s, id))} />
+          <OpFields fields={OP_OPERATION_FIELDS_TOP} op={op} setField={setField} />
+          <Field field={{ type: "text", key: "op__preop", label: "Pre-operative diagnosis", suggestions: preopSuggestions, multiSelect: true }} state={op} setField={setField} />
+          <OpFields fields={OP_OPERATION_FIELDS_POSTOP} op={op} setField={setField} />
+        </>
+      ),
+    },
+    {
+      id: "safety", title: "Anaesthesia and safety", subtitle: "Time-out, antibiotics, TXA, tourniquet, counts, blood loss",
+      hasContent: opAnyValue(op, (key) => safetyKeys.has(key)),
+      body: <OpFields fields={OP_SAFETY_FIELDS} op={op} setField={setField} />,
+    },
+    ...procs.map((p, i) => ({
+      id: p.id, title: p.name, subtitle: i === 0 && procs.length > 1 ? "Primary procedure" : p.variantName,
+      hasContent: opAnyValue(op, (key) => key.startsWith(`${p.id}__`)),
+      body: <OpProcedureBody proc={p} op={op} procs={procs} isPrimary={i === 0} setField={setField} />,
+    })),
+    {
+      id: "implants", title: "Implants", subtitle: "Implant, size, lot or serial number",
+      hasContent: (op.op__implants || []).some((r) => r && (opHasValue(r.item) || opHasValue(r.size) || opHasValue(r.lot))),
+      body: <OpImplantLog rows={op.op__implants} onChange={(rows) => setField("op__implants", rows)} />,
+    },
+    {
+      id: "plan", title: "Post-operative plan", subtitle: "Pre-filled from your protocol; edit freely",
+      hasContent: (op.op__planLines || []).length > 0,
+      body: (
+        <>
+          <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>Lines are pre-filled from the protocol for the procedure above. Untick a line to leave it out of the note, or edit it.</div>
+          {(op.op__planLines || []).length === 0 && <div className="text-[14px] mb-3" style={{ color: T.inkSoft }}>Choose a procedure to pre-fill the plan.</div>}
+          <OpLinesEditor lines={op.op__planLines} onChange={(l) => setField("op__planLines", l)} addLabel="Add plan line" noun="Plan line" />
+          <OpGroup title="Rehabilitation protocol (for the physiotherapist; copied separately)">
+            <OpLinesEditor lines={op.op__rehabLines} onChange={(l) => setField("op__rehabLines", l)} addLabel="Add rehabilitation line" noun="Rehabilitation line" />
+          </OpGroup>
+          <button onClick={() => onChange((s) => opResetPlan(s))} className="mt-3 flex items-center gap-1.5 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
+            <RotateCcw size={16} /> Reset plan to the protocol
+          </button>
+        </>
+      ),
+    },
+  ];
+
+  const copy = async (which, text) => {
+    const ok = await copyTextRobust(text);
+    if (ok) {
+      setCopied(which);
+      setCopyError(false);
+      setTimeout(() => setCopied(null), 1800);
+      if (which === "note" && onNoteSaved) {
+        onNoteSaved({ id: "operative-note", title: "Operative note", kind: "note", text: note, at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+      }
+    } else {
+      setCopied(null);
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 4000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen pb-28" style={{ background: T.bg }}>
+      <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
+        <button onClick={onGoHome} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal, minHeight: 44 }}>
+          <ArrowLeft size={16} /> Back to home
+        </button>
+        <div className="text-[12px] font-semibold uppercase tracking-widest mb-1" style={{ color: T.teal }}>Operative note</div>
+        <h1 className="text-[20px] font-bold mb-1" style={{ color: T.ink }}>{procs.length ? `${procs.length} procedure${procs.length === 1 ? "" : "s"} recorded` : "What was done?"}</h1>
+        <div className="text-[13px] mb-4" style={{ color: T.inkSoft }}>Nothing is pre-ticked. Only what you tick, type or confirm appears in the note.</div>
+      </div>
+      <div className="px-4 max-w-2xl lg:max-w-4xl mx-auto">
+        {sections.map((sec, i) => (
+          <CollapsibleSection
+            key={sec.id}
+            index={i + 1}
+            title={sec.title}
+            subtitle={sec.subtitle}
+            isOpen={openId === sec.id}
+            onToggle={() => setOpenId(openId === sec.id ? null : sec.id)}
+            hasContent={sec.hasContent}
+            nextTitle={sections[i + 1] ? sections[i + 1].title : null}
+            onNext={sections[i + 1] ? () => setOpenId(sections[i + 1].id) : null}
+          >
+            {sec.body}
+          </CollapsibleSection>
+        ))}
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-30 px-3 py-3" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
+        <div className="max-w-2xl lg:max-w-4xl mx-auto flex gap-2">
+          <button onClick={() => setConfirmReset(true)} className="flex items-center justify-center gap-1.5 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.redTint, color: T.red, border: `1px solid ${T.red}`, minHeight: 48 }}>
+            <RotateCcw size={17} /> New patient
+          </button>
+          <button onClick={() => setNoteOpen(true)} className="flex-1 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+            Preview operative note
+          </button>
+        </div>
+      </div>
+
+      {confirmReset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
+          <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
+            <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
+            <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears the operative note and everything else entered in this session, and returns to the home screen ready for the next patient. This cannot be undone.</div>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmReset(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>Cancel</button>
+              <button onClick={() => { setConfirmReset(false); if (onNewPatient) onNewPatient(); }} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.red, color: "#fff", minHeight: 48 }}>Clear and start</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {noteOpen && (
+        <div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.5)" }} onClick={() => setNoteOpen(false)}>
+          <DragSheet quickRef onClose={() => setNoteOpen(false)} className="w-full sm:max-w-lg lg:max-w-2xl rounded-t-2xl sm:rounded-2xl" style={{ background: T.surface, display: "flex", flexDirection: "column", maxHeight: "88vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+            <div data-sheet-drag className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, touchAction: "none", cursor: "grab" }}>
+              <span className="font-bold text-[15px] flex-1 min-w-0 truncate" style={{ color: T.ink }}>Operative note</span>
+              <button onClick={() => setNoteOpen(false)} aria-label="Close preview" className="shrink-0 flex items-center justify-center p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}>
+                <X size={20} color={T.inkSoft} />
+              </button>
+            </div>
+            <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+              {note ? <NoteBody text={note} /> : <div className="text-[14px]" style={{ color: T.inkSoft }}>Choose the procedures performed to start the note.</div>}
+              {onNoteCommentsChange && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
+              {summary && (
+                <div className="mt-4 rounded-xl p-3 text-[13px]" style={{ border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink, whiteSpace: "pre-wrap" }}>
+                  <div className="text-[12px] font-bold uppercase tracking-wide mb-1" style={{ color: T.tealDark }}>Summary for the follow-up visit</div>
+                  {summary}
+                </div>
+              )}
+            </div>
+            <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
+              <div className="grid grid-cols-1 gap-2">
+                <button onClick={() => copy("note", note)} disabled={!note} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48, opacity: note ? 1 : 0.5 }}>
+                  {copied === "note" ? <Check size={17} /> : <Copy size={17} />}
+                  {copied === "note" ? <span className="ut-confirm">Copied</span> : "Copy note"}
+                </button>
+                {summary && (
+                  <button onClick={() => copy("summary", summary)} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
+                    {copied === "summary" ? <Check size={17} /> : <Copy size={17} />}
+                    {copied === "summary" ? <span className="ut-confirm">Copied</span> : "Copy summary line"}
+                  </button>
+                )}
+                {rehab && (
+                  <button onClick={() => copy("rehab", rehab)} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
+                    {copied === "rehab" ? <Check size={17} /> : <Copy size={17} />}
+                    {copied === "rehab" ? <span className="ut-confirm">Copied</span> : "Copy rehabilitation protocol"}
+                  </button>
+                )}
+              </div>
+              {copyError && (
+                <div className="text-[13px] text-center" style={{ color: T.red }}>
+                  Couldn't copy automatically — tap and hold the note above to select and copy it manually.
+                </div>
+              )}
+            </div>
+          </DragSheet>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================================
+   POST-OPERATIVE REVIEW BY PERIOD (screen parts)
+============================================================================ */
+
+function PostopSummaryImport({ onApply }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [msg, setMsg] = useState(null);
+  const apply = () => {
+    const r = opPostopPatchFromSummary(text);
+    if (!r) { setMsg({ ok: false, text: "That is not an operation summary. Copy the summary line from the operative note preview and paste it here." }); return; }
+    onApply(r.patch);
+    setMsg({ ok: true, text: r.description });
+    setText("");
+    setOpen(false);
+  };
+  return (
+    <div className="mb-3">
+      {!open && (
+        <button onClick={() => { setOpen(true); setMsg(null); }} className="flex items-center gap-1.5 rounded-xl px-3 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
+          <ClipboardList size={16} /> Fill from an operative note summary
+        </button>
+      )}
+      {open && (
+        <div className="rounded-xl p-3" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+          <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>Paste the summary line copied from the operative note. It fills in the procedure and the date of surgery.</div>
+          <textarea value={text} onChange={(e) => setText(e.target.value)} aria-label="Operation summary" rows={3} placeholder="UT-OP v1 | 2026-10-13 | R | rcr-arthroscopic" className="w-full rounded-lg px-3 py-2.5 text-[14px]" style={{ border: `1px solid ${T.border}`, background: T.surface, color: T.ink, minHeight: 76 }} />
+          <div className="flex gap-2 mt-2">
+            <button onClick={apply} className="flex-1 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 44 }}>Fill in</button>
+            <button onClick={() => { setOpen(false); setText(""); setMsg(null); }} className="rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>Cancel</button>
+          </div>
+        </div>
+      )}
+      {msg && (
+        <div role="status" className="rounded-xl px-3 py-2.5 mt-2 text-[13px] leading-relaxed" style={{ background: msg.ok ? T.tealTint : T.redTint, color: msg.ok ? T.tealDark : T.red, border: `1px solid ${msg.ok ? T.teal : T.red}` }}>{msg.text}</div>
+      )}
+    </div>
+  );
+}
+
+function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions }) {
+  const procs = opModulesForPostop(poState);
+  const days = daysSinceSurgery(poState.surgeryDate);
+  const override = poState.reviewPeriod || null;
+  const period = override ? opReviewPeriodById(override) : opReviewPeriodForDays(days);
+  const protocol = procs.length && period ? opProtocolForReview(procs, days, override) : null;
+  const scores = period ? opScoresDue(condition, period.id) : null;
+  const assessedInfo = opAssessedFor(poState);
+  const assessed = assessedInfo.items;
+  const nextReview = protocol ? opNextReview(procs, period.id) : null;
+  // Never automatic: the surgeon taps it. It picks the matching interval from this diagnosis's own follow-up table.
+  const applyNext = () => {
+    if (!nextReview) return;
+    if (nextReview.final) { setMany({ followUpInterval: "Final", followUpIntervalOther: null }); return; }
+    const o = opNextReviewOption(intervalOptions, nextReview.next.id);
+    setMany({ followUpInterval: o.interval, followUpIntervalOther: o.other || null });
+  };
+  const row = (label, items) => (items && items.length ? <li key={label} className="mb-1.5"><span className="font-semibold">{label}:</span> {items.join("; ")}</li> : null);
+  return (
+    <div>
+      <SubLabel>Review period</SubLabel>
+      <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>{override ? "Chosen by you; tap it again to follow the date of surgery." : period ? "From the date of surgery; tap another to change it." : "Enter the date of surgery, or choose the period."}</div>
+      <div role="group" aria-label="Review period" className="flex flex-wrap gap-1.5 mb-3">
+        {OP_REVIEW_PERIODS.map((p) => {
+          const active = !!period && period.id === p.id;
+          return (
+            <button key={p.id} aria-pressed={active} onClick={() => set("reviewPeriod", override === p.id ? null : p.id)} className="rounded-full px-3.5 py-2 text-[13px] font-medium active:scale-95 transition" style={{ background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}`, minHeight: 44 }}>
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+      {protocol && (
+        <div className="rounded-xl p-3 mb-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+          <div className="text-[12px] font-bold uppercase tracking-wide mb-1.5" style={{ color: T.tealDark }}>Protocol at this review: {protocol.primary.name}</div>
+          <ul className="text-[13px] leading-relaxed" style={{ color: T.ink, listStyle: "none", paddingLeft: 0 }}>
+            {protocol.phase && <li className="mb-1.5"><span className="font-semibold">Rehabilitation now:</span> {protocol.phase.text}</li>}
+            {protocol.nextPhase && <li className="mb-1.5"><span className="font-semibold">Next phase:</span> {protocol.nextPhase.text}</li>}
+            {row("Immobilisation", protocol.immobilisation)}
+            {row("Precautions", protocol.precautions)}
+            {row("Imaging and follow-up in the protocol", protocol.followup ? [protocol.followup] : [])}
+            {row("Return to", protocol.returnTo ? [protocol.returnTo] : [])}
+            {row("Red flags to ask about", protocol.redFlags)}
+            <li className="mb-0"><span className="font-semibold">Scores due at this point:</span> {scores ? `${scores.scores} (${scores.when})` : "none scheduled at this point in this diagnosis's template"}</li>
+          </ul>
+        </div>
+      )}
+      {nextReview && (
+        <div className="rounded-xl p-3 mb-3" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+          <div className="text-[12px] font-bold uppercase tracking-wide mb-1.5" style={{ color: T.tealDark }}>Next review in the protocol</div>
+          {nextReview.final ? (
+            <div className="text-[13px] mb-2" style={{ color: T.ink }}>The protocol has no review after this one for this operation. If recovery is as expected, this can be the final visit.</div>
+          ) : (
+            <div className="text-[13px] mb-2" style={{ color: T.ink }}>
+              <span className="font-semibold">{nextReview.next.label}</span> ({OP_PERIOD_INTERVAL[nextReview.next.id]} from surgery).
+              {nextReview.milestones.length > 0 && <> Due at that review: {nextReview.milestones.join("; ")}.</>}
+            </div>
+          )}
+          <button onClick={applyNext} className="rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
+            {nextReview.final ? "Set as the final visit" : `Set next review to ${OP_PERIOD_INTERVAL[nextReview.next.id]}`}
+          </button>
+        </div>
+      )}
+      {!protocol && period && poState.procedureName && poState.procedureName.trim() && (
+        <div className="text-[13px] mb-3" style={{ color: T.inkSoft }}>No operative protocol is linked to this procedure name. Use Fill from an operative note summary to link it.</div>
+      )}
+      {period && (
+        <>
+          <SubLabel>Assessed at this visit</SubLabel>
+          <CheckboxGroup options={assessedInfo.prompts} selected={assessed} onChange={(v) => set("assessed", v)} />
+        </>
+      )}
+      {protocol && (
+        <>
+          <SubLabel>Progress against the protocol</SubLabel>
+          <ButtonSelect options={OP_PROGRESS_OPTIONS} value={poState.protocolProgress || null} onChange={(v) => set("protocolProgress", v)} columns={1} />
+        </>
+      )}
+    </div>
+  );
+}
+
 function screenToHistoryState(screen) {
   if (screen.view === "template") {
     return { view: "template", regionKey: screen.regionKey, conditionId: screen.condition.id };
@@ -25493,6 +29140,9 @@ export default function App() {
   }, []);
 
   const [session, setSession] = useState({ order: [], statesByConditionId: {} });
+  // The operative note is one flat in-memory object (nothing is stored), cleared by New patient.
+  const [opNote, setOpNote] = useState({});
+  const updateOp = useCallback((fn) => setOpNote((cur) => fn(cur)), []);
   const [combinedNoteOpen, setCombinedNoteOpen] = useState(false);
   const [combinedCopied, setCombinedCopied] = useState(false);
   const [combinedCopyError, setCombinedCopyError] = useState(false);
@@ -25541,10 +29191,11 @@ export default function App() {
   const [recentNotes, setRecentNotes] = useState([]);
   // Additional comments for the note, per kind of visit. Held with the session
   // (in memory only) and cleared by New patient.
-  const [noteComments, setNoteComments] = useState({ visit: "", followup: "", postop: "" });
+  const [noteComments, setNoteComments] = useState({ visit: "", followup: "", postop: "", operative: "" });
   const setVisitComments = useCallback((t) => setNoteComments((m) => ({ ...m, visit: t })), []);
   const setFollowupComments = useCallback((t) => setNoteComments((m) => ({ ...m, followup: t })), []);
   const setPostopComments = useCallback((t) => setNoteComments((m) => ({ ...m, postop: t })), []);
+  const setOperativeComments = useCallback((t) => setNoteComments((m) => ({ ...m, operative: t })), []);
   const [viewNote, setViewNote] = useState(null);
   // A diagnosis's clinic note and physio referral are shown as one entry.
   const groupedNotes = useMemo(() => groupRecentNotes(recentNotes), [recentNotes]);
@@ -25615,7 +29266,8 @@ export default function App() {
 
   const endSession = useCallback(() => {
     setSession({ order: [], statesByConditionId: {} });
-    setNoteComments({ visit: "", followup: "", postop: "" });
+    setNoteComments({ visit: "", followup: "", postop: "", operative: "" });
+    setOpNote({});
     setCombinedNoteOpen(false);
     setScreen({ view: "visitType" }, { replace: true });
   }, []);
@@ -25684,6 +29336,7 @@ export default function App() {
         <VisitTypeGate
           onSelect={(type) => {
             if (type === "new") setScreen({ view: "regions" });
+            else if (type === "operative") setScreen({ view: "operativeNote" });
             else {
               setFollowupSelectedIds([]);
               setScreen({ view: type === "postop" ? "postopSelect" : "followupSelect" });
@@ -25745,6 +29398,20 @@ export default function App() {
           onNoteSaved={noteRecent2}
           noteComments={noteComments.postop}
           onNoteCommentsChange={setPostopComments}
+        />
+        </div>
+      )}
+
+      {screen.view === "operativeNote" && (
+        <div className="ut-page">
+        <OperativeNoteScreen
+          op={opNote}
+          onChange={updateOp}
+          onGoHome={goHome}
+          onNewPatient={endSession}
+          onNoteSaved={noteRecent2}
+          noteComments={noteComments.operative}
+          onNoteCommentsChange={setOperativeComments}
         />
         </div>
       )}
