@@ -26,6 +26,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024
         // Everything the app needs is bundled at build time and nothing
         // calls out to a network API, so precaching the full build output
         // gives a genuinely working offline app with no extra config.
