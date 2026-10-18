@@ -15230,6 +15230,7 @@ const WHATS_NEW = [
     items: [
       "Operative note: a fourth visit type covering every operation in the clinic notes, each with a standard note (findings, technique, steps, plan, rehabilitation); three general entries have a basic one where you write the steps. Choose the region on the body map, then the operation from a table. Nothing is pre-ticked.",
       "Operative note: 99 more operations now have a full standard note, completing the clinic list: shoulder and elbow revision and infection, fractures, clavicle and sternoclavicular surgery, scapular and nerve reconstructions, hand tumours and infections, wrist and thumb salvage.",
+      "Operative note: an operation is now listed in every region where the clinic notes offer it, so carpal tunnel release opens from both the wrist and the peripheral nerve lesions, and distal radius and scaphoid fixation from the hand as well. It is one note, chosen once, and the body map counts include them.",
       "Operative note: the standard steps are yours to start, then reword, delete or add to in place, with no separate deviations box. Steps you have not edited keep following the side and findings, so clock-face positions stay right; steps you have edited never change.",
       "Operative note: clock-face positions (Bankart repair, Latarjet, capsular release) are written for the side operated on, and an operation that combined several procedures reads as one note, with preparation and closure described once and no repeated arthroscopy.",
       "Operative note: the note carries the anaesthesia and safety details (time-out, antibiotics, tranexamic acid, tourniquet or WALANT, counts, blood loss, complications), and the post-operative plan is pre-filled from the protocol for the procedure and stays editable.",
@@ -23383,7 +23384,7 @@ function AboutSheet({ open, onClose }) {
           <H>What you can do</H>
           <ul className="mb-1">
             <Li>At a post-operative review, choose the operation and the date of surgery, or paste the summary line from its operative note, to see the protocol for that review (2 weeks, 6 weeks, 3, 6 or 12 months): the current rehabilitation phase, precautions, imaging and follow-up, red flags and the scores due. It also suggests the next review and what to assess for that operation. Nothing is pre-ticked.</Li>
-            <Li>Write an operative note: choose the region on the body map, then the operations performed (one or several), tick the indications that applied, record findings, technique, implants and the safety details, and start from the standard steps if you want them, then edit them in place. Nothing is pre-ticked, and the plan is pre-filled from your protocol. Copy the note, a follow-up summary or the rehabilitation protocol from one preview.</Li>
+            <Li>Write an operative note: choose the region on the body map, then the operations performed (one or several), tick the indications that applied, record findings, technique, implants and the safety details, and start from the standard steps if you want them, then edit them in place. Nothing is pre-ticked, and the plan is pre-filled from your protocol. An operation is listed in every region where the clinic notes offer it, such as carpal tunnel release under both the wrist and the peripheral nerve lesions. Copy the note, a follow-up summary or the rehabilitation protocol from one preview.</Li>
             <Li>Document a new patient, a follow-up, a post-operative review or an operation. Post-operative reviews adapt to the time since surgery and to the procedure performed.</Li>
             <Li>Cover several diagnoses in one visit. Follow-up and post-operative reviews carry the shared details (date, reason for review, progress, plan) across diagnoses and produce one combined note that lists only what differs.</Li>
             <Li>Details about the patient (age, occupation, sport, work, medical history, hand dominance) entered under one diagnosis fill in the same details under the others, in whatever form each template asks for them. Anything you type yourself is left alone, and the combined note states the patient once, using every diagnosis.</Li>
@@ -30327,7 +30328,34 @@ function opLoadSteps(state, id) {
 function opFamiliesOf(p) { return p.families || [p.family]; }
 function opFamilyName(id) { const f = OP_FAMILIES.find((x) => x.id === id); return f ? f.name : id; }
 function opProcsInFamily(familyId) { return OPERATIVE_PROCEDURES.filter((p) => opFamiliesOf(p).includes(familyId)); }
-function opCountInRegion(regionId) { return OPERATIVE_PROCEDURES.filter((p) => opFamiliesOf(p).some((f) => (OP_FAMILIES.find((x) => x.id === f) || {}).region === regionId)).length; }
+// The rows of a region's table: its own families, then, for operations that are also offered here (see opRegionsOf), a
+// row carrying the home family's name with just those operations, so the same note is reachable from every region
+// where the clinic notes offer it. Diagnosis rows hold the operations with only a basic entry.
+function opRowsForRegion(regionId) {
+  const templates = [];
+  const diagnosis = [];
+  OP_FAMILIES.filter((f) => f.region === regionId).forEach((f) => {
+    const procs = opProcsInFamily(f.id);
+    if (procs.length) (f.diagnosis ? diagnosis : templates).push({ id: f.id, name: f.name, procs });
+  });
+  const shared = new Map();
+  OPERATIVE_PROCEDURES.filter((p) => !p.basic && p.region !== regionId && opRegionsOf(p).includes(regionId)).forEach((p) => {
+    const home = OP_FAMILIES.find((x) => x.id === p.family);
+    if (!home) return;
+    if (!shared.has(home.id)) shared.set(home.id, { id: `shared:${regionId}:${home.id}`, name: home.name, procs: [] });
+    shared.get(home.id).procs.push(p);
+  });
+  shared.forEach((row) => {
+    const same = templates.find((t) => t.name === row.name);
+    if (same) row.procs.forEach((p) => { if (!same.procs.includes(p)) same.procs.push(p); });
+    else templates.push(row);
+  });
+  return { templates, diagnosis };
+}
+function opCountInRegion(regionId) {
+  const rows = opRowsForRegion(regionId);
+  return new Set([...rows.templates, ...rows.diagnosis].flatMap((r) => r.procs.map((p) => p.id))).size;
+}
 // The full names of the diagnoses an operation belongs to, so a search for "frozen shoulder" finds it. A basic entry
 // carries its own; a full template uses the diagnoses it covers and those whose specific names link to it.
 let opDxIndex = null;
@@ -30776,6 +30804,42 @@ function catalogueBridge() {
   return rows;
 }
 
+// ---- where an operation is offered ------------------------------------------------------------------------------
+// An operation belongs to its own region and also to every other region where the clinic notes offer it: a diagnosis
+// it covers, or one of its clinic names that no other entry claims, is offered there. Carpal tunnel release is
+// therefore reachable from the wrist and from the peripheral nerve lesions. It is derived, never listed by hand.
+let opDxRegionCache = null;
+function opDiagnosisRegions() {
+  if (opDxRegionCache) return opDxRegionCache;
+  const map = new Map();
+  Object.keys(REGIONS).forEach((r) => REGIONS[r].subsections.forEach((sub) => sub.conditions.forEach((c) => map.set(c.id, r))));
+  opDxRegionCache = map;
+  return map;
+}
+let opRegionsCache = null;
+function opRegionsOf(p) {
+  if (!opRegionsCache) opRegionsCache = new Map();
+  if (opRegionsCache.has(p.id)) return opRegionsCache.get(p.id);
+  const out = new Set([p.region]);
+  if (p.basic) {
+    opFamiliesOf(p).forEach((f) => { const fam = OP_FAMILIES.find((x) => x.id === f); if (fam) out.add(fam.region); });
+  } else {
+    const dxRegion = opDiagnosisRegions();
+    (p.covers || []).forEach(([d]) => { if (dxRegion.has(d)) out.add(dxRegion.get(d)); });
+    const regionsOfName = opClinicNameRegions();
+    const generic = catalogueAmbiguousNames();
+    [p.name, ...p.clinicNames].forEach((n) => {
+      const k = n.toLowerCase();
+      if (generic.has(k)) return;
+      const claimers = new Set([...PROCEDURE_CATALOGUE.filter((e) => e.name.toLowerCase() === k), ...catalogueClaims(n)].map((e) => e.id));
+      if (claimers.size === 1 && claimers.has(p.id)) (regionsOfName.get(k) || new Set()).forEach((r) => out.add(r));
+    });
+  }
+  const ordered = OP_REGIONS.map((r) => r.id).filter((r) => out.has(r));
+  opRegionsCache.set(p.id, ordered);
+  return ordered;
+}
+
 /* ============================================================================
    OPERATIVE NOTES - screen
 
@@ -30878,10 +30942,10 @@ function OpProcedurePicker({ selectedIds, onToggle, region, onRegion }) {
   const counts = useMemo(() => { const c = {}; OP_REGIONS.forEach((r) => { c[r.id] = opCountInRegion(r.id); }); return c; }, []);
   const regionInfo = OP_REGIONS.find((r) => r.id === region);
   const accent = REGION_ACCENT[region] || {};
-  const families = region ? OP_FAMILIES.filter((f) => f.region === region && opProcsInFamily(f.id).length) : [];
+  const rows = region ? opRowsForRegion(region) : { templates: [], diagnosis: [] };
   const groups = [
-    { id: "templates", title: "Operation templates", list: families.filter((f) => !f.diagnosis) },
-    { id: "diagnosis", title: "Other operations by diagnosis", list: families.filter((f) => f.diagnosis) },
+    { id: "templates", title: "Operation templates", list: rows.templates },
+    { id: "diagnosis", title: "Other operations by diagnosis", list: rows.diagnosis },
   ].filter((g) => g.list.length);
   return (
     <div>
@@ -30922,7 +30986,7 @@ function OpProcedurePicker({ selectedIds, onToggle, region, onRegion }) {
                       <th scope="row" className="text-left align-top py-3 pr-2 text-[14px] font-semibold" style={{ color: T.ink }}>{f.name}</th>
                       <td className="py-2">
                         <div className="flex flex-wrap gap-1.5">
-                          {opProcsInFamily(f.id).map((p) => {
+                          {f.procs.map((p) => {
                             const active = selectedIds.includes(p.id);
                             return (
                               <button key={p.id} onClick={() => onToggle(p.id)} aria-pressed={active} className="rounded-full px-3.5 py-2 text-[14px] font-medium active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>
