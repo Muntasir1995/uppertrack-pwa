@@ -15231,6 +15231,10 @@ const WHATS_NEW = [
       "Operative note: a fourth visit type covering every operation in the clinic notes, each with a standard note (findings, technique, steps, plan, rehabilitation); three general entries have a basic one where you write the steps. Choose the region on the body map, then the operation from a table. Nothing is pre-ticked.",
       "Operative note: 99 more operations now have a full standard note, completing the clinic list: shoulder and elbow revision and infection, fractures, clavicle and sternoclavicular surgery, scapular and nerve reconstructions, hand tumours and infections, wrist and thumb salvage.",
       "Operative note: an operation is now listed in every region where the clinic notes offer it, so carpal tunnel release opens from both the wrist and the peripheral nerve lesions, and distal radius and scaphoid fixation from the hand as well. It is one note, chosen once, and the body map counts include them.",
+      "Rotator cuff repair: each tendon (supraspinatus, infraspinatus, subscapularis, teres minor) is categorised on its own, and the tendons repaired are chosen separately. Hemi-hamate arthroplasty names the digit, and its steps and plan follow the surgeon's own record, with anaesthesia, antibiotics, side and tourniquet taken from the safety section.",
+      "Operative note: the operation search now offers Continue, and once an operation is chosen the long list folds to the rows that hold it, with a button to add or change operations. Extensor indicis proprius transfer for extensor pollicis longus rupture has its own note beside the EPL repair.",
+      "Post-operative follow-up now begins from the operation, with the diagnosis list one tap away. Filling from the operation summary also brings the operative details into the note and sets this visit's reasons and plan and the next review from the timeline: check and edit them.",
+      "Generated notes (operative, follow-up, post-operative and the combined clinic note) can be edited in place before copying. An edited note stops following the form until it is reverted, and the edited text is what is copied and kept in Recent notes.",
       "Operative note: the standard steps are yours to start, then reword, delete or add to in place, with no separate deviations box. Steps you have not edited keep following the side and findings, so clock-face positions stay right; steps you have edited never change.",
       "Operative note: clock-face positions (Bankart repair, Latarjet, capsular release) are written for the side operated on, and an operation that combined several procedures reads as one note, with preparation and closure described once and no repeated arthroscopy.",
       "Operative note: the note carries the anaesthesia and safety details (time-out, antibiotics, tranexamic acid, tourniquet or WALANT, counts, blood loss, complications), and the post-operative plan is pre-filled from the protocol for the procedure and stays editable.",
@@ -20571,6 +20575,8 @@ function buildPostopNoteParts(condition, poState) {
   // Written only when the review-by-period fields are used, so existing post-operative notes are unchanged.
   const protocolPart = opPostopProtocolPart(poState);
   if (protocolPart) parts.push(protocolPart);
+  const detailsPart = opPostopDetailsPart(poState);
+  if (detailsPart) parts.splice(parts.length && parts[0].heading === "Procedure" ? 1 : 0, 0, detailsPart);   // straight after the procedure line
 
   const statusClauses = [];
   if (poState.woundStatus) statusClauses.push(`the wound was ${lowerFirst(poState.woundStatus)}`);
@@ -23383,7 +23389,7 @@ function AboutSheet({ open, onClose }) {
 
           <H>What you can do</H>
           <ul className="mb-1">
-            <Li>At a post-operative review, choose the operation and the date of surgery, or paste the summary line from its operative note, to see the protocol for that review (2 weeks, 6 weeks, 3, 6 or 12 months): the current rehabilitation phase, precautions, imaging and follow-up, red flags and the scores due. It also suggests the next review and what to assess for that operation. Nothing is pre-ticked.</Li>
+            <Li>At a post-operative review, start from the operation (or the diagnosis), then enter the date of surgery or paste the summary line from its operative note, to see the protocol for that review (2 weeks, 6 weeks, 3, 6 or 12 months): the current rehabilitation phase, precautions, imaging and follow-up, red flags and the scores due. It also suggests the next review and what to assess for that operation, and one tap sets this visit's reasons and plan and the next review from the timeline. Any generated note can be edited in place before it is copied.</Li>
             <Li>Write an operative note: choose the region on the body map, then the operations performed (one or several), tick the indications that applied, record findings, technique, implants and the safety details, and start from the standard steps if you want them, then edit them in place. Nothing is pre-ticked, and the plan is pre-filled from your protocol. An operation is listed in every region where the clinic notes offer it, such as carpal tunnel release under both the wrist and the peripheral nerve lesions. Copy the note, a follow-up summary or the rehabilitation protocol from one preview.</Li>
             <Li>Document a new patient, a follow-up, a post-operative review or an operation. Post-operative reviews adapt to the time since surgery and to the procedure performed.</Li>
             <Li>Cover several diagnoses in one visit. Follow-up and post-operative reviews carry the shared details (date, reason for review, progress, plan) across diagnoses and produce one combined note that lists only what differs.</Li>
@@ -23662,6 +23668,49 @@ function SavedNoteView({ note }) {
        </div>
       </div>
     </>
+  );
+}
+
+// A generated note that can be edited where it is shown. Once edited it stops following the form, exactly as the clinic
+// note always has, until it is reverted; the text to copy is whatever is showing. `override` is null until edited.
+function useNoteEdit(generated, override, setOverride) {
+  const [editing, setEditing] = useState(false);
+  const isEdited = override !== null && override !== undefined;
+  const text = isEdited ? override : generated;
+  const toggle = () => {
+    if (editing) { if (override === generated) setOverride(null); setEditing(false); }
+    else { if (!isEdited) setOverride(generated); setEditing(true); }
+  };
+  const revert = () => { setOverride(null); setEditing(false); };
+  return { text, generated, isEdited, editing, toggle, revert, edit: setOverride };
+}
+function NoteEditor({ ed, minHeight = 320 }) {
+  return (
+    <>
+      {ed.isEdited && (
+        <div className="rounded-xl px-3 py-2.5 mb-3 flex items-start gap-2" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+          <AlertTriangle size={15} color={T.amber} style={{ marginTop: 2, flexShrink: 0 }} />
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-semibold" style={{ color: T.amber }}>Manually edited</div>
+            <div className="text-[12px]" style={{ color: T.inkSoft }}>This note no longer updates from the form. Revert to pick up any later changes.</div>
+          </div>
+          <button onClick={ed.revert} className="shrink-0 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold active:scale-95" style={{ background: T.surface, color: T.ink, border: `1px solid ${T.border}`, minHeight: 36 }}>Revert</button>
+        </div>
+      )}
+      {ed.editing ? (
+        <textarea value={ed.text} onChange={(e) => ed.edit(e.target.value)} aria-label="Note text" autoFocus className="w-full leading-relaxed rounded-xl px-3 py-3" style={{ color: T.ink, fontFamily: "inherit", fontSize: 14, border: `1px solid ${T.teal}`, background: T.surface, minHeight, resize: "vertical" }} />
+      ) : (
+        <NoteBody text={ed.text} />
+      )}
+    </>
+  );
+}
+function NoteEditButton({ ed }) {
+  return (
+    <button onClick={ed.toggle} aria-label={ed.editing ? "Done editing" : "Edit note text"} className="flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-3 font-semibold text-[14px] active:scale-95" style={{ background: ed.editing ? T.tealTint : T.slateChip, color: ed.editing ? T.tealDark : T.ink, border: `1px solid ${ed.editing ? T.teal : T.border}`, minHeight: 48 }}>
+      {ed.editing ? <Check size={17} /> : <Pencil size={16} />}
+      <span>{ed.editing ? "Done" : "Edit"}</span>
+    </button>
   );
 }
 
@@ -24008,6 +24057,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
   const [noteOpen, setNoteOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  const [noteOverride, setNoteOverride] = useState(null);
 
   const conditions = conditionIds.map((id) => findConditionById(id)).filter(Boolean);
   // Several diagnoses at one visit: the first one's shared answers become the
@@ -24017,8 +24067,9 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
     : null;
   const note = useMemo(() => withAdditionalComments(buildCombinedFollowupNote(session, conditionIds), noteComments), [session, conditionIds, noteComments]);
 
+  const ed = useNoteEdit(note, noteOverride, setNoteOverride);
   const copyNote = async () => {
-    const ok = await copyTextRobust(note);
+    const ok = await copyTextRobust(ed.text);
     if (ok) {
       setCopied(true);
       setCopyError(false);
@@ -24030,7 +24081,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
           id: "followup-visit",
           title: "Follow-up visit",
           kind: "note",
-          text: note,
+          text: ed.text,
           at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         });
       }
@@ -24104,11 +24155,12 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
               </button>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-              <NoteBody text={note} />
-              {onNoteCommentsChange && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
+              <NoteEditor ed={ed} />
+              {onNoteCommentsChange && !ed.isEdited && !ed.editing && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid gap-2" style={{ gridTemplateColumns: "auto 1fr" }}>
+                <NoteEditButton ed={ed} />
                 <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
                 {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
@@ -24197,7 +24249,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
         </div>
       )}
 
-      <PostopSummaryImport onApply={(patch) => onChange({ ...ownState, ...patch })} />
+      <PostopSummaryImport onApply={(patch) => { const merged = { ...ownState, ...patch }; onChange({ ...merged, ...opPostopTimelinePatch(merged, intervalOptions) }); }} />
       <TextField
         label="Procedure performed"
         value={poState.procedureName}
@@ -24293,6 +24345,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
   const [noteOpen, setNoteOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
+  const [noteOverride, setNoteOverride] = useState(null);
 
   const conditions = conditionIds.map((id) => findConditionById(id)).filter(Boolean);
   // Several procedures at one visit: the first one's shared answers become
@@ -24302,8 +24355,9 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
     : null;
   const note = useMemo(() => withAdditionalComments(buildCombinedPostopNote(session, conditionIds), noteComments), [session, conditionIds, noteComments]);
 
+  const ed = useNoteEdit(note, noteOverride, setNoteOverride);
   const copyNote = async () => {
-    const ok = await copyTextRobust(note);
+    const ok = await copyTextRobust(ed.text);
     if (ok) {
       setCopied(true);
       setCopyError(false);
@@ -24315,7 +24369,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
           id: "postop-visit",
           title: "Post-operative follow-up",
           kind: "note",
-          text: note,
+          text: ed.text,
           at: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         });
       }
@@ -24388,11 +24442,12 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
               </button>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-              <NoteBody text={note} />
-              {onNoteCommentsChange && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
+              <NoteEditor ed={ed} />
+              {onNoteCommentsChange && !ed.isEdited && !ed.editing && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid gap-2" style={{ gridTemplateColumns: "auto 1fr" }}>
+                <NoteEditButton ed={ed} />
                 <button onClick={copyNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {copied ? <Check size={17} /> : <Copy size={17} />}
                 {copied ? <span className="ut-confirm">Copied</span> : "Copy"}
@@ -24756,7 +24811,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
 // Selections persist across region changes, so a patient being reviewed
 // for problems in two regions can be assembled without losing the first
 // set - which is why the count lives in the footer rather than the list.
-function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, title }) {
+function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, title, onSwitch, switchLabel }) {
   const [regionKey, setRegionKey] = useState(null);
 
   const counts = useMemo(() => {
@@ -24843,6 +24898,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
             {showRegionPicker ? "Tap the region being reviewed" : `${REGIONS[regionKey].label} \u2014 select the diagnosis (or diagnoses)`}
           </div>
         </div>
+        {onSwitch && <button onClick={onSwitch} className="shrink-0 rounded-xl px-3 text-[13px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>{switchLabel}</button>}
       </div>
 
       {regionKey && (
@@ -25125,12 +25181,20 @@ const OP_FIELD_OTHER_FINDINGS = { type: "text", key: "otherFindings", label: "Ot
 const OP_FIELD_PORTAL_SUTURE = { type: "text", key: "portalSuture", label: "Portal closure suture", suggestions: OP_SUTURE_SUGGESTIONS, placeholder: "e.g. 3-0 nylon" };
 const OP_FIELD_SKIN_CLOSURE = { type: "select", key: "skinClosure", label: "Skin closure", options: ["Subcuticular suture", "Staples"], columns: 2 };
 
+// Each cuff tendon is categorised on its own, so a note can say that the supraspinatus is torn through its full
+// thickness while the infraspinatus is only partly torn and the subscapularis is intact.
+const OP_CUFF_TENDONS = ["Supraspinatus", "Infraspinatus", "Subscapularis", "Teres minor"];
+const OP_CUFF_TEAR_CATEGORIES = ["Intact", "Partial-thickness, articular side", "Partial-thickness, bursal side", "Partial-thickness, intratendinous", "Full-thickness"];
 const OP_TEAR_FINDINGS = [
   { type: "select", key: "tearPattern", label: "Tear pattern", options: ["Crescent", "U-shaped", "L-shaped", "Massive"], columns: 2 },
   { type: "number", key: "tearSize", label: "Tear size", suffix: "cm" },
-  { type: "checkbox", key: "tendons", label: "Tendons involved", options: ["Supraspinatus", "Infraspinatus", "Subscapularis"] },
+  { type: "select", key: "sspTear", label: "Supraspinatus tear", options: OP_CUFF_TEAR_CATEGORIES, columns: 1 },
+  { type: "select", key: "ispTear", label: "Infraspinatus tear", options: OP_CUFF_TEAR_CATEGORIES, columns: 1 },
+  { type: "select", key: "sscTear", label: "Subscapularis tear", options: OP_CUFF_TEAR_CATEGORIES, columns: 1 },
+  { type: "select", key: "tmTear", label: "Teres minor tear", options: OP_CUFF_TEAR_CATEGORIES, columns: 1 },
   OP_FIELD_OTHER_FINDINGS,
 ];
+const OP_TENDONS_REPAIRED = { type: "checkbox", key: "tendons", label: "Tendons repaired", options: OP_CUFF_TENDONS };
 
 const OP_ARTHRO_POSITIONS = ["Beach chair", "Lateral decubitus"];
 const OP_ARTHRO_PREP = [
@@ -25176,6 +25240,7 @@ const OP_RCR_OPEN_BASE = {
   },
   findings: OP_TEAR_FINDINGS,
   technique: [
+    OP_TENDONS_REPAIRED,
     { type: "select", key: "arthroscopyFirst", label: "Diagnostic arthroscopy first", options: ["Performed", "Not performed"], columns: 2 },
     { type: "select", key: "approach", label: "Approach", options: ["Deltopectoral", "Anterolateral deltoid-splitting"], columns: 2 },
     { type: "number", key: "incision", label: "Incision length", suffix: "cm" },
@@ -25281,6 +25346,7 @@ const OP_PROCS_SHOULDER_1 = [
     },
     findings: OP_TEAR_FINDINGS,
     technique: [
+      OP_TENDONS_REPAIRED,
       { type: "conditional", when: (v) => v.position === "Lateral decubitus", fields: [{ type: "number", key: "traction", label: "Traction applied", suffix: "lb" }] },
       { type: "number", key: "anchors", label: "Number of suture anchors" },
       { type: "text", key: "anchorSize", label: "Anchor size and type", placeholder: "e.g. 4.5 mm" },
@@ -25307,8 +25373,9 @@ const OP_PROCS_SHOULDER_1 = [
       { t: "Anterior working portal established under direct visualisation via an outside-in technique" },
       { t: "Scope redirected to the subacromial space; bursectomy performed with a shaver to improve visualisation" },
       { t: "Rotator cuff tear pattern identified and characterised" },
-      { t: "Tear mobility assessed; releases performed as needed (subacromial, articular-sided, coracohumeral ligament release for subscapularis tears)" },
-      { t: "Footprint prepared with a shaver or burr to bleeding bone, avoiding excessive decortication" },
+      { t: "Tear mobility assessed; releases performed as needed (subacromial, articular-sided)" },
+      { t: "Comma tissue preserved for the subscapularis repair", if: (v) => (v.tendons || []).includes("Subscapularis") },
+      { t: "Footprint prepared with a shaver to bleeding bone, avoiding excessive decortication" },
       { t: "Suture anchors placed at the footprint" },
       { t: "Sutures passed through the tendon with a suture passer device" },
       { t: "Sutures tied arthroscopically, securing the tendon to the footprint; tension and coverage confirmed dynamically with a probe" },
@@ -25322,9 +25389,9 @@ const OP_PROCS_SHOULDER_1 = [
     plan: [
       { kind: "immobilisation", text: "Sling immobilisation for 4\u20136 weeks, removed only for hygiene and prescribed exercises" },
       { kind: "general", text: "Ice therapy and elevation for swelling control" },
-      { kind: "analgesia", text: "Pain management: multimodal (paracetamol, NSAIDs if permitted, limited opioids); counsel on the duration of the nerve block" },
-      { kind: "restriction", text: "No active shoulder motion or lifting over 1\u20132 lb until cleared by the surgeon" },
-      { kind: "wound", text: "Wound care: keep the dressing dry for 48\u201372 hours, then may shower with a waterproof cover" },
+      { kind: "analgesia", text: "Pain management: multimodal; counsel on the duration of the nerve block" },
+      { kind: "restriction", text: "No active shoulder motion or lifting over 0.5\u20131 kg until cleared by the surgeon" },
+      { kind: "wound", text: "Wound care: keep the dressing dry till suture removal" },
       { kind: "redflags", text: "Red flags: fever, increasing redness or drainage, uncontrolled pain, sudden loss of motion (concern for stiffness) or new weakness (concern for retear)" },
       { kind: "followup", text: "Follow-up in 10\u201314 days for wound check and suture removal if applicable, then per rehabilitation protocol" },
     ],
@@ -27513,8 +27580,8 @@ const opMini = (o) => opProc({
   findings: [...(o.find || []), OP_FIELD_OTHER_FINDINGS], technique: o.tech || [], closure: [OP_SKIN_SUTURE],
   prep: o.prep || { shoulder: OP_PREP_SHOULDER, elbow: OP_PREP_ELBOW }[o.region] || OP_PREP_HAND,
   steps: o.steps.map(opStepFrom), closureSteps: o.close || ["Layered closure", "Sterile dressing applied and the limb protected as planned"],
-  plan: opPlanLines({ imm: o.imm, extra: o.extra, restr: o.restr, general: o.general, pain: o.pain, wound: o.wound, red: o.red || OP_RED_GENERAL, follow: o.follow }),
-  rehab: opRehab(opPhasesFrom(o.phases), o.ret, o.rf), reviewClass: o.cls,
+  plan: o.planLines || opPlanLines({ imm: o.imm, extra: o.extra, restr: o.restr, general: o.general, pain: o.pain, wound: o.wound, red: o.red || OP_RED_GENERAL, follow: o.follow }),
+  rehab: opRehab(opPhasesFrom(o.phases), o.ret, o.rf), reviewClass: o.cls, clinicGap: !!o.clinicGap,
 });
 
 // ---- standard notes for operations that had only a basic entry: batch 1 -----------------------------------------
@@ -29626,14 +29693,37 @@ const OP_PROCS_MORE_6 = [
     preop: ["Comminuted proximal interphalangeal joint fracture-dislocation with a large volar defect"],
     ind: ["Comminuted proximal interphalangeal fracture-dislocation with loss of more than about 40 per cent of the middle phalangeal base, acute or chronic", "Unstable joint not suitable for fixation or volar plate arthroplasty"],
     cons: ["Donor site morbidity at the carpometacarpal joint, and technical difficulty", "Graft healing and the shape match with the middle phalangeal base"],
-    eq: ["Fine saw or osteotomes and mini-screws", "Image intensifier and loupes"],
-    pit: ["Match the contour of the hamate graft to the missing portion of the middle phalangeal base", "Protect the ulnar neurovascular bundle at the hand donor site", "Fix the graft with two or three small screws"],
-    pos: ["Supine with the hand on a table"],
-    find: [opS("defect", "Volar articular defect", ["Over 40 per cent", "Comminuted"], 2)],
-    tech: [opN("screws", "Screws", "screws")],
-    steps: ["Volar Bruner incision made and the proximal interphalangeal joint exposed by hyperextension", "Comminuted fragments excised and the defect shaped for the graft", "Dorsal hand incision made and the hamate osteochondral graft harvested from the carpometacarpal joint of the ring or little finger", "Graft shaped and positioned to restore the volar lip and the articular contour", "Graft fixed with screws and the joint stability checked", "Donor site closed and the wounds closed in layers"],
-    imm: "Dorsal blocking splint for 3–4 weeks with early active flexion", restr: "No forceful use until union, typically 8–12 weeks", general: "Hand therapy from the first week", red: "Red flags: fever, wound drainage, graft loss, loss of reduction, donor site pain", follow: "Follow-up in 10–14 days; serial radiographs",
-    phases: [["Protection", "0–3 weeks", "dorsal blocking splint, early active flexion"], ["Early mobilisation", "3–6 weeks", "guided motion"], ["Strengthening", "6–12 weeks", "progressive grip"], ["Return to activity", "3–4 months", "return to full activity"]],
+    eq: ["Fine saw or osteotomes and mini-screws", "Image intensifier and loupes", "Bone wax for the donor surfaces"],
+    pit: ["Match the contour of the hamate graft to the missing portion of the middle phalangeal base", "Protect the ulnar neurovascular bundle at the hand donor site", "Fix the graft with two or three small screws", "Suture the flexor sheath beneath the flexor tendons so they glide over the graft"],
+    pos: ["Supine"],
+    find: [opS("digit", "Digit", ["Index", "Middle", "Ring", "Little"], 2), opS("defect", "Volar articular defect", ["Over 40 per cent", "Comminuted"], 2)],
+    tech: [opN("screws", "Screws", "screws"), opS("screwSize", "Screw diameter", ["1.2 mm", "1.5 mm", "2.0 mm"], 3)],
+    prep: [(v, c) => opPrepAnaesthesiaLine(c), (v, c) => opPrepDrapeLine(c, "upper limb"), (v, c) => opPrepTourniquetLine(c), "Standard prep and drape."],
+    steps: [
+      "Volar chevron Brunner incision made and the skin flaps raised.",
+      "Flexor tendon sheath flap raised between the A2 and A4 pulleys.",
+      { t: (v) => `Proximal interphalangeal joint of the ${v.digit ? `${v.digit.toLowerCase()} finger` : "finger"} exposed.` },
+      "Shotgun approach used: the volar plate released from its distal insertion and from the distal insertions of the collateral ligaments, and the joint hyperextended.",
+      "Comminuted volar fragment excised with a small bone saw and the defect shaped for the graft.",
+      "Dorsal skin incision made and the hamate osteochondral graft harvested from the carpometacarpal joint of the ring and little fingers.",
+      "Graft size taken according to the measured defect of the base of the middle phalanx.",
+      "Bone wax applied to the cut bony surfaces and the capsule closed over the donor defect.",
+      "Graft shaped and positioned to restore the volar lip and the articular contour.",
+      { t: (v) => `Graft fixed with ${v.screws ? `${opNumberWord(v.screws)} ` : ""}${v.screwSize ? `${v.screwSize} ` : ""}screws and the joint stability checked.` },
+      "Volar plate sutured to the collateral ligaments on either side.",
+      "Flexor tendon sheath sutured beneath the flexor tendons to allow smooth gliding of the tendons over the bone graft.",
+    ].map(opStepFrom),
+    close: ["Layered closure performed.", "Local anaesthetic infiltration given.", "Sterile dressing and buddy taping applied."],
+    planLines: [
+      { kind: "immobilisation", text: "Buddy strapping for 3–4 weeks with early active flexion." },
+      { kind: "restriction", text: "No forceful use until union." },
+      { kind: "analgesia", text: "Standard post-operative pain management." },
+      { kind: "wound", text: "Keep the dressing clean and dry." },
+      { kind: "general", text: "Refer to occupational therapy tomorrow before discharge." },
+      { kind: "followup", text: "Suture removal after 2 weeks in the clinic, with serial radiographs." },
+      { kind: "redflags", text: "Red flags: fever, wound drainage, graft loss, loss of reduction, donor site pain" },
+    ],
+    phases: [["Protection", "0–4 weeks", "buddy strapping with early active flexion"], ["Early mobilisation", "4–8 weeks", "guided active motion"], ["Strengthening", "8–12 weeks", "progressive grip once union is seen"], ["Return to activity", "3–4 months", "return to full activity"]],
     ret: "Return to driving 3–4 weeks; desk work 1–2 weeks; manual labour 3–4 months", rf: "Red flags: graft failure, stiffness, donor site problems, infection",
   }),
   opMini({
@@ -29934,12 +30024,45 @@ const OP_PROCS_MORE_7 = [
   }),
 ];
 
+// ---- standard notes, batch 4: EIP transfer for EPL rupture ----------------------------------------------------------
+const OP_PROCS_MORE_8 = [
+  opMini({
+    id: "epl-eip-transfer", clinicGap: true, family: "hand-tendon", variant: "EIP transfer for EPL rupture", name: "Extensor indicis proprius transfer for extensor pollicis longus rupture", cls: "tendon-hand", pri: 80, region: "hand",
+    preop: ["Extensor pollicis longus rupture", "Attritional extensor pollicis longus rupture after distal radius fracture", "Rheumatoid extensor pollicis longus rupture"],
+    ind: ["Closed or attritional extensor pollicis longus rupture with loss of active thumb interphalangeal extension, where direct repair is not possible", "Segmental tendon loss, delayed presentation with a contracted tendon, or a failed primary repair"],
+    cons: ["A functioning extensor digitorum communis to the index finger, so that index extension is preserved after the transfer", "The cause of attrition (for example prominent hardware or a Lister tubercle spur), which should be addressed at the same time", "Rheumatoid disease, where several tendons may be involved and a different transfer may be chosen"],
+    eq: ["Standard hand instrument set and a tendon passer", "Non-absorbable suture (3-0 or 4-0) for a Pulvertaft weave", "K-wire for temporary interphalangeal joint pinning if used", "Tourniquet or WALANT, loupe magnification"],
+    pit: ["Divide the extensor indicis proprius distal to the metacarpophalangeal joint, ulnar and deep to the extensor digitorum communis, and make sure the index finger keeps its own extensor", "Pass the tendon in a straight, subcutaneous line to the thumb and avoid a tight or angulated course", "Set the tension with the wrist in neutral and test it with the tenodesis effect before closing", "Protect the dorsal sensory branches of the radial nerve"],
+    pos: ["Supine with the arm on a hand table"],
+    find: [opS("cause", "Cause", ["Attritional rupture", "Traumatic loss of tendon", "Rheumatoid rupture", "Failed primary repair"], 2), opS("edc", "Extensor digitorum communis to the index", ["Present and functioning", "Absent"], 2), opS("stump", "Distal EPL stump", ["Usable", "Short or frayed"], 2)],
+    tech: [opS("junction", "Tendon junction", ["Pulvertaft weave", "End-to-end suture"], 2), opS("kwire", "K-wire across the interphalangeal joint", ["Placed", "Not placed"], 2)],
+    steps: [
+      "Dorsal incision made over the thumb metacarpal and the distal extensor pollicis longus stump identified, protecting the dorsal sensory branches of the radial nerve",
+      ["Cause of the rupture identified and addressed, with prominent hardware or a bony spur removed or smoothed", (v) => v.cause === "Attritional rupture" || v.cause === "Rheumatoid rupture"],
+      "Frayed tendon excised back to healthy tendon and the distal stump prepared",
+      "Second incision made over the dorsum of the index metacarpophalangeal joint and the extensor indicis proprius identified ulnar and deep to the extensor digitorum communis",
+      "Extensor indicis proprius divided distal to the metacarpophalangeal joint, leaving the extensor digitorum communis to the index finger intact and confirming independent index extension",
+      "Third incision made over the dorsum of the wrist or distal forearm and the extensor indicis proprius withdrawn proximally with a tendon retriever",
+      "Tendon passed subcutaneously to the thumb with a tendon passer, in a straight line of pull",
+      ["Extensor indicis proprius woven through the distal extensor pollicis longus stump (Pulvertaft weave) and secured with non-absorbable sutures", (v) => v.junction !== "End-to-end suture"],
+      ["Extensor indicis proprius sutured end-to-end to the distal stump with a core suture", (v) => v.junction === "End-to-end suture"],
+      "Tension set with the wrist in neutral and the thumb in extension, and checked with the tenodesis effect: thumb extension with wrist flexion and relaxation with wrist extension",
+      ["K-wire placed across the interphalangeal joint in extension to protect the transfer", (v) => v.kwire === "Placed"],
+      "Independent index finger extension and thumb extension confirmed before closure",
+    ],
+    close: ["Wounds closed in layers", "Sterile dressing applied and a splint holding the wrist and thumb in extension"],
+    imm: "Splint holding the wrist in about 30 degrees of extension and the thumb extended for 4 weeks", restr: "No resisted thumb extension for 8–12 weeks", general: "Hand therapy to retrain the transfer: thumb extension is learned with the index finger relaxed", red: "Red flags: fever, wound drainage, sudden loss of thumb extension (rupture of the transfer), numbness over the radial hand", follow: "Follow-up in 10–14 days for wound check and suture removal",
+    phases: [["Protection", "0–4 weeks", "splint with the wrist and thumb in extension, free finger motion"], ["Early mobilisation", "4–6 weeks", "supervised active thumb extension and flexion within limits, motion retraining"], ["Strengthening", "6–12 weeks", "progressive strengthening"], ["Return to activity", "3 months", "return to full activity"]],
+    ret: "Return to driving 6 weeks; desk work 2 weeks; manual labour 3 months", rf: "Red flags: rupture of the transfer, loss of thumb extension, extensor lag, adhesions, infection",
+  }),
+];
+
 // ---- basic entries: every clinic operation without a full template ------------------------------------------------
 // Generated from the clinic procedure lists at load, so nothing is typed twice. A (diagnosis, operation) pair is
 // covered when its name links to a full module, or the module lists that exact pair in `covers`; every other pair
 // gets a basic entry. A basic entry has no standard narrative: the surgeon writes the steps. Names of one or two
 // words ("ORIF", "Biopsy") are generic, so they get one entry per diagnosis, qualified by it.
-const OP_FULL_PROCEDURES = [...OP_PROCS_SHOULDER_1, ...OP_PROCS_SHOULDER_2, ...OP_PROCS_ELBOW, ...OP_PROCS_WRIST, ...OP_PROCS_HAND, ...OP_PROCS_NERVE, ...OP_PROCS_MORE_1, ...OP_PROCS_MORE_2, ...OP_PROCS_MORE_3, ...OP_PROCS_MORE_4, ...OP_PROCS_MORE_5, ...OP_PROCS_MORE_6, ...OP_PROCS_MORE_7];
+const OP_FULL_PROCEDURES = [...OP_PROCS_SHOULDER_1, ...OP_PROCS_SHOULDER_2, ...OP_PROCS_ELBOW, ...OP_PROCS_WRIST, ...OP_PROCS_HAND, ...OP_PROCS_NERVE, ...OP_PROCS_MORE_1, ...OP_PROCS_MORE_2, ...OP_PROCS_MORE_3, ...OP_PROCS_MORE_4, ...OP_PROCS_MORE_5, ...OP_PROCS_MORE_6, ...OP_PROCS_MORE_7, ...OP_PROCS_MORE_8];
 const OP_SIDED_BY_REGION = { shoulder: "shoulder", elbow: "elbow", wrist: "wrist", hand: "hand", peripheralNerve: "arm" };
 
 function opShortDiagnosis(name) { return String(name).replace(/\s*[(\u201c].*$/, "").trim(); }
@@ -30036,10 +30159,29 @@ function opJoin(items) {
   if (a.length <= 1) return a.join("");
   return `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`;
 }
-function opContext(procs, side) {
+function opContext(procs, side, state) {
   const ids = procs.map((p) => p.id);
-  return { ids, side: side || "", has: (id) => ids.includes(id) };
+  const st = state || {};
+  // `g` carries what the safety section recorded, so a step can say "Under GA" or "TQ inflated to 250 mmHg" from it
+  const g = { anaesthesia: st.op__anaesthesia || "", antibiotic: st.op__antibiotic || "", tourniquet: st.op__tourniquet || "", tqPressure: st.op__tqPressure, tqTime: st.op__tqTime };
+  return { ids, side: side || "", has: (id) => ids.includes(id), g };
 }
+// Preparation lines written from the safety section; each returns null when there is nothing to say.
+function opAnaesthesiaPhrase(a) {
+  return { "General": "GA", "General with regional block": "GA with a regional block", "Regional block": "regional block", "Local with sedation": "local anaesthesia with sedation" }[a] || (a === OP_WALANT ? "WALANT" : "");
+}
+function opPrepAnaesthesiaLine(c) {
+  const phrase = opAnaesthesiaPhrase(c.g.anaesthesia);
+  if (!phrase) return null;
+  return `Under ${phrase}${c.g.antibiotic === "Given" ? ", antibiotics at induction" : ""}.`;
+}
+function opPrepDrapeLine(c, limb) { return opCap(`${c.side ? `${c.side.toLowerCase()} ` : ""}${limb} painted and draped.`); }
+function opPrepTourniquetLine(c) {
+  if (c.g.tourniquet !== "Used") return null;
+  const p = opHasValue(c.g.tqPressure), t = opHasValue(c.g.tqTime);
+  return p && t ? `TQ inflated to ${c.g.tqPressure} mmHg for a total of ${c.g.tqTime} mins.` : p ? `TQ inflated to ${c.g.tqPressure} mmHg.` : t ? `TQ inflated for a total of ${c.g.tqTime} mins.` : "TQ inflated.";
+}
+function opNumberWord(n) { return ["zero", "one", "two", "three", "four", "five", "six"][Number(n)] || String(n); }
 // Clock-face positions are written for a right shoulder and mirrored for a left one, so a note never
 // quotes the wrong side. "3", "5:30" and "12" are right-shoulder positions; the order of a range is kept.
 function opClockMinutes(text) { const [h, m] = String(text).split(":"); return (Number(h) % 12) * 60 + Number(m || 0); }
@@ -30124,12 +30266,7 @@ function opFieldLines(proc, fields, state) {
   return lines;
 }
 // The numbered steps of one procedure, as they will read in the note.
-function opStepTexts(proc, state, procs, isPrimary) {
-  const v = opLocalView(state, proc.id);
-  const ctx = opContext(procs, opSideWord(state));
-  const body = proc.steps.filter((s) => !s.if || s.if(v, ctx)).map((s) => opStepText(s, v, ctx));
-  return isPrimary ? [...proc.prep, ...body, ...proc.closureSteps] : body;
-}
+function opStepTexts(proc, state, procs, isPrimary) { return opStandardSteps(proc, state, procs, isPrimary).map((x) => x.text); }
 function opSideWord(state) { return state.op__side ? String(state.op__side) : ""; }
 function opProcedureLabel(proc, state) {
   const side = opSideWord(state).toLowerCase();
@@ -30291,9 +30428,10 @@ function buildRehabNote(s) {
 // one the surgeon deleted never comes back. Lines they add themselves are simply theirs.
 function opStandardSteps(proc, state, procs, isPrimary) {
   const v = opLocalView(state, proc.id);
-  const ctx = opContext(procs, opSideWord(state));
-  const prep = isPrimary ? proc.prep.map((t, i) => ({ ref: `prep:${i}`, text: t })) : [];
-  const body = proc.steps.map((st, i) => (!st.if || st.if(v, ctx) ? { ref: `steps:${i}`, text: opStepText(st, v, ctx) } : null)).filter(Boolean);
+  const ctx = opContext(procs, opSideWord(state), state);
+  // a preparation line is a string, or a function of the form and the safety section that may return null
+  const prep = isPrimary ? proc.prep.map((t, i) => ({ ref: `prep:${i}`, text: typeof t === "function" ? t(v, ctx) : t })).filter((x) => opHasValue(x.text)) : [];
+  const body = proc.steps.map((st, i) => (!st.if || st.if(v, ctx) ? { ref: `steps:${i}`, text: opStepText(st, v, ctx) } : null)).filter((x) => x && opHasValue(x.text));
   const closure = isPrimary ? proc.closureSteps.map((t, i) => ({ ref: `closure:${i}`, text: t })) : [];
   return [...prep, ...body, ...closure];
 }
@@ -30547,8 +30685,99 @@ function opPostopPatchFromSummary(text) {
   const procedureName = opCap(opJoin(procs.map((p) => opLowerFirstName(p.name))));
   const patch = { procedureName, opModuleIds: procs.map((p) => p.id), opModuleProcedureName: procedureName };
   if (parsed.date) patch.surgeryDate = parsed.date;
+  const details = opSummaryDetailLines(text);
+  if (details.length) patch.opDetails = details.join("\n");
   const description = `Filled in: ${procedureName}${parsed.date ? `, on ${formatDateDMY(parsed.date)}` : ""}${parsed.side ? ` (${parsed.side.toLowerCase()} side in the summary; the side itself is not changed here)` : ""}.`;
   return { patch, description, side: parsed.side };
+}
+
+// ---- operation-first entry, and a smarter fill from the operation summary ---------------------------------------------
+// The post-operative review can begin from the operation. The note itself is kept per diagnosis, so an operation is
+// mapped to the diagnosis the clinic notes file it under; where that is not unique the surgeon picks.
+let opDxIdIndex = null;
+function opDiagnosisIdsByName() {
+  if (opDxIdIndex) return opDxIdIndex;
+  const m = new Map();
+  Object.keys(REGIONS).forEach((r) => REGIONS[r].subsections.forEach((sub) => sub.conditions.forEach((c) => surgicalOptionsFor(c.id).forEach((n) => {
+    const k = n.toLowerCase();
+    if (!m.has(k)) m.set(k, new Set());
+    m.get(k).add(c.id);
+  }))));
+  opDxIdIndex = m;
+  return m;
+}
+function opDiagnosisIdsOf(p) {
+  const out = new Set();
+  if (p.basic) {
+    opFamiliesOf(p).forEach((f) => { const id = f.replace(/^dx-/, ""); if (opDiagnosisRegions().has(id)) out.add(id); });
+    return [...out];
+  }
+  (p.covers || []).forEach(([d]) => { if (opDiagnosisRegions().has(d)) out.add(d); });
+  const byName = opDiagnosisIdsByName();
+  [p.name, ...p.clinicNames].forEach((n) => {
+    const e = catalogueForClinicName(n);
+    if (e && e.id === p.id) (byName.get(n.toLowerCase()) || new Set()).forEach((id) => out.add(id));
+  });
+  return [...out];
+}
+// The diagnoses an operation can be reviewed under: its own, or (for an operation no clinic diagnosis offers, such as
+// the EPL notes) those of the operations beside it in its family, or finally every diagnosis in its region.
+function opDiagnosisCandidates(p) {
+  const own = opDiagnosisIdsOf(p);
+  if (own.length) return { ids: own, exact: true };
+  const siblings = new Set();
+  OPERATIVE_PROCEDURES.filter((q) => q.id !== p.id && !q.basic && q.family === p.family).forEach((q) => opDiagnosisIdsOf(q).forEach((id) => siblings.add(id)));
+  if (siblings.size) return { ids: [...siblings], exact: false };
+  const region = [];
+  opDiagnosisRegions().forEach((r, id) => { if (r === p.region) region.push(id); });
+  return { ids: region, exact: false };
+}
+
+// The lines of an operation summary that describe the operation (diagnosis, findings and technique, implants), without
+// the heading sentence and without the token.
+function opSummaryDetailLines(text) {
+  return String(text || "").split("\n").map((l) => l.trim()).filter((l) => l && !/^Operation summary:/i.test(l) && !/^UT-OP v\d+/i.test(l));
+}
+function opPostopDetailsPart(po) {
+  const lines = String((po && po.opDetails) || "").split("\n").map((l) => l.trim()).filter(Boolean);
+  return lines.length ? { heading: "Operative Details", text: lines.join(" ") } : null;
+}
+
+// What this visit and the next follow from the time since surgery. It is only ever applied when the surgeon asks for it
+// (by filling from the operation summary, or by the button), and every value it sets is an ordinary answer that can be
+// changed. Without a protocol only the reasons for the visit follow the timeline.
+function opPostopTimelinePatch(po, intervalOptions) {
+  const state = po || {};
+  const days = daysSinceSurgery(state.surgeryDate);
+  const period = state.reviewPeriod ? opReviewPeriodById(state.reviewPeriod) : opReviewPeriodForDays(days);
+  if (!period) return {};
+  const procs = opModulesForPostop(state);
+  const patch = { timelineSet: true };
+  const reason = period.id === "2w" ? ["Wound check", "Suture removal"] : period.id === "6w" ? ["Scheduled post-operative review"] : ["Scheduled post-operative review", "Return to work/sport assessment"];
+  if (opMilestonesFor(procs, period.id).some((t) => /K-wire|pin/i.test(t))) reason.push("Pin removal");
+  patch.reason = reason;
+  if (!procs.length) return patch;
+  const protocol = opProtocolForReview(procs, days, state.reviewPeriod || null);
+  const next = opNextReview(procs, period.id);
+  const plan = [];
+  const weeks = [...String((protocol.immobilisation || [])[0] || "").matchAll(/(\d+)\s*(?:\u2013\s*(\d+))?\s*weeks?/gi)].map((m) => Number(m[2] || m[1]));
+  if (weeks.length && days != null) plan.push(days < Math.max(...weeks) * 7 ? "Continue immobilization (splint/cast/sling)" : "Wean from immobilization");
+  if (protocol.phase) plan.push(protocol.phase.number >= 2 ? "Progress rehabilitation / advance loading" : "Continue current rehabilitation protocol");
+  if (opMilestonesFor(procs, period.id).some((t) => /radiograph|\bCT\b|imaging|electrodiagnostic/i.test(t))) plan.push("Further imaging or investigations");
+  plan.push(next && next.final ? "Discharge from follow-up" : "Continue routine follow-up");
+  patch.planOptions = plan;
+  if (!next || next.final) {
+    patch.followUpInterval = "Final";
+    patch.followUpIntervalOther = null;
+    patch.nextReviewReason = [];
+  } else {
+    const o = opNextReviewOption(intervalOptions, next.next.id);
+    patch.followUpInterval = o.interval;
+    patch.followUpIntervalOther = o.other || null;
+    const after = opNextReview(procs, next.next.id);
+    patch.nextReviewReason = next.milestones.some((t) => /radiograph|\bCT\b|imaging|union|fusion|electrodiagnostic/i.test(t)) ? ["Assess healing progress"] : after && after.final ? ["Pre-discharge assessment"] : ["Routine post-operative review"];
+  }
+  return patch;
 }
 
 /* ============================================================================
@@ -30940,6 +31169,24 @@ function OpSelectedStrip({ selectedIds, onToggle }) {
 // as tap targets in the row.
 function OpProcedurePicker({ selectedIds, onToggle, region, onRegion }) {
   const counts = useMemo(() => { const c = {}; OP_REGIONS.forEach((r) => { c[r.id] = opCountInRegion(r.id); }); return c; }, []);
+  // Once an operation is chosen the long list is out of the way: only the rows that hold the chosen operations remain,
+  // and a button brings the rest back for adding another. It folds again whenever the section is reopened.
+  const [showAll, setShowAll] = useState(false);
+  const collapsed = selectedIds.length > 0 && !showAll;
+  const selectedRows = useMemo(() => {
+    if (!collapsed) return [];
+    const rows = new Map();
+    selectedIds.forEach((id) => {
+      const p = opProcedureById(id);
+      if (!p) return;
+      for (const r of [p.region, ...opRegionsOf(p)]) {
+        const set = opRowsForRegion(r);
+        const row = [...set.templates, ...set.diagnosis].find((x) => x.procs.some((q) => q.id === id));
+        if (row) { if (!rows.has(row.id)) rows.set(row.id, row); break; }
+      }
+    });
+    return [...rows.values()];
+  }, [collapsed, selectedIds]);
   const regionInfo = OP_REGIONS.find((r) => r.id === region);
   const accent = REGION_ACCENT[region] || {};
   const rows = region ? opRowsForRegion(region) : { templates: [], diagnosis: [] };
@@ -30950,7 +31197,34 @@ function OpProcedurePicker({ selectedIds, onToggle, region, onRegion }) {
   return (
     <div>
       <OpSelectedStrip selectedIds={selectedIds} onToggle={onToggle} />
-      {!region ? (
+      {collapsed ? (
+        <>
+          <table className="w-full" style={{ borderCollapse: "collapse", tableLayout: "fixed" }}>
+            <tbody>
+              {selectedRows.map((f) => (
+                <tr key={f.id} style={{ borderTop: `1px solid ${T.border}` }}>
+                  <th scope="row" className="text-left align-top py-3 pr-2 text-[14px] font-semibold" style={{ color: T.ink, width: "36%" }}>{f.name}</th>
+                  <td className="py-2">
+                    <div className="flex flex-wrap gap-1.5">
+                      {f.procs.map((p) => {
+                        const active = selectedIds.includes(p.id);
+                        return (
+                          <button key={p.id} onClick={() => onToggle(p.id)} aria-pressed={active} className="rounded-full px-3.5 py-2 text-[14px] font-medium active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>
+                            {p.variantName}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button onClick={() => setShowAll(true)} className="w-full flex items-center justify-center gap-1.5 rounded-xl px-4 mt-3 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>
+            <Plus size={17} /> Add or change operations
+          </button>
+        </>
+      ) : !region ? (
         <div className="rounded-2xl overflow-hidden mx-auto w-full max-w-[400px] md:max-w-[560px]" style={{ background: "#FBF9F3", border: `1px solid ${T.border}`, boxShadow: T.shadowElevated }}>
           <BodyMap onSelect={onRegion} counts={counts} unit="operations" uid="opm" />
         </div>
@@ -31002,6 +31276,11 @@ function OpProcedurePicker({ selectedIds, onToggle, region, onRegion }) {
               ))}
             </tbody>
           </table>
+          {selectedIds.length > 0 && (
+            <button onClick={() => setShowAll(false)} className="w-full flex items-center justify-center gap-1.5 rounded-xl px-4 mt-3 text-[14px] font-semibold active:scale-95" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}`, minHeight: 48 }}>
+              <Check size={17} /> Done adding
+            </button>
+          )}
         </>
       )}
     </div>
@@ -31174,6 +31453,18 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
   const note = useMemo(() => withAdditionalComments(buildOperativeNote(op), noteComments), [op, noteComments]);
   const summary = useMemo(() => buildOperationSummary(op), [op]);
   const rehab = useMemo(() => buildRehabNote(op), [op]);
+  // Each view of the note can be edited where it is shown. The edit is kept with the note, so it survives leaving the
+  // screen, and "New patient" clears it with everything else.
+  const edNote = useNoteEdit(note, op.op__editNote ?? null, (v) => setField("op__editNote", v));
+  const edSummary = useNoteEdit(summary, op.op__editSummary ?? null, (v) => setField("op__editSummary", v));
+  const edRehab = useNoteEdit(rehab, op.op__editRehab ?? null, (v) => setField("op__editRehab", v));
+
+  // Continue, from the operation search, lands on the next section; the flag is cleared as soon as it is used.
+  useEffect(() => {
+    if (!op.op__goto) return;
+    setOpenId(op.op__goto);
+    onChange((s) => { const { op__goto, ...rest } = s; return rest; });
+  }, [op.op__goto, onChange]);
 
   // The date of the operation is, to begin with, the day the note is written; it can be changed.
   useEffect(() => { onChange((s) => (s.op__date ? s : { ...s, op__date: opTodayISO() })); }, [onChange]);
@@ -31252,9 +31543,10 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
     rehab ? { id: "rehab", label: "Rehabilitation", text: rehab, copy: "Copy protocol" } : null,
   ].filter(Boolean);
   const current = tabs.find((t) => t.id === tab) || tabs[0];
+  const ed = { note: edNote, summary: edSummary, rehab: edRehab }[current.id];
 
   const copy = async () => {
-    const ok = await copyTextRobust(current.text);
+    const ok = await copyTextRobust(ed.text);
     if (ok) {
       setCopied(current.id);
       setCopyError(false);
@@ -31264,9 +31556,9 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
       if (onNoteSaved) {
         const at = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         const title = opNoteHeadline(op) || "Operative note";
-        if (rehab) onNoteSaved({ id: "operative-note:rehab", title, kind: "operativeRehab", text: rehab, at });
-        if (summary) onNoteSaved({ id: "operative-note:summary", title, kind: "operativeSummary", text: summary, at });
-        onNoteSaved({ id: "operative-note", title, kind: "operative", text: note, at });
+        if (rehab) onNoteSaved({ id: "operative-note:rehab", title, kind: "operativeRehab", text: edRehab.text, at });
+        if (summary) onNoteSaved({ id: "operative-note:summary", title, kind: "operativeSummary", text: edSummary.text, at });
+        onNoteSaved({ id: "operative-note", title, kind: "operative", text: edNote.text, at });
       }
     } else {
       setCopied(null);
@@ -31353,14 +31645,17 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
               </div>
             )}
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-              {current.text ? <NoteBody text={current.text} /> : <div className="text-[14px]" style={{ color: T.inkSoft }}>Choose the procedures performed to start the note.</div>}
-              {current.id === "note" && onNoteCommentsChange && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
+              {ed.text ? <NoteEditor ed={ed} /> : <div className="text-[14px]" style={{ color: T.inkSoft }}>Choose the procedures performed to start the note.</div>}
+              {current.id === "note" && onNoteCommentsChange && !ed.isEdited && !ed.editing && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
             </div>
             <div className="px-4 py-3" style={{ borderTop: `1px solid ${T.border}` }}>
-              <button onClick={copy} disabled={!current.text} className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48, opacity: current.text ? 1 : 0.5 }}>
-                {copied === current.id ? <Check size={17} /> : <Copy size={17} />}
-                {copied === current.id ? <span className="ut-confirm">Copied</span> : current.copy}
-              </button>
+              <div className="grid gap-2" style={{ gridTemplateColumns: ed.text ? "auto 1fr" : "1fr" }}>
+                {ed.text && <NoteEditButton ed={ed} />}
+                <button onClick={copy} disabled={!ed.text} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48, opacity: ed.text ? 1 : 0.5 }}>
+                  {copied === current.id ? <Check size={17} /> : <Copy size={17} />}
+                  {copied === current.id ? <span className="ut-confirm">Copied</span> : current.copy}
+                </button>
+              </div>
               {copyError && (
                 <div className="text-[13px] text-center mt-2" style={{ color: T.red }}>
                   Couldn't copy automatically — tap and hold the text above to select and copy it manually.
@@ -31375,7 +31670,7 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
 }
 
 // The Search button on the green bar, while an operative note is open: it searches the operations, not the diagnoses.
-function OperationSearch({ selectedIds, onToggle, onClose }) {
+function OperationSearch({ selectedIds, onToggle, onClose, onContinue }) {
   const [query, setQuery] = useState("");
   const groups = useMemo(() => opSearchProcedures(query), [query]);
   return (
@@ -31429,6 +31724,15 @@ function OperationSearch({ selectedIds, onToggle, onClose }) {
           )}
         </div>
       </div>
+      {selectedIds.length > 0 && (
+        <div className="px-3 py-3 shrink-0" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
+          <div className="max-w-2xl lg:max-w-4xl mx-auto">
+            <button onClick={onContinue} className="w-full rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+              {`Continue with ${selectedIds.length} operation${selectedIds.length === 1 ? "" : "s"}`}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -31445,7 +31749,7 @@ function PostopSummaryImport({ onApply }) {
     const r = opPostopPatchFromSummary(text);
     if (!r) { setMsg({ ok: false, text: "That is not an operation summary. Copy the summary line from the operative note preview and paste it here." }); return; }
     onApply(r.patch);
-    setMsg({ ok: true, text: r.description });
+    setMsg({ ok: true, text: r.patch.surgeryDate ? `${r.description} The reasons for this visit, the plan and the next review are set from the follow-up timeline: check and edit them.` : r.description });
     setText("");
     setOpen(false);
   };
@@ -31536,6 +31840,12 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
           </button>
         </div>
       )}
+      {protocol && (
+        <div className="mb-3">
+          <button onClick={() => setMany(opPostopTimelinePatch(poState, intervalOptions))} className="w-full rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}`, minHeight: 48 }}>Set this visit and the next from the timeline</button>
+          {poState.timelineSet && <div className="text-[13px] mt-1.5" style={{ color: T.inkSoft }}>Set from the follow-up timeline: the reasons, the plan and the next review. Check and edit them.</div>}
+        </div>
+      )}
       {!protocol && period && poState.procedureName && poState.procedureName.trim() && (
         <div className="text-[13px] mb-3" style={{ color: T.inkSoft }}>No operative protocol is linked to this procedure name. Use Fill from an operative note summary to link it.</div>
       )}
@@ -31550,6 +31860,62 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
           <SubLabel>Progress against the protocol</SubLabel>
           <ButtonSelect options={OP_PROGRESS_OPTIONS} value={poState.protocolProgress || null} onChange={(v) => set("protocolProgress", v)} columns={1} />
         </>
+      )}
+    </div>
+  );
+}
+
+// The post-operative review can begin from the operation, which is how a surgeon knows the patient. The diagnosis the note
+// is kept under follows from the operation; where the clinic notes file it under several, the surgeon picks.
+function PostopOperationPicker({ onContinue, onBack, onSwitch }) {
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [region, setRegion] = useState(undefined);
+  const [choice, setChoice] = useState({});
+  const toggle = (id) => setSelectedIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+  const procs = selectedIds.map(opProcedureById).filter(Boolean);
+  const autoRegion = procs.length ? procs[0].region : null;
+  const activeRegion = region === undefined ? autoRegion : region || null;
+  const items = procs.map((p) => {
+    const c = opDiagnosisCandidates(p);
+    return { p, ids: c.ids, exact: c.exact, dxId: choice[p.id] && c.ids.includes(choice[p.id]) ? choice[p.id] : c.ids[0] };
+  });
+  const shortName = (id) => opShortDiagnosis(findConditionById(id).name);
+  return (
+    <div className="flex flex-col" style={{ height: "calc(100vh - 56px)", background: T.bg }}>
+      <div className="flex items-center gap-2 px-3 py-3 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
+        <button onClick={onBack} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Back"><ArrowLeft size={22} color={T.ink} /></button>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-[15px]" style={{ color: T.ink }}>Post-operative Follow-up</div>
+          <div className="text-[12px] truncate" style={{ color: T.inkSoft }}>{selectedIds.length ? `${selectedIds.length} operation${selectedIds.length === 1 ? "" : "s"} selected` : activeRegion ? "Choose the operation performed" : "Tap the region operated on"}</div>
+        </div>
+        <button onClick={onSwitch} className="shrink-0 rounded-xl px-3 text-[13px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>By diagnosis</button>
+      </div>
+      <div className="px-3 pt-3 pb-28" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div className="max-w-2xl lg:max-w-4xl mx-auto">
+          <OpProcedurePicker selectedIds={selectedIds} onToggle={toggle} region={activeRegion} onRegion={(r) => setRegion(r)} />
+          {items.filter((i) => i.ids.length > 1).map((i) => (
+            <div key={i.p.id} className="mt-4">
+              <div className="text-[13px] mb-1.5" style={{ color: T.inkSoft }}>{i.exact ? `Review ${i.p.name} under which diagnosis?` : `No clinic diagnosis offers ${i.p.name}: choose the closest.`}</div>
+              <div role="group" aria-label={`Diagnosis for ${i.p.name}`} className="flex flex-wrap gap-1.5">
+                {i.ids.map((id) => {
+                  const active = i.dxId === id;
+                  return (
+                    <button key={id} aria-pressed={active} onClick={() => setChoice((c) => ({ ...c, [i.p.id]: id }))} className="rounded-full px-3.5 py-2 text-[14px] font-medium active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>{shortName(id)}</button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {selectedIds.length > 0 && (
+        <div className="px-3 py-3 shrink-0" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
+          <div className="max-w-2xl lg:max-w-4xl mx-auto">
+            <button onClick={() => onContinue(items.map((i) => ({ id: i.p.id, dxId: i.dxId })))} className="w-full rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+              {`Continue with ${selectedIds.length} operation${selectedIds.length === 1 ? "" : "s"}`}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -32181,6 +32547,26 @@ export default function App() {
     addSelectedToSession();
     setScreen({ view: "followupVisit", conditionIds: followupSelectedIds });
   }, [followupSelectedIds, addSelectedToSession]);
+  // The post-operative review begins from the operation by default; the diagnosis list stays one tap away.
+  const [postopMode, setPostopMode] = useState("operation");
+  const continueToPostopFromOperations = useCallback((items) => {
+    const byDx = new Map();
+    items.forEach(({ id, dxId }) => { if (!byDx.has(dxId)) byDx.set(dxId, []); byDx.get(dxId).push(id); });
+    const dxIds = [...byDx.keys()];
+    dxIds.forEach((dxId) => {
+      const condition = findConditionById(dxId);
+      if (!condition) return;
+      setSession((s) => {
+        const withCondition = addConditionToSession(s, condition);
+        const ids = byDx.get(dxId);
+        const name = opCap(opJoin(ids.map((id) => opLowerFirstName(opProcedureById(id).name))));
+        const prev = (withCondition.statesByConditionId[dxId] || {}).postop || {};
+        return applyConditionUpdate(withCondition, dxId, { postop: { ...prev, procedureName: name, opModuleIds: ids, opModuleProcedureName: name } });
+      });
+    });
+    setFollowupSelectedIds(dxIds);
+    setScreen({ view: "postopVisit", conditionIds: dxIds });
+  }, []);
   const continueToPostopVisit = useCallback(() => {
     addSelectedToSession();
     setScreen({ view: "postopVisit", conditionIds: followupSelectedIds });
@@ -32192,8 +32578,12 @@ export default function App() {
   }, []);
 
   const combinedNote = useMemo(() => withAdditionalComments(buildCombinedNote(session), noteComments.visit), [session, noteComments.visit]);
+  const [combinedOverride, setCombinedOverride] = useState(null);
+  const edCombined = useNoteEdit(combinedNote, combinedOverride, setCombinedOverride);
+  // a new patient starts from a clean note
+  useEffect(() => { if (!session.order.length) setCombinedOverride(null); }, [session.order.length]);
   const copyCombinedNote = async () => {
-    const ok = await copyTextRobust(combinedNote);
+    const ok = await copyTextRobust(edCombined.text);
     if (ok) {
       setCombinedCopied(true);
       setCombinedCopyError(false);
@@ -32255,13 +32645,19 @@ export default function App() {
 
       {screen.view === "postopSelect" && (
         <div className="ut-page">
-        <FollowupConditionPicker
-          title="Post-operative Follow-up"
-          selectedIds={followupSelectedIds}
-          onToggle={toggleFollowupSelection}
-          onContinue={continueToPostopVisit}
-          onBack={goHome}
-        />
+        {postopMode === "operation" ? (
+          <PostopOperationPicker onContinue={continueToPostopFromOperations} onBack={goHome} onSwitch={() => setPostopMode("diagnosis")} />
+        ) : (
+          <FollowupConditionPicker
+            title="Post-operative Follow-up"
+            selectedIds={followupSelectedIds}
+            onToggle={toggleFollowupSelection}
+            onContinue={continueToPostopVisit}
+            onBack={goHome}
+            onSwitch={() => setPostopMode("operation")}
+            switchLabel="By operation"
+          />
+        )}
         </div>
       )}
 
@@ -32390,11 +32786,12 @@ export default function App() {
               </button>
             </div>
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-              <NoteBody text={combinedNote} />
-              <NoteComments value={noteComments.visit} onChange={setVisitComments} />
+              <NoteEditor ed={edCombined} />
+              {!edCombined.isEdited && !edCombined.editing && <NoteComments value={noteComments.visit} onChange={setVisitComments} />}
             </div>
             <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${T.border}` }}>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid gap-2" style={{ gridTemplateColumns: "auto 1fr" }}>
+                <NoteEditButton ed={edCombined} />
                 <button onClick={copyCombinedNote} className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
                 {combinedCopied ? <Check size={17} /> : <Copy size={17} />}
                 {combinedCopied ? "Copied" : "Copy"}
@@ -32411,7 +32808,7 @@ export default function App() {
       )}
 
       {searchOpen && (screen.view === "operativeNote"
-        ? <OperationSearch selectedIds={opNote.op__procedures || []} onToggle={(id) => updateOp((cur) => opToggleProcedure(cur, id))} onClose={() => setSearchOpen(false)} />
+        ? <OperationSearch selectedIds={opNote.op__procedures || []} onToggle={(id) => updateOp((cur) => opToggleProcedure(cur, id))} onClose={() => setSearchOpen(false)} onContinue={() => { setSearchOpen(false); updateOp((cur) => ({ ...cur, op__goto: "details" })); }} />
         : <TemplateSearch onSelect={selectFromSearch} onClose={() => setSearchOpen(false)} selectedIds={inFollowupSelection ? followupSelectedIds : undefined} />)}
     </div>
     </ReferenceCtx.Provider>
