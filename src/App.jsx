@@ -15231,6 +15231,7 @@ const WHATS_NEW = [
       "Operative note: a fourth visit type covering every operation in the clinic notes, each with a standard note (findings, technique, steps, plan, rehabilitation); three general entries have a basic one where you write the steps. Choose the region on the body map, then the operation from a table. Nothing is pre-ticked.",
       "Operative note: 99 more operations now have a full standard note, completing the clinic list: shoulder and elbow revision and infection, fractures, clavicle and sternoclavicular surgery, scapular and nerve reconstructions, hand tumours and infections, wrist and thumb salvage.",
       "Operative note: an operation is now listed in every region where the clinic notes offer it, so carpal tunnel release opens from both the wrist and the peripheral nerve lesions, and distal radius and scaphoid fixation from the hand as well. It is one note, chosen once, and the body map counts include them.",
+      "Operations on a particular digit now ask which one: felon and paronychia drainage, nail bed, fingertip, glomus, PIP, mallet, flexor sheath and others. The digit is written in the title of the note, the procedure line and the follow-up summary, for example drainage of felon (ring finger).",
       "Rotator cuff repair: each tendon (supraspinatus, infraspinatus, subscapularis, teres minor) is categorised on its own, and the tendons repaired are chosen separately. Hemi-hamate arthroplasty names the digit, and its steps and plan follow the surgeon's own record, with anaesthesia, antibiotics, side and tourniquet taken from the safety section.",
       "Operative note: the operation search now offers Continue, and once an operation is chosen the long list folds to the rows that hold it, with a button to add or change operations. Extensor indicis proprius transfer for extensor pollicis longus rupture has its own note beside the EPL repair.",
       "Post-operative follow-up now begins from the operation, with the diagnosis list one tap away. Filling from the operation summary also brings the operative details into the note and sets this visit's reasons and plan and the next review from the timeline: check and edit them.",
@@ -27172,7 +27173,7 @@ const OP_PROCS_HAND = [
       ["Stable, minimally displaced fracture without rotational deformity (favour closed treatment)", "Isolated boxer's fracture (fifth metacarpal neck) with acceptable angulation (commonly treated non-operatively)"],
       ["Mini-fragment plate and screw system (1.5\u20132.4 mm), or K-wires for percutaneous or intramedullary fixation", "Fluoroscopy", "Standard hand fracture instrument set", "Tourniquet"],
       ["Rotational malalignment is the most functionally significant and under-recognised error; assess digit alignment through active and passive flexion (fingers pointing toward the scaphoid tubercle, no scissoring) intra-operatively and post-operatively", "Extensor tendon adhesion to dorsal plates is a recognised complication; early protected motion and adequate periosteal or tendon coverage over hardware help", "Multiple adjacent metacarpal fractures should generally all be fixed, as the stability from adjacent intact metacarpals is lost", "K-wire migration or loosening is more common with the percutaneous technique; ensure adequate purchase and decide between burying and leaving percutaneous by fracture stability"]),
-    findings: [opC("metacarpals", "Metacarpal(s)", ["Thumb", "Index", "Middle", "Ring", "Little"]), opS("site", "Fracture site", ["Shaft", "Neck", "Base", "Head"], 4), opS("rotation", "Rotational alignment after fixation (nail and tenodesis check, no scissoring)", ["Aligned", "Residual malrotation"], 2), OP_FIELD_OTHER_FINDINGS],
+    findings: [opC("digits", "Digit(s) (metacarpal)", OP_DIGITS), opC("metacarpals", "Metacarpal(s)", ["Thumb", "Index", "Middle", "Ring", "Little"]), opS("site", "Fracture site", ["Shaft", "Neck", "Base", "Head"], 4), opS("rotation", "Rotational alignment after fixation (nail and tenodesis check, no scissoring)", ["Aligned", "Residual malrotation"], 2), OP_FIELD_OTHER_FINDINGS],
     technique: [opS("fixation", "Fixation", ["Plate and screws", "K-wires", "Intramedullary implant"], 1), opT("implantDetail", "Implant details", "e.g. 2.0 mm plate, K-wire size"), opS("kwireEnds", "K-wire ends (if used)", ["Percutaneous, bent and capped", "Buried"], 2)],
     closure: [OP_SKIN_SUTURE],
     summary: (v) => (v.fixation ? v.fixation.toLowerCase() : null),
@@ -28141,7 +28142,7 @@ const OP_PROCS_MORE_1 = [
       ["Fine instruments and loupe magnification", "Fine absorbable suture (6-0 or 7-0)", "Foil or non-adherent material to stent the nail fold"],
       ["Remove the nail gently without damaging the germinal matrix", "Repair the nail bed accurately with fine absorbable sutures and avoid leaving gaps", "Stent the nail fold to prevent adhesions"]),
     positioning: ["Supine with the hand on a table"],
-    findings: [opS("injury", "Nail bed", ["Simple laceration", "Stellate laceration", "Crush or avulsion"], 3), opS("fracture", "Distal phalanx", ["Intact", "Tuft fracture", "Displaced fracture"], 3), OP_FIELD_OTHER_FINDINGS],
+    findings: [OP_DIGIT_FIELD, opS("injury", "Nail bed", ["Simple laceration", "Stellate laceration", "Crush or avulsion"], 3), opS("fracture", "Distal phalanx", ["Intact", "Tuft fracture", "Displaced fracture"], 3), OP_FIELD_OTHER_FINDINGS],
     technique: [opS("nail", "Nail", ["Replaced as a stent", "Replaced with foil", "Not replaced"], 3)],
     closure: [], prep: ["Digital block given, tourniquet applied at the base of the digit", "Standard prep and drape"],
     steps: [
@@ -28167,7 +28168,7 @@ const OP_PROCS_MORE_1 = [
       ["Digital block and tourniquet", "Number 11 or 15 blade, fine scissors and irrigation"],
       ["Avoid the fish-mouth incision across the pulp, which scars and leaves a sensitive tip", "Keep the incision away from the flexor sheath and divide the septa to open all loculi", "Send pus for culture and sensitivity"]),
     positioning: ["Supine with the hand on a table"],
-    findings: [opS("pus", "Pus", ["Present", "Absent"], 2), opS("bone", "Distal phalanx", ["Normal", "Osteomyelitis suspected"], 2), OP_FIELD_OTHER_FINDINGS],
+    findings: [OP_SINGLE_DIGIT, opS("pus", "Pus", ["Present", "Absent"], 2), opS("bone", "Distal phalanx", ["Normal", "Osteomyelitis suspected"], 2), OP_FIELD_OTHER_FINDINGS],
     technique: [opS("incision", "Incision", ["Lateral", "Volar longitudinal"], 2)],
     closure: [], prep: ["Digital block given, tourniquet applied at the base of the digit", "Standard prep and drape"],
     steps: [
@@ -28193,7 +28194,7 @@ const OP_PROCS_MORE_1 = [
       ["Digital block", "Number 11 blade, fine instruments"],
       ["Elevate the nail fold from the nail plate rather than incising deeply, to avoid the germinal matrix", "Remove the nail edge if pus extends beneath it"]),
     positioning: ["Supine with the hand on a table"],
-    findings: [opS("extent", "Abscess", ["Eponychial fold only", "Extends beneath the nail"], 2), OP_FIELD_OTHER_FINDINGS],
+    findings: [OP_SINGLE_DIGIT, opS("extent", "Abscess", ["Eponychial fold only", "Extends beneath the nail"], 2), OP_FIELD_OTHER_FINDINGS],
     technique: [opS("nail", "Nail", ["Left in place", "Partly removed", "Removed"], 3)],
     closure: [], prep: ["Digital block given", "Standard prep"],
     steps: [
@@ -28578,7 +28579,7 @@ const OP_PROCS_MORE_2 = [
     eq: ["Digital tourniquet and loupes", "Fine instruments and 6-0 sutures"],
     pit: ["Excise the tumour completely with its capsule to avoid recurrence", "Repair the nail bed accurately to limit a nail deformity", "Send the specimen for histology"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("site", "Tumour", ["Subungual", "Pulp", "Lateral, near the phalanx"], 3), opS("capsule", "Capsule", ["Intact, excised in one piece", "Fragmented"], 2)],
+    find: [OP_SINGLE_DIGIT, opS("site", "Tumour", ["Subungual", "Pulp", "Lateral, near the phalanx"], 3), opS("capsule", "Capsule", ["Intact, excised in one piece", "Fragmented"], 2)],
     tech: [opS("approach", "Approach", ["Transungual (nail bed)", "Lateral subperiosteal", "Pulp or soft tissue"], 1)],
     steps: ["Digital block given and the tourniquet applied", ["Nail plate removed and the nail bed incised longitudinally over the lesion", (v) => v.approach === "Transungual (nail bed)" || !v.approach], ["Lateral midaxial incision made and the lesion approached subperiosteally, protecting the neurovascular bundle", (v) => v.approach === "Lateral subperiosteal"], ["Incision made directly over the pulp lesion", (v) => v.approach === "Pulp or soft tissue"],
       "Tumour identified as a blue-red nodule and excised completely with its capsule", "Bone bed inspected for erosion and curetted if involved", ["Nail bed repaired with fine absorbable sutures and the nail or foil replaced as a stent", (v) => v.approach === "Transungual (nail bed)" || !v.approach], "Specimen sent for histology"],
@@ -28595,7 +28596,7 @@ const OP_PROCS_MORE_2 = [
     eq: ["Tourniquet and loupes", "Fine instruments and microscissors", "Sutures for tendon sheath and skin"],
     pit: ["Excise all tumour including satellite lesions and extensions beneath the neurovascular bundles, to limit recurrence", "Protect the digital nerves and arteries", "Send the specimen for histology and counsel about recurrence"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("extent", "Lesion", ["Localised", "Diffuse"], 2), opS("bone", "Bone", ["Intact", "Eroded"], 2), opS("recurrence", "Presentation", ["Primary", "Recurrence"], 2)],
+    find: [OP_SINGLE_DIGIT, opS("extent", "Lesion", ["Localised", "Diffuse"], 2), opS("bone", "Bone", ["Intact", "Eroded"], 2), opS("recurrence", "Presentation", ["Primary", "Recurrence"], 2)],
     tech: [opS("excision", "Excision", ["Marginal", "Planned wide excision", "Revision excision"], 3)],
     steps: ["Incision made over the lesion with the neurovascular bundles identified and protected", "Tumour dissected from the tendon sheath, tendons and joint capsule", "Satellite lesions and extensions beneath the bundles sought and excised", "Bone bed curetted if eroded", ["Further tumour tissue excised and the bed examined carefully for residual disease", (v) => v.excision === "Revision excision" || v.recurrence === "Recurrence"], "Wound irrigated and haemostasis confirmed", "Specimen sent for histology"],
     imm: "Soft dressing and splint for comfort for 1–2 weeks", red: "Red flags: fever, wound drainage, numbness, recurrent mass", follow: "Follow-up in 10–14 days; review histology; surveillance for recurrence",
@@ -28611,7 +28612,7 @@ const OP_PROCS_MORE_2 = [
     eq: ["Curettes and burr", "Cancellous graft or bone substitute", "Image intensifier"],
     pit: ["Create a cortical window large enough to curette the cavity fully", "Send the curettings for histology, and review for atypia", "Avoid weakening the cortex with an oversized window"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("bone", "Bone", ["Proximal phalanx", "Middle phalanx", "Metacarpal", "Distal phalanx"], 2), opS("cortex", "Cortex", ["Thinned", "Intact"], 2)],
+    find: [OP_SINGLE_DIGIT, opS("bone", "Bone", ["Proximal phalanx", "Middle phalanx", "Metacarpal", "Distal phalanx"], 2), opS("cortex", "Cortex", ["Thinned", "Intact"], 2)],
     tech: [opS("filling", "Cavity filled with", ["Autograft", "Allograft", "Bone substitute"], 3)],
     steps: ["Incision made over the lesion with the extensor mechanism or tendons protected", "Cortical window made over the lesion", "Cavity curetted completely, with a burr or adjuncts used as decided and samples sent for histology", "Cavity irrigated", ["Cavity packed with autograft or allograft", (v) => v.filling !== "Bone substitute"], ["Cavity filled with bone substitute", (v) => v.filling === "Bone substitute"], "Window and cortical integrity checked on imaging"],
     imm: "Splint for 3–4 weeks", restr: "No forceful grip or impact until the graft consolidates, typically 6–12 weeks", red: "Red flags: fever, wound drainage, increasing pain, fracture", follow: "Follow-up in 10–14 days; radiographs; review histology",
@@ -28627,7 +28628,7 @@ const OP_PROCS_MORE_2 = [
     eq: ["Mini-fragment plates, screws or K-wires", "Curettes and graft", "Image intensifier"],
     pit: ["Curette the lesion and send the tissue for histology", "Fix the fracture in good alignment and fill the cavity as decided"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("bone", "Bone", ["Proximal phalanx", "Middle phalanx", "Metacarpal"], 3), opS("displacement", "Displacement", ["Undisplaced", "Displaced"], 2)],
+    find: [OP_SINGLE_DIGIT, opS("bone", "Bone", ["Proximal phalanx", "Middle phalanx", "Metacarpal"], 3), opS("displacement", "Displacement", ["Undisplaced", "Displaced"], 2)],
     tech: [opS("fixation", "Fixation", ["K-wires", "Plate and screws"], 2), opS("graft", "Cavity", ["Grafted", "Left unfilled"], 2)],
     steps: ["Incision made over the fracture and the soft tissues protected", "Fracture and lesion exposed and the cavity curetted, with curettings sent for histology", ["Cavity grafted", (v) => v.graft === "Grafted"], "Fracture reduced and held in good alignment", ["Fixed with K-wires", (v) => v.fixation === "K-wires"], ["Fixed with a mini-fragment plate and screws", (v) => v.fixation !== "K-wires"], "Reduction and fixation confirmed on imaging"],
     imm: "Splint for 4–6 weeks", restr: "No forceful grip until union, typically 8–12 weeks", red: "Red flags: fever, wound drainage, loss of fixation, pin site problems", follow: "Follow-up in 10–14 days; radiographs; review histology",
@@ -28643,7 +28644,7 @@ const OP_PROCS_MORE_2 = [
     eq: ["Biopsy needle or small curette", "Tourniquet and image intensifier"],
     pit: ["Place the biopsy along the line of the future incision and avoid contaminating other compartments", "Send samples for histology and, where indicated, culture"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("bone", "Lesion", ["Phalanx", "Metacarpal", "Carpus"], 3)],
+    find: [OP_SINGLE_DIGIT, opS("bone", "Lesion", ["Phalanx", "Metacarpal", "Carpus"], 3)],
     tech: [opS("method", "Method", ["Open", "Needle"], 2)],
     steps: ["Incision or needle track planned along the line of a possible later excision", "Lesion approached and a representative sample taken", "Sample sent for histology and culture as indicated", "Haemostasis confirmed"],
     imm: "Soft dressing for comfort", red: "Red flags: fever, wound drainage, increasing pain, fracture", follow: "Follow-up in 10–14 days for the histology result",
@@ -28659,7 +28660,7 @@ const OP_PROCS_MORE_2 = [
     eq: ["Tourniquet, loupes and fine instruments", "Fine sutures and non-adherent dressings"],
     pit: ["Preserve the neurovascular supply to the flap and avoid tension on the closure", "Shorten bone only enough to allow tension-free coverage", "Avoid immobilising more than the injured digit, to limit stiffness"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("defect", "Defect", ["Dorsal oblique", "Transverse", "Volar oblique"], 3), opS("bone", "Bone", ["Exposed", "Not exposed"], 2)],
+    find: [OP_DIGIT_FIELD, opS("defect", "Defect", ["Dorsal oblique", "Transverse", "Volar oblique"], 3), opS("bone", "Bone", ["Exposed", "Not exposed"], 2)],
     tech: [opS("flap", "Flap", ["V-Y advancement", "Cross-finger", "Moberg advancement", "Other local flap"], 2)],
     steps: ["Digital block given and the tourniquet applied", "Wound debrided and bone trimmed if needed to allow coverage", ["V-Y flap marked, raised on its subcutaneous pedicle and advanced over the defect", (v) => v.flap === "V-Y advancement"], ["Flap raised from the dorsum of the adjacent finger and inset over the defect", (v) => v.flap === "Cross-finger"], ["Volar skin of the thumb advanced as a neurovascular island flap over the defect", (v) => v.flap === "Moberg advancement"], ["Local flap raised and inset over the defect", (v) => v.flap === "Other local flap"], "Flap perfusion checked after tourniquet release", "Flap inset without tension with fine sutures"],
     imm: "Protective dressing and finger splint for 1–2 weeks", red: "Red flags: flap colour change, fever, wound drainage, severe pain", follow: "Follow-up in 5–7 days for a flap check",
@@ -28675,7 +28676,7 @@ const OP_PROCS_MORE_2 = [
     eq: ["Skin graft instruments and donor site dressing", "Tourniquet and fine sutures"],
     pit: ["Prepare a clean vascularised bed and stabilise the graft with a tie-over dressing", "Choose a donor site that matches the colour and the thickness needed"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("bed", "Wound bed", ["Vascularised soft tissue", "Bone partly exposed"], 2)],
+    find: [OP_DIGIT_FIELD, opS("bed", "Wound bed", ["Vascularised soft tissue", "Bone partly exposed"], 2)],
     tech: [opS("graft", "Graft", ["Full-thickness", "Split-thickness"], 2), opT("donor", "Donor site", "e.g. hypothenar or forearm")],
     steps: ["Wound debrided and the bed prepared", "Graft harvested from the donor site and defatted if full thickness", "Graft sutured to the defect margins with fine sutures", "Graft held in place with a tie-over dressing or a gentle compressive dressing", "Donor site dressed"],
     imm: "Dressing and splint for 5–7 days, protecting the graft", red: "Red flags: graft loss, fever, drainage, severe pain", follow: "Follow-up in 5–7 days for the first dressing change",
@@ -28691,7 +28692,7 @@ const OP_PROCS_MORE_2 = [
     eq: ["Tourniquet, loupes and microsurgical instruments", "Small bone drill or a muscle or vein for the nerve end"],
     pit: ["Resect the neuroma back to healthy fascicles and bury the nerve end in muscle or bone away from the scar and from load-bearing surfaces", "Avoid traction on the nerve, which causes recurrence"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("nerve", "Nerve", ["Radial digital", "Ulnar digital", "Common digital", "Other"], 2), opS("neuroma", "Neuroma", ["End neuroma", "In continuity"], 2)],
+    find: [OP_SINGLE_DIGIT, opS("nerve", "Nerve", ["Radial digital", "Ulnar digital", "Common digital", "Other"], 2), opS("neuroma", "Neuroma", ["End neuroma", "In continuity"], 2)],
     tech: [opS("management", "Nerve end", ["Buried in muscle", "Buried in bone", "Reconstructed with a graft or conduit"], 3)],
     steps: ["Incision made over the neuroma and the nerve identified proximal to it", "Neuroma dissected free and resected back to healthy fascicles", ["Nerve end buried in adjacent muscle and fixed with a fine suture", (v) => v.management === "Buried in muscle" || !v.management], ["Nerve end buried in a drill hole in the proximal bone", (v) => v.management === "Buried in bone"], ["Gap bridged with a nerve graft or conduit", (v) => v.management === "Reconstructed with a graft or conduit"], "Haemostasis confirmed and the wound closed without tension"],
     imm: "Soft dressing and splint for comfort for 1–2 weeks", red: "Red flags: fever, wound drainage, severe or increasing pain, numbness", follow: "Follow-up in 10–14 days for wound check and suture removal",
@@ -29584,7 +29585,7 @@ const OP_PROCS_MORE_6 = [
     eq: ["Loupes, fine instruments and K-wires", "Fine sutures"],
     pit: ["Shorten the scarred tendon to restore balance without over-tightening and causing a swan-neck deformity", "Pin the joint in extension to protect the repair"],
     pos: ["Supine with the hand on a table"],
-    find: [opN("lag", "Extensor lag", "°"), opS("joint", "Distal interphalangeal joint", ["Supple", "Arthritic"], 2)],
+    find: [OP_SINGLE_DIGIT, opN("lag", "Extensor lag", "°"), opS("joint", "Distal interphalangeal joint", ["Supple", "Arthritic"], 2)],
     tech: [opS("repair", "Repair", ["Tenodermodesis", "Tendon shortening and repair"], 2), opS("pin", "Joint pinned", ["Yes", "No"], 2)],
     steps: ["Dorsal incision made over the distal interphalangeal joint and the scarred extensor tendon identified", ["Redundant skin and scarred tendon excised in an elliptical manner and the edges sutured (tenodermodesis)", (v) => v.repair === "Tenodermodesis"], ["Scarred tendon shortened and repaired to the distal phalanx", (v) => v.repair !== "Tenodermodesis"], ["Joint held in extension with a K-wire", (v) => v.pin !== "No"], "Extension lag checked and the wound closed"],
     imm: "Splint or K-wire with the distal interphalangeal joint in extension for 6–8 weeks", restr: "No forced flexion of the distal joint until healed", red: "Red flags: fever, wound drainage, pin site problems, recurrent lag", follow: "Follow-up in 10–14 days; pin removal at about 6 weeks",
@@ -29648,7 +29649,7 @@ const OP_PROCS_MORE_6 = [
     eq: ["Loupes and a small blade", "Fine instruments"],
     pit: ["Divide the extensor tendon at the correct level over the middle phalanx to rebalance the extensor mechanism", "Avoid division of the oblique retinacular ligaments"],
     pos: ["Supine with the hand on a table"],
-    find: [opG("angles", "Joint position before surgery", ["Proximal interphalangeal flexion", "Distal interphalangeal extension"], "°")],
+    find: [OP_SINGLE_DIGIT, opG("angles", "Joint position before surgery", ["Proximal interphalangeal flexion", "Distal interphalangeal extension"], "°")],
     tech: [opS("level", "Tenotomy", ["Over the middle phalanx", "Over the proximal phalanx"], 2)],
     steps: ["Dorsal incision made over the middle phalanx and the extensor mechanism exposed", "Terminal tendon divided at the correct level and the distal joint allowed to flex", "Balance of the extensor mechanism checked through a range of motion", "Wound closed", "Joint held in position with a splint if needed"],
     imm: "Splint holding the proximal interphalangeal joint in extension for 4–6 weeks", restr: "No forceful flexion for 6 weeks", red: "Red flags: fever, wound drainage, recurrence of the deformity", follow: "Follow-up in 10–14 days",
@@ -29664,7 +29665,7 @@ const OP_PROCS_MORE_6 = [
     eq: ["Mini-fragment screws, plates or K-wires and cerclage", "Image intensifier, loupes"],
     pit: ["Restore the volar lip so the joint is congruent and stable through a full arc", "Protect the neurovascular bundles and the flexor sheath", "Begin controlled motion early"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("fragment", "Volar fragment", ["Single large fragment", "Comminuted"], 2), opS("stability", "Stability after reduction", ["Stable", "Unstable in extension"], 2)],
+    find: [opS("digit", "Digit", ["Index", "Middle", "Ring", "Little"], 4), opS("fragment", "Volar fragment", ["Single large fragment", "Comminuted"], 2), opS("stability", "Stability after reduction", ["Stable", "Unstable in extension"], 2)],
     tech: [opS("fixation", "Fixation", ["Lag screws", "Mini-plate", "K-wires with cerclage"], 3)],
     steps: ["Volar Bruner incision made and the flexor sheath opened between the A2 and A4 pulleys", "Volar plate and fracture exposed by hyperextending the joint (shotgun approach)", "Articular surface reduced and held with provisional wires", "Fracture fixed with the chosen implant to restore the volar lip", "Joint congruity and stability checked through a range of motion", "Volar plate and sheath repaired and the wound closed"],
     imm: "Dorsal blocking splint for 3–4 weeks with early active flexion", restr: "No forceful use until union, typically 8–12 weeks", general: "Hand therapy from the first week", red: "Red flags: fever, wound drainage, loss of reduction, increasing stiffness", follow: "Follow-up in 10–14 days; serial radiographs",
@@ -29680,7 +29681,7 @@ const OP_PROCS_MORE_6 = [
     eq: ["Fine sutures or a pullout wire", "Loupes and image intensifier"],
     pit: ["Advance the volar plate into the defect and secure it firmly with the joint reduced", "Pin or splint the joint in slight flexion to protect the repair"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("defect", "Volar articular defect", ["Under 40 per cent", "Over 40 per cent"], 2)],
+    find: [opS("digit", "Digit", ["Index", "Middle", "Ring", "Little"], 4), opS("defect", "Volar articular defect", ["Under 40 per cent", "Over 40 per cent"], 2)],
     tech: [opS("fixation", "Volar plate fixation", ["Pull-out suture", "Suture anchor"], 2)],
     steps: ["Volar Bruner incision made and the flexor sheath opened", "Volar plate and the fractured volar lip exposed by hyperextending the joint", "Comminuted fragments excised and the defect prepared", "Volar plate advanced into the defect and secured with the chosen fixation", "Joint reduced and stability checked through a range of motion", "Wound closed"],
     imm: "Dorsal blocking splint or a pin for 3 weeks, then guided motion", restr: "No forceful use for 6–8 weeks", general: "Hand therapy", red: "Red flags: fever, wound drainage, recurrent subluxation, increasing stiffness", follow: "Follow-up in 10–14 days",
@@ -29735,7 +29736,7 @@ const OP_PROCS_MORE_6 = [
     eq: ["Dynamic or hinged external fixator system", "K-wires and image intensifier"],
     pit: ["Place the axis wire through the centre of rotation of the proximal phalangeal head and check it on imaging", "Apply tension to keep the joint reduced through the arc"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("fracture", "Injury", ["Comminuted fracture-dislocation", "Chronic instability"], 2)],
+    find: [opS("digit", "Digit", ["Index", "Middle", "Ring", "Little"], 4), opS("fracture", "Injury", ["Comminuted fracture-dislocation", "Chronic instability"], 2)],
     tech: [opS("type", "Fixator", ["Dynamic with elastic traction", "Hinged"], 2)],
     steps: ["Joint reduced under imaging", "Axis wire inserted through the centre of rotation of the proximal phalangeal head", "Distal wire placed through the middle phalanx and the fixator assembled", "Tension adjusted to hold the joint reduced and the arc of motion checked on imaging", "Pin sites dressed"],
     close: ["Pin sites dressed", "Hand elevated and the finger protected"],
@@ -29790,7 +29791,7 @@ const OP_PROCS_MORE_7 = [
     eq: ["Mini external fixator system or K-wires", "Image intensifier"],
     pit: ["Place the pins in the safe zones and avoid the extensor mechanism and the joint", "Remove the fixator as soon as the fracture is stable enough to begin motion"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("bone", "Bone", ["Proximal phalanx", "Middle phalanx"], 2), opS("wound", "Wound", ["Closed", "Open"], 2)],
+    find: [OP_SINGLE_DIGIT, opS("bone", "Bone", ["Proximal phalanx", "Middle phalanx"], 2), opS("wound", "Wound", ["Closed", "Open"], 2)],
     tech: [opN("pins", "Pins", "pins")],
     steps: ["Fracture reduced under imaging", "Pins inserted proximal and distal to the fracture through small incisions, avoiding the joints and the extensor mechanism", "Fixator assembled and the alignment, length and rotation checked", "Position confirmed on imaging", "Pin sites dressed"],
     close: ["Pin sites dressed", "Hand elevated"],
@@ -29855,7 +29856,7 @@ const OP_PROCS_MORE_7 = [
     eq: ["Tourniquet, fine instruments, catheter and irrigation", "Microbiology specimen pots"],
     pit: ["Open the sheath at the proximal and distal ends, preserving the A2 and A4 pulleys", "Take cultures, irrigate thoroughly and debride necrotic tissue"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("pus", "Sheath contents", ["Purulent fluid", "Serous fluid", "Necrotic tendon"], 3), opS("extension", "Extension", ["Confined to the sheath", "Into the palm or deep space"], 2)],
+    find: [OP_SINGLE_DIGIT, opS("pus", "Sheath contents", ["Purulent fluid", "Serous fluid", "Necrotic tendon"], 3), opS("extension", "Extension", ["Confined to the sheath", "Into the palm or deep space"], 2)],
     tech: [opS("technique", "Technique", ["Closed irrigation with a catheter", "Open debridement"], 2)],
     steps: ["Tourniquet applied and incisions made at the distal digital crease and in the proximal palm", "Sheath opened at both ends, with the A2 and A4 pulleys preserved", "Fluid sent for culture and the sheath irrigated with a catheter from one end to the other", ["Necrotic tissue debrided through an open exposure", (v) => v.technique === "Open debridement"], "Wounds left open or loosely closed over a drain as decided"],
     imm: "Elevated splint in a position of function", extra: ["Culture-directed intravenous antibiotics under the infection team"], wound: "Wound care: change the dressing daily, as instructed", red: "Red flags: spreading redness, fever, increasing pain, loss of finger movement", follow: "Follow-up in 24–48 hours for wound review",
@@ -29871,7 +29872,7 @@ const OP_PROCS_MORE_7 = [
     eq: ["Tourniquet, fine instruments, irrigation", "Microbiology specimen pots"],
     pit: ["Open the joint, send samples and irrigate thoroughly", "Protect the extensor mechanism and the neurovascular bundles"],
     pos: ["Supine with the hand on a table"],
-    find: [opS("joint", "Joint", ["Interphalangeal", "Metacarpophalangeal", "Wrist"], 3), opS("cartilage", "Cartilage", ["Preserved", "Damaged"], 2)],
+    find: [OP_SINGLE_DIGIT, opS("joint", "Joint", ["Interphalangeal", "Metacarpophalangeal", "Wrist"], 3), opS("cartilage", "Cartilage", ["Preserved", "Damaged"], 2)],
     tech: [opS("closure", "Wound", ["Left open", "Closed over a drain"], 2)],
     steps: ["Incision made over the joint and the joint capsule opened", "Pus and fluid sent for culture and the synovitis debrided", "Joint irrigated thoroughly", "Cartilage and bone inspected for damage", "Wound left open or closed over a drain as decided"],
     imm: "Splint in a position of function and elevation", extra: ["Culture-directed antibiotics under the infection team"], wound: "Wound care: change the dressing daily", red: "Red flags: spreading redness, fever, increasing pain, persistent drainage", follow: "Follow-up in 24–48 hours",
@@ -29935,7 +29936,7 @@ const OP_PROCS_MORE_7 = [
     eq: ["Saw and osteotomes, plates and screws or K-wires", "Bone graft if needed", "Image intensifier"],
     pit: ["Correct rotation and angulation accurately, checking with finger alignment and imaging", "Fix the osteotomy rigidly to allow early motion"],
     pos: ["Supine with the arm on a hand table"],
-    find: [opS("bone", "Bone", ["Metacarpal", "Proximal phalanx", "Distal radius"], 3), opS("deformity", "Deformity", ["Rotational", "Angular", "Rotational and angular"], 3)],
+    find: [OP_DIGIT_FIELD, opS("bone", "Bone", ["Metacarpal", "Proximal phalanx", "Distal radius"], 3), opS("deformity", "Deformity", ["Rotational", "Angular", "Rotational and angular"], 3)],
     tech: [opS("graft", "Bone graft", ["Used", "Not used"], 2), opS("fixation", "Fixation", ["Plate and screws", "K-wires"], 2)],
     steps: ["Approach made over the malunion and the soft tissues protected", "Osteotomy planned and the site marked", "Osteotomy performed and the deformity corrected for rotation and angulation", ["Bone graft placed in any gap", (v) => v.graft === "Used"], ["Osteotomy fixed with a plate and screws", (v) => v.fixation !== "K-wires"], ["Osteotomy fixed with K-wires", (v) => v.fixation === "K-wires"], "Alignment, rotation and finger cascade checked and confirmed on imaging", "Wound closed in layers"],
     imm: "Splint for 3–4 weeks then early motion", restr: "No loading until union, typically 8–12 weeks", general: "Hand therapy for motion", red: "Red flags: fever, wound drainage, loss of correction, nonunion", follow: "Follow-up in 10–14 days; serial radiographs",
@@ -29983,7 +29984,7 @@ const OP_PROCS_MORE_7 = [
     eq: ["Loupes and fine instruments", "Heavy sutures, graft if needed"],
     pit: ["Remove the cause of attrition, such as an irregular distal ulna", "Set the tension of each transfer with the wrist and metacarpophalangeal joints in correct position"],
     pos: ["Supine with the arm on a hand table"],
-    find: [opC("tendons", "Ruptured tendons", ["Extensor digiti minimi", "Extensor digitorum to the little finger", "Extensor digitorum to the ring finger", "Extensor pollicis longus"])],
+    find: [OP_DIGIT_FIELD, opC("tendons", "Ruptured tendons", ["Extensor digiti minimi", "Extensor digitorum to the little finger", "Extensor digitorum to the ring finger", "Extensor pollicis longus"])],
     tech: [opS("procedure", "Procedure", ["Side-to-side transfer to an adjacent tendon", "End-to-side transfer to an adjacent tendon", "Tendon graft", "Extensor indicis proprius transfer"], 1), opS("ulna", "Distal ulna", ["Not addressed", "Resected"], 2)],
     steps: ["Dorsal incision made and the extensor compartments exposed, protecting the dorsal sensory nerve branches", "Ruptured tendon ends identified and the cause of attrition assessed", ["Irregular distal ulna resected and smoothed to remove the cause of attrition", (v) => v.ulna === "Resected"], ["Ruptured tendon sutured side-to-side to an intact adjacent tendon", (v) => v.procedure === "Side-to-side transfer to an adjacent tendon"], ["Distal stump of the ruptured tendon transferred end-to-side to an adjacent tendon", (v) => v.procedure === "End-to-side transfer to an adjacent tendon"], ["Gap bridged with a tendon graft", (v) => v.procedure === "Tendon graft"], ["Extensor indicis proprius transferred to the ruptured tendon", (v) => v.procedure === "Extensor indicis proprius transfer"], "Tension and extension checked through a range of motion", "Wound closed in layers"],
     imm: "Splint holding the wrist and metacarpophalangeal joints in extension for 4 weeks", restr: "No resisted extension for 8–12 weeks", general: "Hand therapy for guided motion", red: "Red flags: fever, wound drainage, rupture, loss of extension", follow: "Follow-up in 10–14 days",
@@ -30268,16 +30269,37 @@ function opFieldLines(proc, fields, state) {
 // The numbered steps of one procedure, as they will read in the note.
 function opStepTexts(proc, state, procs, isPrimary) { return opStandardSteps(proc, state, procs, isPrimary).map((x) => x.text); }
 function opSideWord(state) { return state.op__side ? String(state.op__side) : ""; }
+// The digits an operation was done on, from whichever digit field it has ("digit", "digits" or, for Dupuytren, "rays").
+// An operation on a specific digit says which in its title, so the note can never leave it out.
+const OP_DIGIT_KEYS = ["digit", "digits", "rays"];
+function opDigitsOf(proc, state) {
+  const v = opLocalView(state, proc.id);
+  const chosen = [];
+  OP_DIGIT_KEYS.forEach((k) => { const x = v[k]; if (Array.isArray(x)) chosen.push(...x); else if (opHasValue(x)) chosen.push(x); });
+  return OP_DIGITS.filter((d) => chosen.includes(d));
+}
+function opDigitPhrase(digits) {
+  if (!digits || !digits.length) return "";
+  const w = digits.map((d) => d.toLowerCase());
+  if (w.length === 1) return w[0] === "thumb" ? "thumb" : `${w[0]} finger`;
+  return `${opJoin(w)} fingers`;
+}
 function opProcedureLabel(proc, state) {
   const side = opSideWord(state).toLowerCase();
-  return side ? `${proc.name}, ${side} ${proc.sided}` : proc.name;
+  const digit = opDigitPhrase(opDigitsOf(proc, state));
+  return [side ? `${proc.name}, ${side} ${proc.sided}` : proc.name, digit].filter(Boolean).join(", ");
+}
+// A procedure's name as it appears in the title and the summary line: with its digit(s), when it has any.
+function opNameWithDigits(proc, state) {
+  const digit = opDigitPhrase(opDigitsOf(proc, state));
+  return digit ? `${opLowerFirstName(proc.name)} (${digit})` : opLowerFirstName(proc.name);
 }
 // Lower-case the first letter of a name unless it starts an acronym ("ORIF", "TFCC").
 function opLowerFirstName(name) { return String(name).replace(/^([A-Z])([a-z])/, (m, a, b) => a.toLowerCase() + b); }
 function opCap(text) { return text ? text.charAt(0).toUpperCase() + text.slice(1) : text; }
 function opNoteHeadline(s) {
   const procs = opOrderProcs(opSelected(s));
-  return opCap([opSideWord(s), opJoin(procs.map((p) => opLowerFirstName(p.name)))].filter(Boolean).join(" "));
+  return opCap([opSideWord(s), opJoin(procs.map((p) => opNameWithDigits(p, s)))].filter(Boolean).join(" "));
 }
 
 function buildOperativeNote(s) {
@@ -30396,7 +30418,7 @@ function buildOperationSummary(s) {
   if (!procs.length) return "";
   const side = opSideWord(s);
   const when = s.op__date ? `${formatDateDMY(s.op__date)}, ` : "";
-  const lines = [`Operation summary: ${when}${[side.toLowerCase(), opJoin(procs.map((p) => opLowerFirstName(p.name)))].filter(Boolean).join(" ")}.`];
+  const lines = [`Operation summary: ${when}${[side.toLowerCase(), opJoin(procs.map((p) => opNameWithDigits(p, s)))].filter(Boolean).join(" ")}.`];
   const dx = s.op__postop === "Revised" && opHasValue(s.op__postopText) ? s.op__postopText : s.op__preop;
   if (opHasValue(dx)) lines.push(`Diagnosis: ${String(dx).trim()}.`);
   procs.forEach((p) => { const d = opSummaryDetails(p, s); if (d.length) lines.push(`${p.name}: ${d.join("; ")}.`); });
