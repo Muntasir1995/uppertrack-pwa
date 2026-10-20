@@ -15246,7 +15246,7 @@ const WHATS_NEW = [
       "Post-operative follow-up starts from the operation, brings in the operative details from the summary, and can set this visit's reasons and plan and the next review from the timeline.",
       "Every generated note (operative, follow-up, post-operative and combined) can be edited in place before copying.",
       "Accessibility and layout audit at phone, tablet and desktop sizes: sliders and dates now have names for screen readers, button text meets contrast standards, small map text is larger, and the post-operative screen is shorter on a phone (the procedure list and protocol card fold).",
-      "Post-operative follow-up has an Outcome measures section: it offers the scores due at that review from the diagnosis's own table, checks each score's range, and writes them into the note.",
+      "Post-operative follow-up records outcome measures, range of motion and imaging for the review period (passive motion first, then active; radiographs after fixation). The follow-up visit now records motion and shows the imaging each diagnosis schedules, with labelled draft suggestions where one is missing.",
     ],
   },
 ];
@@ -17003,16 +17003,18 @@ function romSliderMin(motion) {
 // small editable number box for typing an exact value when precision
 // matters more than speed - the two stay in sync since both read/write
 // the same value.
-function ROMSlider({ label, value, onChange, max, min, color }) {
+function ROMSlider({ label, value, onChange, max, min, color, motion }) {
+  const name = `${motion ? `${motion} ` : ""}${label.toLowerCase()}`;
   return (
     <div className="flex items-center gap-2 py-1">
       <span className="text-[12px] w-16 shrink-0" style={{ color: T.inkSoft }}>{label}</span>
-      <input type="range" min={min} max={max} step={5} value={value ?? 0} aria-label={`${label} slider`} onChange={(e) => onChange(Number(e.target.value))} className="flex-1" style={{ accentColor: color, height: 44 }} />
+      <input type="range" min={min} max={max} step={5} value={value ?? 0} aria-label={`${name} slider`} onChange={(e) => onChange(Number(e.target.value))} className="flex-1" style={{ accentColor: color, height: 44 }} />
       <div className="flex items-center gap-0.5 shrink-0">
         <input
           type="number"
           inputMode="numeric"
           value={value ?? ""}
+          aria-label={`${name} degrees`}
           onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
           className="text-right rounded-lg px-1.5 py-1 text-[13px] font-semibold"
           style={{ width: 44, border: `1px solid ${T.border}`, color }}
@@ -17076,8 +17078,8 @@ function ROMTable({ motions, values, onChange, region }) {
               </>
             ) : (
               <>
-                <ROMSlider label="Active" value={row.active} onChange={(v) => onChange(m, { ...row, active: v })} max={max} min={min} color={T.teal} />
-                <ROMSlider label="Passive" value={row.passive} onChange={(v) => onChange(m, { ...row, passive: v })} max={max} min={min} color={T.tealDark} />
+                <ROMSlider label="Active" motion={m} value={row.active} onChange={(v) => onChange(m, { ...row, active: v })} max={max} min={min} color={T.teal} />
+                <ROMSlider label="Passive" motion={m} value={row.passive} onChange={(v) => onChange(m, { ...row, passive: v })} max={max} min={min} color={T.tealDark} />
                 {ref && <div className="text-[12px] mt-1" style={{ color: T.inkSoft }}>Normal: {ref}</div>}
                 {min < 0 && <div className="text-[12px]" style={{ color: T.inkSoft }}>Drag below 0° to record a deficit/contracture.</div>}
               </>
@@ -20256,6 +20258,11 @@ function buildFollowupNoteParts(condition, fuState, fullState) {
     if (fuState.outcomeNotes && fuState.outcomeNotes.trim()) t += `; ${lowerFirst(fuState.outcomeNotes.trim())}`;
     parts.push({ heading: "Outcome of Treatment", text: `${t}.` });
   }
+  // Written only when motion or imaging was recorded, so existing follow-up notes are unchanged.
+  const fuRom = opPostopRomPart(fuState, opDiagnosisRegions().get(condition.id));
+  if (fuRom) parts.push(fuRom);
+  const fuImaging = opPostopImagingPart(fuState);
+  if (fuImaging) parts.push(fuImaging);
 
   const planBullets = [];
   if (condition.pathway && fuState.pathwayAnswers && Object.keys(fuState.pathwayAnswers).length) {
@@ -20566,6 +20573,12 @@ function buildPostopNoteParts(condition, poState) {
   if (poState.functionalProgress) statusClauses.push(`functional progress was ${lowerFirst(poState.functionalProgress)}`);
   if (poState.statusNotes && poState.statusNotes.trim()) statusClauses.push(poState.statusNotes.trim());
   if (statusClauses.length) parts.push({ heading: "Current Status", text: `${statusClauses.join("; ")}.`.replace(/^./, (c) => c.toUpperCase()) });
+  // Written only when motion or imaging was recorded, so existing post-operative notes are unchanged.
+  const romSet = opRomSetFor(opModulesForPostop(poState), condition);
+  const romPart = opPostopRomPart(poState, romSet && romSet.region);
+  if (romPart) parts.push(romPart);
+  const imagingPart = opPostopImagingPart(poState);
+  if (imagingPart) parts.push(imagingPart);
 
   const activity = [];
   if (poState.returnToWork) activity.push(`return to work: ${lowerFirst(poState.returnToWork)}`);
@@ -23936,6 +23949,10 @@ function FollowupConditionBlock({ index, condition, fuState: ownState, fullState
         </div>
       )}
 
+      <FollowupRom condition={condition} fuState={ownState} setMany={(patch) => onChange({ ...ownState, ...patch })} />
+
+      <FollowupImaging condition={condition} fuState={ownState} setMany={(patch) => onChange({ ...ownState, ...patch })} />
+
       <SubLabel>New plan of treatment</SubLabel>
       {condition.pathway ? (
         <>
@@ -24250,6 +24267,8 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
         </div>
       )}
 
+      <PostopRom condition={condition} poState={poState} setMany={(patch) => onChange({ ...ownState, ...patch })} />
+
       {daysSince != null && daysSince >= 42 && (
         <>
           <SubLabel>Return to activity</SubLabel>
@@ -24261,6 +24280,8 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
       )}
 
       <PostopScores condition={condition} poState={poState} setMany={(patch) => onChange({ ...ownState, ...patch })} />
+
+      <PostopImaging condition={condition} poState={poState} setMany={(patch) => onChange({ ...ownState, ...patch })} />
 
       <SubLabel>Complications</SubLabel>
       <CheckboxGroup options={postopComplicationOptions(poState.procedureName)} selected={poState.complications || []} onChange={setComplications} />
@@ -30684,6 +30705,119 @@ function opScoreValid(spec, v) {
   const n = Number(v);
   return Number.isFinite(n) && n >= 0 && n <= spec.max;
 }
+
+// ---- range of motion and imaging at the post-operative reviews ---------------------------------------------------------
+// When motion is measured after each kind of operation: "p" is passive motion within the protocol limits (active motion is
+// not yet allowed), "a" is active and passive. These are drafts for the surgeon to confirm; the section can always be
+// opened at a review where it is not listed as due.
+const OP_ROM_BY_CLASS = {
+  "minimal": {},
+  "minor": { "6w": "a" },
+  "soft-moderate": { "6w": "a", "3m": "a" },
+  "soft-major": { "6w": "p", "3m": "a", "6m": "a" },
+  "ligament-long": { "6w": "p", "3m": "a", "6m": "a", "12m": "a" },
+  "tendon-hand": { "2w": "a", "6w": "a", "3m": "a" },
+  "fracture": { "6w": "a", "3m": "a" },
+  "fusion": { "6w": "a", "3m": "a", "6m": "a" },
+  "arthroplasty": { "6w": "p", "3m": "a", "12m": "a" },
+  "nerve-decompression": {},
+  "nerve-repair": { "6w": "p", "3m": "a" },
+  "vascular": {},
+  "replant": { "6w": "a", "3m": "a", "6m": "a", "12m": "a" },
+};
+// Operations whose result is not read from joint motion (nerve release at the wrist, a ganglion), whatever their class.
+const OP_ROM_NONE = new Set(["ctr-open", "ctr-endoscopic", "ctr-mini-open", "ganglion-excision", "hand-bone-lesion-biopsy", "wrist-image-guided-injection"]);
+// A trigger finger is judged at the first review by whether the finger moves freely and no longer triggers.
+// Operations done to restore motion are measured actively from the first review.
+const OP_ROM_BY_ID = { "trigger-finger-open": { "2w": "a" }, "trigger-finger-percutaneous": { "2w": "a" }, "capsular-release-arthroscopic": { "2w": "a" }, "manipulation-under-anaesthesia-shoulder": { "2w": "a" }, "elbow-contracture-release": { "2w": "a" },
+  // where the result is the motion itself: frozen shoulder, and the extension deficit in Dupuytren's disease
+  "shoulder-hydrodilatation": { "2w": "a" }, "calcific-barbotage": { "2w": "a" }, "dupuytren-collagenase": { "2w": "a" }, "percutaneous-needle-aponeurotomy": { "2w": "a" }, "dupuytren-fasciectomy": { "2w": "a", "6w": "a" }, "dupuytren-dermofasciectomy": { "2w": "a", "6w": "a" } };
+// Motion that is protected but started early: the elbow after fixation or repair (the arc the brace allows), and the hand
+// after fixation, arthroplasty or replantation (the fingers are moved from the first review).
+const OP_ROM_EARLY_CLASSES = ["soft-moderate", "soft-major", "ligament-long", "fracture", "fusion", "arthroplasty", "replant"];
+function opRomPlanFor(p) {
+  if (!p || OP_ROM_NONE.has(p.id)) return {};
+  const cls = (catalogueEntry(p.id) || {}).reviewClass || p.reviewClass;
+  const plan = { ...(OP_ROM_BY_CLASS[cls] || {}), ...(OP_ROM_BY_ID[p.id] || {}) };
+  if (p.region === "elbow" && OP_ROM_EARLY_CLASSES.includes(cls) && !plan["2w"] && (OP_REVIEW_CLASSES[cls] || { reviews: [] }).reviews.includes("2w")) plan["2w"] = "p";
+  if (p.region === "hand" && ["fracture", "arthroplasty", "replant", "fusion"].includes(cls) && !plan["2w"]) plan["2w"] = "a";
+  return plan;
+}
+// "a" wins over "p" when several operations were done at once.
+function opRomDue(procs, periodId) {
+  let due = null;
+  (procs || []).forEach((p) => { const m = opRomPlanFor(p)[periodId]; if (m === "a" || (m === "p" && !due)) due = m; });
+  return due;
+}
+const OP_ROM_MOTIONS = {
+  shoulder: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"],
+  elbow: ["Flexion", "Extension", "Pronation", "Supination"],
+  wrist: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation", "Pronation", "Supination"],
+  hand: ["MCP flexion", "PIP flexion", "PIP extension", "DIP flexion", "DIP extension"],
+  thumb: ["MCP flexion", "Palmar abduction", "Radial abduction"],
+};
+// Operations filed under the peripheral nerves that are measured at a joint of their own.
+const OP_ROM_REGION_BY_ID = { "thoracic-outlet-decompression": "shoulder", "tos-vascular-repair": "shoulder", "tendon-transfers-ain-pin": "wrist" };
+// The region and movements to record: the operation's own region when it is linked, otherwise the diagnosis's.
+function opRomSetFor(procs, condition) {
+  const proc = (procs || [])[0];
+  const region = proc ? (OP_ROM_REGION_BY_ID[proc.id] || proc.region) : opDiagnosisRegions().get(condition && condition.id);
+  if (region === "hand" && (procs || []).some((q) => /thumb|pollicis|carpometacarpal|bennett|rolando/i.test(q.name))) return { region: "hand", motions: OP_ROM_MOTIONS.thumb };
+  if (OP_ROM_MOTIONS[region]) return { region, motions: OP_ROM_MOTIONS[region] };
+  // a nerve diagnosis has no region of its own to measure against: use the movements of its own examination, if it has any
+  let own = null;
+  (function walk(fs) { (fs || []).forEach((f) => { if (!own && f.type === "rom") own = f; if (f.fields) walk(f.fields); }); })(((condition && condition.sections) || []).flatMap((x) => x.fields || []));
+  return own ? { region: region || "peripheralNerve", motions: own.motions } : null;
+}
+function opPostopRomPart(po, region) {
+  if (!po) return null;
+  if (po.romFull === "Full") return { heading: "Range of Motion", text: "Range of motion was full." };
+  const lines = fieldClause({ type: "rom", key: "rom", label: "Range of motion", motions: [] }, { rom: po.rom || {}, romFull: po.romFull, __region: region });
+  if (!lines) return null;
+  const items = lines.split("\n").map((l) => l.replace(/^\s*\u2022\s*/, "").replace(/: /, " ").trim()).filter(Boolean);
+  return items.length ? { heading: "Range of Motion", text: `${items.join("; ")}.` } : null;
+}
+
+// Imaging expected at each review, by kind of operation (from the review prompts, now structured), and by operation (the
+// template's own dated milestones). For the soft-tissue operations imaging is not routine: it is a prompt for a concern.
+const OP_IMAGING_BY_CLASS = {
+  "fracture": { "2w": "Radiograph: alignment and hardware position", "6w": "Radiograph: callus, alignment and hardware position", "3m": "Radiograph: union (keep reviewing if not united)" },
+  "fusion": { "6w": "Radiograph: fusion progress and hardware position", "3m": "Radiograph: fusion progress", "6m": "Radiograph: union" },
+  "arthroplasty": { "6w": "Radiograph: component position", "3m": "Radiograph: component position and alignment", "12m": "Radiograph: loosening or wear" },
+  "replant": { "6w": "Radiograph: bone fixation", "3m": "Radiograph: bone union" },
+};
+const OP_IMAGING_IF_CONCERN = {
+  "soft-major": "Not routine. Ultrasound or MRI only if a re-tear or failure of the repair is suspected (new weakness, loss of motion, persistent pain).",
+  "ligament-long": "Not routine. MRI or stress views only if instability or failure of the reconstruction is suspected.",
+  "tendon-hand": "Not routine. Ultrasound if rupture of the repair is suspected.",
+};
+const OP_IMAGING_WORDS = /radiograph|x-?ray|\bCT\b|MRI|ultrasound|imaging/i;
+function opImagingDue(procs, periodId) {
+  const due = [], ifConcern = [];
+  (procs || []).forEach((p) => {
+    const cls = (catalogueEntry(p.id) || {}).reviewClass || p.reviewClass;
+    const byClass = (OP_IMAGING_BY_CLASS[cls] || {})[periodId];
+    if (byClass && !due.includes(byClass)) due.push(byClass);
+    ((catalogueEntry(p.id) || {}).milestones || []).forEach((m) => { if ((m.at === periodId || m.at === "each") && OP_IMAGING_WORDS.test(m.text) && !due.includes(m.text)) due.push(m.text); });
+    const c = OP_IMAGING_IF_CONCERN[cls];
+    if (c && !ifConcern.includes(c)) ifConcern.push(c);
+  });
+  return { due, ifConcern: due.length ? [] : ifConcern };
+}
+const OP_IMAGING_MODALITIES = ["Radiographs", "CT", "MRI", "Ultrasound"];
+const OP_IMAGING_RESULTS = ["As expected", "Concern", "Not available at this review"];
+function opPostopImagingPart(po) {
+  const st = po || {};
+  const mods = (st.imagingDone || []).filter((m) => OP_IMAGING_MODALITIES.includes(m));
+  const findings = (st.imagingFindings || "").trim();
+  const result = st.imagingResult;
+  if (result === "Not available at this review") return { heading: "Imaging", text: "Imaging was due at this review and was not available." };
+  if (!mods.length && !findings && !result) return null;
+  const what = mods.length ? `${opJoin(mods)} ${mods.length === 1 && mods[0] !== "Radiographs" ? "was" : "were"} reviewed` : "Imaging was reviewed";
+  const how = result === "As expected" ? ": the appearances were as expected" : result === "Concern" ? ": there was a concern" : "";
+  return { heading: "Imaging", text: `${what}${how}${findings ? `${how ? "; " : ": "}${lowerFirst(findings)}` : ""}.` };
+}
+
 // The scores recorded at this review, written for the period they belong to. Out-of-range entries are left out.
 function opPostopScoresPart(po) {
   const scores = (po && po.scores) || {};
@@ -30799,7 +30933,7 @@ function opPostopTimelinePatch(po, intervalOptions) {
   const weeks = [...String((protocol.immobilisation || [])[0] || "").matchAll(/(\d+)\s*(?:\u2013\s*(\d+))?\s*weeks?/gi)].map((m) => Number(m[2] || m[1]));
   if (weeks.length && days != null) plan.push(days < Math.max(...weeks) * 7 ? "Continue immobilization (splint/cast/sling)" : "Wean from immobilization");
   if (protocol.phase) plan.push(protocol.phase.number >= 2 ? "Progress rehabilitation / advance loading" : "Continue current rehabilitation protocol");
-  if (opMilestonesFor(procs, period.id).some((t) => /radiograph|\bCT\b|imaging|electrodiagnostic/i.test(t))) plan.push("Further imaging or investigations");
+  if (opMilestonesFor(procs, period.id).some((t) => /radiograph|\bCT\b|imaging|electrodiagnostic/i.test(t)) || opImagingDue(procs, period.id).due.length) plan.push("Further imaging or investigations");
   plan.push(next && next.final ? "Discharge from follow-up" : "Continue routine follow-up");
   patch.planOptions = plan;
   if (!next || next.final) {
@@ -30811,7 +30945,7 @@ function opPostopTimelinePatch(po, intervalOptions) {
     patch.followUpInterval = o.interval;
     patch.followUpIntervalOther = o.other || null;
     const after = opNextReview(procs, next.next.id);
-    patch.nextReviewReason = next.milestones.some((t) => /radiograph|\bCT\b|imaging|union|fusion|electrodiagnostic/i.test(t)) ? ["Assess healing progress"] : after && after.final ? ["Pre-discharge assessment"] : ["Routine post-operative review"];
+    patch.nextReviewReason = next.milestones.some((t) => /radiograph|\bCT\b|imaging|union|fusion|electrodiagnostic/i.test(t)) || opImagingDue(procs, next.next.id).due.length ? ["Assess healing progress"] : after && after.final ? ["Pre-discharge assessment"] : ["Routine post-operative review"];
   }
   return patch;
 }
@@ -31869,6 +32003,155 @@ function PostopScores({ condition, poState, setMany }) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Range of motion at this review. Shown open when the operation's schedule puts it here (see OP_ROM_BY_CLASS); at any
+// other review it is one button away. It uses the clinic examination's own motion entry and wording.
+function PostopRom({ condition, poState, setMany }) {
+  const [open, setOpen] = React.useState(false);
+  const procs = opModulesForPostop(poState);
+  const set = opRomSetFor(procs, condition);
+  if (!set) return null;
+  const period = poState.reviewPeriod ? opReviewPeriodById(poState.reviewPeriod) : opReviewPeriodForDays(daysSinceSurgery(poState.surgeryDate));
+  const due = period && procs.length ? opRomDue(procs, period.id) : null;
+  const hasData = poState.romFull === "Full" || Object.values(poState.rom || {}).some((r) => r && (r.active != null || r.passive != null));
+  const show = !!due || open || hasData;
+  return (
+    <div>
+      <SubLabel>Range of motion</SubLabel>
+      <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>
+        {due === "p" ? "Due at this review: passive motion, within the protocol limits (active motion is not yet allowed)."
+          : due === "a" ? "Due at this review: active and passive motion."
+          : procs.length && period ? "Not routinely recorded at this review after this operation. It can still be added."
+          : "Record the motion of the operated joint."}
+      </div>
+      {show ? (
+        <>
+          <ButtonSelect options={["Full", "Not full"]} value={poState.romFull || null} onChange={(v) => setMany({ romFull: v })} columns={2} />
+          {poState.romFull === "Not full" && <ROMTable motions={set.motions} values={poState.rom || {}} onChange={(m, v) => setMany({ rom: { ...(poState.rom || {}), [m]: v } })} region={set.region} />}
+        </>
+      ) : (
+        <button onClick={() => setOpen(true)} className="w-full rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>Record range of motion</button>
+      )}
+    </div>
+  );
+}
+
+// What was reviewed, the result and the findings: shared by the post-operative review and the follow-up visit.
+function ImagingRecord({ state, setMany }) {
+  return (
+    <>
+      <div className="text-[12px] mb-1" style={{ color: T.inkSoft }}>Reviewed at this visit</div>
+      <CheckboxGroup options={OP_IMAGING_MODALITIES} selected={state.imagingDone || []} onChange={(v) => setMany({ imagingDone: v })} />
+      <div className="mt-2">
+        <ButtonSelect options={OP_IMAGING_RESULTS} value={state.imagingResult || null} onChange={(v) => setMany({ imagingResult: v })} columns={1} />
+      </div>
+      <div className="mt-2">
+        <TextField label="Imaging findings" value={state.imagingFindings || ""} onChange={(v) => setMany({ imagingFindings: v })} placeholder="e.g. callus bridging, hardware unchanged" />
+      </div>
+    </>
+  );
+}
+
+// Imaging at this review: what the operation's schedule puts here, and a place to record what was reviewed.
+function PostopImaging({ condition, poState, setMany }) {
+  const procs = opModulesForPostop(poState);
+  const period = poState.reviewPeriod ? opReviewPeriodById(poState.reviewPeriod) : opReviewPeriodForDays(daysSinceSurgery(poState.surgeryDate));
+  const info = period && procs.length ? opImagingDue(procs, period.id) : null;
+  return (
+    <div>
+      <SubLabel>Imaging</SubLabel>
+      <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>
+        {!info ? "Enter the date of surgery and choose the procedure to see whether imaging is due at this review."
+          : info.due.length ? (<><div className="font-semibold" style={{ color: T.tealDark }}>Due at this review:</div><ul>{info.due.map((t) => <li key={t} className="ml-4" style={{ listStyle: "disc" }}>{t}</li>)}</ul></>)
+          : info.ifConcern.length ? info.ifConcern[0]
+          : "No imaging is routinely repeated at this review after this operation."}
+      </div>
+      <ImagingRecord state={poState} setMany={setMany} />
+    </div>
+  );
+}
+
+// ---- motion and imaging at the follow-up visit (a diagnosis not operated on) ----
+// The follow-up tables already say, per diagnosis, what is looked at and when; these read them.
+function followupRows(condition) {
+  const sec = condition && (condition.sections || []).find((x) => x.id === "followup");
+  const table = sec && (sec.fields || []).find((f) => f.type === "table");
+  return (table && table.rows) || [];
+}
+function followupImagingRows(condition) { return followupRows(condition).filter((r) => OP_IMAGING_WORDS.test(`${r.left} ${r.right}`) || /\bscan\b/i.test(r.right)); }
+function followupMotionRows(condition) { return followupRows(condition).filter((r) => /\bROM\b|motion|range/i.test(`${r.left} ${r.right}`)); }
+// The movement entry of the diagnosis's own examination: a follow-up measures what the clinic examination measures.
+function followupRomFieldOf(condition) {
+  let own = null;
+  (function walk(fs) { (fs || []).forEach((f) => { if (!own && f.type === "rom") own = f; if (f.fields) walk(f.fields); }); })(((condition && condition.sections) || []).flatMap((x) => x.fields || []));
+  return own;
+}
+// The movements a follow-up records: the diagnosis's own examination entry when it has one; otherwise, where its follow-up
+// table lists motion, the standard movements of its region (a distal radius fracture, a phalangeal fracture).
+function followupRomSetOf(condition) {
+  const region = opDiagnosisRegions().get(condition && condition.id);
+  const own = followupRomFieldOf(condition);
+  if (own) return { motions: own.motions, region };
+  if (!followupMotionRows(condition).length) return null;
+  // the clinic files some wrist injuries (a distal radius fracture, a perilunate injury) under the hand: the diagnosis decides
+  if (/radius|lunate|carpal|tfcc|scaph|wrist/i.test(condition.id)) return { motions: OP_ROM_MOTIONS.wrist, region: "wrist" };
+  if (region === "hand" && /thumb|bennett|rolando/i.test(`${condition.id} ${condition.name}`)) return { motions: OP_ROM_MOTIONS.thumb, region: "hand" };
+  return OP_ROM_MOTIONS[region] ? { motions: OP_ROM_MOTIONS[region], region } : null;
+}
+function FollowupRom({ condition, fuState, setMany }) {
+  const [open, setOpen] = React.useState(false);
+  const set = followupRomSetOf(condition);
+  if (!set) return null;
+  const region = set.region;
+  const rows = followupMotionRows(condition);
+  const hasData = fuState.romFull === "Full" || Object.values(fuState.rom || {}).some((r) => r && (r.active != null || r.passive != null));
+  const show = rows.length > 0 || open || hasData;
+  return (
+    <div>
+      <SubLabel>Range of motion</SubLabel>
+      <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>
+        {rows.length ? `In this diagnosis's follow-up: ${rows.map((r) => `${r.left.toLowerCase()} \u2013 ${r.right.toLowerCase()}`).join("; ")}.` : "Not listed in this diagnosis's follow-up. It can still be added."}
+      </div>
+      {show ? (
+        <>
+          <ButtonSelect options={["Full", "Not full"]} value={fuState.romFull || null} onChange={(v) => setMany({ romFull: v })} columns={2} />
+          {fuState.romFull === "Not full" && <ROMTable motions={set.motions} values={fuState.rom || {}} onChange={(m, v) => setMany({ rom: { ...(fuState.rom || {}), [m]: v } })} region={region} />}
+        </>
+      ) : (
+        <button onClick={() => setOpen(true)} className="w-full rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>Record range of motion</button>
+      )}
+    </div>
+  );
+}
+// Repeat imaging that standard practice expects at follow-up but the diagnosis's own table does not say. These are drafts for
+// the surgeon to accept or strike: they are shown as suggestions, never written into a template's follow-up table, and
+// only for a diagnosis whose table schedules no imaging. The last two are conditional ("if").
+const FOLLOWUP_IMAGING_SUGGESTED = {
+  "radial-head-fracture": [{ left: "1\u20132 weeks", right: "Radiographs to confirm alignment" }, { left: "6 weeks", right: "Radiographs for union" }],
+  "coronoid-terrible-triad": [{ left: "1\u20132 weeks", right: "Radiographs to confirm a concentric reduction" }, { left: "6 weeks", right: "Radiographs: reduction and healing" }, { left: "3 months", right: "Radiographs: union and heterotopic ossification" }],
+  "athletic-elbow-ocd-veo": [{ left: "3\u20136 months", right: "Radiographs or MRI to assess healing of the lesion" }],
+  "hook-of-hamate-fracture": [{ left: "6\u20138 weeks", right: "Radiographs, and CT if union is uncertain" }],
+  "pip-dislocation-volar-plate": [{ left: "1\u20132 weeks", right: "Radiograph to confirm a congruent joint" }],
+  "mallet-finger": [{ left: "1\u20132 weeks", right: "Lateral radiograph if a bony mallet: joint congruity" }],
+  "amputation-replantation": [{ left: "2 weeks", right: "Radiographs of the bone fixation" }, { left: "6 weeks", right: "Radiographs: bone healing" }, { left: "3 months", right: "Radiographs: union" }],
+  "calcific-tendinitis": [{ left: "3 months", right: "Repeat radiograph if symptoms persist (resorption of the deposit)" }],
+  "rotator-cuff": [{ left: "3\u20136 months", right: "Ultrasound or MRI if not improving" }],
+};
+function FollowupImaging({ condition, fuState, setMany }) {
+  const rows = followupImagingRows(condition);
+  const suggested = rows.length ? [] : FOLLOWUP_IMAGING_SUGGESTED[condition.id] || [];
+  return (
+    <div>
+      <SubLabel>Imaging</SubLabel>
+      <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>
+        {rows.length ? (<><div className="font-semibold" style={{ color: T.tealDark }}>Scheduled in this diagnosis's follow-up:</div><ul>{rows.map((r) => <li key={r.left} className="ml-4" style={{ listStyle: "disc" }}>{r.left}: {r.right}</li>)}</ul></>)
+          : suggested.length ? (<><div>No repeat imaging is scheduled in this diagnosis's template.</div><div className="font-semibold mt-1" style={{ color: T.amber }}>Suggested, a draft for your review:</div><ul>{suggested.map((r) => <li key={r.left} className="ml-4" style={{ listStyle: "disc" }}>{r.left}: {r.right}</li>)}</ul></>)
+          : "No repeat imaging is scheduled for this diagnosis at follow-up. Record it if it was repeated."}
+      </div>
+      <ImagingRecord state={fuState} setMany={setMany} />
     </div>
   );
 }
