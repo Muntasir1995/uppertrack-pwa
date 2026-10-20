@@ -6291,6 +6291,18 @@ const kienbockDiseaseData = {
       subtitle: "Lichtman stage, biological & mechanical status",
       fields: [
         { type: "select", key: "lichtmanStage", label: "Lichtman classification", options: ["Stage I", "Stage II", "Stage IIIA", "Stage IIIB", "Stage IV"], columns: 3, noteLabel: "Lichtman stage" },
+        {
+          type: "info",
+          title: "Lichtman classification (reference)",
+          items: [
+            "Stage I \u2013 Radiographs normal, or a linear or compression fracture of the lunate only; MRI shows lunate signal loss (low on T1) and the bone scan is positive.",
+            "Stage II \u2013 Lunate sclerosis (increased density) on radiographs, with or without fracture lines; the lunate keeps its shape and size, and carpal height is normal.",
+            "Stage IIIA \u2013 Lunate collapse with normal carpal height and no fixed scaphoid rotation.",
+            "Stage IIIB \u2013 Lunate collapse with fixed scaphoid flexion (ring sign), loss of carpal height and proximal migration of the capitate.",
+            "Stage IV \u2013 Lunate and carpal collapse with generalised degenerative change: radiocarpal and/or midcarpal arthritis.",
+            "Described by Lichtman et al. (J Bone Joint Surg Am, 1977) and refined by Lichtman and Degnan (Hand Clin, 1993). The stage describes the radiographic and MRI picture; biological and mechanical status and ulnar variance are recorded separately and also guide treatment.",
+          ],
+        },
         { type: "select", key: "biologicalStatus", label: "Biological status", options: ["Viable", "Compromised", "Collapsed"], columns: 3 },
         { type: "select", key: "mechanicalStatus", label: "Mechanical status", options: ["Stable", "Collapse", "Arthritic"], columns: 3 },
       ],
