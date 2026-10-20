@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   ChevronDown,
+  ChevronUp,
   ChevronRight,
   ArrowLeft,
   AlertTriangle,
@@ -58,7 +59,7 @@ const T = {
   shadowCard: "0 1px 1px rgba(16,30,43,0.04), 0 2px 4px rgba(16,30,43,0.04), 0 8px 16px rgba(16,30,43,0.035)",
   shadowElevated: "0 1px 1px rgba(16,30,43,0.05), 0 3px 6px rgba(16,30,43,0.05), 0 12px 24px rgba(16,30,43,0.05)",
   shadowFloating: "0 2px 4px rgba(16,30,43,0.06), 0 12px 24px rgba(16,30,43,0.10), 0 24px 48px rgba(16,30,43,0.12)",
-  gradientTeal: "linear-gradient(135deg, #0A5D65, #12907E)",
+  gradientTeal: "linear-gradient(135deg, #0A5D65, #108378)",
 };
 
 /* ============================================================================
@@ -15217,7 +15218,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // The version is the date this build was made (year.month.day). A clinician can
 // read it ("is my copy today's?") and it says more than 5.31.1 ever did. Change
 // it, and add a line to WHATS_NEW, with each release.
-const APP_VERSION = "2026.10.17";
+const APP_VERSION = "2026.10.20";
 
 // Where suggestions and problems go. The one address to change if it moves.
 const CONTACT_EMAIL = "namanimuntasir@gmail.com";
@@ -15226,62 +15227,14 @@ const CONTACT_EMAIL = "namanimuntasir@gmail.com";
 // notice. Dated groups are added as releases are made.
 const WHATS_NEW = [
   {
-    when: "17 October 2026",
+    when: "20 October 2026",
     items: [
-      "Operative note: a fourth visit type covering every operation in the clinic notes, each with a standard note (findings, technique, steps, plan, rehabilitation); three general entries have a basic one where you write the steps. Choose the region on the body map, then the operation from a table. Nothing is pre-ticked.",
-      "Operative note: 99 more operations now have a full standard note, completing the clinic list: shoulder and elbow revision and infection, fractures, clavicle and sternoclavicular surgery, scapular and nerve reconstructions, hand tumours and infections, wrist and thumb salvage.",
-      "Operative note: an operation is now listed in every region where the clinic notes offer it, so carpal tunnel release opens from both the wrist and the peripheral nerve lesions, and distal radius and scaphoid fixation from the hand as well. It is one note, chosen once, and the body map counts include them.",
-      "Operations on a particular digit now ask which one: felon and paronychia drainage, nail bed, fingertip, glomus, PIP, mallet, flexor sheath and others. The digit is written in the title of the note, the procedure line and the follow-up summary, for example drainage of felon (ring finger).",
-      "Rotator cuff repair: each tendon (supraspinatus, infraspinatus, subscapularis, teres minor) is categorised on its own, and the tendons repaired are chosen separately. Hemi-hamate arthroplasty names the digit, and its steps and plan follow the surgeon's own record, with anaesthesia, antibiotics, side and tourniquet taken from the safety section.",
-      "Operative note: the operation search now offers Continue, and once an operation is chosen the long list folds to the rows that hold it, with a button to add or change operations. Extensor indicis proprius transfer for extensor pollicis longus rupture has its own note beside the EPL repair.",
-      "Post-operative follow-up now begins from the operation, with the diagnosis list one tap away. Filling from the operation summary also brings the operative details into the note and sets this visit's reasons and plan and the next review from the timeline: check and edit them.",
-      "Generated notes (operative, follow-up, post-operative and the combined clinic note) can be edited in place before copying. An edited note stops following the form until it is reverted, and the edited text is what is copied and kept in Recent notes.",
-      "Operative note: the standard steps are yours to start, then reword, delete or add to in place, with no separate deviations box. Steps you have not edited keep following the side and findings, so clock-face positions stay right; steps you have edited never change.",
-      "Operative note: clock-face positions (Bankart repair, Latarjet, capsular release) are written for the side operated on, and an operation that combined several procedures reads as one note, with preparation and closure described once and no repeated arthroscopy.",
-      "Operative note: the note carries the anaesthesia and safety details (time-out, antibiotics, tranexamic acid, tourniquet or WALANT, counts, blood loss, complications), and the post-operative plan is pre-filled from the protocol for the procedure and stays editable.",
-      "Operative note: the preview has one Copy button and tabs for the note, the follow-up summary and the rehabilitation protocol. The summary now says what was found and done (the tendons repaired, tear size, anchors, implant sizes), never free text or lot numbers.",
-      "Operative note: the green bar's Search finds operations, not diagnoses; the date starts as today; assistants can be several; each section opens at its top. Recent notes names the operation and keeps the note, the follow-up summary and the rehabilitation protocol together, each one tap away.",
-      "Post-operative review by period: the review is placed at 2 weeks, 6 weeks, 3, 6 or 12 months from the date of surgery, or chosen by you. For an operation that has an operative note, the form shows its protocol at that point and the scores due from the diagnosis's own outcomes table.",
-      "Post-operative review: the next review is suggested from the operation's protocol, with what is due at it (imaging, wire removal, electrodiagnostic review) as the templates state. One tap sets it from the diagnosis's own follow-up options; when the protocol has no later review, one tap sets the final visit.",
-      "Post-operative review: what to assess now differs by operation (for example subscapularis precautions after a shoulder arthroplasty, pillar pain after a carpal tunnel release), and ticks from another operation never carry across.",
-      "Post-operative review: paste the summary line from an operative note to fill in the procedure and the date of surgery. Tick what was assessed and the progress against the protocol; nothing is pre-ticked, and a note that does not use them is unchanged.",
-      "The product line now reads Upper Extremity Clinical Documentation, since the app covers theatre as well as clinic.",
-    ],
-  },
-  {
-    when: "13 October 2026",
-    items: [
-      "Clavicle fractures, lateral third: the pathway now follows a September 2026 review. Fixation is chosen by type and fragment: a locking plate for IIA, coracoclavicular stabilisation or a plate with augmentation for IIB and IIC, and a hook plate only as a salvage. The Cho system is listed for comparison.",
-      "Clavicle fractures: an apparent type I gets a stability check (displacement 5 mm or more, wide coracoclavicular distance, angle over about 30\u00b0), imaging adds an axillary lateral view and bilateral comparison, and sources include recent trials and meta-analyses.",
-      "Five classifications were asked twice and are now asked once, in the pathway that suggests management, and are still written into the impression: Rockwood type (AC joint), stage (adhesive capsulitis), Cruess stage (AVN of the humeral head), AO/OTA type (distal humerus fracture) and tear pattern (elbow UCL injury).",
-      "Glenohumeral osteoarthritis: the Cruess stage chosen in the AVN pathway is now written into the impression.",
-    ],
-  },
-  {
-    when: "12 October 2026",
-    items: [
-      "Fixed raw code text (\"u2014\") appearing in the hint under \"No templates match\" when a search finds nothing, and in two similar messages.",
-    ],
-  },
-  {
-    when: "11 October 2026",
-    items: [
-      "Credit and contact details now sit in About, with a tappable email link. The home screen is cleaner.",
-      "The version is now a date, and this list says what changed.",
-      "Every button and link now has at least a 44 px area to tap, including the three icons in the green bar and the remove button on a diagnosis tab (which was 21 px).",
-      "Brief encounter now includes Diagnosis Classification, so the classification, severity and sub-type that the impression is written from are no longer hidden. Only the differential diagnosis checklist stays in the full template.",
-      "Wording fixed in two notes: PIP dislocation now says how the dislocation was reduced beforehand, and the wrist ganglion stability rings no longer read \"stability was stable\".",
-    ],
-  },
-  {
-    when: "Earlier in October 2026",
-    items: [
-      "Hemi-hamate arthroplasty added to the surgical options for PIP dislocations. The risks listed for it, and for volar plate arthroplasty, no longer mention implants.",
-      "Patient details (age, occupation, sport, work, medical history, hand dominance) carry between diagnoses in a visit, and the combined note states the patient once, using every diagnosis.",
-      "Search is now an icon. Home, reference and search stay fixed in the green bar while the diagnoses scroll beside them.",
-      "Related conditions start folded away. Choosing one adds it to the visit without leaving the diagnosis you are working on.",
-      "Glenohumeral osteoarthritis: Walch and Favard classifications under Imaging, an anticoagulant question, skin and axilla inspection, and an Other option under medical history.",
-      "Notes are kept to a readable width on wide screens, and sheets stop below the green bar so they can always be dragged back down.",
+      "Operative note: the operation search offers Continue, the long list folds to the rows that hold your choice, and an operation appears in every region where the clinic notes offer it (carpal tunnel release under both the wrist and the nerve lesions).",
+      "Operative note: operations on a particular digit ask which one and write it in the title, the procedure line and the summary. Each rotator cuff tendon has its own tear category. New notes: EIP transfer for EPL rupture; hemi-hamate arthroplasty follows the surgeon's own record.",
+      "Post-operative follow-up starts from the operation, brings in the operative details from the summary, and can set this visit's reasons and plan and the next review from the timeline.",
+      "Every generated note (operative, follow-up, post-operative and combined) can be edited in place before copying.",
+      "Accessibility and layout audit at phone, tablet and desktop sizes: sliders and dates now have names for screen readers, button text meets contrast standards, small map text is larger, and the post-operative screen is shorter on a phone (the procedure list and protocol card fold).",
+      "Post-operative follow-up has an Outcome measures section: it offers the scores due at that review from the diagnosis's own table, checks each score's range, and writes them into the note.",
     ],
   },
 ];
@@ -16737,7 +16690,7 @@ function VASSlider({ value, onChange }) {
           {v}<span className="text-[13px] font-normal" style={{ color: T.inkSoft }}>/10</span>
         </span>
       </div>
-      <input type="range" min={0} max={10} step={1} value={v} onChange={(e) => onChange(Number(e.target.value))} className="w-full" style={{ accentColor: color, height: 44 }} />
+      <input type="range" min={0} max={10} step={1} value={v} aria-label="VAS pain score" aria-valuetext={`${v} out of 10`} onChange={(e) => onChange(Number(e.target.value))} className="w-full" style={{ accentColor: color, height: 44 }} />
       <div className="flex justify-between text-[12px] mt-0.5" style={{ color: T.inkSoft }}>
         <span>No pain</span><span>Worst pain</span>
       </div>
@@ -16863,7 +16816,12 @@ function DictateButton({ onResult }) {
   );
 }
 
-function TextField({ label, value, onChange, placeholder, suggestions, multiSelect }) {
+function TextField({ label, value, onChange, placeholder, suggestions, multiSelect, foldSuggestions, foldNoun }) {
+  // Once something is chosen the long list of suggestions is out of the way: only the matching chip stays, and a button
+  // brings the rest back. Opt-in, for fields where the list is long and the choice is made once.
+  const [showAll, setShowAll] = React.useState(false);
+  const folded = !!foldSuggestions && !multiSelect && !!String(value || "").trim() && !showAll;
+  const shownSuggestions = folded ? (suggestions || []).filter((x) => String(value || "").trim().toLowerCase() === x.toLowerCase()) : suggestions;
   const selectedList = multiSelect ? String(value || "").split(",").map((v) => v.trim()).filter(Boolean) : [];
   const toggleMultiSelect = (s) => {
     const isNoneChip = s.trim().toLowerCase() === "none";
@@ -16883,7 +16841,7 @@ function TextField({ label, value, onChange, placeholder, suggestions, multiSele
       <div className="text-[13px] mb-1" style={{ color: T.inkSoft }}>{label}</div>
       {suggestions && suggestions.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
-          {suggestions.map((s) => {
+          {shownSuggestions.map((s) => {
             const active = multiSelect
               ? selectedList.some((v) => v.toLowerCase() === s.toLowerCase())
               : String(value || "").trim().toLowerCase() === s.toLowerCase();
@@ -16903,6 +16861,14 @@ function TextField({ label, value, onChange, placeholder, suggestions, multiSele
               </button>
             );
           })}
+          {foldSuggestions && !multiSelect && String(value || "").trim() && folded && suggestions.length > shownSuggestions.length && (
+            <button onClick={() => setShowAll(true)} className="rounded-full px-3.5 text-[13px] font-semibold active:scale-95" style={{ minHeight: 44, background: "transparent", color: T.tealDark, border: `1px dashed ${T.teal}` }}>
+              {`Show other ${foldNoun || "options"} (${suggestions.length - shownSuggestions.length})`}
+            </button>
+          )}
+          {foldSuggestions && !multiSelect && String(value || "").trim() && showAll && (
+            <button onClick={() => setShowAll(false)} className="rounded-full px-3.5 text-[13px] font-semibold active:scale-95" style={{ minHeight: 44, background: "transparent", color: T.tealDark, border: `1px dashed ${T.teal}` }}>Hide the list</button>
+          )}
         </div>
       )}
       <div className="flex items-center gap-2">
@@ -16919,7 +16885,7 @@ function DateField({ label, value, onChange }) {
   return (
     <div className="mb-3">
       <div className="text-[13px] mb-1" style={{ color: T.inkSoft }}>{label}</div>
-      <input type="date" value={value || ""} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink, minHeight: 44 }} />
+      <input type="date" value={value || ""} aria-label={label} onChange={(e) => onChange(e.target.value)} className="w-full rounded-lg px-3 py-2.5 text-[15px]" style={{ border: `1px solid ${T.border}`, background: T.slateChip, color: T.ink, minHeight: 44 }} />
     </div>
   );
 }
@@ -17029,7 +16995,7 @@ function ROMSlider({ label, value, onChange, max, min, color }) {
   return (
     <div className="flex items-center gap-2 py-1">
       <span className="text-[12px] w-16 shrink-0" style={{ color: T.inkSoft }}>{label}</span>
-      <input type="range" min={min} max={max} step={5} value={value ?? 0} onChange={(e) => onChange(Number(e.target.value))} className="flex-1" style={{ accentColor: color, height: 44 }} />
+      <input type="range" min={min} max={max} step={5} value={value ?? 0} aria-label={`${label} slider`} onChange={(e) => onChange(Number(e.target.value))} className="flex-1" style={{ accentColor: color, height: 44 }} />
       <div className="flex items-center gap-0.5 shrink-0">
         <input
           type="number"
@@ -17064,6 +17030,7 @@ function SpinalLevelSlider({ label, value, onChange, color }) {
         min={0}
         max={SPINAL_LEVELS.length - 1}
         step={1}
+        aria-label={`${label} spinal level`}
         value={sliderIdx}
         onChange={(e) => onChange(SPINAL_LEVELS[Number(e.target.value)])}
         className="flex-1"
@@ -20576,6 +20543,8 @@ function buildPostopNoteParts(condition, poState) {
   // Written only when the review-by-period fields are used, so existing post-operative notes are unchanged.
   const protocolPart = opPostopProtocolPart(poState);
   if (protocolPart) parts.push(protocolPart);
+  const scoresPart = opPostopScoresPart(poState);
+  if (scoresPart) parts.push(scoresPart);
   const detailsPart = opPostopDetailsPart(poState);
   if (detailsPart) parts.splice(parts.length && parts[0].heading === "Procedure" ? 1 : 0, 0, detailsPart);   // straight after the procedure line
 
@@ -21026,7 +20995,7 @@ function OutcomeScores({ condition, state, onFieldChange }) {
         <SubLabel>SANE — overall rating of the affected limb (0–100%, higher is better)</SubLabel>
         <div className="flex items-center gap-3">
           <input
-            type="range" min={0} max={100} step={5}
+            type="range" min={0} max={100} step={5} aria-label="SANE rating, percent"
             value={state.saneScore ?? 0}
             onChange={(e) => onFieldChange({ saneScore: Number(e.target.value) })}
             className="flex-1" style={{ accentColor: T.teal, height: 44 }}
@@ -21047,7 +21016,7 @@ function OutcomeScores({ condition, state, onFieldChange }) {
           <SubLabel>ASES — pain today (0–10, higher is worse)</SubLabel>
           <div className="flex items-center gap-3 mb-3">
             <input
-              type="range" min={0} max={10} step={1}
+              type="range" min={0} max={10} step={1} aria-label="ASES pain today"
               value={ases.pain ?? 0}
               onChange={(e) => setAses("pain", Number(e.target.value))}
               className="flex-1" style={{ accentColor: T.teal, height: 44 }}
@@ -23043,25 +23012,25 @@ function BodyMap({ onSelect, counts, activeRegion, fillHeight, uid = "ut", unit 
       )}
 
       <text x="208" y="96" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#2C5468">SHOULDER</text>
-      <text x="208" y="118" fontSize="11" fill="#3F6D84">{n("shoulder")} {unit}</text>
+      <text x="208" y="118" fontSize="12" fill="#3F6D84">{n("shoulder")} {unit}</text>
       <text x="20" y="278" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#6B5410">ELBOW</text>
-      <text x="20" y="300" fontSize="11" fill="#8A6C16">{n("elbow")} {unit}</text>
+      <text x="20" y="300" fontSize="12" fill="#8A6C16">{n("elbow")} {unit}</text>
       <text x="20" y="394" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#7A4A14">WRIST</text>
-      <text x="20" y="416" fontSize="11" fill="#98601C">{n("wrist")} {unit}</text>
+      <text x="20" y="416" fontSize="12" fill="#98601C">{n("wrist")} {unit}</text>
       <text x="20" y="496" fontSize="21" fontWeight="700" letterSpacing="1.6" fill="#7E2F2A">HAND</text>
-      <text x="20" y="518" fontSize="11" fill="#9C443C">{n("hand")} {unit}</text>
+      <text x="20" y="518" fontSize="12" fill="#9C443C">{n("hand")} {unit}</text>
 
       <rect x="0" y="556" width="348" height="46" rx="7" fill="#DCD3EC" opacity="0.6"/>
       <text x="20" y="576" fontSize="17" fontWeight="700" letterSpacing="1.2" fill="#463A66">PERIPHERAL NERVE</text>
-      <text x="20" y="592" fontSize="11" fill="#5A4B80">{n("peripheralNerve")} {unit}</text>
+      <text x="20" y="592" fontSize="12" fill="#5A4B80">{n("peripheralNerve")} {unit}</text>
       <g strokeLinecap="round" fill="none">
         <path d="M250 566 h30" stroke="#F0C64A" strokeWidth="3"/>
         <path d="M250 580 h30" stroke="#7FD4DC" strokeWidth="3"/>
         <path d="M250 594 h30" stroke="#C58ED8" strokeWidth="3"/>
       </g>
-      <text x="286" y="570" fontSize="9" fill="#5A4B80">median</text>
-      <text x="286" y="584" fontSize="9" fill="#5A4B80">ulnar</text>
-      <text x="286" y="598" fontSize="9" fill="#5A4B80">radial</text>
+      <text x="286" y="570" fontSize="11" fill="#5A4B80">median</text>
+      <text x="286" y="584" fontSize="11" fill="#5A4B80">ulnar</text>
+      <text x="286" y="598" fontSize="11" fill="#5A4B80">radial</text>
 
       {zones.map((z) => (
         <rect
@@ -23382,63 +23351,38 @@ function AboutSheet({ open, onClose }) {
         <div className="px-5 pb-6 pt-1" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
           <H>What it is</H>
           <P>
-            UpperTrack is a structured documentation tool for upper extremity clinics, theatre and follow-up. It covers {conditionCount} condition
-            templates across the shoulder, elbow, wrist, hand and peripheral nerves, plus {generalCount} general assessments for
-            presentations where the diagnosis is not yet clear. Tapping through history, examination, imaging and a
-            management pathway produces a clinic note and a physiotherapy referral ready to copy into the record. Operative notes cover every operation offered in the clinic notes, each with a standard note you can edit. Three general entries that name no single operation, such as surgical treatment of an underlying pathology, have no standard steps.
+            UpperTrack documents upper extremity clinics, theatre and follow-up. {conditionCount} condition templates across the shoulder,
+            elbow, wrist, hand and peripheral nerves, and {generalCount} general assessments for an unclear diagnosis, produce a clinic note
+            and a physiotherapy referral to copy into the record. Every operation has a standard operative note, plan and rehabilitation protocol.
           </P>
 
           <H>What you can do</H>
           <ul className="mb-1">
-            <Li>At a post-operative review, start from the operation (or the diagnosis), then enter the date of surgery or paste the summary line from its operative note, to see the protocol for that review (2 weeks, 6 weeks, 3, 6 or 12 months): the current rehabilitation phase, precautions, imaging and follow-up, red flags and the scores due. It also suggests the next review and what to assess for that operation, and one tap sets this visit's reasons and plan and the next review from the timeline. Any generated note can be edited in place before it is copied.</Li>
-            <Li>Write an operative note: choose the region on the body map, then the operations performed (one or several), tick the indications that applied, record findings, technique, implants and the safety details, and start from the standard steps if you want them, then edit them in place. Nothing is pre-ticked, and the plan is pre-filled from your protocol. An operation is listed in every region where the clinic notes offer it, such as carpal tunnel release under both the wrist and the peripheral nerve lesions. Copy the note, a follow-up summary or the rehabilitation protocol from one preview.</Li>
-            <Li>Document a new patient, a follow-up, a post-operative review or an operation. Post-operative reviews adapt to the time since surgery and to the procedure performed.</Li>
-            <Li>Cover several diagnoses in one visit. Follow-up and post-operative reviews carry the shared details (date, reason for review, progress, plan) across diagnoses and produce one combined note that lists only what differs.</Li>
-            <Li>Details about the patient (age, occupation, sport, work, medical history, hand dominance) entered under one diagnosis fill in the same details under the others, in whatever form each template asks for them. Anything you type yourself is left alone, and the combined note states the patient once, using every diagnosis.</Li>
-            <Li>Use a brief encounter for a quick consultation, or the full template when the case needs it.</Li>
-            <Li>Start each new-visit note with a one-line summary of the patient, diagnosis and decision, which can be copied on its own. Add your own comments, typed or dictated, and they stay in the note as it updates, unlike editing the text by hand.</Li>
-            <Li>Record established classifications and scores where they guide management, for example the Wrightington classification for elbow fracture-dislocations, the GTIM score for shoulder instability, Herbert for scaphoid fractures, McGowan for cubital tunnel and STAM for scapulothoracic abnormal motion.</Li>
-            <Li>Calculate ASES, SANE and QuickDASH scores from item responses, and document injections (agent, dose and technique).</Li>
-            <Li>Search the evidence library, which has summaries and linked sources for {evidenceCount} diagnoses, and reopen the notes you have copied during the session.</Li>
-            <Li>Work on a phone or tablet. Buttons shade under a hovering Apple Pencil or S Pen on devices that report pencil hover.</Li>
-          </ul>
-
-          <H>Goals</H>
-          <ul className="mb-1">
-            <Li>Faster, consistent notes in a busy clinic, with the examination captured exactly as recorded rather than reconstructed afterwards.</Li>
-            <Li>Evidence at the point of decision: management pathways carry summaries of the literature that informs them.</Li>
-            <Li>Safety prompts that stay visible, such as red flags that show whether they have been reviewed.</Li>
-            <Li>A teaching aid for trainees, since the grading criteria and evidence sit alongside the documentation.</Li>
+            <Li>Document a new patient, a follow-up, a post-operative review or an operation, and cover several diagnoses in one visit with a single combined note.</Li>
+            <Li>Write an operative note: choose the region, then the operations; record indications, findings, technique and implants; start from the standard steps and edit them. Nothing is pre-ticked.</Li>
+            <Li>At a post-operative review, start from the operation or the diagnosis. The review follows the time since surgery: protocol, scores due, next review.</Li>
+            <Li>Edit any generated note in place, add your own comments, and copy a one-line summary.</Li>
+            <Li>Record classifications and scores (ASES, SANE, QuickDASH), document injections, search the evidence library ({evidenceCount} diagnoses) and reopen recent notes.</Li>
+            <Li>Works on phone, tablet and desktop.</Li>
           </ul>
 
           <H>Your data</H>
           <ul className="mb-1">
-            <Li>Nothing is stored. Everything entered is held in memory only, never saved to the device.</Li>
-            <Li>New patient clears what you entered for the current patient. Notes you have copied stay in the Notes list (the most recent 12) until the app is closed or reloaded, so close the app before handing a shared device to someone else.</Li>
-            <Li>The app sends no patient data anywhere and contains no analytics or tracking. Links to evidence open the publisher&apos;s or PubMed&apos;s website in your browser.</Li>
-            <Li>
-              Voice dictation uses your browser&apos;s built-in speech recognition. Depending on the browser, the audio may
-              be processed on the browser provider&apos;s servers (for example Google, in Chrome). Avoid dictating patient
-              identifiers.
-            </Li>
-            <Li>Copied notes are placed on your device&apos;s clipboard, where other apps may be able to read them.</Li>
+            <Li>Nothing is saved. Entries stay in memory only. New patient clears the current patient; copied notes stay in the Notes list (the last 12) until the app is closed, so close it before handing over a shared device.</Li>
+            <Li>No patient data is sent anywhere and there are no analytics. Voice dictation uses your browser&apos;s speech recognition, which may send audio to the browser provider, so avoid identifiers. Copied notes sit on the clipboard, where other apps may read them.</Li>
           </ul>
 
-          <H>Important disclaimers</H>
+          <H>Important</H>
           <ul className="mb-1">
-            <Li>UpperTrack is a documentation and structured-thinking aid for qualified clinicians. It does not diagnose, and it does not make treatment decisions.</Li>
-            <Li>Pathways suggest options. Clinical judgement remains central, and the clinician is responsible for the accuracy of every note and for all clinical decisions.</Li>
-            <Li>It has not been evaluated or approved as a medical device by any regulatory body.</Li>
-            <Li>Evidence summaries cite the sources they draw on and were last updated in October 2026. They may become out of date: verify against the primary source before changing practice.</Li>
-            <Li>Classifications, scores and treatment algorithms are condensed from the publications cited. Refer to the original for full definitions and indications.</Li>
-            <Li>Standard sentences, such as the consent discussion and the pre-operative referral line, are written from your selections. Check that they describe what actually happened and match your local practice.</Li>
-            <Li>It does not replace local protocols or institutional guidelines, which take precedence.</Li>
-            <Li>Outcome measure instruments remain the property of their copyright holders and should be obtained from the official sources linked in the Reference panel.</Li>
+            <Li>UpperTrack is a documentation aid for qualified clinicians. It does not diagnose or decide treatment, it has not been approved as a medical device, and local protocols take precedence. The clinician is responsible for every note and decision.</Li>
+            <Li>Pathways suggest options. Evidence summaries (last updated October 2026), classifications and scores are condensed from the sources cited: check the original before changing practice.</Li>
+            <Li>Standard sentences are written from your selections: check that they describe what happened.</Li>
+            <Li>Outcome measure instruments belong to their copyright holders: use the official sources linked in the Reference panel.</Li>
           </ul>
 
           <H>Version and what&apos;s new</H>
           <P>Version {APP_VERSION}. The version is the date this build was made.</P>
-          {WHATS_NEW.map((group) => (
+          {WHATS_NEW.slice(0, 1).map((group) => (
             <div key={group.when} className="mb-2">
               <div className="text-[13px] font-semibold mb-1" style={{ color: T.ink }}>{group.when}</div>
               <ul>{group.items.map((item, i) => <Li key={i}>{item}</Li>)}</ul>
@@ -23494,8 +23438,8 @@ function RefIconButton({ section, label, short, icon: Icon, tone, showLabel }) {
         <Icon size={19} color={isOpen ? "#fff" : T.tealDark} />
         {count > 0 && (
           <span
-            className="absolute flex items-center justify-center rounded-full text-[10px] font-bold"
-            style={{ top: -4, right: -4, minWidth: 17, height: 17, padding: "0 4px", background: isOpen ? "#fff" : T.teal, color: isOpen ? T.tealDark : "#fff", border: `1.5px solid ${T.surface}`, lineHeight: 1 }}
+            className="absolute flex items-center justify-center rounded-full text-[11px] font-bold"
+            style={{ top: -4, right: -4, minWidth: 18, height: 18, padding: "0 4px", background: isOpen ? "#fff" : T.teal, color: isOpen ? T.tealDark : "#fff", border: `1.5px solid ${T.surface}`, lineHeight: 1 }}
           >
             {count > 9 ? "9+" : count}
           </span>
@@ -24257,6 +24201,8 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
         onChange={(v) => set("procedureName", v)}
         placeholder="e.g. Open rotator cuff repair"
         suggestions={surgicalOptionsFor(condition.id)}
+        foldSuggestions
+        foldNoun="procedures"
       />
       <DateField label="Date of surgery" value={poState.surgeryDate} onChange={(v) => set("surgeryDate", v)} />
       {sinceText && <div className="text-[13px] mt-1 mb-1" style={{ color: T.inkSoft }}>{sinceText} since surgery</div>}
@@ -24301,6 +24247,8 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
           <ButtonSelect options={POSTOP_RETURN_SPORT_OPTIONS} value={poState.returnToSport || null} onChange={(v) => set("returnToSport", v)} columns={3} />
         </>
       )}
+
+      <PostopScores condition={condition} poState={poState} setMany={(patch) => onChange({ ...ownState, ...patch })} />
 
       <SubLabel>Complications</SubLabel>
       <CheckboxGroup options={postopComplicationOptions(poState.procedureName)} selected={poState.complications || []} onChange={setComplications} />
@@ -24555,7 +24503,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
           <FileText size={16} color="#fff" />
           {noteCount > 0 && (
             <span
-              className="absolute flex items-center justify-center rounded-full text-[10px] font-bold"
+              className="absolute flex items-center justify-center rounded-full text-[11px] font-bold"
               style={{
                 top: -2, right: -2, minWidth: 16, height: 16, padding: "0 4px",
                 background: "#fff", color: T.tealDark,
@@ -30671,12 +30619,66 @@ function opProtocolForReview(procs, days, periodId) {
     followup: kind("followup")[0] || null, redFlags, returnTo: primary.rehab.returnTo || null,
   };
 }
-function opScoresDue(condition, periodId) {
+// Which scores a diagnosis's outcomes table puts at this review. A table with rows for particular times ("3 months") is
+// read exactly. A table that only says Initial / Follow-up / Final (more than half of the diagnoses) is read this way:
+// nothing at the 2-week wound check, the Follow-up row at each later review, and the Final row at the operation's last
+// review. `isFinal` is that last review when the operation's protocol is known; without one the 6- and 12-month
+// reviews are taken as final.
+function opScoresDue(condition, periodId, isFinal) {
   const sec = condition && (condition.sections || []).find((s) => s.id === "outcomes");
   const table = sec && (sec.fields || []).find((f) => f.type === "table");
+  if (!table) return null;
   const re = OP_SCORE_LABELS[periodId];
-  const row = table && re && table.rows.find((r) => re.test(r.left));
-  return row ? { when: row.left, scores: row.right } : null;
+  const exact = re && table.rows.find((r) => re.test(r.left));
+  if (exact) return { when: exact.left, scores: exact.right };
+  if (periodId === "2w") return null;
+  const useFinal = isFinal == null ? periodId === "6m" || periodId === "12m" : !!isFinal;
+  const generic = table.rows.find((r) => new RegExp(`^${useFinal ? "Final" : "Follow-up"}`, "i").test(r.left));
+  return generic ? { when: generic.left, scores: generic.right } : null;
+}
+
+// The instruments that can be recorded as a total score, with the range each is scored on. Anything else a table names
+// (grip strength, return to work, range of motion) is a clinical finding the review already asks about.
+const OP_SCORE_SPECS = [
+  { id: "ASES", label: "ASES", max: 100, hint: "higher is better", calc: true, re: /^ASES/i },
+  { id: "QuickDASH", label: "QuickDASH", max: 100, hint: "higher is worse", calc: true, re: /^QuickDASH/i },
+  { id: "DASH", label: "DASH", max: 100, hint: "higher is worse", re: /^DASH$/i },
+  { id: "SANE", label: "SANE", max: 100, hint: "higher is better", calc: true, re: /^SANE/i },
+  { id: "Constant", label: "Constant", max: 100, hint: "higher is better", re: /^Constant/i },
+  { id: "MEPS", label: "MEPS", max: 100, hint: "higher is better", re: /^MEPS/i },
+  { id: "PRWE", label: "PRWE", max: 100, hint: "higher is worse", re: /^PRWE/i },
+  { id: "WOSI", label: "WOSI", max: 2100, hint: "lower is better", re: /^WOSI/i },
+  { id: "VAS", label: "VAS", max: 10, hint: "pain, higher is worse", re: /^VAS/i },
+];
+function opScoreSpecFor(name) { return OP_SCORE_SPECS.find((m) => m.re.test(String(name).trim())) || null; }
+function opScoreNames(text) { return String(text || "").split(/\s*\+\s*|,\s*/).map((n) => n.trim()).filter(Boolean); }
+function opScoreMeasuresIn(text) {
+  const out = [];
+  opScoreNames(text).forEach((n) => { const sp = opScoreSpecFor(n); if (sp && !out.includes(sp)) out.push(sp); });
+  return out;
+}
+// What a diagnosis's table lists that is not a total score, for a line of "also assessed".
+function opNonScoreItemsIn(text) { return opScoreNames(text).filter((n) => !opScoreSpecFor(n)); }
+// Every instrument the diagnosis's table names at any time, so a score outside the due ones can still be added.
+function opScoreOptionsFor(condition) {
+  const sec = condition && (condition.sections || []).find((s) => s.id === "outcomes");
+  const table = sec && (sec.fields || []).find((f) => f.type === "table");
+  const found = [];
+  ((table && table.rows) || []).forEach((r) => opScoreMeasuresIn(r.right).forEach((m) => { if (!found.includes(m)) found.push(m); }));
+  return found.length ? OP_SCORE_SPECS.filter((m) => found.includes(m)) : OP_SCORE_SPECS.filter((m) => ["QuickDASH", "VAS"].includes(m.id));
+}
+function opScoreValid(spec, v) {
+  if (v === "" || v == null) return false;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 && n <= spec.max;
+}
+// The scores recorded at this review, written for the period they belong to. Out-of-range entries are left out.
+function opPostopScoresPart(po) {
+  const scores = (po && po.scores) || {};
+  const entered = OP_SCORE_SPECS.filter((sp) => opScoreValid(sp, scores[sp.id]));
+  if (!entered.length) return null;
+  const period = po && po.reviewPeriod ? opReviewPeriodById(po.reviewPeriod) : opReviewPeriodForDays(daysSinceSurgery(po && po.surgeryDate));
+  return { heading: "Outcome Measures", text: `${period ? `At the ${period.label.toLowerCase()}: ` : ""}${entered.map((sp) => `${sp.label} ${Number(scores[sp.id])}/${sp.max}`).join(", ")}.` };
 }
 function opAssessedFor(po) {
   const period = po && po.reviewPeriod ? opReviewPeriodById(po.reviewPeriod) : opReviewPeriodForDays(daysSinceSurgery(po && po.surgeryDate));
@@ -31655,11 +31657,11 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
               </button>
             </div>
             {tabs.length > 1 && (
-              <div role="tablist" aria-label="What to preview and copy" className="grid gap-1.5 px-4 pt-3" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0,1fr))` }}>
+              <div role="tablist" aria-label="What to preview and copy" className="flex gap-1.5 px-4 pt-3">
                 {tabs.map((t) => {
                   const active = t.id === current.id;
                   return (
-                    <button key={t.id} role="tab" aria-selected={active} onClick={() => setTab(t.id)} className="rounded-xl px-2 py-2.5 text-[14px] font-medium active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>
+                    <button key={t.id} role="tab" aria-selected={active} onClick={() => setTab(t.id)} className="rounded-xl px-3 py-2.5 text-[14px] font-medium active:scale-95 transition whitespace-nowrap" style={{ flex: "1 1 auto", minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>
                       {t.label}
                     </button>
                   );
@@ -31799,16 +31801,79 @@ function PostopSummaryImport({ onApply }) {
   );
 }
 
+// Outcome measures for this review. Only the scores this diagnosis's table puts at this point in the follow-up are shown;
+// any other instrument the table names can be added. A score is written into the note only when it is within its range.
+function PostopScores({ condition, poState, setMany }) {
+  const ref = React.useContext(ReferenceCtx);
+  const procs = opModulesForPostop(poState);
+  const days = daysSinceSurgery(poState.surgeryDate);
+  const period = poState.reviewPeriod ? opReviewPeriodById(poState.reviewPeriod) : opReviewPeriodForDays(days);
+  const nextReview = procs.length && period ? opNextReview(procs, period.id) : null;
+  const due = period ? opScoresDue(condition, period.id, nextReview ? nextReview.final : null) : null;
+  const dueSpecs = due ? opScoreMeasuresIn(due.scores) : [];
+  const scores = poState.scores || {};
+  const added = poState.scoresShown || [];
+  const shownIds = [...new Set([...dueSpecs.map((m) => m.id), ...added, ...Object.keys(scores)])];
+  const shown = OP_SCORE_SPECS.filter((m) => shownIds.includes(m.id));
+  const addable = opScoreOptionsFor(condition).filter((m) => !shownIds.includes(m.id));
+  const alsoListed = due ? opNonScoreItemsIn(due.scores) : [];
+  const setScore = (id, value) => setMany({ scores: { ...scores, [id]: value } });
+  const remove = (id) => { const next = { ...scores }; delete next[id]; setMany({ scores: next, scoresShown: added.filter((x) => x !== id) }); };
+  return (
+    <div>
+      <SubLabel>Outcome measures</SubLabel>
+      <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>
+        {!period ? "Enter the date of surgery to see which scores are due at this review. Any score can still be added."
+          : dueSpecs.length ? `Due at this review (${due.when}): ${dueSpecs.map((m) => m.label).join(", ")}.`
+          : "No score is scheduled at this review in this diagnosis's template. One can still be added."}
+        {alsoListed.length ? ` Also listed for this point: ${alsoListed.join(", ")}.` : ""}
+      </div>
+      {shown.map((sp) => {
+        const raw = scores[sp.id];
+        const bad = raw !== "" && raw != null && !opScoreValid(sp, raw);
+        const isDue = dueSpecs.some((m) => m.id === sp.id);
+        return (
+          <div key={sp.id} className="mb-2">
+            <div className="flex items-center gap-2">
+              <label htmlFor={`score-${sp.id}`} className="flex-1 min-w-0">
+                <div className="text-[14px] font-semibold" style={{ color: T.ink }}>{sp.label}{isDue ? <span className="text-[12px] font-medium ml-1.5" style={{ color: T.tealDark }}>due</span> : null}</div>
+                <div className="text-[12px]" style={{ color: T.inkSoft }}>{sp.hint}</div>
+              </label>
+              <input id={`score-${sp.id}`} type="number" inputMode="decimal" min={0} max={sp.max} step={sp.id === "VAS" ? 0.5 : 1} value={raw ?? ""} aria-label={`${sp.label} score`} aria-invalid={bad || undefined}
+                onChange={(e) => setScore(sp.id, e.target.value)} className="rounded-xl px-2 text-center"
+                style={{ width: 88, minHeight: 48, fontSize: 16, color: T.ink, background: T.surface, border: `1px solid ${bad ? T.amber : T.border}` }} />
+              <span className="text-[13px] shrink-0" style={{ color: T.inkSoft, minWidth: 34 }}>/ {sp.max}</span>
+              {sp.calc && ref && <button onClick={() => ref.openPanel("outcomes")} className="shrink-0 rounded-xl px-2.5 text-[13px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>Calculate</button>}
+              {!isDue && <button onClick={() => remove(sp.id)} aria-label={`Remove ${sp.label}`} className="shrink-0 flex items-center justify-center active:opacity-60" style={{ minWidth: 44, minHeight: 44 }}><X size={18} color={T.inkSoft} /></button>}
+            </div>
+            {bad && <div role="alert" className="text-[12px] mt-1" style={{ color: T.amber }}>{sp.label} is scored from 0 to {sp.max}; this entry is not written to the note.</div>}
+          </div>
+        );
+      })}
+      {addable.length > 0 && (
+        <div role="group" aria-label="Add a score" className="flex flex-wrap gap-1.5 mt-1">
+          {addable.map((m) => (
+            <button key={m.id} onClick={() => setMany({ scoresShown: [...added, m.id] })} className="rounded-full px-3.5 text-[14px] font-medium active:scale-95" style={{ minHeight: 44, background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>+ {m.label}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions }) {
+  // On a phone the card shows the current phase and the red flags, and folds the rest behind a button: it is reference
+  // text, and unfolded it is about 600 px of a screen that is already long. With room (tablet, desktop) it starts open.
+  const [open, setOpen] = React.useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
   const procs = opModulesForPostop(poState);
   const days = daysSinceSurgery(poState.surgeryDate);
   const override = poState.reviewPeriod || null;
   const period = override ? opReviewPeriodById(override) : opReviewPeriodForDays(days);
   const protocol = procs.length && period ? opProtocolForReview(procs, days, override) : null;
-  const scores = period ? opScoresDue(condition, period.id) : null;
   const assessedInfo = opAssessedFor(poState);
   const assessed = assessedInfo.items;
   const nextReview = protocol ? opNextReview(procs, period.id) : null;
+  const scores = period ? opScoresDue(condition, period.id, nextReview ? nextReview.final : null) : null;
   // Never automatic: the surgeon taps it. It picks the matching interval from this diagnosis's own follow-up table.
   const applyNext = () => {
     if (!nextReview) return;
@@ -31836,14 +31901,17 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
           <div className="text-[12px] font-bold uppercase tracking-wide mb-1.5" style={{ color: T.tealDark }}>Protocol at this review: {protocol.primary.name}</div>
           <ul className="text-[13px] leading-relaxed" style={{ color: T.ink, listStyle: "none", paddingLeft: 0 }}>
             {protocol.phase && <li className="mb-1.5"><span className="font-semibold">Rehabilitation now:</span> {protocol.phase.text}</li>}
-            {protocol.nextPhase && <li className="mb-1.5"><span className="font-semibold">Next phase:</span> {protocol.nextPhase.text}</li>}
-            {row("Immobilisation", protocol.immobilisation)}
-            {row("Precautions", protocol.precautions)}
-            {row("Imaging and follow-up in the protocol", protocol.followup ? [protocol.followup] : [])}
-            {row("Return to", protocol.returnTo ? [protocol.returnTo] : [])}
+            {open && protocol.nextPhase && <li className="mb-1.5"><span className="font-semibold">Next phase:</span> {protocol.nextPhase.text}</li>}
+            {open && row("Immobilisation", protocol.immobilisation)}
+            {open && row("Precautions", protocol.precautions)}
+            {open && row("Imaging and follow-up in the protocol", protocol.followup ? [protocol.followup] : [])}
+            {open && row("Return to", protocol.returnTo ? [protocol.returnTo] : [])}
             {row("Red flags to ask about", protocol.redFlags)}
-            <li className="mb-0"><span className="font-semibold">Scores due at this point:</span> {scores ? `${scores.scores} (${scores.when})` : "none scheduled at this point in this diagnosis's template"}</li>
+            {open && <li className="mb-0"><span className="font-semibold">Scores due at this point:</span> {scores ? `${scores.scores} (${scores.when})` : "none scheduled at this point in this diagnosis's template"}</li>}
           </ul>
+          <button onClick={() => setOpen(!open)} aria-expanded={open} className="mt-2 inline-flex items-center gap-1 rounded-lg px-1 text-[13px] font-semibold active:opacity-60" style={{ color: T.tealDark, minHeight: 44 }}>
+            {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />} {open ? "Show less" : "Show next phase, precautions and more"}
+          </button>
         </div>
       )}
       {nextReview && (
