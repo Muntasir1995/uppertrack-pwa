@@ -15241,7 +15241,7 @@ const WHATS_NEW = [
   {
     when: "20 October 2026",
     items: [
-      "Operative note: the operation search offers Continue, the long list folds to the rows that hold your choice, and an operation appears in every region where the clinic notes offer it (carpal tunnel release under both the wrist and the nerve lesions).",
+      "Searches offer Continue: choose an operation or diagnosis and go straight on (operative note, post-operative review, follow-up visit). In the operative note the long list folds to the rows that hold your choice, and an operation appears in every region where the clinic notes offer it.",
       "Operative note: operations on a particular digit ask which one and write it in the title, the procedure line and the summary. Each rotator cuff tendon has its own tear category. New notes: EIP transfer for EPL rupture; hemi-hamate arthroplasty follows the surgeon's own record.",
       "Post-operative follow-up starts from the operation, brings in the operative details from the summary, and can set this visit's reasons and plan and the next review from the timeline.",
       "Every generated note (operative, follow-up, post-operative and combined) can be edited in place before copying.",
@@ -24684,7 +24684,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
 /* Full-screen template search, reachable from anywhere via the top bar.
    Searches every condition across every region/subsection by name, and jumps
    straight into the template (adding it to the session) on selection. */
-function TemplateSearch({ onSelect, onClose, selectedIds }) {
+function TemplateSearch({ onSelect, onClose, selectedIds, onContinue }) {
   const [query, setQuery] = useState("");
   const toggleMode = !!selectedIds;
 
@@ -24732,7 +24732,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
       {toggleMode && (
         <div className="px-3 pt-3">
           <div className="max-w-2xl lg:max-w-4xl mx-auto rounded-xl px-3 py-2.5 text-[13px]" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}` }}>
-            Tap to add or remove from this visit — {selectedIds.length ? `${selectedIds.length} selected so far.` : "nothing selected yet."} Close this search to continue.
+            Tap to add or remove from this visit: {selectedIds.length ? `${selectedIds.length} selected so far.` : "nothing selected yet."}
           </div>
         </div>
       )}
@@ -24775,6 +24775,15 @@ function TemplateSearch({ onSelect, onClose, selectedIds }) {
           )}
         </div>
       </div>
+      {toggleMode && onContinue && selectedIds.length > 0 && (
+        <div className="px-3 py-3 shrink-0" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
+          <div className="max-w-2xl lg:max-w-4xl mx-auto">
+            <button onClick={onContinue} className="w-full rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
+              {`Continue with ${selectedIds.length} diagnosis${selectedIds.length === 1 ? "" : "es"}`}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -31840,7 +31849,7 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
 }
 
 // The Search button on the green bar, while an operative note is open: it searches the operations, not the diagnoses.
-function OperationSearch({ selectedIds, onToggle, onClose, onContinue }) {
+function OperationSearch({ selectedIds, onToggle, onClose, onContinue, continueNote }) {
   const [query, setQuery] = useState("");
   const groups = useMemo(() => opSearchProcedures(query), [query]);
   return (
@@ -31857,7 +31866,7 @@ function OperationSearch({ selectedIds, onToggle, onClose, onContinue }) {
       </div>
       <div className="px-3 pt-3">
         <div className="max-w-2xl lg:max-w-4xl mx-auto rounded-xl px-3 py-2.5 text-[13px]" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}` }}>
-          {`Tap to add or remove from this operation \u2014 ${selectedIds.length ? `${selectedIds.length} selected so far.` : "nothing selected yet."} Close this search to continue.`}
+          {`Tap to add or remove operations: ${selectedIds.length ? `${selectedIds.length} selected so far.` : "nothing selected yet."}`}
         </div>
       </div>
       <div className="px-3 pt-3 pb-8" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
@@ -31897,6 +31906,7 @@ function OperationSearch({ selectedIds, onToggle, onClose, onContinue }) {
       {selectedIds.length > 0 && (
         <div className="px-3 py-3 shrink-0" style={{ background: T.surface, borderTop: `1px solid ${T.border}` }}>
           <div className="max-w-2xl lg:max-w-4xl mx-auto">
+            {continueNote && <div className="text-[12px] mb-2" style={{ color: T.inkSoft }}>{continueNote}</div>}
             <button onClick={onContinue} className="w-full rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 48 }}>
               {`Continue with ${selectedIds.length} operation${selectedIds.length === 1 ? "" : "s"}`}
             </button>
@@ -32252,18 +32262,22 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
 
 // The post-operative review can begin from the operation, which is how a surgeon knows the patient. The diagnosis the note
 // is kept under follows from the operation; where the clinic notes file it under several, the surgeon picks.
-function PostopOperationPicker({ onContinue, onBack, onSwitch }) {
-  const [selectedIds, setSelectedIds] = useState([]);
+// The diagnosis each chosen operation will be reviewed under: the one picked, or the first it can go under. `chosen` says
+// whether the surgeon picked it; an operation that can go under several diagnoses and has no pick is still ambiguous.
+function opPostopItems(selectedIds, choice) {
+  return (selectedIds || []).map(opProcedureById).filter(Boolean).map((p) => {
+    const c = opDiagnosisCandidates(p);
+    const picked = choice && choice[p.id] && c.ids.includes(choice[p.id]);
+    return { p, ids: c.ids, exact: c.exact, dxId: picked ? choice[p.id] : c.ids[0], chosen: !!picked };
+  });
+}
+function PostopOperationPicker({ selectedIds, onToggle, choice, onChoice, onContinue, onBack, onSwitch }) {
   const [region, setRegion] = useState(undefined);
-  const [choice, setChoice] = useState({});
-  const toggle = (id) => setSelectedIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+  const toggle = onToggle;
   const procs = selectedIds.map(opProcedureById).filter(Boolean);
   const autoRegion = procs.length ? procs[0].region : null;
   const activeRegion = region === undefined ? autoRegion : region || null;
-  const items = procs.map((p) => {
-    const c = opDiagnosisCandidates(p);
-    return { p, ids: c.ids, exact: c.exact, dxId: choice[p.id] && c.ids.includes(choice[p.id]) ? choice[p.id] : c.ids[0] };
-  });
+  const items = opPostopItems(selectedIds, choice);
   const shortName = (id) => opShortDiagnosis(findConditionById(id).name);
   return (
     <div className="flex flex-col" style={{ height: "calc(100vh - 56px)", background: T.bg }}>
@@ -32285,7 +32299,7 @@ function PostopOperationPicker({ onContinue, onBack, onSwitch }) {
                 {i.ids.map((id) => {
                   const active = i.dxId === id;
                   return (
-                    <button key={id} aria-pressed={active} onClick={() => setChoice((c) => ({ ...c, [i.p.id]: id }))} className="rounded-full px-3.5 py-2 text-[14px] font-medium active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>{shortName(id)}</button>
+                    <button key={id} aria-pressed={active} onClick={() => onChoice(i.p.id, id)} className="rounded-full px-3.5 py-2 text-[14px] font-medium active:scale-95 transition" style={{ minHeight: 44, background: active ? T.teal : T.slateChip, color: active ? "#fff" : T.ink, border: `1px solid ${active ? T.teal : T.border}` }}>{shortName(id)}</button>
                   );
                 })}
               </div>
@@ -32934,6 +32948,10 @@ export default function App() {
   }, [followupSelectedIds, addSelectedToSession]);
   // The post-operative review begins from the operation by default; the diagnosis list stays one tap away.
   const [postopMode, setPostopMode] = useState("operation");
+  // The operations chosen for a post-operative review are held here so that the search and the picker share them.
+  const [postopOpIds, setPostopOpIds] = useState([]);
+  const [postopOpChoice, setPostopOpChoice] = useState({});
+  const togglePostopOp = useCallback((id) => setPostopOpIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])), []);
   const continueToPostopFromOperations = useCallback((items) => {
     const byDx = new Map();
     items.forEach(({ id, dxId }) => { if (!byDx.has(dxId)) byDx.set(dxId, []); byDx.get(dxId).push(id); });
@@ -32950,8 +32968,20 @@ export default function App() {
       });
     });
     setFollowupSelectedIds(dxIds);
+    setPostopOpIds([]);
+    setPostopOpChoice({});
     setScreen({ view: "postopVisit", conditionIds: dxIds });
   }, []);
+  // Leaving the selection screen starts the next one clean.
+  useEffect(() => { if (screen.view !== "postopSelect") { setPostopOpIds([]); setPostopOpChoice({}); } }, [screen.view]);
+  // Continue from the operation search: straight to the review, unless an operation can go under several diagnoses and none
+  // has been picked, in which case the search closes onto the picker so the diagnosis is chosen on purpose.
+  const postopSearchItems = opPostopItems(postopOpIds, postopOpChoice);
+  const postopSearchAmbiguous = postopSearchItems.some((i) => i.ids.length > 1 && !i.chosen);
+  const continueFromOperationSearch = () => {
+    setSearchOpen(false);
+    if (!postopSearchAmbiguous) continueToPostopFromOperations(postopSearchItems.map((i) => ({ id: i.p.id, dxId: i.dxId })));
+  };
   const continueToPostopVisit = useCallback(() => {
     addSelectedToSession();
     setScreen({ view: "postopVisit", conditionIds: followupSelectedIds });
@@ -32993,7 +33023,7 @@ export default function App() {
         onViewCombinedNote={() => setCombinedNoteOpen(true)}
         onEndSession={endSession}
         onOpenSearch={() => setSearchOpen(true)}
-        searchLabel={screen.view === "operativeNote" ? "Search operations" : "Search templates"}
+        searchLabel={screen.view === "operativeNote" || (screen.view === "postopSelect" && postopMode === "operation") ? "Search operations" : "Search templates"}
         onOpenPanel={() => { setPanelNote(null); setPanelSection(null); setPanelVariant("panel"); setPanelOpen(true); }}
         noteCount={recentNotes.length}
         onGoHome={goHome}
@@ -33031,7 +33061,7 @@ export default function App() {
       {screen.view === "postopSelect" && (
         <div className="ut-page">
         {postopMode === "operation" ? (
-          <PostopOperationPicker onContinue={continueToPostopFromOperations} onBack={goHome} onSwitch={() => setPostopMode("diagnosis")} />
+          <PostopOperationPicker selectedIds={postopOpIds} onToggle={togglePostopOp} choice={postopOpChoice} onChoice={(opId, dxId) => setPostopOpChoice((c) => ({ ...c, [opId]: dxId }))} onContinue={continueToPostopFromOperations} onBack={goHome} onSwitch={() => setPostopMode("diagnosis")} />
         ) : (
           <FollowupConditionPicker
             title="Post-operative Follow-up"
@@ -33194,7 +33224,9 @@ export default function App() {
 
       {searchOpen && (screen.view === "operativeNote"
         ? <OperationSearch selectedIds={opNote.op__procedures || []} onToggle={(id) => updateOp((cur) => opToggleProcedure(cur, id))} onClose={() => setSearchOpen(false)} onContinue={() => { setSearchOpen(false); updateOp((cur) => ({ ...cur, op__goto: "details" })); }} />
-        : <TemplateSearch onSelect={selectFromSearch} onClose={() => setSearchOpen(false)} selectedIds={inFollowupSelection ? followupSelectedIds : undefined} />)}
+        : screen.view === "postopSelect" && postopMode === "operation"
+        ? <OperationSearch selectedIds={postopOpIds} onToggle={togglePostopOp} onClose={() => setSearchOpen(false)} onContinue={continueFromOperationSearch} continueNote={postopSearchAmbiguous ? "Some of these can be reviewed under more than one diagnosis: you choose which next." : ""} />
+        : <TemplateSearch onSelect={selectFromSearch} onClose={() => setSearchOpen(false)} selectedIds={inFollowupSelection ? followupSelectedIds : undefined} onContinue={inFollowupSelection ? () => { setSearchOpen(false); if (screen.view === "postopSelect") continueToPostopVisit(); else continueToFollowupVisit(); } : undefined} />)}
     </div>
     </ReferenceCtx.Provider>
   );
