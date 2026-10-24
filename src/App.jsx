@@ -15243,7 +15243,7 @@ const WHATS_NEW = [
     items: [
       "Searches offer Continue: choose an operation or diagnosis and go straight on (operative note, post-operative review, follow-up visit). In the operative note the long list folds to the rows that hold your choice, and an operation appears in every region where the clinic notes offer it.",
       "Operative note: operations on a particular digit ask which one and write it in the title, the procedure line and the summary. Each rotator cuff tendon has its own tear category. New notes: EIP transfer for EPL rupture; hemi-hamate arthroplasty follows the surgeon's own record.",
-      "Post-operative follow-up starts from the operation, brings in the operative details from the summary, and can set this visit's reasons and plan and the next review from the timeline.",
+      "Post-operative follow-up starts from the operation, brings in the operative details from the summary, and can set this visit's reasons and plan and the next review from the timeline, listing what it set so you can check and edit it.",
       "Every generated note (operative, follow-up, post-operative and combined) can be edited in place before copying.",
       "Accessibility and layout audit at phone, tablet and desktop sizes: sliders and dates now have names for screen readers, button text meets contrast standards, small map text is larger, and the post-operative screen is shorter on a phone (the procedure list and protocol card fold).",
       "Post-operative follow-up records outcome measures, range of motion and imaging for the review period (passive motion first, then active; radiographs after fixation). The follow-up visit now records motion and shows the imaging each diagnosis schedules, with labelled draft suggestions where one is missing.",
@@ -23877,7 +23877,7 @@ function FollowupConditionBlock({ index, condition, fuState: ownState, fullState
 
   const followupSection = condition.sections.find((s) => s.id === "followup");
   const tableField = followupSection && (followupSection.fields || []).find((f) => f.type === "table");
-  const intervalOptions = tableField ? [...tableField.rows.map((r) => r.left), "Final", "Other"] : ["Final", "Other"];
+  const intervalOptions = followupIntervalChoices(condition);
 
   const sinceLastVisit = fuState.lastVisitDate ? timeSinceDate(fuState.lastVisitDate) : null;
   const stalled = followupProgressStalled(fuState);
@@ -24185,7 +24185,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
 
   const followupSection = condition.sections.find((s) => s.id === "followup");
   const tableField = followupSection && (followupSection.fields || []).find((f) => f.type === "table");
-  const intervalOptions = tableField ? [...tableField.rows.map((r) => r.left), "Final", "Other"] : ["Final", "Other"];
+  const intervalOptions = followupIntervalChoices(condition);
   const sinceText = poState.surgeryDate ? timeSinceSurgery(poState.surgeryDate) : null;
   // Drives the stage-aware prompts: which reasons come first, what the
   // red-flag line says, and whether return-to-activity is asked yet.
@@ -24238,6 +24238,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
 
       <PostopProtocolCard condition={condition} poState={poState} set={set} setMany={(patch) => onChange({ ...ownState, ...patch })} intervalOptions={intervalOptions} />
 
+      <div id="postop-reason" style={{ scrollMarginTop: 120 }} />
       <SubLabel>Reason for review</SubLabel>
       {stage && (
         <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>
@@ -24289,6 +24290,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
         <TextField label="Specify complication" value={poState.complicationsOther} onChange={(v) => set("complicationsOther", v)} />
       )}
 
+      <div id="postop-plan" style={{ scrollMarginTop: 120 }} />
       <SubLabel>Follow-up plan</SubLabel>
       <div className="text-[13px] mb-3" style={{ color: T.inkSoft }}>A post-operative plan is not the same decision as a first-presentation Management Pathway — select what applies now that surgery has already been done.</div>
       <CheckboxGroup options={POSTOP_PLAN_OPTIONS} selected={poState.planOptions || []} onChange={(v) => set("planOptions", v)} />
@@ -24299,6 +24301,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
         <InjectionPrompt detail={poState.injectionDetail} onChange={(d) => set("injectionDetail", d)} />
       )}
 
+      <div id="postop-next-review" style={{ scrollMarginTop: 120 }} />
       <SubLabel>Next review</SubLabel>
       <ButtonSelect options={intervalOptions} value={poState.followUpInterval || null} onChange={(v) => set("followUpInterval", v)} columns={2} />
       {poState.followUpInterval === "Other" && (
@@ -32091,6 +32094,21 @@ function followupRows(condition) {
   const table = sec && (sec.fields || []).find((f) => f.type === "table");
   return (table && table.rows) || [];
 }
+// The next-review choices for a diagnosis: the time labels of its follow-up table, each once, then "Final" and "Other". The
+// table's other rows (the day of injury, return to play, the initial visit) are milestones and baselines, not reviews, and
+// a row already called "Final" is not offered twice.
+const FOLLOWUP_INTERVAL_RE = /(\d+(\s*[\u2013-]\s*\d+)?\s*(hour|day|week|month|year)s?\b)|\bannual(ly)?\b|\byearly\b/i;
+function followupIntervalChoices(condition) {
+  const out = [];
+  followupRows(condition).forEach((r) => {
+    const label = String(r.left || "").trim();
+    if (!label || /^(final|other)$/i.test(label)) return;
+    if (/injury day|return to|initial|pre-?operative|baseline/i.test(label)) return;
+    if (!FOLLOWUP_INTERVAL_RE.test(label)) return;
+    if (!out.some((x) => x.toLowerCase() === label.toLowerCase())) out.push(label);
+  });
+  return [...out, "Final", "Other"];
+}
 function followupImagingRows(condition) { return followupRows(condition).filter((r) => OP_IMAGING_WORDS.test(`${r.left} ${r.right}`) || /\bscan\b/i.test(r.right)); }
 function followupMotionRows(condition) { return followupRows(condition).filter((r) => /\bROM\b|motion|range/i.test(`${r.left} ${r.right}`)); }
 // The movement entry of the diagnosis's own examination: a follow-up measures what the clinic examination measures.
@@ -32180,12 +32198,17 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
   const nextReview = protocol ? opNextReview(procs, period.id) : null;
   const scores = period ? opScoresDue(condition, period.id, nextReview ? nextReview.final : null) : null;
   // Never automatic: the surgeon taps it. It picks the matching interval from this diagnosis's own follow-up table.
-  const applyNext = () => {
-    if (!nextReview) return;
-    if (nextReview.final) { setMany({ followUpInterval: "Final", followUpIntervalOther: null }); return; }
-    const o = opNextReviewOption(intervalOptions, nextReview.next.id);
-    setMany({ followUpInterval: o.interval, followUpIntervalOther: o.other || null });
-  };
+  const nextTarget = nextReview ? (nextReview.final ? { interval: "Final", other: null } : opNextReviewOption(intervalOptions, nextReview.next.id)) : null;
+  const nextIsSet = !!nextTarget && poState.followUpInterval === nextTarget.interval && (nextTarget.interval !== "Other" || (poState.followUpIntervalOther || "") === (nextTarget.other || ""));
+  const applyNext = () => { if (nextTarget) setMany({ followUpInterval: nextTarget.interval, followUpIntervalOther: nextTarget.other || null }); };
+  const goTo = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const nextLabel = nextTarget ? (nextTarget.interval === "Other" ? nextTarget.other : nextTarget.interval) : "";
+  // what is currently set by the timeline, in words, so the effect is visible where the button is
+  const setNow = [
+    (poState.reason || []).length ? ["Reason for review", (poState.reason || []).join("; ")] : null,
+    (poState.planOptions || []).length ? ["Plan", (poState.planOptions || []).join("; ")] : null,
+    poState.followUpInterval ? ["Next review", `${poState.followUpInterval === "Other" ? poState.followUpIntervalOther || "other" : poState.followUpInterval}${(poState.nextReviewReason || []).length ? ` (${(poState.nextReviewReason || []).join("; ")})` : ""}`] : null,
+  ].filter(Boolean);
   const row = (label, items) => (items && items.length ? <li key={label} className="mb-1.5"><span className="font-semibold">{label}:</span> {items.join("; ")}</li> : null);
   return (
     <div>
@@ -32211,7 +32234,7 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
             {open && row("Precautions", protocol.precautions)}
             {open && row("Imaging and follow-up in the protocol", protocol.followup ? [protocol.followup] : [])}
             {open && row("Return to", protocol.returnTo ? [protocol.returnTo] : [])}
-            {row("Red flags to ask about", protocol.redFlags)}
+            {row("Red flags to ask about", (protocol.redFlags || []).map((t) => String(t).replace(/^Red flags( during rehabilitation)?:\s*/i, "")))}
             {open && <li className="mb-0"><span className="font-semibold">Scores due at this point:</span> {scores ? `${scores.scores} (${scores.when})` : "none scheduled at this point in this diagnosis's template"}</li>}
           </ul>
           <button onClick={() => setOpen(!open)} aria-expanded={open} className="mt-2 inline-flex items-center gap-1 rounded-lg px-1 text-[13px] font-semibold active:opacity-60" style={{ color: T.tealDark, minHeight: 44 }}>
@@ -32230,15 +32253,36 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
               {nextReview.milestones.length > 0 && <> Due at that review: {nextReview.milestones.join("; ")}.</>}
             </div>
           )}
-          <button onClick={applyNext} className="rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
-            {nextReview.final ? "Set as the final visit" : `Set next review to ${OP_PERIOD_INTERVAL[nextReview.next.id]}`}
+          <button onClick={applyNext} className="inline-flex items-center gap-1.5 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: nextIsSet ? T.tealTint : T.slateChip, color: nextIsSet ? T.tealDark : T.ink, border: `1px solid ${nextIsSet ? T.teal : T.border}`, minHeight: 44 }}>
+            {nextIsSet && <Check size={16} />}
+            {nextReview.final ? (nextIsSet ? "Marked as the final visit" : "Set as the final visit") : nextIsSet ? `Next review set to ${nextLabel}` : `Set next review to ${OP_PERIOD_INTERVAL[nextReview.next.id]}`}
           </button>
+          {nextIsSet && (
+            <div role="status" aria-live="polite" className="text-[13px] mt-1.5" style={{ color: T.inkSoft }}>
+              Done. It is under Next review, further down.
+              <button onClick={() => goTo("postop-next-review")} className="ml-1.5 font-semibold underline active:opacity-60" style={{ color: T.tealDark, minHeight: 44 }}>Go there</button>
+            </div>
+          )}
         </div>
       )}
       {protocol && (
         <div className="mb-3">
-          <button onClick={() => setMany(opPostopTimelinePatch(poState, intervalOptions))} className="w-full rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}`, minHeight: 48 }}>Set this visit and the next from the timeline</button>
-          {poState.timelineSet && <div className="text-[13px] mt-1.5" style={{ color: T.inkSoft }}>Set from the follow-up timeline: the reasons, the plan and the next review. Check and edit them.</div>}
+          <button onClick={() => setMany(opPostopTimelinePatch(poState, intervalOptions))} className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.tealTint, color: T.tealDark, border: `1px solid ${T.teal}`, minHeight: 48 }}>
+            {poState.timelineSet && <Check size={16} />}Set this visit and the next from the timeline
+          </button>
+          {poState.timelineSet && (
+            <div role="status" aria-live="polite" className="rounded-xl p-3 mt-2" style={{ background: T.surface, border: `1px solid ${T.teal}` }}>
+              <div className="text-[13px] font-semibold flex items-center gap-1.5 mb-1.5" style={{ color: T.tealDark }}><Check size={15} /> Set from the timeline. Check and change these below.</div>
+              <ul className="text-[13px]" style={{ color: T.ink }}>
+                {setNow.map(([k, v]) => <li key={k} className="mb-1"><span className="font-semibold">{k}:</span> {v}</li>)}
+              </ul>
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                {[["Reason for review", "postop-reason"], ["Plan", "postop-plan"], ["Next review", "postop-next-review"]].map(([label, id]) => (
+                  <button key={id} onClick={() => goTo(id)} className="rounded-full px-3.5 text-[13px] font-semibold active:scale-95" style={{ minHeight: 44, background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Go to {label.toLowerCase()}</button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
       {!protocol && period && poState.procedureName && poState.procedureName.trim() && (
