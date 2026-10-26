@@ -9846,10 +9846,34 @@ const doubleCrushSyndromeData = {
     }],
 };
 
+// A prompt that shows only while a finding is chosen: what is usually considered for it. Prompts, not decisions.
+const drfPrompt = (when, text) => ({ type: "conditional", when, fields: [{ type: "info", title: null, items: [text] }] });
+const drfHas = (key, option) => (s) => (s[key] || []).includes(option);
+const drfIs = (key, option) => (s) => s[key] === option;
+// The pattern features that suggest operative consideration, for the line in the note. A large volar rim fragment, a tip
+// fracture of the ulnar styloid and dorsal displacement without any instability criterion are recorded but do not count.
+const drfOperativeFeatures = (s) => {
+  const out = [];
+  const low = (x) => lowerListItem(x);   // the app's own rule: lower the first letter, keep acronyms such as DRUJ
+  const criteria = s.drfDorsalCriteria || [];
+  if (s.drfDisplacement === "Volar displacement") out.push("volar displacement");
+  if (s.drfDisplacement === "Dorsal displacement" && criteria.length) out.push(`dorsal displacement with ${criteria.length} instability criteri${criteria.length === 1 ? "on" : "a"} (${criteria.map(low).join(", ")})`);
+  if (s.drfFractureDislocation) out.push(`fracture-dislocation (${s.drfFractureDislocation.replace(/\s*\(.*\)/, "").toLowerCase()})`);
+  (s.drfExtent || []).forEach((x) => out.push(low(x)));
+  (s.drfCortices || []).forEach((x) => out.push(low(x)));
+  (s.drfJointSurface || []).forEach((x) => out.push(low(x)));
+  if (s.drfLunateFacet && s.drfLunateFacet !== "Large volar rim fragment") out.push(low(s.drfLunateFacet));
+  if (s.drfRadialStyloid) out.push(`${s.drfRadialStyloid.toLowerCase()} radial styloid`);
+  (s.drfDruj || []).forEach((x) => out.push(low(x)));
+  if (s.drfUlnarStyloid && s.drfUlnarStyloid !== "Tip fracture") out.push(`ulnar styloid ${s.drfUlnarStyloid.toLowerCase()}`);
+  return out;
+};
+
 const distalRadiusFxData = {
   id: "distal-radius-fracture",
   name: "Distal Radius Fractures",
-  region: "hand",
+  region: "wrist",
+  operativeFeatures: drfOperativeFeatures,
   // Unlike every other template in this project, your original opens
   // straight into data-capture fields (mechanism, patient factors, injury
   // factors) rather than a "typical presentation" reference list. Section 1
@@ -10005,6 +10029,43 @@ const distalRadiusFxData = {
           when: (s) => s.openFracture === "Yes",
           fields: [{ type: "text", key: "gustiloClassification", label: "Open fracture \u2014 Gustilo classification" }],
         },
+        { type: "info", title: "Fracture pattern (pre-operative)", items: ["Record what the radiographs and CT show. Each finding prompts what is usually considered for it; the choice of treatment stays with the surgeon."] },
+        { type: "select", key: "drfDisplacement", label: "Fracture pattern \u2014 Displacement", options: ["Volar displacement", "Dorsal displacement"], columns: 1, noteLabel: "fracture pattern" },
+        drfPrompt(drfIs("drfDisplacement", "Volar displacement"), "Volar displacement: buttress fixation (volar plate) is usually considered, because these fractures are typically unstable when treated closed."),
+        {
+          type: "conditional",
+          when: drfIs("drfDisplacement", "Dorsal displacement"),
+          fields: [
+            { type: "info", title: null, items: ["Dorsal displacement: check the instability criteria."] },
+            { type: "checkbox", key: "drfDorsalCriteria", label: "Dorsal displacement \u2014 Instability criteria", options: ["Dorsal tilt >20\u00b0", "Dorsal comminution", "Intra-articular extension", "Associated ulna fracture", "Age >60"], noteLabel: "dorsal displacement instability criteria" },
+          ],
+        },
+        drfPrompt((s) => s.drfDisplacement === "Dorsal displacement" && Number(s.age) > 60, "The age recorded is over 60, which is one of the criteria."),
+        { type: "select", key: "drfFractureDislocation", label: "Fracture pattern \u2014 Fracture-dislocation", options: ["Partial (subluxation)", "Total (dislocation)"], columns: 1, noteLabel: "fracture-dislocation" },
+        drfPrompt((s) => !!s.drfFractureDislocation, "Fracture-dislocation (total or partial): surgical stabilisation is usually considered, with a rim buttress on the side of the dislocation."),
+        { type: "checkbox", key: "drfExtent", label: "Fracture pattern \u2014 Extent", options: ["Extension to the shaft"], noteLabel: "fracture extent" },
+        drfPrompt(drfHas("drfExtent", "Extension to the shaft"), "Extends to the shaft: consider a longer plate or a bridge plate."),
+        { type: "checkbox", key: "drfCortices", label: "Cortices", options: ["Volar metaphyseal comminution", "Dorsal impacted fragment"], noteLabel: "cortical findings" },
+        drfPrompt(drfHas("drfCortices", "Volar metaphyseal comminution"), "Volar metaphyseal comminution: consider a bridge plate or supplementary fixation."),
+        drfPrompt(drfHas("drfCortices", "Dorsal impacted fragment"), "Dorsal impacted fragment: may not reduce from a volar approach, so consider a dorsal approach or a graft."),
+        { type: "checkbox", key: "drfJointSurface", label: "Joint surface and die punch", options: ["Large joint step or comminution", "Medial die punch", "Central die punch"], noteLabel: "joint surface" },
+        drfPrompt(drfHas("drfJointSurface", "Large joint step or comminution"), "Large joint step or comminution: a step over 2 mm is the flag. Consider arthroscopic or fluoroscopic-assisted reduction."),
+        drfPrompt((s) => (s.drfJointSurface || []).includes("Large joint step or comminution") && Number(s.intraArticularStepMm) > 2, "The step measured under Imaging is over 2 mm."),
+        drfPrompt((s) => (s.drfJointSurface || []).includes("Large joint step or comminution") && !((s.ctCommon || []).length || String(s.ctFinding || "").trim()), "CT is not recorded yet. Consider CT to define the joint surface."),
+        drfPrompt(drfHas("drfJointSurface", "Medial die punch"), "Medial die punch: consider a dorsal approach or percutaneous elevation."),
+        drfPrompt(drfHas("drfJointSurface", "Central die punch"), "Central die punch: consider elevation and subchondral support."),
+        { type: "select", key: "drfLunateFacet", label: "Lunate facet", options: ["Large volar rim fragment", "Small volar rim fragment (high risk of volar escape)", "Volar-ulnar or dorso-ulnar fragment"], columns: 1, noteLabel: "lunate facet" },
+        drfPrompt(drfIs("drfLunateFacet", "Large volar rim fragment"), "Large volar rim fragment: usually captured by the distal row of a standard volar plate."),
+        drfPrompt(drfIs("drfLunateFacet", "Small volar rim fragment (high risk of volar escape)"), "Small volar rim fragment (high risk of volar escape): consider rim-specific fixation such as a hook plate, a rim plate, or wiring."),
+        drfPrompt(drfIs("drfLunateFacet", "Volar-ulnar or dorso-ulnar fragment"), "Volar-ulnar or dorso-ulnar fragment: consider fragment-specific fixation, through an extended or separate approach."),
+        { type: "select", key: "drfRadialStyloid", label: "Radial styloid", options: ["Single large fragment", "Fragmented"], columns: 2, noteLabel: "radial styloid" },
+        drfPrompt(drfIs("drfRadialStyloid", "Single large fragment"), "Radial styloid, single large fragment: suggests screw or wire fixation."),
+        drfPrompt(drfIs("drfRadialStyloid", "Fragmented"), "Radial styloid, fragmented: suggests a radial column plate."),
+        { type: "checkbox", key: "drfDruj", label: "Sigmoid notch and DRUJ", options: ["Disrupted sigmoid notch or dislocated DRUJ"], noteLabel: "sigmoid notch and DRUJ" },
+        drfPrompt(drfHas("drfDruj", "Disrupted sigmoid notch or dislocated DRUJ"), "Disrupted sigmoid notch or dislocated DRUJ: restore the notch, and test DRUJ stability after the radius is fixed."),
+        { type: "select", key: "drfUlnarStyloid", label: "Ulnar styloid", options: ["Tip fracture", "Base fracture", "Foveal fracture"], columns: 3, noteLabel: "ulnar styloid" },
+        drfPrompt(drfIs("drfUlnarStyloid", "Tip fracture"), "Ulnar styloid tip fracture: usually left alone."),
+        drfPrompt((s) => s.drfUlnarStyloid === "Base fracture" || s.drfUlnarStyloid === "Foveal fracture", "Ulnar styloid base or foveal fracture: consider fixation or TFCC repair if the DRUJ is unstable after the radius is fixed."),
         { type: "checkbox", key: "instabilityFeatures", label: "Stability Assessment \u2014 Instability features", options: ["Dorsal comminution", "Volar comminution", "Intra-articular extension", "Loss of reduction", "Osteoporosis", "Associated ulnar fracture", "DRUJ instability", "Initial dorsal angulation", "Radial shortening"] },
         { type: "checkbox", key: "acceptableAlignment", label: "Stability Assessment \u2014 Acceptable alignment (adults)", options: ["Radial height maintained", "Radial inclination acceptable", "Volar tilt acceptable", "Articular step <2 mm", "No progressive displacement"] },
         { type: "info", title: null, items: ["Thresholds should be individualized according to patient age, functional demands, bone quality, and surgeon judgment."] },
@@ -15139,6 +15200,7 @@ const REGIONS = {
     subsections: [
       { id: "wrist-tendon", label: "Tendon", conditions: [deQuervainData, intersectionSyndromeData, ecuTendinopathyData] },
       { id: "wrist-instability", label: "Instability & Ulnar-sided", conditions: [scapholunateInjuryData, ltInstabilityData, drujInstabilityData, tfccInjuryData, ulnarImpactionData] },
+      { id: "wrist-trauma", label: "Fractures & Trauma", conditions: [distalRadiusFxData] },
       { id: "wrist-degenerative", label: "Joint Disease & Osteonecrosis", conditions: [wristOAData, thumbCMCOAData, sttArthritisData, kienbockDiseaseData] },
       { id: "wrist-masses", label: "Masses", conditions: [wristGanglionData, carpalBossData] },
     ],
@@ -15154,7 +15216,7 @@ const REGIONS = {
     subsections: [
       { id: "hand-tendon", label: "Tendon & Contracture", conditions: [triggerFingerData, dupuytrenDiseaseData, malletFingerData, jerseyFingerData, sagittalBandInjuryData, extensorTendonInjuriesData, boutonniereDeformityData, tendonLacerationData] },
       { id: "hand-joint", label: "Joint & Ligament", conditions: [pipDislocationData, handOAData, thumbUCLInjuryData] },
-      { id: "hand-trauma", label: "Fractures & Trauma", conditions: [distalRadiusFxData, scaphoidFxData, metacarpalFxData, phalangealFxData, bennettRolandoFxData, perilunateInjuryData, hookOfHamateFxData, fingertipInjuryData, amputationReplantData] },
+      { id: "hand-trauma", label: "Fractures & Trauma", conditions: [scaphoidFxData, metacarpalFxData, phalangealFxData, bennettRolandoFxData, perilunateInjuryData, hookOfHamateFxData, fingertipInjuryData, amputationReplantData] },
       { id: "hand-masses-infection", label: "Masses & Infection", conditions: [glomusTumourData, gcttsData, enchondromaData, flexorTenosynovitisData, handInfectionData] },
       { id: "hand-pain-inflammatory", label: "Pain & Inflammatory", conditions: [crpsData, inflammatoryHandData] },
     ],
@@ -15230,7 +15292,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // The version is the date this build was made (year.month.day). A clinician can
 // read it ("is my copy today's?") and it says more than 5.31.1 ever did. Change
 // it, and add a line to WHATS_NEW, with each release.
-const APP_VERSION = "2026.10.20";
+const APP_VERSION = "2026.10.26";
 
 // Where suggestions and problems go. The one address to change if it moves.
 const CONTACT_EMAIL = "namanimuntasir@gmail.com";
@@ -15239,14 +15301,14 @@ const CONTACT_EMAIL = "namanimuntasir@gmail.com";
 // notice. Dated groups are added as releases are made.
 const WHATS_NEW = [
   {
-    when: "20 October 2026",
+    when: "26 October 2026",
     items: [
-      "Searches offer Continue: choose an operation or diagnosis and go straight on (operative note, post-operative review, follow-up visit). In the operative note the long list folds to the rows that hold your choice, and an operation appears in every region where the clinic notes offer it.",
-      "Operative note: operations on a particular digit ask which one and write it in the title, the procedure line and the summary. Each rotator cuff tendon has its own tear category. New notes: EIP transfer for EPL rupture; hemi-hamate arthroplasty follows the surgeon's own record.",
-      "Post-operative follow-up starts from the operation, brings in the operative details from the summary, and can set this visit's reasons and plan and the next review from the timeline, listing what it set so you can check and edit it.",
-      "Every generated note (operative, follow-up, post-operative and combined) can be edited in place before copying.",
-      "Accessibility and layout audit at phone, tablet and desktop sizes: sliders and dates now have names for screen readers, button text meets contrast standards, small map text is larger, and the post-operative screen is shorter on a phone (the procedure list and protocol card fold).",
-      "Post-operative follow-up records outcome measures, range of motion and imaging for the review period (passive motion first, then active; radiographs after fixation). The follow-up visit now records motion and shows the imaging each diagnosis schedules, with labelled draft suggestions where one is missing.",
+      "Distal radius fractures moved from Hand to Wrist (in a new Fractures & Trauma group), and the operations for them are now offered under the wrist only.",
+      "Distal radius fracture pattern before surgery: displacement, fracture-dislocation, cortices, joint surface, die punch, lunate facet, radial styloid, DRUJ and ulnar styloid each prompt what is usually considered, and the note adds a line, Features suggesting operative consideration. After surgery, hardware prominence and impingement prompt their risks.",
+      "Post-operative follow-up: Set next review and Set from the timeline now show what they did, and the next-review choices are real intervals (no Return to play, no repeated Final).",
+      "Searches offer Continue: choose an operation or diagnosis and go straight on (operative note, post-operative review, follow-up visit).",
+      "Post-operative follow-up records outcome measures, range of motion and imaging for the review period. The follow-up visit shows the imaging each diagnosis schedules, with labelled draft suggestions where one is missing.",
+      "Operative note: operations on a particular digit ask which one, each rotator cuff tendon has its own tear category, and EIP transfer is new. Any generated note can be edited in place before copying.",
     ],
   },
 ];
@@ -18824,7 +18886,26 @@ function sideWord(state) {
   return null;
 }
 
+// A template may carry operativeFeatures(state): the findings that suggest operative consideration, written as one line
+// under the impression (distal radius fractures). It is a summary of what was recorded, not a recommendation.
 function buildImpression(condition, state) {
+  const base = buildImpressionBase(condition, state);
+  if (typeof condition.operativeFeatures !== "function") return base;
+  let line = null;
+  if (state.side === "Bilateral") {
+    const right = condition.operativeFeatures({ ...state, ...(state.limbData?.right || {}) });
+    const left = condition.operativeFeatures({ ...state, ...(state.limbData?.left || {}) });
+    const bits = [];
+    if (right.length) bits.push(`right side \u2014 ${right.join("; ")}`);
+    if (left.length) bits.push(`left side \u2014 ${left.join("; ")}`);
+    if (bits.length) line = `Features suggesting operative consideration: ${bits.join(". ")}.`;
+  } else {
+    const f = condition.operativeFeatures(state);
+    if (f.length) line = `Features suggesting operative consideration: ${f.join("; ")}.`;
+  }
+  return [base, line].filter(Boolean).join("\n");
+}
+function buildImpressionBase(condition, state) {
   const dx = condition.sections.find((s) => s.id === "diagnosis");
   // Carried forward from a general assessment at the point this diagnosis
   // was opened from it (see deriveSharedDefaults) - the reasoning that led
@@ -20077,7 +20158,8 @@ function buildCombinedNote(session) {
       if (supersededGeneralIds.has(condition.id)) return null;
       const text = buildImpression(condition, state);
       if (!text) return null;
-      const clause = text.replace(/^Clinical impression:\s*/i, "").trim().replace(/\.$/, "");
+      // only the operative-features line is joined on; any other line break in an impression is left exactly as it was
+      const clause = text.replace(/^Clinical impression:\s*/i, "").replace(/\n(?=Features suggesting operative consideration)/, " ").trim().replace(/\.$/, "");
       const label = labelFor(condition);
       return `${withLabel(condition.name, label ? label.toLowerCase() : null)} \u2014 ${clause}`;
     })
@@ -20491,7 +20573,19 @@ function postopReasonOptions(dateStr) {
 // list below.
 const POSTOP_CONSENT_ONLY_RE = /anaesthetic risk|need for revision/i;
 
-function postopComplicationOptions(procedureName) {
+// What a distal radius fracture can leave behind that is specific to its hardware, and what each prompts. Shown only for
+// that diagnosis; ticking one shows the prompt under the list.
+const POSTOP_COMPLICATION_PROMPTS = {
+  "Prominent volar plate": "Prominent plate: risk of flexor pollicis longus rupture. Consider plate removal.",
+  "Prominent dorsal screw": "Prominent dorsal screw: risk of extensor pollicis longus rupture.",
+  "Radio-ulnar impingement": "Radio-ulnar impingement: review the ulnar variance.",
+};
+function postopComplicationOptions(procedureName, condition) {
+  const options = postopComplicationOptionsBase(procedureName);
+  if (!condition || condition.id !== "distal-radius-fracture") return options;
+  return [options[0], ...Object.keys(POSTOP_COMPLICATION_PROMPTS), ...options.slice(1)];
+}
+function postopComplicationOptionsBase(procedureName) {
   const base = POSTOP_COMPLICATION_OPTIONS;
   if (!procedureName || !procedureName.trim()) return base;
   const seen = base.map((b) => b.toLowerCase());
@@ -24285,7 +24379,10 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
       <PostopImaging condition={condition} poState={poState} setMany={(patch) => onChange({ ...ownState, ...patch })} />
 
       <SubLabel>Complications</SubLabel>
-      <CheckboxGroup options={postopComplicationOptions(poState.procedureName)} selected={poState.complications || []} onChange={setComplications} />
+      <CheckboxGroup options={postopComplicationOptions(poState.procedureName, condition)} selected={poState.complications || []} onChange={setComplications} />
+      {(poState.complications || []).filter((c) => POSTOP_COMPLICATION_PROMPTS[c]).map((c) => (
+        <div key={c} role="status" className="rounded-xl px-3 py-2.5 mt-2 text-[13px]" style={{ background: T.amberTint, color: T.amber, border: `1px solid ${T.amber}` }}>{POSTOP_COMPLICATION_PROMPTS[c]}</div>
+      ))}
       {(poState.complications || []).includes("Other") && (
         <TextField label="Specify complication" value={poState.complicationsOther} onChange={(v) => set("complicationsOther", v)} />
       )}
