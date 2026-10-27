@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -15379,7 +15379,7 @@ const WHATS_NEW = [
       "Distal radius, scaphoid, perilunate and hook of hamate fractures moved from Hand to Wrist (a new Fractures & Trauma group), with their operations. Examination findings such as the ulnar nerve, radial pulse and tendons can now be recorded as abnormal, with what was found.",
       "Distal radius fracture pattern: the criteria are one list with the instability findings, guide the pathway and suggest operations, and the note adds a line, Features suggesting operative consideration. New operations: dorsal bridge plate, dorsal plate, arthroscopic-assisted and volar rim fixation (drafts to review).",
       "Post-operative follow-up: the next-review buttons show what they did, the choices are real intervals, and every search offers Continue.",
-      "Installed on an iPhone, the app now sits under the status bar and notch, does not zoom into text boxes or flash grey on a tap, and sections and pathway steps ease in. Two lines in your own project files are needed: see docs/ios-standalone-setup.md.",
+      "Installed on an iPhone, screens now slide in and back like a native app and sections ease open; the app also fits under the notch, does not zoom into text boxes, and a pull can no longer reload it. An optional status-bar setting is in docs/ios-standalone-setup.md.",
       "Post-operative follow-up records outcome measures, range of motion and imaging for the review period. The follow-up visit shows the imaging each diagnosis schedules, with labelled draft suggestions where one is missing.",
       "Operative note: operations on a particular digit ask which one, each rotator cuff tendon has its own tear category, and EIP transfer is new. Any generated note can be edited in place before copying.",
     ],
@@ -24741,7 +24741,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
   }, [session.order, activeConditionId, reveal.n, reveal.id, showChips]);
 
   return (
-    <div data-ut-topbar className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 pl-3 pr-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)", height: TOPBAR_TOP, paddingTop: "var(--ut-safe-top, 0px)" }}>
+    <div data-ut-topbar className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 pl-3 pr-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)", height: TOPBAR_TOP, paddingTop: "var(--ut-safe-top, 0px)", viewTransitionName: "ut-topbar" }}>
       <div className="shrink-0 flex items-center gap-3" data-ut-tracker-fixed>
       <button onClick={onGoHome} className="ut-hit shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Go to home">
         <Home size={16} color="#fff" />
@@ -31583,8 +31583,6 @@ function opRegionsOf(p) {
    the sticky header's back arrow 22.
 ============================================================================ */
 
-// The green bar is 48px tall and sticky; this screen's own header sits directly beneath it.
-const OP_BAR_HEIGHT = 48;
 
 function opTodayISO() {
   const d = new Date();
@@ -32077,7 +32075,7 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
 
   return (
     <div className="min-h-screen pb-28" style={{ background: T.bg }}>
-      <div className="flex items-center gap-2 px-3 py-3 sticky z-30" style={{ top: OP_BAR_HEIGHT, background: T.surface, borderBottom: `1px solid ${T.border}` }}>
+      <div className="flex items-center gap-2 px-3 py-3 sticky z-30" style={{ top: TOPBAR_TOP, background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button onClick={onGoHome} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Back to home">
           <ArrowLeft size={22} color={T.ink} />
         </button>
@@ -32728,14 +32726,13 @@ function historyStateToScreen(histState) {
 
 // What iOS needs to run this as an installed app. These belong in the project's index.html, and anything set there wins: the
 // tags below are added only where missing, so this is a fallback and never an override. viewport-fit=cover is what makes the
-// safe-area insets non-zero. "black-translucent" lets the top bar run under the status bar; if it ever misbehaves on a device,
-// change this one constant to "default" (and the same value in index.html).
-const IOS_STATUS_BAR_STYLE = "black-translucent";
+// safe-area insets non-zero. The status bar style is deliberately NOT set here: "black-translucent" (the header running under
+// the clock) is an opt-in made in index.html, because the app must work identically without it, and iOS only reads it when the
+// app is added to the home screen.
 function iosStandaloneTags() {
   return [
     ["apple-mobile-web-app-capable", "yes"],
     ["mobile-web-app-capable", "yes"],
-    ["apple-mobile-web-app-status-bar-style", IOS_STATUS_BAR_STYLE],
     ["apple-mobile-web-app-title", "UpperTrack"],
     ["theme-color", "#0A5D65"],
     // numbers in a clinic note (dates, doses, lengths of time) must not turn into phone or calendar links
@@ -32753,6 +32750,23 @@ function applyStandaloneMeta(doc) {
   else if (!/viewport-fit\s*=/.test(v.getAttribute("content") || "")) v.setAttribute("content", `${v.getAttribute("content") || "width=device-width, initial-scale=1"}, viewport-fit=cover`);
 }
 
+
+// ---- Moving between screens -----------------------------------------------------------------------------------------------
+// How deep a screen is, so that a change of screen reads as going forward (a push) or back (a pop).
+const NAV_RANK = { visitType: 0, regions: 1, followupSelect: 1, postopSelect: 1, operativeNote: 1, conditions: 2, followupVisit: 2, postopVisit: 2, template: 3 };
+function navDirection(fromView, toView) {
+  if (!fromView || !toView || fromView === toView) return null;     // the same screen, or one we do not know: no movement
+  const a = NAV_RANK[fromView], b = NAV_RANK[toView];
+  if (a === undefined || b === undefined) return null;
+  return b >= a ? "push" : "pop";
+}
+// Only where the browser can cross-fade between two states of the page (the View Transitions API), and never when the person
+// has asked for less motion. Everywhere else the screen simply changes, as it always did.
+function canAnimateNav() {
+  if (typeof document === "undefined" || typeof window === "undefined" || typeof document.startViewTransition !== "function") return false;
+  return !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+
 const DESIGN_SYSTEM_CSS = `
   :root {
     --ut-ease: cubic-bezier(0.32, 0.72, 0, 1);
@@ -32766,15 +32780,17 @@ const DESIGN_SYSTEM_CSS = `
   html {
     -webkit-text-size-adjust: 100%; text-size-adjust: 100%;     /* no text growth when the phone is turned */
     -webkit-tap-highlight-color: transparent;                    /* no grey flash on a tap */
-    background: #F5F7F8;
-    overscroll-behavior-y: none;                                 /* the page does not rubber-band over the bars; sheets and lists still do */
+    background: #0A5D65;                                         /* what shows when the page is pulled past its end: the colour of the top bar */
+    overscroll-behavior-y: contain;                              /* iOS keeps its bounce; a pull can never reload the app and lose an unsaved note (Android's pull-to-refresh) */
   }
-  body { overscroll-behavior-y: none; }
+  body { background: #F5F7F8; min-height: 100vh; min-height: 100dvh; }
   /* Controls answer a tap at once and never zoom the page on a quick second tap. */
   button, [role="button"], a, input, select, textarea, label, summary { touch-action: manipulation; }
-  /* A press-and-hold on a control is not a text selection or a link preview. Notes, text boxes and the note editor stay
-     selectable. */
-  button, [role="button"], .ut-card { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  /* A press-and-hold on a control is not a text selection or a link preview. Touch screens only: with a mouse, text on a
+     control stays selectable. Notes, text boxes and the note editor stay selectable everywhere. */
+  @media (pointer: coarse) {
+    button, [role="button"], .ut-card { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  }
   /* iOS Safari zooms the whole page into any text box set below 16px and leaves it zoomed. Only on iOS, text boxes are
      16px (the usual iOS size). */
   @supports (-webkit-touch-callout: none) {
@@ -32986,6 +33002,25 @@ const DESIGN_SYSTEM_CSS = `
   @keyframes ut-page-in { from { opacity: 0; } to { opacity: 1; } }
   .ut-page { animation: ut-page-in 200ms ease-out backwards; }
 
+  /* ---- Moving between screens: a push and a pop, as in UIKit ----------------------------------------------------------
+     Where the browser can cross-fade between two states of the page (the View Transitions API: current Chrome, and Safari 18
+     and later), a change of screen slides. Going forward, the new screen comes in from the right while the old one moves left
+     a little and dims; going back, the leaving screen slides off to the right over the one returning. The top bar is a named
+     group of its own, so it stays where it is. Elsewhere, and under Reduce Motion, the screen simply changes, with the short
+     fade every screen has. Only the app's own navigation is animated (the system's back gesture draws its own). */
+  :root { --ut-nav-ms: 380ms; }
+  html[data-ut-nav] .ut-page { animation: none; }
+  ::view-transition-group(root) { animation-duration: var(--ut-nav-ms); animation-timing-function: var(--ut-ease); }
+  ::view-transition-old(root), ::view-transition-new(root) { mix-blend-mode: normal; animation-duration: var(--ut-nav-ms); animation-timing-function: var(--ut-ease); animation-fill-mode: both; }
+  html[data-ut-nav="push"]::view-transition-old(root) { animation-name: ut-vt-push-out; z-index: 1; }
+  html[data-ut-nav="push"]::view-transition-new(root) { animation-name: ut-vt-push-in; z-index: 2; box-shadow: -10px 0 28px rgba(16,30,43,0.16); }
+  html[data-ut-nav="pop"]::view-transition-old(root) { animation-name: ut-vt-pop-out; z-index: 2; box-shadow: -10px 0 28px rgba(16,30,43,0.16); }
+  html[data-ut-nav="pop"]::view-transition-new(root) { animation-name: ut-vt-pop-in; z-index: 1; }
+  @keyframes ut-vt-push-in  { from { transform: translateX(100%); } }
+  @keyframes ut-vt-push-out { to   { transform: translateX(-28%); filter: brightness(0.85); } }
+  @keyframes ut-vt-pop-in   { from { transform: translateX(-28%); filter: brightness(0.85); } }
+  @keyframes ut-vt-pop-out  { to   { transform: translateX(100%); } }
+
   /* Content that appears as a result of a tap (an opened section, the next step of a pathway, a prompt or a hint) eases in with
      a short rise on the same curve as the sheets, instead of snapping into place. It runs once, when the element is added, so
      what is already on screen never moves; "backwards" leaves nothing applied afterwards. */
@@ -33131,6 +33166,7 @@ const DESIGN_SYSTEM_CSS = `
     .ut-nerve-trace { animation: none; stroke-dasharray: none; }
     /* The panel still appears and disappears, just without travel. */
     .ut-sheet-in, .ut-sheet-out, .ut-scrim-in, .ut-scrim-out, .ut-sheet-leave, .ut-page, .ut-reveal, .ut-spring-up, .ut-drop-out { animation: none !important; }
+    ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
     button:not([data-no-spring]):not(.ut-card):not(:disabled):active { transform: none; }
     .ut-sheet-out, .ut-scrim-out { opacity: 0; }
   }
@@ -33198,13 +33234,36 @@ export default function App() {
   useEffect(() => { applyStandaloneMeta(typeof document !== "undefined" ? document : null); }, []);
   usePenHover();
   const [screen, setScreenRaw] = useState({ view: "visitType" });
+  // Moving between screens (see canAnimateNav): screenRef is the screen now showing; navResolve lets a transition wait until the
+  // new screen has really been drawn; appBack marks a Back made by the app's own button, as opposed to the system's.
+  const screenRef = useRef(screen);
+  const navResolve = useRef(null);
+  const appBack = useRef(false);
+  useLayoutEffect(() => {
+    screenRef.current = screen;
+    if (navResolve.current) { navResolve.current(); navResolve.current = null; }
+  }, [screen]);
+  const runNav = useCallback((dir, change) => {
+    if (!dir || !canAnimateNav()) { change(); return; }
+    const root = document.documentElement;
+    root.dataset.utNav = dir;
+    const t = document.startViewTransition(() => new Promise((resolve) => { navResolve.current = resolve; change(); setTimeout(resolve, 300); }));
+    Promise.resolve(t.finished).catch(() => {}).then(() => { if (root.dataset.utNav === dir) delete root.dataset.utNav; });
+  }, []);
+  // The app's own Back button. The system's back (an edge swipe on iOS, Android's back button, the browser's) is not animated
+  // here: iOS draws its own swipe, and animating again would double it.
+  const goBack = useCallback(() => {
+    appBack.current = true;
+    setTimeout(() => { appBack.current = false; }, 600);
+    window.history.back();
+  }, []);
   // Wraps every screen change with a matching history entry. `replace: true`
   // updates the current entry in place instead of adding a new one - used
   // for the very first screen and for popstate-driven restores, where a new
   // entry would either be redundant or would corrupt the back-stack the
   // browser is already managing.
   const setScreen = useCallback((next, opts) => {
-    setScreenRaw((cur) => {
+    const change = () => setScreenRaw((cur) => {
       const resolved = typeof next === "function" ? next(cur) : next;
       const state = screenToHistoryState(resolved);
       if (opts && opts.replace) {
@@ -33214,7 +33273,10 @@ export default function App() {
       }
       return resolved;
     });
-  }, []);
+    // a change of screen slides; the same screen with other content (another diagnosis) does not
+    const dir = opts && opts.replace ? null : navDirection(screenRef.current && screenRef.current.view, typeof next === "function" ? null : next && next.view);
+    runNav(dir, change);
+  }, [runNav]);
 
   // Establishes the initial history entry on mount, and syncs screen state
   // to whatever the browser navigates to on back/forward. This listener is
@@ -33222,10 +33284,14 @@ export default function App() {
   // a navigation the browser already performed.
   useEffect(() => {
     window.history.replaceState(screenToHistoryState({ view: "visitType" }), "");
-    const onPopState = (e) => setScreenRaw(historyStateToScreen(e.state));
+    const onPopState = (e) => {
+      const target = historyStateToScreen(e.state);
+      const own = appBack.current; appBack.current = false;
+      runNav(own ? navDirection(screenRef.current && screenRef.current.view, target && target.view) : null, () => setScreenRaw(target));
+    };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+  }, [runNav]);
 
   const [session, setSession] = useState({ order: [], statesByConditionId: {} });
   // The operative note is one flat in-memory object (nothing is stored), cleared by New patient.
@@ -33511,7 +33577,7 @@ export default function App() {
           conditionIds={screen.conditionIds}
           session={session}
           onFieldChange={updateConditionState}
-          onBack={() => window.history.back()}
+          onBack={goBack}
           onGoHome={goHome}
           onNewPatient={endSession}
           onNoteSaved={noteRecent2}
@@ -33527,7 +33593,7 @@ export default function App() {
           conditionIds={screen.conditionIds}
           session={session}
           onFieldChange={updateConditionState}
-          onBack={() => window.history.back()}
+          onBack={goBack}
           onGoHome={goHome}
           onNewPatient={endSession}
           onNoteSaved={noteRecent2}
@@ -33594,7 +33660,7 @@ export default function App() {
           regionKey={screen.regionKey}
           session={session}
           onSelect={openCondition}
-          onBack={() => window.history.back()}
+          onBack={goBack}
           onRemove={removeCondition}
         />
         </div>
@@ -33614,7 +33680,7 @@ export default function App() {
           onAddCondition={addRelatedCondition}
           onRevealCondition={revealCondition}
           onResetCondition={endSession}
-          onBack={() => window.history.back()}
+          onBack={goBack}
           onGoHome={goHome}
         />
         </div>
