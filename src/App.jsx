@@ -33006,10 +33006,12 @@ const DESIGN_SYSTEM_CSS = `
      Where the browser can cross-fade between two states of the page (the View Transitions API: current Chrome, and Safari 18
      and later), a change of screen slides. Going forward, the new screen comes in from the right while the old one moves left
      a little and dims; going back, the leaving screen slides off to the right over the one returning. The top bar is a named
-     group of its own, so it stays where it is. Elsewhere, and under Reduce Motion, the screen simply changes, with the short
-     fade every screen has. Only the app's own navigation is animated (the system's back gesture draws its own). */
+     group of its own, so it stays where it is. Elsewhere the screen simply changes, with the short fade every screen has. Only the app's own navigation is animated (the system's back gesture draws its own). */
   :root { --ut-nav-ms: 380ms; }
-  html[data-ut-nav] .ut-page { animation: none; }
+  /* Where screens slide, the short fade each screen has is off, for good. It must not be switched off only while the slide runs:
+     removing the rule afterwards makes the browser start the fade again, from transparent, so the screen flashed the moment it
+     arrived. (Browsers that cannot slide keep the fade; so do reduced-motion changes that never run a transition.) */
+  @supports (view-transition-name: none) { .ut-page { animation: none; } }
   ::view-transition-group(root) { animation-duration: var(--ut-nav-ms); animation-timing-function: var(--ut-ease); }
   ::view-transition-old(root), ::view-transition-new(root) { mix-blend-mode: normal; animation-duration: var(--ut-nav-ms); animation-timing-function: var(--ut-ease); animation-fill-mode: both; }
   html[data-ut-nav="push"]::view-transition-old(root) { animation-name: ut-vt-push-out; z-index: 1; }
