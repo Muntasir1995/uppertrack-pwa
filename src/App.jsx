@@ -344,7 +344,8 @@ const sapsData = {
         { type: "strength", key: "strength", label: "Strength (0–5)", muscles: [{ key: "supraspinatus", label: "Supraspinatus" }, { key: "externalRotation", label: "External Rotation" }, { key: "subscapularis", label: "Subscapularis" }] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Painful Arc", "Neer", "Hawkins-Kennedy", "Jobe", "External Rotation Resistance", "Cross-body Adduction", "Speed", "Scapular Assistance Test", "Scapular Retraction Test"] },
         { type: "testGrid", key: "stCervical", label: "Cervical Spine", options: ["ROM", "Spurling", "Radicular symptoms"], itemOptions: { "ROM": ["Normal", "Abnormal"] } },
-        { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
+        { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [{ type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" }] },
       ],
     },
     {
@@ -501,7 +502,8 @@ const adhesiveCapsulitisData = {
         { type: "select", key: "strengthAssessment", label: "Strength", options: ["Difficult to assess due to pain", "Preserved", "Weak (consider associated cuff pathology)"], columns: 1 },
         { type: "testGrid", key: "specialTests", label: "Special tests (perform only if tolerated)", options: ["Jobe", "Hawkins", "Neer", "Cross-body"] },
         { type: "testGrid", key: "stCervical", label: "Cervical spine", options: ["ROM", "Spurling"], itemOptions: { "ROM": ["Normal", "Abnormal"] } },
-        { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
+        { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [{ type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" }] },
       ],
     },
     {
@@ -895,7 +897,8 @@ const bicepsData = {
         { type: "text", key: "cuffStrengthNote", label: "Rotator cuff strength (document individually)", noteLabel: "Rotator cuff strength", placeholder: "e.g. Jobe 4/5, ER 5/5, Subscapularis 5/5" },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Speed Test", "Yergason Test", "Upper Cut Test", "O'Brien Test", "Dynamic Labral Shear Test", "Jobe Test", "Hawkins", "Neer"] },
         { type: "testGrid", key: "instability", label: "Instability (if indicated)", options: ["Apprehension", "Relocation"] },
-        { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
+        { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [{ type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" }] },
       ],
     },
     {
@@ -1632,7 +1635,8 @@ const gleroarthritisData = {
         { type: "checkbox", key: "mechanicalFindings", label: "Mechanical findings", options: ["Crepitus", "Pain at end range", "Capsular stiffness"] },
         { type: "testGrid", key: "strength", label: "Strength \u2014 document", noteLabel: "Strength", options: ["Supraspinatus", "External Rotation", "Subscapularis", "Deltoid"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "info", title: "Special tests", items: ["Perform only if clinically useful \u2014 no fixed battery specified."] },
-        { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
+        { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [{ type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" }] },
       ],
     },
     {
@@ -1846,7 +1850,8 @@ const avnData = {
         { type: "rom", key: "rom", label: "Range of motion", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "checkbox", key: "mechanicalFindings", label: "Mechanical findings", options: ["Crepitus", "Pain at end range", "Stiffness"] },
         { type: "testGrid", key: "cuffDocument", label: "Rotator cuff \u2014 document", noteLabel: "Rotator cuff", options: ["Supraspinatus", "External Rotation", "Subscapularis"], defaultOptions: ["Intact", "Weak"] },
-        { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
+        { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [{ type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" }] },
       ],
     },
     {
@@ -2016,7 +2021,8 @@ const calcificTendinitisData = {
         { type: "checkbox", key: "strengthLimitedByPain", label: "Strength assessment", options: ["Difficult to assess due to pain"] },
         { type: "testGrid", key: "strength", label: "Strength", options: ["Supraspinatus", "External Rotation", "Subscapularis"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Painful Arc", "Hawkins-Kennedy", "Neer", "Jobe"] },
-        { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
+        { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [{ type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" }] },
       ],
     },
     {
@@ -2712,7 +2718,8 @@ const slapData = {
         // Kibler's scapular tests, recorded like the SLAP tests above them: a
         // result for each, rather than a chip that only says the name.
         { type: "testGrid", key: "scapularAssessment", label: "Scapular assessment", options: ["Scapular Assistance Test (SAT)", "Scapular Retraction Test (SRT)"] },
-        { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
+        { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [{ type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" }] },
       ],
     },
     {
@@ -2875,7 +2882,8 @@ const pecMajorRuptureData = {
         { type: "rom", key: "rom", label: "Range of motion — document", motions: ["Forward Flexion", "Abduction", "External Rotation", "Internal Rotation"] },
         { type: "testGrid", key: "strength", label: "Strength \u2014 compare with opposite side", options: ["Adduction", "Internal Rotation", "Horizontal Adduction"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "functionalTesting", label: "Functional testing (if tolerated)", options: ["Push-up", "Wall push"], defaultOptions: ["Normal", "Painful", "Weak"] },
-        { type: "checkbox", key: "stNeuro", label: "Neurovascular", options: ["Normal"] },
+        { type: "select", key: "stNeuroStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.stNeuroStatus === "Abnormal", fields: [{ type: "text", key: "stNeuroFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" }] },
       ],
     },
     {
@@ -5333,8 +5341,8 @@ const deQuervainData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["First dorsal compartment tenderness", "APL tendon", "EPB tendon", "Thumb CMC joint", "Anatomical snuffbox", "Radial styloid"] },
         { type: "rom", key: "rom", label: "Range of motion \u2014 wrist", motions: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation"] },
         { type: "select", key: "cmcMotion", label: "Thumb CMC motion", options: ["Normal", "Painful"], columns: 2 },
-        { type: "checkbox", key: "mcpMotion", label: "Thumb MCP motion", options: ["Normal"] },
-        { type: "checkbox", key: "ipMotion", label: "Thumb IP motion", options: ["Normal"] },
+        ...abnormalCheck({ key: "mcpMotion", label: "Thumb MCP motion", ok: "Normal"  }),
+        ...abnormalCheck({ key: "ipMotion", label: "Thumb IP motion", ok: "Normal"  }),
         { type: "testGrid", key: "strength", label: "Strength", options: ["Grip strength", "Key pinch", "Tip pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Finkelstein Test", "Eichhoff Test", "WHAT Test (Wrist Hyperflexion and Abduction of the Thumb)", "CMC Grind Test", "Watson Test (if indicated)"] },
         { type: "select", key: "neuroAssessmentStatus", label: "Neurological assessment \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
@@ -5506,7 +5514,7 @@ const thumbCMCOAData = {
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["CMC joint tenderness", "STT joint tenderness", "First dorsal compartment", "MCP joint"] },
         { type: "select", key: "cmcMotion", label: "Thumb CMC", options: ["Normal", "Painful"], columns: 2 },
         { type: "select", key: "mcpMotion", label: "Thumb MCP", options: ["Stable", "Hyperextension"], columns: 2 },
-        { type: "checkbox", key: "ipMotion", label: "Thumb IP", options: ["Normal"] },
+        ...abnormalCheck({ key: "ipMotion", label: "Thumb IP", ok: "Normal"  }),
         { type: "rom", key: "rom", label: "Range of motion \u2014 wrist", motions: ["Flexion", "Extension"] },
         { type: "testGrid", key: "strength", label: "Strength \u2014 compare with contralateral side", options: ["Grip strength", "Key pinch", "Tip pinch", "Three-jaw chuck pinch"], defaultOptions: ["Normal", "Reduced", "Absent"] },
         { type: "testGrid", key: "specialTests", label: "Special tests", options: ["Grind Test", "Lever Test", "Traction Shift Test (if familiar)", "Finkelstein Test"] },
@@ -8217,8 +8225,8 @@ const carpalTunnelSyndromeData = {
         { type: "select", key: "compressionChainCervical", label: "Compression Chain Assessment \u2014 Cervical Spine", options: ["Symptoms absent", "Symptoms present"], columns: 2 },
         { type: "select", key: "compressionChainProximalMedian", label: "Compression Chain Assessment \u2014 Proximal Median Nerve", options: ["Lacertus/pronator symptoms absent", "Suspicious for proximal compression"], columns: 2 },
         { type: "checkbox", key: "compressionChainCarpalTunnel", label: "Compression Chain Assessment \u2014 Carpal Tunnel", options: ["Clinical findings consistent"] },
-        { type: "checkbox", key: "neurovascularRadialPulse", label: "Neurovascular \u2014 radial pulse", options: ["Normal"] },
-        { type: "checkbox", key: "neurovascularDigitalPerfusion", label: "Neurovascular \u2014 digital perfusion", options: ["Normal"] },
+        ...abnormalCheck({ key: "neurovascularRadialPulse", label: "Neurovascular \u2014 radial pulse", ok: "Normal"  }),
+        ...abnormalCheck({ key: "neurovascularDigitalPerfusion", label: "Neurovascular \u2014 digital perfusion", ok: "Normal"  }),
       ],
     },
     {
@@ -8430,7 +8438,7 @@ const cubitalTunnelData = {
         { type: "select", key: "dynamicNerveStability", label: "Dynamic Ulnar Nerve Assessment \u2014 nerve stability during elbow flexion", options: ["Stable", "Subluxation", "Dislocation"], columns: 3 },
         { type: "select", key: "medialEpicondyleTenderness", label: "Dynamic Ulnar Nerve Assessment \u2014 medial epicondyle tenderness", options: ["Yes", "No"], columns: 2 },
         { type: "select", key: "cubitusValgus", label: "Dynamic Ulnar Nerve Assessment \u2014 cubitus valgus", options: ["Present", "Absent"], columns: 2 },
-        { type: "checkbox", key: "neurovascularDigitalPerfusion", label: "Neurovascular \u2014 digital perfusion", options: ["Normal"] },
+        ...abnormalCheck({ key: "neurovascularDigitalPerfusion", label: "Neurovascular \u2014 digital perfusion", ok: "Normal"  }),
       ],
     },
     {
@@ -9178,8 +9186,8 @@ const pinSyndromeData = {
         },
         { type: "testGrid", key: "provocativeExam", label: "Provocative examination", options: ["Resisted supination pain", "Tenderness over Arcade of Frohse", "Radial tunnel tenderness", "Dynamic compression signs"] },
         { type: "select", key: "nerveFailureLadder", label: "Nerve Failure Ladder", options: ["Stage 1 \u2013 Isolated motor weakness", "Stage 2 \u2013 Multiple extensor weakness", "Stage 3 \u2013 Functional limitation", "Stage 4 \u2013 Occupational impairment", "Stage 5 \u2013 Muscle wasting", "Stage 6 \u2013 Severe loss of hand function"], columns: 1, noteLabel: "Nerve Failure Ladder stage" },
-        { type: "checkbox", key: "localizationTriceps", label: "Radial Nerve Localization Framework \u2014 Triceps", options: ["Normal"] },
-        { type: "checkbox", key: "localizationBrachioradialis", label: "Radial Nerve Localization Framework \u2014 Brachioradialis", options: ["Normal"] },
+        ...abnormalCheck({ key: "localizationTriceps", label: "Radial Nerve Localization Framework \u2014 Triceps", ok: "Normal"  }),
+        ...abnormalCheck({ key: "localizationBrachioradialis", label: "Radial Nerve Localization Framework \u2014 Brachioradialis", ok: "Normal"  }),
         { type: "select", key: "localizationWristExtension", label: "Radial Nerve Localization Framework \u2014 Wrist Extension", options: ["Preserved", "Weak"], columns: 2 },
         { type: "checkbox", key: "localizationFingerExtension", label: "Radial Nerve Localization Framework \u2014 Finger Extension", options: ["Weak"] },
         { type: "checkbox", key: "localizationThumbExtension", label: "Radial Nerve Localization Framework \u2014 Thumb Extension", options: ["Weak"] },
@@ -9367,9 +9375,9 @@ const ainSyndromeData = {
         { type: "number", key: "gripStrengthKg", label: "Grip strength", suffix: "kg" },
         { type: "checkbox", key: "matrixPower", label: "Motor Localization Matrix \u2014 Power", options: ["FPL", "FDP (Index)", "Pronator quadratus"] },
         { type: "select", key: "matrixPattern", label: "Motor Localization Matrix \u2014 Pattern", options: ["Typical AIN", "Atypical"], columns: 2 },
-        { type: "checkbox", key: "matrixPreservationAPB", label: "Motor Localization Matrix \u2014 Preservation: APB", options: ["Normal"] },
-        { type: "checkbox", key: "matrixPreservationThenar", label: "Motor Localization Matrix \u2014 Preservation: Thenar strength", options: ["Normal"] },
-        { type: "checkbox", key: "matrixPreservationSensation", label: "Motor Localization Matrix \u2014 Preservation: Sensation", options: ["Normal"] },
+        ...abnormalCheck({ key: "matrixPreservationAPB", label: "Motor Localization Matrix \u2014 Preservation: APB", ok: "Normal"  }),
+        ...abnormalCheck({ key: "matrixPreservationThenar", label: "Motor Localization Matrix \u2014 Preservation: Thenar strength", ok: "Normal"  }),
+        ...abnormalCheck({ key: "matrixPreservationSensation", label: "Motor Localization Matrix \u2014 Preservation: Sensation", ok: "Normal"  }),
         { type: "checkbox", key: "matrixPerformance", label: "Motor Localization Matrix \u2014 Performance", options: ["Precision pinch", "Fine motor tasks", "Occupational function"] },
         { type: "select", key: "sensoryExam", label: "Sensory examination", options: ["Normal", "Abnormal"], columns: 2 },
         {
@@ -9382,7 +9390,8 @@ const ainSyndromeData = {
         { type: "checkbox", key: "compressionChainCervical", label: "Compression Chain \u2014 Cervical", options: ["Negative"] },
         { type: "select", key: "compressionChainProximalMedian", label: "Compression Chain \u2014 Proximal Median Nerve", options: ["Negative", "Suspicious"], columns: 2 },
         { type: "checkbox", key: "compressionChainAIN", label: "Compression Chain \u2014 AIN", options: ["Clinical findings consistent"] },
-        { type: "checkbox", key: "neurovascular", label: "Neurovascular", options: ["Normal"] },
+        { type: "select", key: "neurovascularStatus", label: "Neurovascular \u2014 overall", options: ["Normal", "Abnormal"], columns: 2 },
+        { type: "conditional", when: (s) => s.neurovascularStatus === "Abnormal", fields: [{ type: "text", key: "neurovascularFindings", label: "Findings (optional)", placeholder: "e.g. specific distribution, grade" }] },
       ],
     },
     {
@@ -9569,10 +9578,10 @@ const wartenbergSyndromeData = {
         { type: "numberGroup", key: "twoPointDiscrimination", label: "Static two-point discrimination", items: ["Thumb", "Index", "First dorsal web space"], suffix: "mm" },
         { type: "select", key: "hypersensitivity", label: "Hypersensitivity", options: ["Present", "Absent"], columns: 2 },
         { type: "select", key: "allodynia", label: "Allodynia", options: ["Present", "Absent"], columns: 2 },
-        { type: "checkbox", key: "thumbExtension", label: "Motor examination \u2014 Thumb extension", options: ["Normal"] },
-        { type: "checkbox", key: "fingerExtension", label: "Motor examination \u2014 Finger extension", options: ["Normal"] },
-        { type: "checkbox", key: "gripMotor", label: "Motor examination \u2014 Grip", options: ["Normal"] },
-        { type: "checkbox", key: "pinchMotor", label: "Motor examination \u2014 Pinch", options: ["Normal"] },
+        ...abnormalCheck({ key: "thumbExtension", label: "Motor examination \u2014 Thumb extension", ok: "Normal"  }),
+        ...abnormalCheck({ key: "fingerExtension", label: "Motor examination \u2014 Finger extension", ok: "Normal"  }),
+        ...abnormalCheck({ key: "gripMotor", label: "Motor examination \u2014 Grip", ok: "Normal"  }),
+        ...abnormalCheck({ key: "pinchMotor", label: "Motor examination \u2014 Pinch", ok: "Normal"  }),
         { type: "testGrid", key: "provocativeTests", label: "Provocative tests", options: ["Tinel sign over superficial radial nerve", "Compression reproduces symptoms", "Wrist pronation/flexion provocation", "Finkelstein test (to exclude concomitant de Quervain disease)"] },
         { type: "select", key: "nerveFailureLadder", label: "Nerve Failure Ladder", options: ["Stage 1 \u2013 Intermittent paresthesia", "Stage 2 \u2013 Persistent dysesthesia", "Stage 3 \u2013 Objective sensory deficit", "Stage 4 \u2013 Functional limitation due to pain", "Stage 5 \u2013 Chronic neuropathic pain", "Stage 6 \u2013 Occupational limitation"], columns: 1, noteLabel: "Nerve Failure Ladder stage" },
         { type: "checkbox", key: "localizationCervical", label: "Radial Sensory Localization Framework \u2014 Cervical Spine", options: ["Negative"] },
@@ -9582,7 +9591,7 @@ const wartenbergSyndromeData = {
         { type: "checkbox", key: "compressionChainCervical", label: "Compression Chain \u2014 Cervical", options: ["Negative"] },
         { type: "checkbox", key: "compressionChainForearm", label: "Compression Chain \u2014 Forearm", options: ["Negative"] },
         { type: "checkbox", key: "compressionChainDistalRadial", label: "Compression Chain \u2014 Distal radial sensory nerve", options: ["Positive"] },
-        { type: "checkbox", key: "neurovascularRadialPulse", label: "Neurovascular \u2014 radial pulse", options: ["Normal"] },
+        ...abnormalCheck({ key: "neurovascularRadialPulse", label: "Neurovascular \u2014 radial pulse", ok: "Normal"  }),
       ],
     },
     {
@@ -9852,10 +9861,14 @@ const drfHas = (key, option) => (s) => (s[key] || []).includes(option);
 const drfIs = (key, option) => (s) => s[key] === option;
 // The pattern features that suggest operative consideration, for the line in the note. A large volar rim fragment, a tip
 // fracture of the ulnar styloid and dorsal displacement without any instability criterion are recorded but do not count.
+// The five criteria that make a dorsal displacement worth a closer look. They live in the one instability list (with the
+// older items it also holds); the volar metaphyseal comminution of the cortices counts as an instability finding as well.
+const DRF_DORSAL_CRITERIA = ["Dorsal tilt >20\u00b0", "Dorsal comminution", "Intra-articular extension", "Associated ulna fracture", "Age >60"];
+const drfCriteriaPresent = (s) => DRF_DORSAL_CRITERIA.filter((c) => (s.instabilityFeatures || []).includes(c));   // in the order of the criteria, not the order ticked
 const drfOperativeFeatures = (s) => {
   const out = [];
   const low = (x) => lowerListItem(x);   // the app's own rule: lower the first letter, keep acronyms such as DRUJ
-  const criteria = s.drfDorsalCriteria || [];
+  const criteria = drfCriteriaPresent(s);
   if (s.drfDisplacement === "Volar displacement") out.push("volar displacement");
   if (s.drfDisplacement === "Dorsal displacement" && criteria.length) out.push(`dorsal displacement with ${criteria.length} instability criteri${criteria.length === 1 ? "on" : "a"} (${criteria.map(low).join(", ")})`);
   if (s.drfFractureDislocation) out.push(`fracture-dislocation (${s.drfFractureDislocation.replace(/\s*\(.*\)/, "").toLowerCase()})`);
@@ -9869,11 +9882,75 @@ const drfOperativeFeatures = (s) => {
   return out;
 };
 
+
+// What each recorded finding suggests, so that the pattern guides the choice of operation. Each rule names an option that is
+// in this diagnosis's list and says why; the picker shows them as prompts and the pathway lists them at its operative step.
+const DRF_SURGICAL_HINTS = [
+  { option: "ORIF with volar locking plate", because: "volar displacement: buttress fixation", when: (s) => s.drfDisplacement === "Volar displacement" },
+  { option: "ORIF with volar locking plate", because: "dorsal displacement with instability criteria", when: (s) => s.drfDisplacement === "Dorsal displacement" && drfCriteriaPresent(s).length > 0 },
+  { option: "ORIF with volar locking plate", because: "fracture-dislocation: stabilisation with a rim buttress", when: (s) => !!s.drfFractureDislocation },
+  { option: "Volar rim fixation", because: "fracture-dislocation: rim buttress on the side of the dislocation", when: (s) => !!s.drfFractureDislocation },
+  { option: "Dorsal plate fixation", because: "fracture-dislocation: rim buttress on the side of the dislocation", when: (s) => !!s.drfFractureDislocation },
+  { option: "Extended-length volar plate", because: "extension to the shaft", when: (s) => (s.drfExtent || []).includes("Extension to the shaft") },
+  { option: "Dorsal bridge plate", because: "extension to the shaft", when: (s) => (s.drfExtent || []).includes("Extension to the shaft") },
+  { option: "Dorsal bridge plate", because: "volar metaphyseal comminution", when: (s) => (s.drfCortices || []).includes("Volar metaphyseal comminution") },
+  { option: "Fragment-specific fixation", because: "volar metaphyseal comminution: supplementary fixation", when: (s) => (s.drfCortices || []).includes("Volar metaphyseal comminution") },
+  { option: "Dorsal plate fixation", because: "dorsal impacted fragment: may not reduce from a volar approach", when: (s) => (s.drfCortices || []).includes("Dorsal impacted fragment") },
+  { option: "Bone graft or substitute", because: "dorsal impacted fragment", when: (s) => (s.drfCortices || []).includes("Dorsal impacted fragment") },
+  { option: "Arthroscopic-assisted reduction and fixation", because: "large joint step or comminution", when: (s) => (s.drfJointSurface || []).includes("Large joint step or comminution") },
+  { option: "Dorsal plate fixation", because: "medial die punch", when: (s) => (s.drfJointSurface || []).includes("Medial die punch") },
+  { option: "Percutaneous elevation of the die punch", because: "medial die punch", when: (s) => (s.drfJointSurface || []).includes("Medial die punch") },
+  { option: "Percutaneous elevation of the die punch", because: "central die punch", when: (s) => (s.drfJointSurface || []).includes("Central die punch") },
+  { option: "Bone graft or substitute", because: "central die punch: subchondral support", when: (s) => (s.drfJointSurface || []).includes("Central die punch") },
+  { option: "Volar rim fixation", because: "small volar rim fragment (high risk of volar escape)", when: (s) => s.drfLunateFacet === "Small volar rim fragment (high risk of volar escape)" },
+  { option: "Fragment-specific fixation", because: "volar-ulnar or dorso-ulnar fragment", when: (s) => s.drfLunateFacet === "Volar-ulnar or dorso-ulnar fragment" },
+  { option: "Radial styloid screw or wire fixation", because: "single large radial styloid fragment", when: (s) => s.drfRadialStyloid === "Single large fragment" },
+  { option: "Radial column plate", because: "fragmented radial styloid", when: (s) => s.drfRadialStyloid === "Fragmented" },
+  { option: "Sigmoid notch and DRUJ stabilisation", because: "disrupted sigmoid notch or dislocated DRUJ", when: (s) => (s.drfDruj || []).includes("Disrupted sigmoid notch or dislocated DRUJ") },
+  { option: "Ulnar styloid fixation or TFCC repair", because: "ulnar styloid base or foveal fracture, if the DRUJ is unstable after the radius is fixed", when: (s) => s.drfUlnarStyloid === "Base fracture" || s.drfUlnarStyloid === "Foveal fracture" },
+];
+const drfSurgicalHints = (s) => {
+  const by = new Map();
+  DRF_SURGICAL_HINTS.forEach((h) => { if (h.when(s)) { if (!by.has(h.option)) by.set(h.option, []); by.get(h.option).push(h.because); } });
+  return [...by].map(([option, because]) => ({ option, because }));
+};
+// For both sides at once: the options either side suggests.
+const drfSurgicalHintsAnySide = (s) => {
+  if (s.side !== "Bilateral") return drfSurgicalHints(s);
+  const merged = new Map();
+  [s.limbData?.right || {}, s.limbData?.left || {}].forEach((limb) => drfSurgicalHints({ ...s, ...limb }).forEach((h) => { const prev = merged.get(h.option) || []; h.because.forEach((b) => { if (!prev.includes(b)) prev.push(b); }); merged.set(h.option, prev); }));
+  return [...merged].map(([option, because]) => ({ option, because }));
+};
+// What the recorded findings say at each decision point of the pathway.
+const drfPathwayGuidance = {
+  initial: (s) => {
+    const f = drfOperativeFeatures(s);
+    if (f.length) return [`Features suggesting operative consideration: ${f.join("; ")}.`];
+    const any = s.drfDisplacement || s.drfFractureDislocation || (s.instabilityFeatures || []).length || (s.drfExtent || []).length || (s.drfCortices || []).length || (s.drfJointSurface || []).length || s.drfLunateFacet || s.drfRadialStyloid || (s.drfDruj || []).length || s.drfUlnarStyloid;
+    return any ? ["Fracture pattern recorded, with no feature so far that suggests operative consideration."] : ["Nothing is recorded yet under Fracture pattern or Stability Assessment (Diagnosis Classification). Recording them first makes the decisions below easier."];
+  },
+  stable: (s) => {
+    const out = [];
+    const crit = drfCriteriaPresent(s);
+    if (s.drfDisplacement === "Volar displacement") out.push("Volar displacement: usually unstable when treated closed.");
+    if (s.drfFractureDislocation) out.push("Fracture-dislocation: surgical stabilisation is usually considered.");
+    if (s.drfDisplacement === "Dorsal displacement") out.push(`Dorsal displacement: ${crit.length} of the 5 instability criteria recorded${crit.length ? ` (${crit.map(lowerListItem).join(", ")})` : ""}.`);
+    const others = (s.instabilityFeatures || []).filter((c) => !DRF_DORSAL_CRITERIA.includes(c));
+    if (others.length) out.push(`Also recorded as instability features: ${others.map(lowerListItem).join(", ")}.`);
+    if ((s.drfJointSurface || []).includes("Large joint step or comminution") || Number(s.intraArticularStepMm) > 2) out.push("Joint surface: a large step or comminution is recorded (a step over 2 mm is the flag).");
+    const ok = (s.acceptableAlignment || []).length;
+    if (ok) out.push(`Acceptable alignment recorded: ${ok} of 5.`);
+    return out;
+  },
+  operative: (s) => drfSurgicalHintsAnySide(s).map((h) => `${h.option} (${h.because.join("; ")})`),
+};
+
 const distalRadiusFxData = {
   id: "distal-radius-fracture",
   name: "Distal Radius Fractures",
   region: "wrist",
   operativeFeatures: drfOperativeFeatures,
+  surgicalHints: drfSurgicalHintsAnySide,
   // Unlike every other template in this project, your original opens
   // straight into data-capture fields (mechanism, patient factors, injury
   // factors) rather than a "typical presentation" reference list. Section 1
@@ -9907,8 +9984,10 @@ const distalRadiusFxData = {
   pathway: {
     start: "initial",
     nodes: {
-      initial: { type: "info", title: "Initial Assessment (Trauma Decision Ladder)", text: "Diagnosis \u2192 Apply Trauma Decision Ladder (recognize \u2192 classify \u2192 assess stability \u2192 assess displacement \u2192 determine treatment \u2192 monitor healing \u2192 restore function)", next: "stableQ" },
+      initial: {
+          guidance: drfPathwayGuidance.initial, type: "info", title: "Initial Assessment (Trauma Decision Ladder)", text: "Diagnosis \u2192 Apply Trauma Decision Ladder (recognize \u2192 classify \u2192 assess stability \u2192 assess displacement \u2192 determine treatment \u2192 monitor healing \u2192 restore function)", next: "stableQ" },
       stableQ: {
+          guidance: drfPathwayGuidance.stable,
         type: "question",
         title: "Stable fracture? (Decision Point 1)",
         text: "Pathway suggests this decision once the Trauma Decision Ladder has been applied.",
@@ -9927,7 +10006,8 @@ const distalRadiusFxData = {
         ],
       },
       nonOperativeDespiteDisplacementTerminal: { type: "terminal", tone: "green", title: "Non-operative management appropriate", text: "Pathway suggests non-operative management despite displacement, given strong evidence (AAOS/ASSH 2020) of no long-term functional benefit from surgery in this group \u2192 immobilization \u2192 serial radiographs \u2192 progressive rehabilitation." },
-      operativeTerminal: { type: "terminal", tone: "amber", title: "Discuss operative fixation", text: "Pathway suggests shared decision-making, discussing operative fixation, then early finger motion, progressive wrist motion, strengthening, and return to function." },
+      operativeTerminal: {
+          guidance: drfPathwayGuidance.operative, type: "terminal", tone: "amber", title: "Discuss operative fixation", text: "Pathway suggests shared decision-making, discussing operative fixation, then early finger motion, progressive wrist motion, strengthening, and return to function." },
       conservativeTrack: { type: "info", title: "Conservative treatment", text: "Immobilization \u2192 Serial radiographs \u2192 Progressive rehabilitation", next: "displacementQ" },
       displacementQ: {
         type: "question",
@@ -9977,13 +10057,13 @@ const distalRadiusFxData = {
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Distal radius tenderness", "Ulnar styloid tenderness", "Scaphoid tenderness", "DRUJ tenderness", "Carpal tenderness"] },
         { type: "select", key: "medianNerve", label: "Median nerve", options: ["Normal", "Acute CTS"], columns: 2 },
-        { type: "checkbox", key: "ulnarNerve", label: "Ulnar nerve", options: ["Normal"] },
-        { type: "checkbox", key: "radialNerve", label: "Radial nerve", options: ["Normal"] },
+        ...abnormalCheck({ key: "ulnarNerve", label: "Ulnar nerve", ok: "Normal"  }),
+        ...abnormalCheck({ key: "radialNerve", label: "Radial nerve", ok: "Normal"  }),
         { type: "number", key: "capillaryRefillSec", label: "Capillary refill", suffix: "sec" },
-        { type: "checkbox", key: "radialPulse", label: "Radial pulse", options: ["Present"] },
-        { type: "checkbox", key: "tendonEPL", label: "Tendons \u2014 EPL", options: ["Intact"] },
-        { type: "checkbox", key: "tendonFPL", label: "Tendons \u2014 FPL", options: ["Intact"] },
-        { type: "checkbox", key: "tendonEDC", label: "Tendons \u2014 EDC", options: ["Intact"] },
+        ...abnormalCheck({ key: "radialPulse", label: "Radial pulse", ok: "Present"  }),
+        ...abnormalCheck({ key: "tendonEPL", label: "Tendons \u2014 EPL", ok: "Intact"  }),
+        ...abnormalCheck({ key: "tendonFPL", label: "Tendons \u2014 FPL", ok: "Intact"  }),
+        ...abnormalCheck({ key: "tendonEDC", label: "Tendons \u2014 EDC", ok: "Intact"  }),
         { type: "select", key: "compartmentPain", label: "Compartment assessment \u2014 pain", options: ["Mild", "Severe"], columns: 2 },
         { type: "select", key: "passiveStretchPain", label: "Compartment assessment \u2014 passive stretch pain", options: ["Yes", "No"], columns: 2 },
         { type: "select", key: "compartmentSyndrome", label: "Compartment syndrome", options: ["Suspected", "No"], columns: 2 },
@@ -10032,14 +10112,7 @@ const distalRadiusFxData = {
         { type: "info", title: "Fracture pattern (pre-operative)", items: ["Record what the radiographs and CT show. Each finding prompts what is usually considered for it; the choice of treatment stays with the surgeon."] },
         { type: "select", key: "drfDisplacement", label: "Fracture pattern \u2014 Displacement", options: ["Volar displacement", "Dorsal displacement"], columns: 1, noteLabel: "fracture pattern" },
         drfPrompt(drfIs("drfDisplacement", "Volar displacement"), "Volar displacement: buttress fixation (volar plate) is usually considered, because these fractures are typically unstable when treated closed."),
-        {
-          type: "conditional",
-          when: drfIs("drfDisplacement", "Dorsal displacement"),
-          fields: [
-            { type: "info", title: null, items: ["Dorsal displacement: check the instability criteria."] },
-            { type: "checkbox", key: "drfDorsalCriteria", label: "Dorsal displacement \u2014 Instability criteria", options: ["Dorsal tilt >20\u00b0", "Dorsal comminution", "Intra-articular extension", "Associated ulna fracture", "Age >60"], noteLabel: "dorsal displacement instability criteria" },
-          ],
-        },
+        drfPrompt(drfIs("drfDisplacement", "Dorsal displacement"), "Dorsal displacement: check the instability criteria in the list below (dorsal tilt >20\u00b0, dorsal comminution, intra-articular extension, associated ulna fracture, age >60)."),
         drfPrompt((s) => s.drfDisplacement === "Dorsal displacement" && Number(s.age) > 60, "The age recorded is over 60, which is one of the criteria."),
         { type: "select", key: "drfFractureDislocation", label: "Fracture pattern \u2014 Fracture-dislocation", options: ["Partial (subluxation)", "Total (dislocation)"], columns: 1, noteLabel: "fracture-dislocation" },
         drfPrompt((s) => !!s.drfFractureDislocation, "Fracture-dislocation (total or partial): surgical stabilisation is usually considered, with a rim buttress on the side of the dislocation."),
@@ -10066,7 +10139,7 @@ const distalRadiusFxData = {
         { type: "select", key: "drfUlnarStyloid", label: "Ulnar styloid", options: ["Tip fracture", "Base fracture", "Foveal fracture"], columns: 3, noteLabel: "ulnar styloid" },
         drfPrompt(drfIs("drfUlnarStyloid", "Tip fracture"), "Ulnar styloid tip fracture: usually left alone."),
         drfPrompt((s) => s.drfUlnarStyloid === "Base fracture" || s.drfUlnarStyloid === "Foveal fracture", "Ulnar styloid base or foveal fracture: consider fixation or TFCC repair if the DRUJ is unstable after the radius is fixed."),
-        { type: "checkbox", key: "instabilityFeatures", label: "Stability Assessment \u2014 Instability features", options: ["Dorsal comminution", "Volar comminution", "Intra-articular extension", "Loss of reduction", "Osteoporosis", "Associated ulnar fracture", "DRUJ instability", "Initial dorsal angulation", "Radial shortening"] },
+        { type: "checkbox", key: "instabilityFeatures", label: "Stability Assessment \u2014 Instability features", options: ["Dorsal tilt >20\u00b0", "Dorsal comminution", "Intra-articular extension", "Associated ulna fracture", "Age >60", "DRUJ instability", "Osteoporosis", "Loss of reduction", "Radial shortening"] },
         { type: "checkbox", key: "acceptableAlignment", label: "Stability Assessment \u2014 Acceptable alignment (adults)", options: ["Radial height maintained", "Radial inclination acceptable", "Volar tilt acceptable", "Articular step <2 mm", "No progressive displacement"] },
         { type: "info", title: null, items: ["Thresholds should be individualized according to patient age, functional demands, bone quality, and surgeon judgment."] },
       ],
@@ -10116,7 +10189,7 @@ const distalRadiusFxData = {
 const scaphoidFxData = {
   id: "scaphoid-fracture",
   name: "Scaphoid Fractures",
-  region: "hand",
+  region: "wrist",
   urgentFlags: [
     { text: "Missed fracture with persistent wrist pain", consider: "Urgent reassessment recommended." },
     { text: "Progressive humpback deformity", consider: "Urgent reassessment recommended." },
@@ -10253,8 +10326,8 @@ const scaphoidFxData = {
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Anatomical snuffbox tenderness", "Scaphoid tubercle tenderness", "Pain with axial thumb compression", "Volar scaphoid tenderness", "Scapholunate interval tenderness"] },
         { type: "checkbox", key: "painWithMotion", label: "Motion \u2014 pain with", options: ["Flexion", "Extension", "Radial deviation", "Ulnar deviation"] },
-        { type: "checkbox", key: "medianNerve", label: "Median nerve", options: ["Normal"] },
-        { type: "checkbox", key: "radialArtery", label: "Radial artery", options: ["Normal"] },
+        ...abnormalCheck({ key: "medianNerve", label: "Median nerve", ok: "Normal"  }),
+        ...abnormalCheck({ key: "radialArtery", label: "Radial artery", ok: "Normal"  }),
         { type: "number", key: "capillaryRefillSec", label: "Capillary refill", suffix: "sec" },
       ],
     },
@@ -10467,8 +10540,8 @@ const thumbUCLInjuryData = {
         { type: "number", key: "tipPinchKg", label: "Tip pinch", suffix: "kg" },
         { type: "number", key: "gripStrengthKg", label: "Grip strength", suffix: "kg" },
         { type: "select", key: "thumbOpposition", label: "Thumb opposition", options: ["Normal", "Limited"], columns: 2 },
-        { type: "checkbox", key: "digitalSensation", label: "Neurovascular \u2014 digital sensation", options: ["Normal"] },
-        { type: "checkbox", key: "digitalPerfusion", label: "Neurovascular \u2014 digital perfusion", options: ["Normal"] },
+        ...abnormalCheck({ key: "digitalSensation", label: "Neurovascular \u2014 digital sensation", ok: "Normal"  }),
+        ...abnormalCheck({ key: "digitalPerfusion", label: "Neurovascular \u2014 digital perfusion", ok: "Normal"  }),
       ],
     },
     {
@@ -10668,10 +10741,10 @@ const metacarpalFxData = {
         { type: "select", key: "alignmentMotion", label: "Functional Alignment Principle \u2014 Motion", options: ["Full", "Limited", "Blocked"], columns: 3 },
         { type: "select", key: "fingerCascade", label: "Finger Cascade Assessment \u2014 Finger flexion", options: ["Normal cascade", "Rotational overlap", "Scissoring", "Malrotation"], columns: 2 },
         { type: "number", key: "gripStrengthKg", label: "Grip strength", suffix: "kg" },
-        { type: "checkbox", key: "digitalSensation", label: "Neurovascular \u2014 digital sensation", options: ["Normal"] },
-        { type: "checkbox", key: "digitalPerfusion", label: "Neurovascular \u2014 digital perfusion", options: ["Normal"] },
-        { type: "checkbox", key: "tendonExtensor", label: "Tendons \u2014 Extensor", options: ["Intact"] },
-        { type: "checkbox", key: "tendonFlexor", label: "Tendons \u2014 Flexor", options: ["Intact"] },
+        ...abnormalCheck({ key: "digitalSensation", label: "Neurovascular \u2014 digital sensation", ok: "Normal"  }),
+        ...abnormalCheck({ key: "digitalPerfusion", label: "Neurovascular \u2014 digital perfusion", ok: "Normal"  }),
+        ...abnormalCheck({ key: "tendonExtensor", label: "Tendons \u2014 Extensor", ok: "Intact"  }),
+        ...abnormalCheck({ key: "tendonFlexor", label: "Tendons \u2014 Flexor", ok: "Intact"  }),
       ],
     },
     {
@@ -10872,10 +10945,10 @@ const phalangealFxData = {
         { type: "select", key: "dipStability", label: "DIP stability", options: ["Stable", "Unstable"], columns: 2 },
         { type: "numberGroup", key: "activeROM", label: "Active range of motion", items: ["MCP flexion", "PIP flexion", "DIP flexion"], suffix: "\u00b0", slider: true, max: 100 },
         { type: "number", key: "gripStrengthKg", label: "Grip strength", suffix: "kg" },
-        { type: "checkbox", key: "tendonExtensor", label: "Tendons \u2014 Extensor", options: ["Intact"] },
-        { type: "checkbox", key: "tendonFlexor", label: "Tendons \u2014 Flexor", options: ["Intact"] },
-        { type: "checkbox", key: "digitalSensation", label: "Neurovascular \u2014 Digital sensation", options: ["Normal"] },
-        { type: "checkbox", key: "digitalPerfusion", label: "Neurovascular \u2014 Digital perfusion", options: ["Normal"] },
+        ...abnormalCheck({ key: "tendonExtensor", label: "Tendons \u2014 Extensor", ok: "Intact"  }),
+        ...abnormalCheck({ key: "tendonFlexor", label: "Tendons \u2014 Flexor", ok: "Intact"  }),
+        ...abnormalCheck({ key: "digitalSensation", label: "Neurovascular \u2014 Digital sensation", ok: "Normal"  }),
+        ...abnormalCheck({ key: "digitalPerfusion", label: "Neurovascular \u2014 Digital perfusion", ok: "Normal"  }),
       ],
     },
     {
@@ -11067,11 +11140,11 @@ const bennettRolandoFxData = {
         { type: "number", key: "palmarAbductionDeg", label: "Thumb Column Principle \u2014 Motion: Palmar abduction", suffix: "\u00b0" },
         { type: "number", key: "radialAbductionDeg", label: "Thumb Column Principle \u2014 Motion: Radial abduction", suffix: "\u00b0" },
         { type: "select", key: "arthrosisRisk", label: "Thumb Column Principle \u2014 Arthrosis Risk", options: ["Low", "Moderate", "High"], columns: 3 },
-        { type: "checkbox", key: "digitalSensation", label: "Neurovascular \u2014 Digital sensation", options: ["Normal"] },
-        { type: "checkbox", key: "digitalPerfusion", label: "Neurovascular \u2014 Digital perfusion", options: ["Normal"] },
-        { type: "checkbox", key: "tendonAPL", label: "Tendons \u2014 APL", options: ["Intact"] },
-        { type: "checkbox", key: "tendonEPL", label: "Tendons \u2014 EPL", options: ["Intact"] },
-        { type: "checkbox", key: "tendonFPL", label: "Tendons \u2014 FPL", options: ["Intact"] },
+        ...abnormalCheck({ key: "digitalSensation", label: "Neurovascular \u2014 Digital sensation", ok: "Normal"  }),
+        ...abnormalCheck({ key: "digitalPerfusion", label: "Neurovascular \u2014 Digital perfusion", ok: "Normal"  }),
+        ...abnormalCheck({ key: "tendonAPL", label: "Tendons \u2014 APL", ok: "Intact"  }),
+        ...abnormalCheck({ key: "tendonEPL", label: "Tendons \u2014 EPL", ok: "Intact"  }),
+        ...abnormalCheck({ key: "tendonFPL", label: "Tendons \u2014 FPL", ok: "Intact"  }),
       ],
     },
     {
@@ -11157,7 +11230,7 @@ const bennettRolandoFxData = {
 const perilunateInjuryData = {
   id: "perilunate-injury",
   name: "Perilunate Injuries",
-  region: "hand",
+  region: "wrist",
   urgentFlags: [
     { text: "Missed perilunate dislocation", consider: "Urgent reassessment recommended." },
     { text: "Irreducible dislocation", consider: "Urgent reassessment recommended." },
@@ -11263,9 +11336,9 @@ const perilunateInjuryData = {
         ] },
         { type: "checkbox", key: "palpation", label: "Palpation", options: ["Scapholunate interval", "Lunate tenderness", "Capitate tenderness", "Distal radius", "Carpal tenderness"] },
         { type: "select", key: "medianNerve", label: "Neurovascular \u2014 Median nerve", options: ["Normal", "Acute compression"], columns: 2 },
-        { type: "checkbox", key: "ulnarNerve", label: "Neurovascular \u2014 Ulnar nerve", options: ["Normal"] },
-        { type: "checkbox", key: "radialNerve", label: "Neurovascular \u2014 Radial nerve", options: ["Normal"] },
-        { type: "checkbox", key: "perfusion", label: "Neurovascular \u2014 Perfusion", options: ["Normal"] },
+        ...abnormalCheck({ key: "ulnarNerve", label: "Neurovascular \u2014 Ulnar nerve", ok: "Normal"  }),
+        ...abnormalCheck({ key: "radialNerve", label: "Neurovascular \u2014 Radial nerve", ok: "Normal"  }),
+        ...abnormalCheck({ key: "perfusion", label: "Neurovascular \u2014 Perfusion", ok: "Normal"  }),
         { type: "select", key: "gripFunctional", label: "Functional Assessment \u2014 Grip", options: ["Unable", "Weak"], columns: 2 },
         { type: "checkbox", key: "romFunctional", label: "Functional Assessment \u2014 ROM", options: ["Severely limited"] },
         { type: "checkbox", key: "carpalRingAlignment", label: "Carpal Ring Principle \u2014 Alignment", options: ["Gilula arcs preserved", "Lateral alignment preserved", "Capitate aligned with lunate"] },
@@ -11357,7 +11430,7 @@ const perilunateInjuryData = {
 const hookOfHamateFxData = {
   id: "hook-of-hamate-fracture",
   name: "Hook of Hamate Fractures",
-  region: "hand",
+  region: "wrist",
   urgentFlags: [
     { text: "Flexor tendon rupture", consider: "Urgent reassessment recommended." },
     { text: "Progressive ulnar neuropathy", consider: "Urgent reassessment recommended." },
@@ -11465,9 +11538,9 @@ const hookOfHamateFxData = {
         { type: "select", key: "ulnarNerveSensation", label: "Neurovascular \u2014 Ulnar Nerve: Sensation", options: ["Normal", "Reduced"], columns: 2 },
         { type: "select", key: "ulnarNerveIntrinsicStrength", label: "Neurovascular \u2014 Ulnar Nerve: Intrinsic strength", options: ["Normal", "Weak"], columns: 2 },
         { type: "select", key: "fromentSign", label: "Neurovascular \u2014 Ulnar Nerve: Froment sign", options: ["Negative", "Positive"], columns: 2 },
-        { type: "checkbox", key: "tendonFDPRing", label: "Tendons \u2014 FDP ring", options: ["Intact"] },
-        { type: "checkbox", key: "tendonFDPLittle", label: "Tendons \u2014 FDP little", options: ["Intact"] },
-        { type: "checkbox", key: "tendonFDS", label: "Tendons \u2014 FDS", options: ["Intact"] },
+        ...abnormalCheck({ key: "tendonFDPRing", label: "Tendons \u2014 FDP ring", ok: "Intact"  }),
+        ...abnormalCheck({ key: "tendonFDPLittle", label: "Tendons \u2014 FDP little", ok: "Intact"  }),
+        ...abnormalCheck({ key: "tendonFDS", label: "Tendons \u2014 FDS", ok: "Intact"  }),
         { type: "number", key: "gripStrengthKg", label: "Grip \u2014 Grip strength", suffix: "kg" },
         { type: "select", key: "gripPain", label: "Grip \u2014 Pain", options: ["Yes", "No"], columns: 2 },
       ],
@@ -11662,8 +11735,8 @@ const fingertipInjuryData = {
         { type: "number", key: "capillaryRefillSec", label: "Digital Unit Principle \u2014 Perfusion: Capillary refill", suffix: "sec" },
         { type: "select", key: "digitalArtery", label: "Digital Unit Principle \u2014 Perfusion: Digital artery", options: ["Intact", "Compromised"], columns: 2 },
         { type: "checkbox", key: "digitalUnitFunctionalEndpoint", label: "Digital Unit Principle \u2014 Functional Endpoint", options: ["Protective sensation", "Durable pulp", "Stable nail", "Pain-free pinch"] },
-        { type: "checkbox", key: "tendonFDP", label: "Tendons \u2014 FDP", options: ["Intact"] },
-        { type: "checkbox", key: "tendonTerminalExtensor", label: "Tendons \u2014 Terminal extensor", options: ["Intact"] },
+        ...abnormalCheck({ key: "tendonFDP", label: "Tendons \u2014 FDP", ok: "Intact"  }),
+        ...abnormalCheck({ key: "tendonTerminalExtensor", label: "Tendons \u2014 Terminal extensor", ok: "Intact"  }),
       ],
     },
     {
@@ -15200,7 +15273,7 @@ const REGIONS = {
     subsections: [
       { id: "wrist-tendon", label: "Tendon", conditions: [deQuervainData, intersectionSyndromeData, ecuTendinopathyData] },
       { id: "wrist-instability", label: "Instability & Ulnar-sided", conditions: [scapholunateInjuryData, ltInstabilityData, drujInstabilityData, tfccInjuryData, ulnarImpactionData] },
-      { id: "wrist-trauma", label: "Fractures & Trauma", conditions: [distalRadiusFxData] },
+      { id: "wrist-trauma", label: "Fractures & Trauma", conditions: [distalRadiusFxData, scaphoidFxData, perilunateInjuryData, hookOfHamateFxData] },
       { id: "wrist-degenerative", label: "Joint Disease & Osteonecrosis", conditions: [wristOAData, thumbCMCOAData, sttArthritisData, kienbockDiseaseData] },
       { id: "wrist-masses", label: "Masses", conditions: [wristGanglionData, carpalBossData] },
     ],
@@ -15216,7 +15289,7 @@ const REGIONS = {
     subsections: [
       { id: "hand-tendon", label: "Tendon & Contracture", conditions: [triggerFingerData, dupuytrenDiseaseData, malletFingerData, jerseyFingerData, sagittalBandInjuryData, extensorTendonInjuriesData, boutonniereDeformityData, tendonLacerationData] },
       { id: "hand-joint", label: "Joint & Ligament", conditions: [pipDislocationData, handOAData, thumbUCLInjuryData] },
-      { id: "hand-trauma", label: "Fractures & Trauma", conditions: [scaphoidFxData, metacarpalFxData, phalangealFxData, bennettRolandoFxData, perilunateInjuryData, hookOfHamateFxData, fingertipInjuryData, amputationReplantData] },
+      { id: "hand-trauma", label: "Fractures & Trauma", conditions: [metacarpalFxData, phalangealFxData, bennettRolandoFxData, fingertipInjuryData, amputationReplantData] },
       { id: "hand-masses-infection", label: "Masses & Infection", conditions: [glomusTumourData, gcttsData, enchondromaData, flexorTenosynovitisData, handInfectionData] },
       { id: "hand-pain-inflammatory", label: "Pain & Inflammatory", conditions: [crpsData, inflammatoryHandData] },
     ],
@@ -15303,8 +15376,8 @@ const WHATS_NEW = [
   {
     when: "26 October 2026",
     items: [
-      "Distal radius fractures moved from Hand to Wrist (in a new Fractures & Trauma group), and the operations for them are now offered under the wrist only.",
-      "Distal radius fracture pattern before surgery: displacement, fracture-dislocation, cortices, joint surface, die punch, lunate facet, radial styloid, DRUJ and ulnar styloid each prompt what is usually considered, and the note adds a line, Features suggesting operative consideration. After surgery, hardware prominence and impingement prompt their risks.",
+      "Distal radius, scaphoid, perilunate and hook of hamate fractures moved from Hand to Wrist (a new Fractures & Trauma group), with their operations. Examination findings such as the ulnar nerve, radial pulse and tendons can now be recorded as abnormal, with what was found.",
+      "Distal radius fracture pattern: the criteria are one list with the instability findings, guide the pathway and suggest operations, and the note adds a line, Features suggesting operative consideration. New operations: dorsal bridge plate, dorsal plate, arthroscopic-assisted and volar rim fixation (drafts to review).",
       "Post-operative follow-up: Set next review and Set from the timeline now show what they did, and the next-review choices are real intervals (no Return to play, no repeated Final).",
       "Searches offer Continue: choose an operation or diagnosis and go straight on (operative note, post-operative review, follow-up visit).",
       "Post-operative follow-up records outcome measures, range of motion and imaging for the review period. The follow-up visit shows the imaging each diagnosis schedules, with labelled draft suggestions where one is missing.",
@@ -17287,7 +17360,8 @@ function StrengthGrid({ muscles, values, onChange }) {
 }
 
 /* Branching pathway flow — reused across every condition's Management Pathway */
-function PathwayFlow({ schema, answers, onAnswer, priorTreatmentGiven }) {
+// A node may carry guidance(state): lines worked out from what has been recorded in the template, shown under its text.
+function PathwayFlow({ schema, answers, onAnswer, priorTreatmentGiven, guidanceState }) {
   const { effectiveStart, skipped } = skipCompletedInfoSteps(schema, priorTreatmentGiven);
   const trail = [];
   let currentId = effectiveStart;
@@ -17320,6 +17394,15 @@ function PathwayFlow({ schema, answers, onAnswer, priorTreatmentGiven }) {
           <div className="rounded-xl px-4 py-3" style={{ background: node.type === "terminal" ? toneColors[node.tone]?.bg || T.slateChip : T.slateChip, border: `1px solid ${node.type === "terminal" ? toneColors[node.tone]?.border || T.border : T.border}` }}>
             <div className="text-[13px] font-semibold mb-0.5" style={{ color: node.type === "terminal" ? toneColors[node.tone]?.fg || T.ink : T.ink }}>{node.title}</div>
             <div className="text-[14px]" style={{ color: T.inkSoft }}>{node.text}</div>
+            {typeof node.guidance === "function" && guidanceState && (() => {
+              const lines = node.guidance(guidanceState) || [];
+              return lines.length ? (
+                <div className="rounded-lg px-3 py-2.5 mt-2.5" style={{ background: T.surface, border: `1px dashed ${T.teal}` }}>
+                  <div className="text-[12px] font-semibold uppercase tracking-wide mb-1" style={{ color: T.tealDark }}>From what has been recorded</div>
+                  <ul>{lines.map((l, k) => <li key={k} className="text-[13px] mb-1 last:mb-0" style={{ color: T.ink }}>{l}</li>)}</ul>
+                </div>
+              ) : null;
+            })()}
             {node.type === "question" && (() => {
               // Short binary answers (Yes/No, Improving/Not improving) read
               // best side by side. Longer or more numerous options - e.g.
@@ -17762,6 +17845,17 @@ async function copyTextRobust(text) {
 // patient was positive for spurling" instead of "...Spurling".
 const EPONYM_TERMS_RE = /\b(Parsonage|Turner|Jobe|Neer|Hawkins|Spurling|Yergason|Speed|Phalen|Tinel|Finkelstein|Watson|Froment|Wartenberg|McMurray|Lachman|Cozen|Hornblower|Paxinos|Kienb\u00f6ck|Kienbock|Guyon|Dupuytren|Quervain|Volkmann|Colles|Smith|Galeazzi|Monteggia|Bennett|Rolando|Barton|Grashey|Zanca|Stryker|Bankart|Latarjet|Hill-Sachs|Stener|Mason|Rockwood|Eaton|Littler|Tubiana|Palmer|Cruess|Goutallier|Patte|Warner|Outerbridge|Kashiwagi|Lichtman|Essex|Lopresti|Jersey|Mallet|Bado|Sunderland|Seddon|Kapandji|Wassel|Preiser|Panner|Bunnell|Elson|Kleinert|Mayfield|Linscheid|Taleisnik|Geissler|Judet|Velpeau|Bernageau|Adson|Wright|Roos|Halstead|Kanavel|Nalebuff|Millender|Heberden|Bouchard|Paget|Schroetter)\b/;
 
+// A finding that used to be a lone "Normal" (or "Present", "Intact") tick, which could say nothing of an abnormal one, so that
+// an unticked box meant "not tested" and "abnormal" alike. It is now a choice: Normal or Abnormal (Present or Absent, Intact
+// or Not intact), and the abnormal answer takes a few words on what was found, written into the same clause of the note.
+function abnormalCheck({ key, label, ok = "Normal", ...rest }) {
+  const notOk = { Normal: "Abnormal", Present: "Absent", Intact: "Not intact" }[ok] || "Abnormal";
+  return [
+    { type: "select", key, label, options: [ok, notOk], columns: 2, abnormalDetailKey: `${key}Detail`, ...rest },
+    { type: "conditional", when: (s) => s[key] === notOk, fields: [{ type: "text", key: `${key}Detail`, label: `${label} \u2014 what was found`, placeholder: "e.g. numbness over the little finger, weak abduction", noteDetailFor: key }] },
+  ];
+}
+
 function lowerListItem(item) {
   if (typeof item !== "string" || !item) return item;
   if (/^[A-Z]{2,}/.test(item)) return item;
@@ -17837,8 +17931,16 @@ function joinClausesLower(clauses) {
 // never breaks on an unfamiliar field.
 function fieldClause(field, state) {
   if (field.type === "info" || field.type === "table") return null;
+  // written inside the clause of the finding it describes (see abnormalCheck)
+  if (field.noteDetailFor) return null;
   if (!isFilled(field, state)) return null;
   const key = field.key || "";
+  if (field.type === "select" && field.abnormalDetailKey) {
+    const v = state[key];
+    const lbl = (field.noteLabel || field.label || "").split(" ").map(lowerListItem).join(" ");
+    const detail = String(state[field.abnormalDetailKey] || "").trim();
+    return `${lbl} was ${lowerListItem(v)}${v === field.options[1] && detail ? ` (${detail})` : ""}`;
+  }
   // The optional scar site is written inside the skin clause (see below), not as a clause of its own.
   if (key === "inspectionScarSite") return null;
   const label = field.noteLabel || field.label || "";
@@ -19044,7 +19146,10 @@ const SURGICAL_OPTIONS_BY_CONDITION = {
   "sagittal-band-injury": ["Primary repair", "Reconstruction (chronic)"],
   "extensor-tendon-injuries": ["Primary repair", "Tendon grafting / reconstruction (delayed)"],
   // Hand & Wrist Trauma
-  "distal-radius-fracture": ["ORIF with volar locking plate", "Percutaneous pinning", "External fixation", "Fragment-specific fixation"],
+  // The first four are the standard options. The rest are what the fracture pattern can call for (see the criteria under
+  // Fracture pattern, and the hints beside this list): a longer plate or a bridge plate, a dorsal or rim approach, the
+  // radial styloid, the joint surface and the die punch, and the ulnar side.
+  "distal-radius-fracture": ["ORIF with volar locking plate", "Percutaneous pinning", "External fixation", "Fragment-specific fixation", "Extended-length volar plate", "Dorsal bridge plate", "Dorsal plate fixation", "Volar rim fixation", "Radial column plate", "Radial styloid screw or wire fixation", "Arthroscopic-assisted reduction and fixation", "Percutaneous elevation of the die punch", "Bone graft or substitute", "Sigmoid notch and DRUJ stabilisation", "Ulnar styloid fixation or TFCC repair"],
   "scaphoid-fracture": ["Percutaneous screw fixation", "Open reduction internal fixation", "Bone grafting (for nonunion)"],
   "thumb-ucl-injury": ["Primary ligament repair", "Ligament reconstruction (chronic/Stener lesion)"],
   "metacarpal-fracture": ["Closed reduction percutaneous pinning", "ORIF (plate/screws)", "Intramedullary fixation"],
@@ -19088,6 +19193,9 @@ const PROCEDURE_COMPLICATION_CATEGORIES = [
   { test: /fixation|\bORIF\b|pinning|plate|screw|nail/i, items: ["Nonunion or malunion", "Hardware irritation or need for removal", "Loss of fixation"] },
   // Named in the distal clavicle review (Yue 2025): the hook sits under the acromion, and is usually removed.
   { test: /hook plate/i, items: ["Subacromial impingement", "Acromial erosion or osteolysis", "Rotator cuff injury", "Planned implant removal"] },
+  { test: /die punch/i, items: ["Loss of articular reduction", "Post-traumatic arthritis", "Nonunion or malunion", "Hardware irritation or need for removal"] },
+  { test: /DRUJ stabili[sz]ation|sigmoid notch/i, items: ["Recurrent DRUJ instability", "Loss of forearm rotation", "Hardware irritation or need for removal"] },
+  { test: /bridge plate/i, items: ["Planned second operation to remove the plate", "Wrist and finger stiffness", "Extensor tendon irritation or rupture"] },
   { test: /coracoclavicular/i, items: ["Loss of reduction", "Nonunion", "Hardware irritation or need for removal"] },
   { test: /fusion|arthrodesis/i, items: ["Nonunion", "Adjacent joint stress", "Loss of motion"] },
   { test: /trapeziectomy|excision/i, items: ["Subsidence / loss of length", "Residual weakness"] },
@@ -20873,6 +20981,9 @@ function InjectionPrompt({ label, detail, onChange }) {
 // not on the list.
 function SurgicalDiscussionPrompt({ label, conditionId, selected, onSelectedChange, otherText, onOtherTextChange, complicationsDiscussed, onComplicationsDiscussedChange, patientState }) {
   const options = [...surgicalOptionsFor(conditionId), "Other"];
+  // a template may suggest options from what has been recorded (distal radius fractures: the fracture pattern)
+  const hintFn = (findConditionById(conditionId) || {}).surgicalHints;
+  const hints = typeof hintFn === "function" && patientState ? hintFn(patientState) : [];
   const procedures = (selected || []).filter((p) => p !== "Other");
   if ((selected || []).includes("Other") && otherText && otherText.trim()) procedures.push(otherText.trim());
   const complicationsSentence = procedures.length ? buildComplicationsSentence(procedures, patientState) : null;
@@ -20880,6 +20991,13 @@ function SurgicalDiscussionPrompt({ label, conditionId, selected, onSelectedChan
   return (
     <>
       <SubLabel>{label ? `${label} \u2014 procedure(s) discussed / elected` : "Procedure(s) discussed / elected"}</SubLabel>
+      {hints.length > 0 && (
+        <div className="rounded-xl px-3 py-2.5 mb-2" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+          <div className="text-[12px] font-semibold uppercase tracking-wide mb-1" style={{ color: T.tealDark }}>Suggested by what has been recorded</div>
+          <ul>{hints.map((h) => <li key={h.option} className="text-[13px] mb-0.5" style={{ color: T.ink }}><span className="font-semibold">{h.option}</span> {"\u2014"} {h.because.join("; ")}</li>)}</ul>
+          <div className="text-[12px] mt-1" style={{ color: T.inkSoft }}>These are prompts from the findings; the choice stays with the surgeon.</div>
+        </div>
+      )}
       <CheckboxGroup options={options} selected={selected || []} onChange={onSelectedChange} />
       {(selected || []).includes("Other") && (
         <TextField label="Specify procedure" value={otherText} onChange={onOtherTextChange} placeholder="Procedure not listed above" />
@@ -22360,7 +22478,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                 {isBilateral ? (
                   <>
                     <LimbHeader limb="right" />
-                    <PathwayFlow schema={condition.pathway} answers={state.pathwayAnswersRight || {}} onAnswer={(q, a) => setField("pathwayAnswersRight", { ...(state.pathwayAnswersRight || {}), [q]: a })} priorTreatmentGiven={((state.limbData?.right?.prevTreatment) || []).length > 0} />
+                    <PathwayFlow schema={condition.pathway} guidanceState={{ ...state, ...(state.limbData?.right || {}) }} answers={state.pathwayAnswersRight || {}} onAnswer={(q, a) => setField("pathwayAnswersRight", { ...(state.pathwayAnswersRight || {}), [q]: a })} priorTreatmentGiven={((state.limbData?.right?.prevTreatment) || []).length > 0} />
                     {pathwayTrailInvolvesSurgery(condition.pathway, state.pathwayAnswersRight || {}) && (
                       <>
                         <SubLabel>Right side — did the patient agree to proceed with surgery?</SubLabel>
@@ -22384,7 +22502,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                       <InjectionPrompt label="Right side" detail={state.injectionDetailRight} onChange={(d) => setField("injectionDetailRight", d)} />
                     )}
                     <LimbHeader limb="left" />
-                    <PathwayFlow schema={condition.pathway} answers={state.pathwayAnswersLeft || {}} onAnswer={(q, a) => setField("pathwayAnswersLeft", { ...(state.pathwayAnswersLeft || {}), [q]: a })} priorTreatmentGiven={((state.limbData?.left?.prevTreatment) || []).length > 0} />
+                    <PathwayFlow schema={condition.pathway} guidanceState={{ ...state, ...(state.limbData?.left || {}) }} answers={state.pathwayAnswersLeft || {}} onAnswer={(q, a) => setField("pathwayAnswersLeft", { ...(state.pathwayAnswersLeft || {}), [q]: a })} priorTreatmentGiven={((state.limbData?.left?.prevTreatment) || []).length > 0} />
                     {pathwayTrailInvolvesSurgery(condition.pathway, state.pathwayAnswersLeft || {}) && (
                       <>
                         <SubLabel>Left side — did the patient agree to proceed with surgery?</SubLabel>
@@ -22410,7 +22528,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
                   </>
                 ) : (
                   <>
-                    <PathwayFlow schema={condition.pathway} answers={state.pathwayAnswers || {}} onAnswer={(q, a) => setField("pathwayAnswers", { ...(state.pathwayAnswers || {}), [q]: a })} priorTreatmentGiven={(state.prevTreatment || []).length > 0} />
+                    <PathwayFlow schema={condition.pathway} guidanceState={state} answers={state.pathwayAnswers || {}} onAnswer={(q, a) => setField("pathwayAnswers", { ...(state.pathwayAnswers || {}), [q]: a })} priorTreatmentGiven={(state.prevTreatment || []).length > 0} />
                     {pathwayTrailInvolvesSurgery(condition.pathway, state.pathwayAnswers || {}) && (
                       <>
                         <SubLabel>Did the patient agree to proceed with surgery?</SubLabel>
@@ -25248,7 +25366,7 @@ const OP_FAMILIES = [
   { id: "ulnar-nerve-elbow", region: "elbow", name: "Ulnar nerve at the elbow" },
   { id: "elbow-fracture-arthroplasty", region: "elbow", name: "Elbow fracture and arthroplasty" },
   { id: "carpal-tunnel", region: "wrist", name: "Carpal tunnel release" },
-  { id: "wrist-fracture", region: "wrist", name: "Distal radius and scaphoid fracture" },
+  { id: "wrist-fracture", region: "wrist", name: "Distal radius and carpal fracture" },
   { id: "wrist-arthroscopy", covers: [["lt-instability", "Arthroscopic debridement"], ["tfcc-injury", "Arthroscopic debridement"], ["scapholunate-injury", "Arthroscopic debridement / pinning"]], region: "wrist", name: "Wrist arthroscopy" },
   { id: "carpal-ligament-salvage", region: "wrist", name: "Carpal ligament and salvage" },
   { id: "druj", region: "wrist", name: "Distal radioulnar joint" },
@@ -26670,7 +26788,7 @@ const OP_PROCS_WRIST = [
   }),
   opProc({
     id: "distal-radius-orif", family: "wrist-fracture", variantName: "Distal radius ORIF (volar plate)", name: "Distal radius open reduction internal fixation (volar plating)",
-    clinicNames: ["ORIF with volar locking plate"], region: "wrist", sided: "wrist", planPriority: 90,
+    clinicNames: ["ORIF with volar locking plate", "Extended-length volar plate"], region: "wrist", sided: "wrist", planPriority: 90,
     preop: ["Displaced distal radius fracture"],
     reference: opRef(
       ["Displaced distal radius fracture with unacceptable radiographic parameters (dorsal tilt, radial shortening, articular step-off or gap) after attempted closed reduction", "Intra-articular fracture with significant displacement or comminution", "Preferred over closed reduction and casting when the fracture is unstable, significantly displaced or comminuted, or intra-articular with step-off over 1\u20132 mm"],
@@ -28401,8 +28519,8 @@ const OP_PROCS_MORE_1 = [
     rehab: opRehab(["Phase 1 (Protection, 0\u20134 weeks): splint, motion of the uninvolved joints", "Phase 2 (Union, 4\u20138 weeks): splint until radiographic union, adjacent joint motion", "Phase 3 (Strengthening, 8\u201312 weeks): progressive grip and pinch strengthening", "Phase 4 (Return to activity, 3 months): return to full activity"], "Return to driving 4\u20136 weeks; desk work 1\u20132 weeks; manual labour 3 months", "Red flags: fever, wound drainage, nonunion, loss of fixation"),
   }),
   opProc({
-    id: "hook-of-hamate-excision", family: "hand-fracture", variantName: "Hook of hamate excision", name: "Hook of hamate excision",
-    clinicNames: ["Excision of hook fragment"], region: "hand", sided: "hand", planPriority: 70,
+    id: "hook-of-hamate-excision", family: "wrist-fracture", variantName: "Hook of hamate excision", name: "Hook of hamate excision",
+    clinicNames: ["Excision of hook fragment"], region: "wrist", sided: "wrist", planPriority: 70,
     preop: ["Hook of hamate fracture", "Symptomatic hook of hamate nonunion"],
     reference: opRef(
       ["Symptomatic hook of hamate fracture or nonunion with ulnar-sided palm pain, particularly with gripping", "Athlete who needs a rapid return to function"],
@@ -29891,7 +30009,7 @@ const OP_PROCS_MORE_7 = [
   }),
   opMini({
     id: "distal-radius-fragment-specific-fixation", family: "wrist-fracture", variant: "Fragment-specific fixation", name: "Distal radius fragment-specific fixation", cls: "fracture", pri: 90, region: "wrist",
-    names: ["Fragment-specific fixation"],
+    names: ["Fragment-specific fixation", "Radial column plate", "Radial styloid screw or wire fixation"],
     preop: ["Complex intra-articular distal radius fracture with separate fragments"],
     ind: ["Complex intra-articular distal radius fracture with distinct radial column, ulnar corner and dorsal fragments that a single volar plate cannot control", "Die-punch and dorsal marginal fragments"],
     cons: ["Technical demand and wider exposure, with a risk of stiffness and tendon irritation", "Bone quality and fragment size"],
@@ -29922,7 +30040,7 @@ const OP_PROCS_MORE_7 = [
     ret: "Return to driving 8–12 weeks; desk work 4 weeks; manual labour 6–12 months", rf: "Red flags: loss of reduction, avascular necrosis, post-traumatic arthritis, median nerve symptoms",
   }),
   opMini({
-    id: "hook-of-hamate-orif", family: "hand-fracture", variant: "Hook of hamate fixation", name: "Hook of hamate fracture fixation", cls: "fracture", pri: 75, region: "hand",
+    id: "hook-of-hamate-orif", family: "wrist-fracture", variant: "Hook of hamate fixation", name: "Hook of hamate fracture fixation", cls: "fracture", pri: 75, region: "wrist",
     covers: [["hook-of-hamate-fracture", "ORIF"]],
     preop: ["Acute displaced hook of hamate fracture"],
     ind: ["Acute displaced hook of hamate fracture in a patient where fixation is chosen to retain the hook and its pulley function", "Large fragment suitable for screw fixation"],
@@ -30146,6 +30264,113 @@ const OP_PROCS_MORE_8 = [
     phases: [["Protection", "0–4 weeks", "splint with the wrist and thumb in extension, free finger motion"], ["Early mobilisation", "4–6 weeks", "supervised active thumb extension and flexion within limits, motion retraining"], ["Strengthening", "6–12 weeks", "progressive strengthening"], ["Return to activity", "3 months", "return to full activity"]],
     ret: "Return to driving 6 weeks; desk work 2 weeks; manual labour 3 months", rf: "Red flags: rupture of the transfer, loss of thumb extension, extensor lag, adhesions, infection",
   }),
+  // ---- distal radius: what the fracture pattern can call for (drafted for the surgeon's review) --------------------------------
+  opMini({
+    id: "distal-radius-bridge-plate", family: "wrist-fracture", variant: "Dorsal bridge plate", name: "Distal radius dorsal bridge plate fixation", cls: "fracture", pri: 88, region: "wrist",
+    names: ["Dorsal bridge plate"],
+    preop: ["Comminuted distal radius fracture extending to the shaft", "Distal radius fracture with metaphyseal comminution that a volar plate cannot buttress"],
+    ind: ["Comminuted distal radius fracture in which the metaphysis cannot be reconstructed, or which extends into the shaft", "Volar metaphyseal comminution that a volar plate cannot buttress", "Fracture-dislocation or polytrauma, where the plate holds length across the wrist"],
+    cons: ["Planned removal of the plate once the fracture has united, which is a second operation", "Stiffness of the wrist and fingers, and extensor tendon irritation", "Bone quality at the third metacarpal and the radial shaft"],
+    eq: ["Dorsal distal radius bridge plate with locking and cortical screws", "Image intensifier", "Bone graft or substitute and K-wires if needed"],
+    pit: ["Pass the plate deep to the extensor tendons and protect the superficial radial nerve branches", "Restore length and alignment before final fixation and check them on the image intensifier", "Fix the plate to the third metacarpal and to the radial shaft with bicortical screws", "Plan removal of the plate once the fracture has united"],
+    pos: ["Supine with the arm on a hand table"],
+    find: [opS("pattern", "Pattern", ["Extends to the shaft", "Severe metaphyseal comminution", "Fracture-dislocation"], 1)],
+    tech: [opS("graft", "Bone graft", ["None", "Autograft", "Allograft or substitute"], 3), opS("articular", "Joint surface", ["No separate fixation needed", "Fixed percutaneously first"], 1)],
+    steps: [
+      "Distal incision made over the dorsum of the third metacarpal and a proximal incision over the dorsal radial shaft, with the superficial radial nerve branches identified and protected",
+      "Fracture reduced indirectly by longitudinal traction, and length, alignment and rotation checked on imaging",
+      ["Joint surface fragments fixed with percutaneous K-wires or screws before the plate was fixed", (v) => v.articular === "Fixed percutaneously first"],
+      "Bridge plate passed deep to the extensor tendons from the third metacarpal to the radial shaft and positioned on imaging",
+      "Plate fixed to the third metacarpal with bicortical screws, then length and alignment checked again",
+      "Plate fixed to the radial shaft with bicortical screws",
+      ["Bone graft placed in the metaphyseal defect", (v) => v.graft === "Autograft"],
+      ["Bone graft substitute placed in the metaphyseal defect", (v) => v.graft === "Allograft or substitute"],
+      "Finger flexion and extension checked, with the extensor tendons free to glide over the plate",
+      "Wounds closed in layers",
+    ],
+    imm: "Splint for 2 weeks with finger, elbow and shoulder motion", restr: "No lifting or weight bearing through the wrist while the plate is in place", red: "Red flags: fever, wound drainage, tendon pain or loss of finger extension, loss of reduction, median nerve symptoms", follow: "Follow-up in 10\u201314 days; radiographs at each visit; plan removal of the plate once the fracture has united",
+    phases: [["Protection", "0\u20132 weeks", "splint, finger, elbow and shoulder motion"], ["Plate in place", "2\u201312 weeks", "finger motion and forearm rotation within limits; wrist motion is limited by the plate"], ["After plate removal", "12\u201316 weeks", "wrist motion and progressive strengthening"], ["Return to activity", "4\u20136 months", "return to full activity"]],
+    ret: "Return to desk work 2 weeks; driving and manual labour after the plate is removed and the fracture has united (4\u20136 months)", rf: "Red flags: loss of reduction, extensor tendon irritation or rupture, stiffness, complex regional pain",
+  }),
+  opMini({
+    id: "distal-radius-dorsal-plate", family: "wrist-fracture", variant: "Dorsal plate", name: "Distal radius dorsal plate fixation", cls: "fracture", pri: 86, region: "wrist",
+    names: ["Dorsal plate fixation"],
+    preop: ["Dorsally displaced distal radius fracture with an impacted dorsal fragment", "Distal radius fracture with a medial die punch"],
+    ind: ["Impacted dorsal fragment or medial die punch that will not reduce from a volar approach", "Dorsal marginal fragment or dorsal comminution that needs a dorsal buttress", "Dorsally displaced fracture that is unstable when treated closed, where a dorsal approach is chosen"],
+    cons: ["Extensor tendon irritation or rupture over the plate, so removal is often needed", "Soft tissue cover over a dorsal implant, so a low-profile plate is used", "Wrist and finger stiffness"],
+    eq: ["Low-profile dorsal distal radius plates with locking screws", "Image intensifier", "Bone graft or substitute"],
+    pit: ["Close the retinaculum or the compartment floor over the plate so the extensor tendons do not lie on the implant", "Check that no screw is prominent on the volar side or into the extensor compartments", "Protect the superficial radial nerve branches and transpose the extensor pollicis longus"],
+    pos: ["Supine with the arm on a hand table"],
+    find: [opS("fragment", "Dorsal finding", ["Impacted dorsal fragment", "Medial die punch", "Dorsal comminution"], 1)],
+    tech: [opS("interval", "Approach", ["Between the third and fourth compartments", "Fourth compartment elevated"], 1), opS("graft", "Bone graft", ["None", "Autograft", "Allograft or substitute"], 3)],
+    steps: [
+      "Longitudinal dorsal incision made over the Lister tubercle, with the superficial radial nerve branches protected",
+      "Third extensor compartment opened and the extensor pollicis longus released and transposed",
+      ["Dorsal distal radius exposed between the third and fourth extensor compartments", (v) => v.interval !== "Fourth compartment elevated"],
+      ["Fourth extensor compartment elevated subperiosteally and the dorsal distal radius exposed", (v) => v.interval === "Fourth compartment elevated"],
+      "Impacted dorsal fragment or die punch elevated and the articular surface reduced under direct vision, and checked on imaging",
+      ["Bone graft placed beneath the elevated articular surface", (v) => v.graft === "Autograft"],
+      ["Bone graft substitute placed beneath the elevated articular surface", (v) => v.graft === "Allograft or substitute"],
+      "Dorsal plate applied and fixed with locking screws, with the screw lengths checked on imaging",
+      "Retinaculum or the floor of the fourth compartment repaired over the plate to separate it from the extensor tendons",
+      "Wounds closed in layers",
+    ],
+    imm: "Splint for 1\u20132 weeks then a removable splint", restr: "No lifting until union, typically 8\u201312 weeks", red: "Red flags: fever, wound drainage, tendon pain, loss of finger or thumb extension (extensor tendon rupture), loss of reduction", follow: "Follow-up in 10\u201314 days; serial radiographs",
+    phases: [["Protection", "0\u20132 weeks", "splint, finger and elbow motion"], ["Early mobilisation", "2\u20136 weeks", "active wrist and forearm motion"], ["Strengthening", "6\u201312 weeks", "progressive strengthening as union is seen"], ["Return to activity", "3\u20134 months", "return to full activity"]],
+    ret: "Return to driving 6 weeks; desk work 2 weeks; manual labour 3\u20134 months", rf: "Red flags: extensor tendon irritation or rupture, loss of reduction, stiffness, complex regional pain",
+  }),
+  opMini({
+    id: "distal-radius-arthroscopic-assisted", family: "wrist-fracture", variant: "Arthroscopic-assisted", name: "Arthroscopic-assisted reduction and fixation of the distal radius", cls: "fracture", pri: 84, region: "wrist",
+    names: ["Arthroscopic-assisted reduction and fixation"],
+    preop: ["Intra-articular distal radius fracture with a joint step over 2 mm", "Comminuted articular surface of the distal radius"],
+    ind: ["Intra-articular fracture with a joint step over 2 mm, where the articular reduction needs direct assessment", "Comminuted joint surface or die-punch fragments", "Suspected associated scapholunate, lunotriquetral or TFCC injury"],
+    cons: ["Fluid extravasation into the forearm, so irrigation is by gravity and the forearm is checked", "Longer operating time and the need for wrist arthroscopy skills", "The fracture is easier to reduce in the first days"],
+    eq: ["Wrist arthroscopy set and a traction tower", "Image intensifier", "Plates, screws and K-wires for the chosen fixation"],
+    pit: ["Use gravity irrigation at low pressure and watch the forearm for swelling", "Use a probe or K-wire as a joystick for each articular fragment", "Confirm the step and gap are under 2 mm on arthroscopy and on imaging"],
+    pos: ["Supine with the arm on a hand table and the hand in a traction tower"],
+    find: [opS("ligament", "Associated injury", ["None found", "Scapholunate", "Lunotriquetral", "TFCC"], 2)],
+    tech: [opS("fixation", "Fixation", ["Volar locking plate", "Percutaneous screws or K-wires"], 1)],
+    steps: [
+      "Traction applied to the hand with a traction tower",
+      "Standard 3-4 and 4-5 portals made and the radiocarpal joint irrigated by gravity, with the haematoma and debris cleared",
+      "Articular surface, scapholunate and lunotriquetral ligaments and the TFCC inspected",
+      "Articular fragments reduced under arthroscopic vision, with a probe or K-wire as a joystick, and held with K-wires",
+      "Articular reduction confirmed arthroscopically and on imaging, with the step and gap under 2 mm",
+      ["Fracture fixed through a volar approach with a volar locking plate", (v) => v.fixation !== "Percutaneous screws or K-wires"],
+      ["Fracture fixed with percutaneous screws or K-wires", (v) => v.fixation === "Percutaneous screws or K-wires"],
+      ["Associated scapholunate, lunotriquetral or TFCC injury addressed (debrided, repaired or pinned according to the injury)", (v) => !!v.ligament && v.ligament !== "None found"],
+      "Final arthroscopic check of the articular surface, portals closed and the forearm checked for swelling",
+    ],
+    imm: "Splint for 1\u20132 weeks then a removable splint", restr: "No lifting until union, typically 8\u201312 weeks", red: "Red flags: fever, wound drainage, tight or swollen forearm, median nerve symptoms, loss of reduction", follow: "Follow-up in 10\u201314 days; serial radiographs",
+    phases: [["Protection", "0\u20132 weeks", "splint, finger and elbow motion"], ["Early mobilisation", "2\u20136 weeks", "active wrist and forearm motion"], ["Strengthening", "6\u201312 weeks", "progressive strengthening as union is seen"], ["Return to activity", "3\u20134 months", "return to full activity"]],
+    ret: "Return to driving 6 weeks; desk work 2 weeks; manual labour 3\u20134 months", rf: "Red flags: loss of articular reduction, post-traumatic arthritis, ligament instability, stiffness",
+  }),
+  opMini({
+    id: "distal-radius-volar-rim-fixation", family: "wrist-fracture", variant: "Volar rim fixation", name: "Distal radius volar rim fixation", cls: "fracture", pri: 86, region: "wrist",
+    names: ["Volar rim fixation"],
+    preop: ["Distal radius fracture with a small volar rim fragment at risk of volar carpal subluxation", "Volar-ulnar fragment of the lunate facet"],
+    ind: ["Small volar rim (lunate facet) fragment at high risk of volar escape of the carpus, which the distal screws of a standard volar plate may not capture", "Volar-ulnar fragment that needs rim-specific fixation"],
+    cons: ["Flexor tendon irritation or rupture over a prominent rim plate or hook plate, so removal is sometimes planned", "Median nerve and carpal tunnel contents at an extended approach", "Small fragment size and stiffness"],
+    eq: ["Volar rim plate, hook plate, or wires or suture anchors", "Image intensifier"],
+    pit: ["Check the rim fragment on lateral and tilted lateral views", "Keep any plate or hook flush so the flexor tendons do not run over it", "Protect the median nerve and its palmar cutaneous branch"],
+    pos: ["Supine with the arm on a hand table"],
+    find: [opS("fragment", "Fragment", ["Small volar rim", "Volar-ulnar"], 2)],
+    tech: [opS("fixation", "Fixation", ["Rim plate", "Hook plate", "Wires or suture anchors"], 3)],
+    steps: [
+      "Volar approach made through the flexor carpi radialis interval and extended ulnarly if needed to expose the volar ulnar corner, with the median nerve protected",
+      "Pronator quadratus released from its radial border and the volar rim fragment identified",
+      "Fragment reduced under direct vision and held provisionally with a K-wire",
+      ["Rim plate applied over the fragment and fixed with screws", (v) => v.fixation === "Rim plate" || !v.fixation],
+      ["Hook plate applied with the hooks engaging the rim fragment and fixed proximally with screws", (v) => v.fixation === "Hook plate"],
+      ["Fragment fixed with wires or suture anchors through the volar rim", (v) => v.fixation === "Wires or suture anchors"],
+      "Reduction of the rim fragment and of the carpus checked on lateral and tilted lateral views",
+      "Pronator quadratus repaired where possible and wounds closed in layers",
+    ],
+    imm: "Splint for 1\u20132 weeks then a removable splint", restr: "No lifting until union, typically 8\u201312 weeks", red: "Red flags: fever, wound drainage, finger flexor pain or loss of flexion, median nerve symptoms, volar subluxation of the carpus", follow: "Follow-up in 10\u201314 days; serial radiographs",
+    phases: [["Protection", "0\u20132 weeks", "splint, finger and elbow motion"], ["Early mobilisation", "2\u20136 weeks", "active wrist and forearm motion"], ["Strengthening", "6\u201312 weeks", "progressive strengthening as union is seen"], ["Return to activity", "3\u20134 months", "return to full activity"]],
+    ret: "Return to driving 6 weeks; desk work 2 weeks; manual labour 3\u20134 months", rf: "Red flags: loss of the rim fragment or volar subluxation, flexor tendon irritation or rupture, stiffness",
+  }),
+
 ];
 
 // ---- basic entries: every clinic operation without a full template ------------------------------------------------
@@ -32221,8 +32446,6 @@ function followupRomSetOf(condition) {
   const own = followupRomFieldOf(condition);
   if (own) return { motions: own.motions, region };
   if (!followupMotionRows(condition).length) return null;
-  // the clinic files some wrist injuries (a distal radius fracture, a perilunate injury) under the hand: the diagnosis decides
-  if (/radius|lunate|carpal|tfcc|scaph|wrist/i.test(condition.id)) return { motions: OP_ROM_MOTIONS.wrist, region: "wrist" };
   if (region === "hand" && /thumb|bennett|rolando/i.test(`${condition.id} ${condition.name}`)) return { motions: OP_ROM_MOTIONS.thumb, region: "hand" };
   return OP_ROM_MOTIONS[region] ? { motions: OP_ROM_MOTIONS[region], region } : null;
 }
