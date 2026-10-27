@@ -15378,8 +15378,8 @@ const WHATS_NEW = [
     items: [
       "Distal radius, scaphoid, perilunate and hook of hamate fractures moved from Hand to Wrist (a new Fractures & Trauma group), with their operations. Examination findings such as the ulnar nerve, radial pulse and tendons can now be recorded as abnormal, with what was found.",
       "Distal radius fracture pattern: the criteria are one list with the instability findings, guide the pathway and suggest operations, and the note adds a line, Features suggesting operative consideration. New operations: dorsal bridge plate, dorsal plate, arthroscopic-assisted and volar rim fixation (drafts to review).",
-      "Post-operative follow-up: Set next review and Set from the timeline now show what they did, and the next-review choices are real intervals (no Return to play, no repeated Final).",
-      "Searches offer Continue: choose an operation or diagnosis and go straight on (operative note, post-operative review, follow-up visit).",
+      "Post-operative follow-up: the next-review buttons show what they did, the choices are real intervals, and every search offers Continue.",
+      "Installed on an iPhone, the app now sits under the status bar and notch, does not zoom into text boxes or flash grey on a tap, and sections and pathway steps ease in. Two lines in your own project files are needed: see docs/ios-standalone-setup.md.",
       "Post-operative follow-up records outcome measures, range of motion and imaging for the review period. The follow-up visit shows the imaging each diagnosis schedules, with labelled draft suggestions where one is missing.",
       "Operative note: operations on a particular digit ask which one, each rotator cuff tendon has its own tear category, and EIP transfer is new. Any generated note can be edited in place before copying.",
     ],
@@ -15390,7 +15390,9 @@ const WHATS_NEW = [
 // other sticky header has to sit BELOW it rather than at top:0, otherwise
 // both stick to the same line and the lower-z one slides underneath and is
 // clipped. SessionBar is py-2 (16px) around a 32px control row.
-const TOPBAR_H = 48;
+// The bar is 48px tall plus whatever the device keeps for its status bar and notch (0 in a browser tab). Everything that sits
+// under the bar, or fills the screen beside it, allows for the same sum.
+const TOPBAR_TOP = "calc(48px + var(--ut-safe-top, 0px))";
 
 // Outcome measures referenced by the templates, with what each is for and
 // where to obtain it. QuickDASH and DASH are included as references only -
@@ -16602,10 +16604,10 @@ function CollapsibleSection({ index, title, subtitle, isOpen, onToggle, hasConte
           {subtitle && <div className="text-[13px] truncate" style={{ color: T.inkSoft }}>{subtitle}</div>}
         </span>
         <ProgressDot done={hasContent} />
-        {isOpen ? <ChevronDown size={20} color={T.inkSoft} /> : <ChevronRight size={20} color={T.inkSoft} />}
+        <ChevronRight size={20} color={T.inkSoft} className="ut-chevron shrink-0" style={{ transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }} />
       </button>
       {isOpen && (
-        <div className="px-4 pb-5 pt-1" style={{ borderTop: `1px solid ${T.border}` }}>
+        <div className="ut-reveal px-4 pb-5 pt-1" style={{ borderTop: `1px solid ${T.border}` }}>
           {children}
           {onNext && nextTitle && (
             <button
@@ -17390,14 +17392,14 @@ function PathwayFlow({ schema, answers, onAnswer, priorTreatmentGiven, guidanceS
         </div>
       )}
       {trail.map(({ id, node }, i) => (
-        <div key={id} className="flex flex-col">
+        <div key={id} className="ut-reveal flex flex-col">
           <div className="rounded-xl px-4 py-3" style={{ background: node.type === "terminal" ? toneColors[node.tone]?.bg || T.slateChip : T.slateChip, border: `1px solid ${node.type === "terminal" ? toneColors[node.tone]?.border || T.border : T.border}` }}>
             <div className="text-[13px] font-semibold mb-0.5" style={{ color: node.type === "terminal" ? toneColors[node.tone]?.fg || T.ink : T.ink }}>{node.title}</div>
             <div className="text-[14px]" style={{ color: T.inkSoft }}>{node.text}</div>
             {typeof node.guidance === "function" && guidanceState && (() => {
               const lines = node.guidance(guidanceState) || [];
               return lines.length ? (
-                <div className="rounded-lg px-3 py-2.5 mt-2.5" style={{ background: T.surface, border: `1px dashed ${T.teal}` }}>
+                <div className="ut-reveal rounded-lg px-3 py-2.5 mt-2.5" style={{ background: T.surface, border: `1px dashed ${T.teal}` }}>
                   <div className="text-[12px] font-semibold uppercase tracking-wide mb-1" style={{ color: T.tealDark }}>From what has been recorded</div>
                   <ul>{lines.map((l, k) => <li key={k} className="text-[13px] mb-1 last:mb-0" style={{ color: T.ink }}>{l}</li>)}</ul>
                 </div>
@@ -20992,7 +20994,7 @@ function SurgicalDiscussionPrompt({ label, conditionId, selected, onSelectedChan
     <>
       <SubLabel>{label ? `${label} \u2014 procedure(s) discussed / elected` : "Procedure(s) discussed / elected"}</SubLabel>
       {hints.length > 0 && (
-        <div className="rounded-xl px-3 py-2.5 mb-2" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+        <div className="ut-reveal rounded-xl px-3 py-2.5 mb-2" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
           <div className="text-[12px] font-semibold uppercase tracking-wide mb-1" style={{ color: T.tealDark }}>Suggested by what has been recorded</div>
           <ul>{hints.map((h) => <li key={h.option} className="text-[13px] mb-0.5" style={{ color: T.ink }}><span className="font-semibold">{h.option}</span> {"\u2014"} {h.because.join("; ")}</li>)}</ul>
           <div className="text-[12px] mt-1" style={{ color: T.inkSoft }}>These are prompts from the findings; the choice stays with the surgeon.</div>
@@ -21984,7 +21986,7 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
       onClick={onClose}
     >
       <div
-        className={`h-full w-[86%] max-w-sm flex flex-col ${closing ? "ut-sheet-out" : "ut-sheet-in"}`}
+        className={`ut-safe-top h-full w-[86%] max-w-sm flex flex-col ${closing ? "ut-sheet-out" : "ut-sheet-in"}`}
         style={{ background: T.bg, boxShadow: "8px 0 28px rgba(16,30,43,0.18)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -22307,7 +22309,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
 
   return (
     <div className="min-h-screen pb-32" style={{ background: T.bg }}>
-      <div className="sticky z-30" style={{ top: TOPBAR_H, background: T.surface, boxShadow: "0 1px 3px rgba(16,30,43,0.04)" }}>
+      <div className="sticky z-30" style={{ top: TOPBAR_TOP, background: T.surface, boxShadow: "0 1px 3px rgba(16,30,43,0.04)" }}>
         <div className="flex items-center gap-2 px-3 py-3">
           <button onClick={onBack} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Back"><ArrowLeft size={22} color={T.ink} /></button>
           <div className="flex-1 min-w-0">
@@ -24004,7 +24006,7 @@ function ConditionList({ regionKey, session, onSelect, onBack, onRemove }) {
       {/* Sticky so the way back is always reachable without scrolling to
           the top of a long condition list, and styled as a filled control
           rather than plain text so it reads as a button at a glance. */}
-      <div className="sticky z-30 px-4 pt-3 pb-3" style={{ top: TOPBAR_H, background: T.bg, borderBottom: `1px solid ${T.border}` }}>
+      <div className="sticky z-30 px-4 pt-3 pb-3" style={{ top: TOPBAR_TOP, background: T.bg, borderBottom: `1px solid ${T.border}` }}>
         <div className="max-w-2xl lg:max-w-4xl mx-auto flex items-center gap-3">
           <button onClick={onBack} className="shrink-0 flex items-center gap-1.5 rounded-full px-3 py-2 active:scale-95 transition" style={{ background: T.slateChip, border: `1px solid ${T.borderStrong}`, color: T.ink, minHeight: 44 }}>
             <ArrowLeft size={17} /><span className="text-[13px] font-semibold">All regions</span>
@@ -24499,7 +24501,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
       <SubLabel>Complications</SubLabel>
       <CheckboxGroup options={postopComplicationOptions(poState.procedureName, condition)} selected={poState.complications || []} onChange={setComplications} />
       {(poState.complications || []).filter((c) => POSTOP_COMPLICATION_PROMPTS[c]).map((c) => (
-        <div key={c} role="status" className="rounded-xl px-3 py-2.5 mt-2 text-[13px]" style={{ background: T.amberTint, color: T.amber, border: `1px solid ${T.amber}` }}>{POSTOP_COMPLICATION_PROMPTS[c]}</div>
+        <div key={c} role="status" className="ut-reveal rounded-xl px-3 py-2.5 mt-2 text-[13px]" style={{ background: T.amberTint, color: T.amber, border: `1px solid ${T.amber}` }}>{POSTOP_COMPLICATION_PROMPTS[c]}</div>
       ))}
       {(poState.complications || []).includes("Other") && (
         <TextField label="Specify complication" value={poState.complicationsOther} onChange={(v) => set("complicationsOther", v)} />
@@ -24739,7 +24741,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
   }, [session.order, activeConditionId, reveal.n, reveal.id, showChips]);
 
   return (
-    <div data-ut-topbar className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 pl-3 pr-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)", height: 48 }}>
+    <div data-ut-topbar className="ut-on-dark sticky top-0 z-40 flex items-center gap-2 pl-3 pr-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)", height: TOPBAR_TOP, paddingTop: "var(--ut-safe-top, 0px)" }}>
       <div className="shrink-0 flex items-center gap-3" data-ut-tracker-fixed>
       <button onClick={onGoHome} className="ut-hit shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }} aria-label="Go to home">
         <Home size={16} color="#fff" />
@@ -24928,7 +24930,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds, onContinue }) {
   }, [query]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: T.bg }}>
+    <div className="ut-safe-top fixed inset-0 z-50 flex flex-col" style={{ background: T.bg }}>
       <div className="flex items-center gap-2 px-3 py-3 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button onClick={onClose} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Close search"><ArrowLeft size={22} color={T.ink} /></button>
         <div className="ut-searchbar flex-1 flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
@@ -25085,7 +25087,7 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
   );
 
   return (
-    <div className="flex flex-col" style={{ height: "calc(100vh - 56px)", background: T.bg }}>
+    <div className="flex flex-col" style={{ height: "calc(100vh - 56px - var(--ut-safe-top, 0px))", background: T.bg }}>
       <div className="flex items-center gap-2 px-3 lg:px-6 py-3 lg:py-4 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button
           onClick={() => (regionKey ? setRegionKey(null) : onBack())}
@@ -32178,7 +32180,7 @@ function OperationSearch({ selectedIds, onToggle, onClose, onContinue, continueN
   const [query, setQuery] = useState("");
   const groups = useMemo(() => opSearchProcedures(query), [query]);
   return (
-    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: T.bg }}>
+    <div className="ut-safe-top fixed inset-0 z-50 flex flex-col" style={{ background: T.bg }}>
       <div className="flex items-center gap-2 px-3 py-3 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button onClick={onClose} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Close search"><ArrowLeft size={22} color={T.ink} /></button>
         <div className="ut-searchbar flex-1 flex items-center gap-2 rounded-xl px-3" style={{ background: T.slateChip, border: `1px solid ${T.border}`, minHeight: 44 }}>
@@ -32578,7 +32580,7 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
             {nextReview.final ? (nextIsSet ? "Marked as the final visit" : "Set as the final visit") : nextIsSet ? `Next review set to ${nextLabel}` : `Set next review to ${OP_PERIOD_INTERVAL[nextReview.next.id]}`}
           </button>
           {nextIsSet && (
-            <div role="status" aria-live="polite" className="text-[13px] mt-1.5" style={{ color: T.inkSoft }}>
+            <div role="status" aria-live="polite" className="ut-reveal text-[13px] mt-1.5" style={{ color: T.inkSoft }}>
               Done. It is under Next review, further down.
               <button onClick={() => goTo("postop-next-review")} className="ml-1.5 font-semibold underline active:opacity-60" style={{ color: T.tealDark, minHeight: 44 }}>Go there</button>
             </div>
@@ -32591,7 +32593,7 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
             {poState.timelineSet && <Check size={16} />}Set this visit and the next from the timeline
           </button>
           {poState.timelineSet && (
-            <div role="status" aria-live="polite" className="rounded-xl p-3 mt-2" style={{ background: T.surface, border: `1px solid ${T.teal}` }}>
+            <div role="status" aria-live="polite" className="ut-reveal rounded-xl p-3 mt-2" style={{ background: T.surface, border: `1px solid ${T.teal}` }}>
               <div className="text-[13px] font-semibold flex items-center gap-1.5 mb-1.5" style={{ color: T.tealDark }}><Check size={15} /> Set from the timeline. Check and change these below.</div>
               <ul className="text-[13px]" style={{ color: T.ink }}>
                 {setNow.map(([k, v]) => <li key={k} className="mb-1"><span className="font-semibold">{k}:</span> {v}</li>)}
@@ -32644,7 +32646,7 @@ function PostopOperationPicker({ selectedIds, onToggle, choice, onChoice, onCont
   const items = opPostopItems(selectedIds, choice);
   const shortName = (id) => opShortDiagnosis(findConditionById(id).name);
   return (
-    <div className="flex flex-col" style={{ height: "calc(100vh - 56px)", background: T.bg }}>
+    <div className="flex flex-col" style={{ height: "calc(100vh - 56px - var(--ut-safe-top, 0px))", background: T.bg }}>
       <div className="flex items-center gap-2 px-3 py-3 sticky top-0" style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
         <button onClick={onBack} className="flex items-center justify-center p-2 -ml-1 active:opacity-60" style={{ minWidth: 44, minHeight: 44 }} aria-label="Back"><ArrowLeft size={22} color={T.ink} /></button>
         <div className="flex-1 min-w-0">
@@ -32723,11 +32725,64 @@ function historyStateToScreen(histState) {
 //  4. TIMING - an unqualified `transition` defaults to a flat 150ms ease.
 //     Deliberate durations and a slight overshoot-free easing curve make
 //     interactions feel considered rather than default.
+
+// What iOS needs to run this as an installed app. These belong in the project's index.html, and anything set there wins: the
+// tags below are added only where missing, so this is a fallback and never an override. viewport-fit=cover is what makes the
+// safe-area insets non-zero. "black-translucent" lets the top bar run under the status bar; if it ever misbehaves on a device,
+// change this one constant to "default" (and the same value in index.html).
+const IOS_STATUS_BAR_STYLE = "black-translucent";
+function iosStandaloneTags() {
+  return [
+    ["apple-mobile-web-app-capable", "yes"],
+    ["mobile-web-app-capable", "yes"],
+    ["apple-mobile-web-app-status-bar-style", IOS_STATUS_BAR_STYLE],
+    ["apple-mobile-web-app-title", "UpperTrack"],
+    ["theme-color", "#0A5D65"],
+    // numbers in a clinic note (dates, doses, lengths of time) must not turn into phone or calendar links
+    ["format-detection", "telephone=no, date=no, address=no, email=no"],
+  ];
+}
+function applyStandaloneMeta(doc) {
+  if (!doc || !doc.head) return;
+  iosStandaloneTags().forEach(([name, content]) => {
+    if (doc.head.querySelector(`meta[name="${name}"]`)) return;
+    const m = doc.createElement("meta"); m.setAttribute("name", name); m.setAttribute("content", content); doc.head.appendChild(m);
+  });
+  const v = doc.head.querySelector('meta[name="viewport"]');
+  if (!v) { const m = doc.createElement("meta"); m.setAttribute("name", "viewport"); m.setAttribute("content", "width=device-width, initial-scale=1, viewport-fit=cover"); doc.head.appendChild(m); }
+  else if (!/viewport-fit\s*=/.test(v.getAttribute("content") || "")) v.setAttribute("content", `${v.getAttribute("content") || "width=device-width, initial-scale=1"}, viewport-fit=cover`);
+}
+
 const DESIGN_SYSTEM_CSS = `
   :root {
     --ut-ease: cubic-bezier(0.32, 0.72, 0, 1);
     --ut-teal: #0E7C86;
   }
+
+  /* ---- Behaving like an installed app on iOS -------------------------------------------------------------------------
+     --ut-safe-top is the height the device keeps for its status bar and notch. It is 0 in a browser tab and in a standalone
+     app whose status bar is not translucent, so nothing changes there. */
+  :root { --ut-safe-top: env(safe-area-inset-top, 0px); }
+  html {
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;     /* no text growth when the phone is turned */
+    -webkit-tap-highlight-color: transparent;                    /* no grey flash on a tap */
+    background: #F5F7F8;
+    overscroll-behavior-y: none;                                 /* the page does not rubber-band over the bars; sheets and lists still do */
+  }
+  body { overscroll-behavior-y: none; }
+  /* Controls answer a tap at once and never zoom the page on a quick second tap. */
+  button, [role="button"], a, input, select, textarea, label, summary { touch-action: manipulation; }
+  /* A press-and-hold on a control is not a text selection or a link preview. Notes, text boxes and the note editor stay
+     selectable. */
+  button, [role="button"], .ut-card { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  /* iOS Safari zooms the whole page into any text box set below 16px and leaves it zoomed. Only on iOS, text boxes are
+     16px (the usual iOS size). */
+  @supports (-webkit-touch-callout: none) {
+    input, textarea, select { font-size: 16px !important; }
+  }
+  /* Under a translucent status bar, iOS draws the clock and battery in white. A full-screen light sheet therefore starts with
+     a dark strip as tall as the status bar, in the colour of the top bar. */
+  .ut-safe-top::before { content: ""; display: block; flex: none; height: var(--ut-safe-top, 0px); background: #0A5D65; }
 
   /* Consistent, intentional motion. Short enough to feel immediate on a
      tap, long enough to read as deliberate rather than abrupt. */
@@ -32931,6 +32986,14 @@ const DESIGN_SYSTEM_CSS = `
   @keyframes ut-page-in { from { opacity: 0; } to { opacity: 1; } }
   .ut-page { animation: ut-page-in 200ms ease-out backwards; }
 
+  /* Content that appears as a result of a tap (an opened section, the next step of a pathway, a prompt or a hint) eases in with
+     a short rise on the same curve as the sheets, instead of snapping into place. It runs once, when the element is added, so
+     what is already on screen never moves; "backwards" leaves nothing applied afterwards. */
+  @keyframes ut-reveal { from { opacity: 0; transform: translateY(8px); } }
+  .ut-reveal { animation: ut-reveal 320ms var(--ut-ease) backwards; }
+  /* A disclosure chevron turns rather than being swapped for another icon. */
+  .ut-chevron { transition: transform 300ms var(--ut-ease); }
+
   /* Reference sheet opened from a shortcut: rises from the bottom with a
      small spring overshoot, and drops back out on close. */
   @keyframes ut-spring-up {
@@ -32968,7 +33031,7 @@ const DESIGN_SYSTEM_CSS = `
      it and the bottom edge of the sheet that rises from it all use this, so
      they cannot drift apart. */
   :root { --ut-homebar-h: calc(74px + env(safe-area-inset-bottom, 0px)); }
-  .ut-home { height: calc(100vh - 48px); height: calc(100dvh - 48px); }
+  .ut-home { height: calc(100vh - 48px - var(--ut-safe-top, 0px)); height: calc(100dvh - 48px - var(--ut-safe-top, 0px)); }
   /* The visit-card glyphs scale with their tile, which is itself sized from
      viewport height, so the cards shrink evenly on a short screen. */
   .ut-visit-icon svg { width: 52%; height: 52%; }
@@ -33067,7 +33130,7 @@ const DESIGN_SYSTEM_CSS = `
     .ut-card:hover, .ut-card[data-pen-hover] { transform: none; }
     .ut-nerve-trace { animation: none; stroke-dasharray: none; }
     /* The panel still appears and disappears, just without travel. */
-    .ut-sheet-in, .ut-sheet-out, .ut-scrim-in, .ut-scrim-out, .ut-sheet-leave, .ut-page, .ut-spring-up, .ut-drop-out { animation: none !important; }
+    .ut-sheet-in, .ut-sheet-out, .ut-scrim-in, .ut-scrim-out, .ut-sheet-leave, .ut-page, .ut-reveal, .ut-spring-up, .ut-drop-out { animation: none !important; }
     button:not([data-no-spring]):not(.ut-card):not(:disabled):active { transform: none; }
     .ut-sheet-out, .ut-scrim-out { opacity: 0; }
   }
@@ -33131,6 +33194,8 @@ function usePenHover() {
   }, []);
 }
 export default function App() {
+  // set the tags an installed iOS app needs, where the project's own index.html has not (see applyStandaloneMeta)
+  useEffect(() => { applyStandaloneMeta(typeof document !== "undefined" ? document : null); }, []);
   usePenHover();
   const [screen, setScreenRaw] = useState({ view: "visitType" });
   // Wraps every screen change with a matching history entry. `replace: true`
