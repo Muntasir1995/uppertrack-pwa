@@ -15380,7 +15380,7 @@ const WHATS_NEW = [
       "Distal radius fracture pattern: the criteria are one list with the instability findings, guide the pathway and suggest operations, and the note adds a line, Features suggesting operative consideration. New operations: dorsal bridge plate, dorsal plate, arthroscopic-assisted and volar rim fixation (drafts to review).",
       "Post-operative follow-up: the next-review buttons show what they did, the choices are real intervals, and every search offers Continue.",
       "Installed on an iPhone, screens now slide in and back like a native app and sections ease open; the app also fits under the notch, does not zoom into text boxes, and a pull can no longer reload it. An optional status-bar setting is in docs/ios-standalone-setup.md.",
-      "Post-operative follow-up records outcome measures, range of motion and imaging for the review period. The follow-up visit shows the imaging each diagnosis schedules, with labelled draft suggestions where one is missing.",
+      "Outcome measures: the home screen's Measures button opens calculators for QuickDASH, DASH, ASES, Constant, WOSI, MEPS, PRWE, SANE and pain VAS, also offered by Calculate beside a score after surgery and in each template's outcome section.",
       "Operative note: operations on a particular digit ask which one, each rotator cuff tendon has its own tear category, and EIP transfer is new. Any generated note can be edited in place before copying.",
     ],
   },
@@ -21294,6 +21294,10 @@ function OutcomeScores({ condition, state, onFieldChange }) {
         </div>
       )}
 
+      <DashBlock kind="quickdash" entry={state.quickDashScore} onChange={(e) => onFieldChange({ quickDashScore: e })} />
+      <DashBlock kind="dash" entry={state.dashScore} onChange={(e) => onFieldChange({ dashScore: e })} />
+      {(TEMPLATE_MEASURES[condition.region] || []).map(([id, key]) => <MeasureBlock key={id} id={id} value={state[key]} onChange={(v) => onFieldChange({ [key]: v })} />)}
+
       <div className="rounded-xl p-3" style={{ background: T.slateChip, border: `1px solid ${T.border}` }}>
         <div className="text-[12px] font-bold uppercase tracking-wide mb-2" style={{ color: T.teal }}>Calculated</div>
         {isShoulder && (
@@ -21320,11 +21324,22 @@ function OutcomeScores({ condition, state, onFieldChange }) {
             <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{state.vas}/10 <span className="text-[12px] font-normal" style={{ color: T.inkSoft }}>higher worse</span></span>
           </div>
         )}
+        {["quickdash", "dash"].map((k) => {
+          const r = dashFamilyScore(k, (state[k === "dash" ? "dashScore" : "quickDashScore"] || {}).items);
+          return r.value != null ? (
+            <div key={k} className="flex items-baseline justify-between py-1">
+              <span className="text-[13px]" style={{ color: T.ink }}>{DASH_NAMES[k]}</span>
+              <span className="text-[15px] font-bold" style={{ color: T.tealDark }}>{r.value} <span className="text-[12px] font-normal" style={{ color: T.inkSoft }}>/100, higher worse</span></span>
+            </div>
+          ) : null;
+        })}
+        {(TEMPLATE_MEASURES[condition.region] || []).map(([id, key]) => {
+          const l = newMeasureLine(id, state[key]);
+          return l ? <div key={id} className="py-1 text-[13px]" style={{ color: T.ink }}>{l}</div> : null;
+        })}
       </div>
 
-      <div className="text-[12px]" style={{ color: T.inkSoft }}>
-        QuickDASH is not included: it is copyright the Institute for Work &amp; Health, must be used unmodified, and requires an Intent to Use submission (and a paid licence if this app is ever sold). The scoring engine is built and can be switched on once that is settled.
-      </div>
+      <div className="text-[12px]" style={{ color: T.inkSoft }}>{DASH_CREDIT}</div>
     </div>
   );
 }
@@ -23657,18 +23672,21 @@ function RefIconButton({ section, label, short, icon: Icon, tone, showLabel }) {
   // press itself fills too (see .ut-ref-icon:active in the stylesheet), so a
   // tap is acknowledged even before the sheet has risen.
   const isOpen = ref.activeSection === section;
+  // On the home screen, Measures opens the calculators. Everywhere else (the sidebar and the sheets) the outcome measures stay
+  // as reference links.
+  const toCalculators = section === "outcomes" && tone === "glass" && !!ref.openMeasures;
   return (
     <button
       // Pressing the icon of the section that is already showing closes it
       // (whether the list or a saved note is on screen - the Back button in the
       // sheet is what returns from a note to the list). Any other icon switches.
-      onClick={() => (isOpen ? ref.closePanel() : ref.openPanel(section))}
+      onClick={() => (toCalculators ? ref.openMeasures() : isOpen ? ref.closePanel() : ref.openPanel(section))}
       className={`ut-ref-icon relative flex flex-col items-center shrink-0 ${showLabel ? "gap-1 px-1" : ""}`}
       style={{ minWidth: showLabel ? 60 : 44 }}
-      aria-label={count ? `Open ${label.toLowerCase()}, ${count}` : `Open ${label.toLowerCase()}`}
+      aria-label={toCalculators ? "Open outcome measure calculators" : count ? `Open ${label.toLowerCase()}, ${count}` : `Open ${label.toLowerCase()}`}
       aria-current={isOpen ? "true" : undefined}
       aria-expanded={isOpen}
-      title={isOpen ? `Close ${label.toLowerCase()}` : label}
+      title={toCalculators ? "Calculate outcome measures" : isOpen ? `Close ${label.toLowerCase()}` : label}
     >
       <span
         className="ut-ref-tile relative flex items-center justify-center rounded-xl"
@@ -25214,12 +25232,15 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
        printed in the note so the number can never be read the wrong way.
      - Missing-item rules differ per instrument and are not interchangeable.
 
-   LICENSING NOTE: QuickDASH is copyright the Institute for Work & Health.
-   It is free to use only where it is not sold or bundled into a product that
-   is sold, must be used unmodified, and requires an Intent to Use form to be
-   submitted to IWH. It is therefore NOT shipped with item wording here; the
-   scoring engine exists and can be enabled once licensing is settled. ASES,
-   SANE and VAS are implemented in full.
+   LICENSING NOTE: the DASH and QuickDASH (and their two optional modules) are owned and copyrighted by the Institute for Work
+   & Health (IWH), Toronto. IWH's published conditions allow free use by clinicians using them only to treat or assess a
+   patient (and by non-commercial researchers and other not-for-profit users); the instruments must be used UNCHANGED, even
+   minor changes can alter how they perform; credit must be given; and they may not be sold or built into a product that is
+   sold without IWH's written permission (IWH asks anyone unsure of their use to submit its User Profile form). This app
+   scores them (the arithmetic is IWH's published scoring rule, verified against IWH's scoring document) and credits IWH, but
+   it does NOT contain the item wording: that is the clinician's to install, unchanged, from the official form (see
+   MEASURE_WORDING). Until it is installed, items appear as numbered rows and the patient's answers are entered from the
+   official form. ASES, SANE and VAS are implemented in full.
 ============================================================================ */
 
 // ASES (American Shoulder and Elbow Surgeons) shoulder score.
@@ -25272,21 +25293,144 @@ function scoreSANE(state) {
   return { value: Number(v) };
 }
 
-// QuickDASH. Verified formula: [(sum of n responses / n) - 1] x 25 with
-// each item scored 1-5, requiring at least 10 of 11 items. Range 0-100,
-// higher = MORE disability. Engine only - see licensing note above.
-// Note on rounding: some published worked examples round the item mean
-// before transforming, which shifts the result by ~0.1. This computes the
-// transform on the unrounded mean and rounds only at the end, which is the
-// mathematically correct order.
-function scoreQuickDASH(responses) {
-  const vals = (responses || []).filter((v) => v != null).map(Number);
-  if (vals.length < 10) {
-    return { value: null, reason: `Needs at least 10 of 11 items (${vals.length} answered).` };
+// The DASH family (DASH, QuickDASH and the two optional four-item modules), scored by IWH's published rule:
+//   score = [(sum of the n answers / n) - 1] x 25, each item answered 1 to 5, giving 0 to 100, HIGHER = MORE disability.
+// What makes a score valid differs: DASH needs at least 27 of its 30 items, QuickDASH at least 10 of its 11, and a module all
+// four of its items (no pro-rating). The work and the sports/performing-arts modules are scored on their own and never
+// folded into the main score. The transform is applied to the unrounded mean and the result rounded once, to one decimal.
+const DASH_ITEM_COUNTS = { dash: 30, quickdash: 11, work: 4, sport: 4 };
+const DASH_MIN_ANSWERED = { dash: 27, quickdash: 10, work: 4, sport: 4 };
+const DASH_NAMES = { dash: "DASH", quickdash: "QuickDASH" };
+function dashFamilyScore(kind, responses) {
+  const total = DASH_ITEM_COUNTS[kind], need = DASH_MIN_ANSWERED[kind];
+  const vals = [];
+  for (let i = 0; i < total; i++) {
+    const r = (responses || [])[i];
+    if (r === null || r === undefined || r === "") continue;
+    const n = Number(r);
+    if (Number.isInteger(n) && n >= 1 && n <= 5) vals.push(n);   // anything else is treated as not answered
   }
+  const answered = vals.length;
+  if (answered < need) return { value: null, answered, total, reason: need === total ? `All ${total} items are needed (${answered} answered).` : `Needs at least ${need} of ${total} items (${answered} answered).` };
   const sum = vals.reduce((t, v) => t + v, 0);
-  return { value: Math.round(((sum / vals.length - 1) * 25) * 10) / 10 };
+  return { value: Math.round(((sum / answered - 1) * 25) * 10) / 10, answered, total };
 }
+const scoreQuickDASH = (responses) => dashFamilyScore("quickdash", responses);
+const scoreDASH = (responses) => dashFamilyScore("dash", responses);
+
+// ---- The other measures: MEPS, Constant, PRWE and WOSI -------------------------------------------------------------------------
+// Each was checked against published scoring tables, not written from memory. Where the sources are silent or differ, the safer
+// choice is made and stated: no grade bands are printed for the Constant (they vary between sources), and a score is not calculated
+// until everything it needs has been entered, except where the published rule allows a blank (PRWE function items).
+
+// Mayo Elbow Performance Score: pain 45, motion 20, stability 10, five daily tasks at 5 each = 100. Higher = better.
+// Grades: 90 and over excellent, 75 to 89 good, 60 to 74 fair, under 60 poor.
+const MEPS_POINTS = {
+  pain: { none: 45, mild: 30, moderate: 15, severe: 0 },
+  motion: { over100: 20, from50to100: 15, under50: 5 },
+  stability: { stable: 10, moderate: 5, gross: 0 },
+};
+const MEPS_TASKS = [["comb", "Comb hair"], ["feed", "Feed oneself"], ["hygiene", "Perform hygiene"], ["shirt", "Put on a shirt"], ["shoes", "Put on shoes"]];
+function scoreMEPS(m) {
+  const v = m || {}, fn = v.function || {};
+  const pain = MEPS_POINTS.pain[v.pain], motion = MEPS_POINTS.motion[v.motion], stability = MEPS_POINTS.stability[v.stability];
+  const tasksAnswered = MEPS_TASKS.filter(([k]) => typeof fn[k] === "boolean").length;
+  const missing = [];
+  if (pain === undefined) missing.push("pain");
+  if (motion === undefined) missing.push("motion");
+  if (stability === undefined) missing.push("stability");
+  if (tasksAnswered < 5) missing.push(`the five daily tasks (${tasksAnswered} answered)`);
+  if (missing.length) return { value: null, reason: `Still needed: ${missing.join(", ")}.` };
+  const tasks = MEPS_TASKS.filter(([k]) => fn[k]).length * 5;
+  const value = pain + motion + stability + tasks;
+  return { value, grade: value >= 90 ? "excellent" : value >= 75 ? "good" : value >= 60 ? "fair" : "poor", parts: { pain, motion, stability, function: tasks } };
+}
+
+// Constant-Murley score: pain 15 (15 minus the pain rating on a 0 to 15 line), activities of daily living 20 (sleep 0 to 2, work 0 to 4,
+// recreation 0 to 4, the level the hand reaches 0 to 10), movement 40 (flexion and abduction by 30-degree bands up to 10 each,
+// external rotation 2 for each of five positions reached, internal rotation by level up to 10), strength 25 (one point for each pound
+// of force, best of three, at most 25; kilograms are multiplied by 2.2). Higher = better. The raw score; no age or sex adjustment.
+const CONSTANT_LEVELS = [0, 2, 4, 6, 8, 10];   // hand level (below the waist to above the head) and internal rotation (lateral thigh to interscapular)
+function constantElevationPoints(deg) {
+  const d = Number(deg);
+  if (deg === null || deg === undefined || deg === "" || !Number.isFinite(d) || d < 0 || d > 180) return null;
+  return d > 150 ? 10 : d > 120 ? 8 : d > 90 ? 6 : d > 60 ? 4 : d > 30 ? 2 : 0;
+}
+function constantStrengthPoints(c) {
+  if (c.strengthUnable === true) return 0;   // painful, or cannot hold 90 degrees: no points
+  if (c.strength === null || c.strength === undefined || c.strength === "") return null;
+  const x = Number(c.strength);
+  if (!Number.isFinite(x) || x < 0) return null;
+  const pounds = c.strengthUnit === "kg" ? x * 2.2 : x;
+  return Math.min(25, Math.round(pounds));
+}
+function scoreConstant(c) {
+  const v = c || {}, missing = [];
+  const painRating = v.pain === null || v.pain === undefined || v.pain === "" ? null : Number(v.pain);
+  const pain = painRating !== null && Number.isFinite(painRating) && painRating >= 0 && painRating <= 15 ? 15 - Math.round(painRating) : null;
+  const sleep = [0, 1, 2].includes(v.sleep) ? v.sleep : null;
+  const work = Number.isInteger(v.work) && v.work >= 0 && v.work <= 4 ? v.work : null;
+  const recreation = Number.isInteger(v.recreation) && v.recreation >= 0 && v.recreation <= 4 ? v.recreation : null;
+  const hand = CONSTANT_LEVELS.includes(v.hand) ? v.hand : null;
+  const flexion = constantElevationPoints(v.flexion), abduction = constantElevationPoints(v.abduction);
+  const er = Array.isArray(v.er) && v.er.length === 5 ? v.er.filter(Boolean).length * 2 : null;
+  const ir = CONSTANT_LEVELS.includes(v.ir) ? v.ir : null;
+  const strength = constantStrengthPoints(v);
+  [["pain", pain], ["sleep", sleep], ["work", work], ["recreation", recreation], ["the level the hand reaches", hand], ["flexion", flexion], ["abduction", abduction], ["external rotation", er], ["internal rotation", ir], ["strength", strength]]
+    .forEach(([label, x]) => { if (x === null) missing.push(label); });
+  if (missing.length) return { value: null, reason: `Still needed: ${missing.join(", ")}.` };
+  const adl = sleep + work + recreation + hand, rom = flexion + abduction + er + ir;
+  return { value: pain + adl + rom + strength, parts: { pain, adl, rom, strength } };
+}
+
+// Patient-Rated Wrist Evaluation: 5 pain items and 10 function items, each 0 to 10. Pain is the sum (0 to 50); function is the sum
+// halved (0 to 50); the total is 0 to 100, HIGHER = WORSE. A function item left blank (a task never done) is replaced by the mean
+// of those answered, as the published method says; the published method does not say how many blanks are acceptable, so this
+// accepts at most two. All five pain items are needed.
+function scorePRWE(p) {
+  const v = p || {};
+  const take = (arr, n) => Array.from({ length: n }, (_, i) => {
+    const x = (arr || [])[i];
+    if (x === null || x === undefined || x === "") return null;
+    const num = Number(x);
+    return Number.isFinite(num) && num >= 0 && num <= 10 ? num : null;
+  });
+  const pain = take(v.pain, 5).filter((x) => x !== null), fn = take(v.function, 10).filter((x) => x !== null);
+  if (pain.length < 5) return { value: null, reason: `All 5 pain items are needed (${pain.length} answered).` };
+  if (fn.length < 8) return { value: null, reason: `Needs at least 8 of 10 function items (${fn.length} answered).` };
+  const painScore = pain.reduce((t, x) => t + x, 0);
+  const fnScore = ((fn.reduce((t, x) => t + x, 0) / fn.length) * 10) / 2;
+  return { value: Math.round((painScore + fnScore) * 10) / 10, pain: painScore, function: Math.round(fnScore * 10) / 10, blanks: 10 - fn.length };
+}
+
+// Western Ontario Shoulder Instability Index: 21 items, each 0 to 100 (a 100 mm line), in four domains (physical symptoms 10, sport
+// recreation and work 4, lifestyle 4, emotions 3). Total 0 to 2100, HIGHER = WORSE; also as a percentage of normal, 100 - total / 21.
+const WOSI_DOMAINS = [["Physical symptoms", 10], ["Sport, recreation and work", 4], ["Lifestyle", 4], ["Emotions", 3]];
+function scoreWOSI(w) {
+  const items = (w && w.items) || [];
+  const vals = Array.from({ length: 21 }, (_, i) => {
+    const x = items[i];
+    if (x === null || x === undefined || x === "") return null;
+    const num = Number(x);
+    return Number.isFinite(num) && num >= 0 && num <= 100 ? num : null;
+  }).filter((x) => x !== null);
+  if (vals.length < 21) return { value: null, answered: vals.length, reason: `All 21 items are needed (${vals.length} answered).` };
+  const raw = vals.reduce((t, x) => t + x, 0);
+  return { value: Math.round(raw * 10) / 10, percent: Math.round((100 - raw / 21) * 10) / 10, answered: 21 };
+}
+
+// The credit IWH asks for, shown wherever a DASH or QuickDASH is scored.
+const DASH_CREDIT = "DASH and QuickDASH \u00a9 Institute for Work & Health, Toronto, Canada. Free for clinicians assessing or treating a patient; the instruments must be used unchanged and may not be sold.";
+// The item wording is NOT in this file (see the licensing note). To install it, paste the official wording, unchanged, from
+// the forms downloaded from dash.iwh.on.ca: 30 items for dash, 11 for quickdash, 4 for work and 4 for sport, in the order
+// printed. An incomplete list is ignored, so a partly pasted form can never show some items and not others.
+const MEASURE_WORDING = { dash: [], quickdash: [], work: [], sport: [], prwe: [], wosi: [] };
+const MEASURE_ITEM_COUNTS = { ...DASH_ITEM_COUNTS, prwe: 15, wosi: 21 };
+function measureItemText(kind, i) {
+  const w = MEASURE_WORDING[kind];
+  return Array.isArray(w) && w.length === MEASURE_ITEM_COUNTS[kind] && typeof w[i] === "string" && w[i].trim() ? w[i] : null;
+}
+const measureWordingInstalled = (kind) => Array.isArray(MEASURE_WORDING[kind]) && MEASURE_WORDING[kind].length === MEASURE_ITEM_COUNTS[kind];
 
 // Direction matters more than the number: printed alongside every score so
 // it cannot be read backwards by whoever reads the note later.
@@ -25295,7 +25439,24 @@ const SCORE_DIRECTION = {
   sane: "higher is better (0-100%)",
   vas: "higher is worse (0-10)",
   quickdash: "higher is worse (0-100)",
+  dash: "higher is worse (0-100)",
+  meps: "higher is better (0-100)",
+  constant: "higher is better (0-100)",
+  prwe: "higher is worse (0-100)",
+  wosi: "lower is better (0-2100)",
 };
+
+// The lines a DASH-family result adds to a note, or to the clipboard: the main score and each module that can be scored.
+function dashResultLines(kind, entry) {
+  const e = entry || {}, name = DASH_NAMES[kind], out = [];
+  const main = dashFamilyScore(kind, e.items);
+  if (main.value != null) out.push(`${name}: ${main.value} \u2014 ${SCORE_DIRECTION[kind]}${main.answered < main.total ? ` (${main.answered} of ${main.total} items answered)` : ""}`);
+  [["work", "work module"], ["sport", "sports/performing arts module"]].forEach(([k, label]) => {
+    const r = dashFamilyScore(k, e[k]);
+    if (r.value != null) out.push(`${name} ${label}: ${r.value} \u2014 ${SCORE_DIRECTION[kind]}`);
+  });
+  return out;
+}
 
 function buildOutcomeScores(condition, state) {
   const lines = [];
@@ -25308,7 +25469,495 @@ function buildOutcomeScores(condition, state) {
   const sane = scoreSANE(state);
   if (sane.value != null) lines.push(`\u2022 SANE: ${sane.value}% \u2014 ${SCORE_DIRECTION.sane}`);
   if (state.vas != null) lines.push(`\u2022 Pain VAS: ${state.vas}/10 \u2014 ${SCORE_DIRECTION.vas}`);
+  dashResultLines("quickdash", state.quickDashScore).forEach((l) => lines.push(`\u2022 ${l}`));
+  dashResultLines("dash", state.dashScore).forEach((l) => lines.push(`\u2022 ${l}`));
+  (TEMPLATE_MEASURES[condition.region] || []).forEach(([id, key]) => { const l = newMeasureLine(id, state[key]); if (l) lines.push(`\u2022 ${l}`); });
   return lines.length ? lines.join("\n") : null;
+}
+
+/* ============================================================================
+   OUTCOME MEASURE CALCULATORS: THE SHARED PIECES, THE SCREEN AND THE SHEET
+   One calculator per measure, used in three places: the Measures screen opened from the home bar (no diagnosis needed), a
+   sheet opened by "Calculate" beside a score in the post-operative review, and the Outcome Measures section of a template.
+============================================================================ */
+const MEASURE_CALCULATORS = [
+  { id: "quickdash", label: "QuickDASH", full: "Quick Disabilities of the Arm, Shoulder and Hand", use: "Upper limb disability from 11 items, with the optional work and sports/performing arts modules.", url: "https://dash.iwh.on.ca/quickdash", dash: true },
+  { id: "dash", label: "DASH", full: "Disabilities of the Arm, Shoulder and Hand", use: "Upper limb disability from 30 items, with the same optional modules.", url: "https://dash.iwh.on.ca/", dash: true },
+  { id: "ases", label: "ASES", full: "American Shoulder and Elbow Surgeons score", use: "Shoulder pain today and ten activities of daily living." },
+  { id: "constant", label: "Constant", full: "Constant-Murley shoulder score", use: "Shoulder pain, daily activities, movement and strength: patient-reported and measured.", note: "The raw score as published (no age or sex adjustment). No grade bands are shown: published bands differ between sources. Strength is one point per pound of force (kilograms are multiplied by 2.2), best of three, at most 25 points, rounded to the nearest point; if it is painful, or the arm cannot be held at 90 degrees, tick that for 0 points. Nothing is scored until every part has been entered. Constant and Murley, 1987." },
+  { id: "wosi", label: "WOSI", full: "Western Ontario Shoulder Instability Index", use: "21 items on shoulder instability, each 0 to 100; lower is better.", note: "Each of the 21 items is 0 (no problem) to 100 (severe), as on the 100 mm line; all 21 are needed. Also shown as a percentage of normal, 100 minus the total divided by 21. The item wording is not stored in this app: enter the patient\u2019s answers from the form. Kirkley and colleagues, 1998." },
+  { id: "meps", label: "MEPS", full: "Mayo Elbow Performance Score", use: "Elbow pain, motion, stability and five daily tasks, rated by the examiner.", note: "Rated by the examiner: pain 45, motion 20, stability 10, five daily tasks at 5 points each. Grades: 90 and over excellent, 75 to 89 good, 60 to 74 fair, under 60 poor. Nothing is scored until every part has been entered." },
+  { id: "prwe", label: "PRWE", full: "Patient-Rated Wrist Evaluation", use: "Wrist pain (5 items) and function (10 items), each 0 to 10; lower is better.", note: "Pain is the sum of five items (0 to 50); function is the sum of ten items halved (0 to 50). A function item left blank (a task the patient never does) is replaced by the mean of those answered; the published method does not say how many blanks are acceptable, so at most two are accepted here. All five pain items are needed. The item wording is not stored in this app: enter the patient\u2019s answers from the form. MacDermid and colleagues, 1998." },
+  { id: "sane", label: "SANE", full: "Single Assessment Numeric Evaluation", use: "One rating, 0 to 100%, of the limb compared with normal." },
+  { id: "vas", label: "Pain VAS", full: "Visual analogue scale for pain", use: "Pain now, 0 to 10." },
+];
+// The score names used in the post-operative rows, and the calculator each one opens.
+const MEASURE_BY_SPEC = { ASES: "ases", QuickDASH: "quickdash", DASH: "dash", SANE: "sane", Constant: "constant", MEPS: "meps", PRWE: "prwe", WOSI: "wosi" };
+
+// The one number a calculator gives, or null while it cannot be scored.
+// The note's line for MEPS, Constant, PRWE and WOSI, or null while it cannot be scored.
+function newMeasureLine(id, v) {
+  if (id === "meps") { const r = scoreMEPS(v); return r.value == null ? null : `MEPS: ${r.value} \u2014 ${SCORE_DIRECTION.meps} (${r.grade})`; }
+  if (id === "constant") { const r = scoreConstant(v); return r.value == null ? null : `Constant score: ${r.value} \u2014 ${SCORE_DIRECTION.constant}`; }
+  if (id === "prwe") { const r = scorePRWE(v); return r.value == null ? null : `PRWE: ${r.value} \u2014 ${SCORE_DIRECTION.prwe} (pain ${r.pain}/50, function ${r.function}/50${r.blanks ? `; ${r.blanks} function item${r.blanks === 1 ? "" : "s"} blank, replaced by the mean` : ""})`; }
+  if (id === "wosi") { const r = scoreWOSI(v); return r.value == null ? null : `WOSI: ${r.value} \u2014 ${SCORE_DIRECTION.wosi} (${r.percent}% of normal)`; }
+  return null;
+}
+// Which of these a template's Outcome Measures section offers, by region, and where its entries are kept in the template's state.
+const TEMPLATE_MEASURES = { shoulder: [["constant", "constantScore"], ["wosi", "wosiScore"]], elbow: [["meps", "mepsScore"]], wrist: [["prwe", "prweScore"]] };
+
+function measurePrimaryScore(id, values) {
+  const v = values || {};
+  if (id === "meps") return scoreMEPS(v.meps).value;
+  if (id === "constant") return scoreConstant(v.constant).value;
+  if (id === "prwe") return scorePRWE(v.prwe).value;
+  if (id === "wosi") return scoreWOSI(v.wosi).value;
+  if (id === "quickdash" || id === "dash") return dashFamilyScore(id, (v[id] || {}).items).value;
+  if (id === "ases") return scoreASES({ asesScore: v.ases }).value;
+  if (id === "sane") return scoreSANE({ saneScore: v.sane }).value;
+  if (id === "vas") return v.vas == null || v.vas === "" ? null : Number(v.vas);
+  return null;
+}
+// The text copied to the clipboard: lines in the same form the note uses, with IWH's credit under a DASH-family result.
+function measureCopyText(id, values) {
+  const v = values || {};
+  if (id === "quickdash" || id === "dash") {
+    const lines = dashResultLines(id, v[id]);
+    return lines.length ? [...lines.map((l) => `\u2022 ${l}`), `(${DASH_CREDIT})`].join("\n") : null;
+  }
+  if (["meps", "constant", "prwe", "wosi"].includes(id)) { const l = newMeasureLine(id, v[id]); return l ? `\u2022 ${l}` : null; }
+  const val = measurePrimaryScore(id, v);
+  if (val == null) return null;
+  const name = id === "vas" ? "Pain VAS" : id === "ases" ? "ASES" : "SANE";
+  return `\u2022 ${name}: ${val}${id === "sane" ? "%" : id === "vas" ? "/10" : ""} \u2014 ${SCORE_DIRECTION[id]}`;
+}
+
+// One item of a DASH-family form: the item's number (and its wording, where installed) and the answers 1 to 5. Tapping the chosen
+// answer again clears it, so an item can be left unanswered (the scoring rules allow a few).
+function ScaleRow({ n, label, text, value, onChange }) {
+  return (
+    <div role="group" aria-label={`${label} item ${n}`} className="py-2" style={{ borderBottom: `1px solid ${T.border}` }}>
+      {text && <div className="text-[13px] mb-1.5" style={{ color: T.ink }}><span className="font-semibold">{n}.</span> {text}</div>}
+      <div className="flex items-center gap-2">
+        {!text && <span className="text-[14px] font-semibold shrink-0" style={{ color: T.ink, minWidth: 52 }}>Item {n}</span>}
+        <div className="flex gap-1.5 flex-1 justify-end">
+          {[1, 2, 3, 4, 5].map((x) => {
+            const on = value === x;
+            return (
+              <button key={x} onClick={() => onChange(on ? null : x)} aria-pressed={on} aria-label={`${label} item ${n}: ${x}`}
+                className="rounded-lg text-[15px] font-semibold active:scale-95"
+                style={{ flex: "1 1 0", maxWidth: 52, minHeight: 44, background: on ? T.teal : T.slateChip, color: on ? "#fff" : T.ink }}>{x}</button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// An optional module, folded away until wanted.
+function ModuleBlock({ title, summary, children }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-xl mt-3" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+      <button onClick={() => setOpen(!open)} aria-expanded={open} className="w-full flex items-center gap-2 px-3 text-left" style={{ minHeight: 48 }}>
+        <ChevronRight size={18} color={T.inkSoft} className="ut-chevron shrink-0" style={{ transform: open ? "rotate(90deg)" : "rotate(0deg)" }} />
+        <span className="flex-1 text-[14px] font-semibold" style={{ color: T.ink }}>{title}</span>
+        <span className="text-[12px]" style={{ color: T.inkSoft }}>{summary}</span>
+      </button>
+      {open && <div className="px-3 pb-2">{children}</div>}
+    </div>
+  );
+}
+
+// The DASH and QuickDASH: the main items, and the two optional modules scored apart from them.
+function DashFamilyCalculator({ kind, entry, onChange, sticky = true, stickyTop = 0 }) {
+  const e = entry || {};
+  const name = DASH_NAMES[kind];
+  const main = dashFamilyScore(kind, e.items), work = dashFamilyScore("work", e.work), sport = dashFamilyScore("sport", e.sport);
+  const set = (field, group, n, val) => {
+    const arr = Array.from({ length: DASH_ITEM_COUNTS[group] }, (_, i) => (e[field] || [])[i] ?? null);
+    arr[n] = val;
+    onChange({ ...e, [field]: arr });
+  };
+  const rows = (field, group, label) => Array.from({ length: DASH_ITEM_COUNTS[group] }, (_, i) => (
+    <ScaleRow key={`${field}-${i}`} n={i + 1} label={label} text={measureItemText(group, i)} value={(e[field] || [])[i] ?? null} onChange={(val) => set(field, group, i, val)} />
+  ));
+  const modSummary = (r) => (r.value != null ? `${r.value}` : `${r.answered} of ${r.total}`);
+  const installed = measureWordingInstalled(kind);
+  return (
+    <div>
+      <div role="status" aria-live="polite" className="rounded-xl px-3 py-2.5 mb-2" style={{ background: T.tealTint, border: `1px solid ${T.teal}`, position: sticky ? "sticky" : "static", top: stickyTop, zIndex: 5 }}>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-[13px] font-semibold" style={{ color: T.tealDark }}>{name} score</span>
+          {main.value != null
+            ? <span className="text-[22px] font-bold" style={{ color: T.tealDark }}>{main.value}<span className="text-[12px] font-normal" style={{ color: T.inkSoft }}> / 100</span></span>
+            : <span className="text-[12px] text-right" style={{ color: T.inkSoft }}>{main.reason}</span>}
+        </div>
+        <div className="text-[12px]" style={{ color: T.inkSoft }}>{`${SCORE_DIRECTION[kind]} \u00b7 ${main.answered} of ${main.total} answered`}</div>
+      </div>
+      <div className="text-[13px] mb-1" style={{ color: T.inkSoft }}>
+        {installed ? "Answers run from 1 to 5, as printed on the form." : "Enter the patient\u2019s answers from the official form, 1 to 5 as marked."} Tap an answer again to clear it.
+      </div>
+      {rows("items", kind, name)}
+      <ModuleBlock title="Work module (optional)" summary={modSummary(work)}>
+        <div className="text-[12px] mb-1" style={{ color: T.inkSoft }}>Four items, all needed. Scored on its own, apart from the {name} score.{work.value != null ? ` Module score: ${work.value} / 100.` : ""}</div>
+        {rows("work", "work", "Work module")}
+      </ModuleBlock>
+      <ModuleBlock title="Sports / performing arts module (optional)" summary={modSummary(sport)}>
+        <div className="text-[12px] mb-1" style={{ color: T.inkSoft }}>Four items, all needed. Scored on its own, apart from the {name} score.{sport.value != null ? ` Module score: ${sport.value} / 100.` : ""}</div>
+        {rows("sport", "sport", "Sports module")}
+      </ModuleBlock>
+      <div className="text-[12px] mt-3" style={{ color: T.inkSoft }}>{DASH_CREDIT}{installed ? "" : " The item wording is not stored in this app."}</div>
+    </div>
+  );
+}
+
+function SliderNumber({ value, min, max, step, label, onChange, unit }) {
+  return (
+    <div className="flex items-center gap-3">
+      <input type="range" min={min} max={max} step={step} aria-label={label} value={value ?? min} onChange={(e) => onChange(Number(e.target.value))} className="flex-1" style={{ accentColor: T.teal, height: 44 }} />
+      <input type="number" inputMode="decimal" min={min} max={max} step={step} aria-label={`${label}, number`} value={value ?? ""} onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+        className="text-right rounded-lg px-2 py-1 font-semibold" style={{ width: 64, minHeight: 44, fontSize: 16, border: `1px solid ${T.border}`, color: T.tealDark }} />
+      {unit && <span className="text-[13px]" style={{ color: T.inkSoft }}>{unit}</span>}
+    </div>
+  );
+}
+
+function ResultCard({ title, value, unit, hint, reason, extra }) {
+  return (
+    <div role="status" aria-live="polite" className="rounded-xl px-3 py-2.5 mb-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-[13px] font-semibold" style={{ color: T.tealDark }}>{title}</span>
+        {value != null ? <span className="text-[22px] font-bold" style={{ color: T.tealDark }}>{value}<span className="text-[12px] font-normal" style={{ color: T.inkSoft }}> {unit}</span></span> : <span className="text-[12px] text-right" style={{ color: T.inkSoft }}>{reason}</span>}
+      </div>
+      <div className="text-[12px]" style={{ color: T.inkSoft }}>{hint}</div>
+      {extra && <div className="text-[12px]" style={{ color: T.inkSoft }}>{extra}</div>}
+    </div>
+  );
+}
+
+function AsesCalculator({ value, onChange }) {
+  const a = value || {};
+  const set = (k, v) => onChange({ ...a, [k]: v });
+  const r = scoreASES({ asesScore: a });
+  return (
+    <div>
+      <ResultCard title="ASES score" value={r.value} unit="/ 100" hint={`${SCORE_DIRECTION.ases}${r.imputed ? ` \u00b7 ${r.imputed} activity item${r.imputed === 1 ? "" : "s"} not answered; the rest averaged` : ""}`} reason={r.reason} />
+      <SubLabel>Pain today (0 to 10, higher is worse)</SubLabel>
+      <SliderNumber value={a.pain} min={0} max={10} step={1} label="ASES pain today" onChange={(v) => set("pain", v)} />
+      <SubLabel>Activities of daily living</SubLabel>
+      <div className="flex flex-col gap-2">
+        {ASES_ADL_ITEMS.map((item) => (
+          <div key={item.key} role="group" aria-label={`ASES ${item.label}`} className="rounded-xl px-3 py-2" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+            <div className="text-[13px] mb-1.5" style={{ color: T.ink }}>{item.label}</div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {ASES_ADL_OPTIONS.map((opt) => {
+                const on = a[item.key] === opt.value;
+                return <button key={opt.value} onClick={() => set(item.key, on ? null : opt.value)} aria-pressed={on} aria-label={`${item.label}: ${opt.label}`} className="rounded-lg py-1.5 text-[12px] font-semibold active:scale-95" style={{ background: on ? T.teal : T.slateChip, color: on ? "#fff" : T.inkSoft, minHeight: 44 }}>{opt.label}</button>;
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// A row of single-choice chips; tapping the chosen one again clears it.
+function ChipRow({ label, options, value, onChange }) {
+  return (
+    <div role="group" aria-label={label} className="flex flex-wrap gap-1.5">
+      {options.map((o) => {
+        const on = value === o.value;
+        return (
+          <button key={String(o.value)} onClick={() => onChange(on ? null : o.value)} aria-pressed={on} aria-label={`${label}: ${o.label}`}
+            className="rounded-xl px-3 text-[13px] font-semibold active:scale-95" style={{ minHeight: 44, minWidth: 44, background: on ? T.teal : T.slateChip, color: on ? "#fff" : T.ink }}>{o.label}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MeasureNumberInput({ label, value, min, max, step = 1, unit, onChange }) {
+  return (
+    <div className="flex items-center gap-2">
+      <input type="number" inputMode="decimal" min={min} max={max} step={step} aria-label={label} value={value ?? ""} onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
+        className="text-center rounded-xl" style={{ width: 96, minHeight: 44, fontSize: 16, border: `1px solid ${T.border}`, color: T.tealDark, background: T.surface }} />
+      {unit && <span className="text-[13px]" style={{ color: T.inkSoft }}>{unit}</span>}
+    </div>
+  );
+}
+
+// One numbered item answered by typing a number (PRWE 0 to 10, WOSI 0 to 100), with its wording where installed.
+function NumberItemRow({ n, kind, label, value, min, max, onChange }) {
+  const text = measureItemText(kind, n - 1);
+  return (
+    <div role="group" aria-label={`${label} item ${n}`} className="flex items-center gap-2 py-1.5" style={{ borderBottom: `1px solid ${T.border}` }}>
+      <div className="flex-1 min-w-0">{text ? <span className="text-[13px]" style={{ color: T.ink }}><span className="font-semibold">{n}.</span> {text}</span> : <span className="text-[14px] font-semibold" style={{ color: T.ink }}>Item {n}</span>}</div>
+      <MeasureNumberInput label={`${label} item ${n}`} value={value} min={min} max={max} onChange={onChange} />
+    </div>
+  );
+}
+
+function MepsCalculator({ value, onChange }) {
+  const v = value || {}, fn = v.function || {};
+  const set = (k, x) => onChange({ ...v, [k]: x });
+  const r = scoreMEPS(v);
+  return (
+    <div>
+      <ResultCard title="MEPS" value={r.value} unit="/ 100" hint={`${SCORE_DIRECTION.meps}${r.grade ? ` \u00b7 ${r.grade}` : ""}`} reason={r.reason}
+        extra={r.parts ? `Pain ${r.parts.pain}/45 \u00b7 motion ${r.parts.motion}/20 \u00b7 stability ${r.parts.stability}/10 \u00b7 function ${r.parts.function}/25` : null} />
+      <SubLabel>Pain</SubLabel>
+      <ChipRow label="MEPS pain" value={v.pain} onChange={(x) => set("pain", x)} options={[{ value: "none", label: "None (45)" }, { value: "mild", label: "Mild (30)" }, { value: "moderate", label: "Moderate (15)" }, { value: "severe", label: "Severe (0)" }]} />
+      <SubLabel>Motion: the flexion-extension arc</SubLabel>
+      <ChipRow label="MEPS motion" value={v.motion} onChange={(x) => set("motion", x)} options={[{ value: "over100", label: "More than 100\u00b0 (20)" }, { value: "from50to100", label: "50\u00b0 to 100\u00b0 (15)" }, { value: "under50", label: "Less than 50\u00b0 (5)" }]} />
+      <SubLabel>Stability</SubLabel>
+      <ChipRow label="MEPS stability" value={v.stability} onChange={(x) => set("stability", x)} options={[{ value: "stable", label: "Stable (10)" }, { value: "moderate", label: "Moderate instability (5)" }, { value: "gross", label: "Gross instability (0)" }]} />
+      <SubLabel>Daily tasks (5 points each if able)</SubLabel>
+      {MEPS_TASKS.map(([k, label]) => (
+        <div key={k} className="flex items-center gap-2 py-1.5" style={{ borderBottom: `1px solid ${T.border}` }}>
+          <span className="flex-1 text-[14px]" style={{ color: T.ink }}>{label}</span>
+          <ChipRow label={`MEPS ${label}`} value={fn[k]} onChange={(x) => set("function", { ...fn, [k]: x })} options={[{ value: true, label: "Able" }, { value: false, label: "Unable" }]} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ConstantCalculator({ value, onChange }) {
+  const v = value || {};
+  const set = (k, x) => onChange({ ...v, [k]: x });
+  const r = scoreConstant(v);
+  const er = Array.isArray(v.er) && v.er.length === 5 ? v.er : null;
+  const ER = ["Hand behind head, elbow forward", "Hand behind head, elbow back", "Hand on top of head, elbow forward", "Hand on top of head, elbow back", "Full elevation from the top of the head"];
+  const toggleEr = (i) => { const a = er ? [...er] : [false, false, false, false, false]; a[i] = !a[i]; set("er", a); };
+  const HAND = [{ value: 0, label: "Below the waist (0)" }, { value: 2, label: "Waist (2)" }, { value: 4, label: "Xiphoid (4)" }, { value: 6, label: "Neck (6)" }, { value: 8, label: "Top of head (8)" }, { value: 10, label: "Above the head (10)" }];
+  const IR = [{ value: 0, label: "Lateral thigh (0)" }, { value: 2, label: "Buttock (2)" }, { value: 4, label: "Lumbosacral junction (4)" }, { value: 6, label: "Waist, L3 (6)" }, { value: 8, label: "T12 (8)" }, { value: 10, label: "Interscapular, T7 (10)" }];
+  const points = (n) => ({ value: n, label: String(n) });
+  return (
+    <div>
+      <ResultCard title="Constant score" value={r.value} unit="/ 100" hint={SCORE_DIRECTION.constant} reason={r.reason}
+        extra={r.parts ? `Pain ${r.parts.pain}/15 \u00b7 activities ${r.parts.adl}/20 \u00b7 movement ${r.parts.rom}/40 \u00b7 strength ${r.parts.strength}/25` : null} />
+      <SubLabel>Pain: the highest in the last 24 hours, on the 0 to 15 line (0 = none, 15 = worst)</SubLabel>
+      <SliderNumber value={v.pain} min={0} max={15} step={1} label="Constant pain rating" onChange={(x) => set("pain", x)} />
+      <SubLabel>Sleep (points: 0 disturbed every night, 1 sometimes, 2 undisturbed)</SubLabel>
+      <ChipRow label="Constant sleep" value={v.sleep} onChange={(x) => set("sleep", x)} options={[0, 1, 2].map(points)} />
+      <SubLabel>Work (points 0 to 4)</SubLabel>
+      <ChipRow label="Constant work" value={v.work} onChange={(x) => set("work", x)} options={[0, 1, 2, 3, 4].map(points)} />
+      <SubLabel>Recreation and sport (points 0 to 4)</SubLabel>
+      <ChipRow label="Constant recreation" value={v.recreation} onChange={(x) => set("recreation", x)} options={[0, 1, 2, 3, 4].map(points)} />
+      <SubLabel>Highest level the hand can reach without pain</SubLabel>
+      <ChipRow label="Constant hand level" value={v.hand} onChange={(x) => set("hand", x)} options={HAND} />
+      <SubLabel>Active forward flexion, degrees</SubLabel>
+      <MeasureNumberInput label="Constant flexion, degrees" value={v.flexion} min={0} max={180} unit="degrees" onChange={(x) => set("flexion", x)} />
+      <SubLabel>Active abduction, degrees</SubLabel>
+      <MeasureNumberInput label="Constant abduction, degrees" value={v.abduction} min={0} max={180} unit="degrees" onChange={(x) => set("abduction", x)} />
+      <SubLabel>External rotation: each position reached scores 2</SubLabel>
+      <div className="flex flex-wrap gap-1.5">
+        {ER.map((label, i) => {
+          const on = !!(er && er[i]);
+          return <button key={label} onClick={() => toggleEr(i)} aria-pressed={on} aria-label={`Constant external rotation: ${label}`} className="rounded-xl px-3 text-[13px] font-semibold active:scale-95" style={{ minHeight: 44, background: on ? T.teal : T.slateChip, color: on ? "#fff" : T.ink }}>{label}</button>;
+        })}
+        <button onClick={() => set("er", [false, false, false, false, false])} aria-pressed={!!er && er.every((x) => !x)} aria-label="Constant external rotation: none of these" className="rounded-xl px-3 text-[13px] font-semibold active:scale-95" style={{ minHeight: 44, background: er && er.every((x) => !x) ? T.teal : T.slateChip, color: er && er.every((x) => !x) ? "#fff" : T.ink }}>None of these</button>
+      </div>
+      <SubLabel>Internal rotation: the highest level the thumb reaches</SubLabel>
+      <ChipRow label="Constant internal rotation" value={v.ir} onChange={(x) => set("ir", x)} options={IR} />
+      <SubLabel>Strength: abduction at 90 degrees, best of three</SubLabel>
+      <div className="flex flex-wrap items-center gap-2">
+        <MeasureNumberInput label="Constant strength" value={v.strength} min={0} step={0.1} onChange={(x) => set("strength", x)} />
+        <ChipRow label="Constant strength unit" value={v.strengthUnit || "lb"} onChange={(x) => set("strengthUnit", x || "lb")} options={[{ value: "lb", label: "Pounds" }, { value: "kg", label: "Kilograms" }]} />
+      </div>
+      <div className="mt-2"><ChipRow label="Constant strength" value={v.strengthUnable === true ? true : null} onChange={(x) => set("strengthUnable", x === true)} options={[{ value: true, label: "Painful or cannot hold 90 degrees: 0 points" }]} /></div>
+    </div>
+  );
+}
+
+function PrweCalculator({ value, onChange }) {
+  const v = value || {};
+  const setAt = (field, i, x, n) => { const arr = Array.from({ length: n }, (_, k) => (v[field] || [])[k] ?? null); arr[i] = x; onChange({ ...v, [field]: arr }); };
+  const r = scorePRWE(v);
+  const Row = (field, i, n, number) => <NumberItemRow key={`${field}-${i}`} n={number} kind="prwe" label="PRWE" value={(v[field] || [])[i] ?? null} min={0} max={10} onChange={(x) => setAt(field, i, x, n)} />;
+  return (
+    <div>
+      <ResultCard title="PRWE" value={r.value} unit="/ 100" hint={SCORE_DIRECTION.prwe} reason={r.reason}
+        extra={r.value != null ? `Pain ${r.pain}/50 \u00b7 function ${r.function}/50${r.blanks ? ` \u00b7 ${r.blanks} blank, replaced by the mean` : ""}` : null} />
+      <SubLabel>Pain: 5 items, each 0 (none) to 10 (worst)</SubLabel>
+      {Array.from({ length: 5 }, (_, i) => Row("pain", i, 5, i + 1))}
+      <SubLabel>Function, specific activities: 6 items, each 0 (no difficulty) to 10 (unable)</SubLabel>
+      {Array.from({ length: 6 }, (_, i) => Row("function", i, 10, i + 6))}
+      <SubLabel>Function, usual activities: 4 items, each 0 to 10 (leave blank if the task is never done)</SubLabel>
+      {Array.from({ length: 4 }, (_, i) => Row("function", i + 6, 10, i + 12))}
+    </div>
+  );
+}
+
+function WosiCalculator({ value, onChange }) {
+  const v = value || {};
+  const setAt = (i, x) => { const arr = Array.from({ length: 21 }, (_, k) => (v.items || [])[k] ?? null); arr[i] = x; onChange({ ...v, items: arr }); };
+  const r = scoreWOSI(v);
+  let n = 0;
+  return (
+    <div>
+      <ResultCard title="WOSI" value={r.value} unit="/ 2100" hint={SCORE_DIRECTION.wosi} reason={r.reason} extra={r.value != null ? `${r.percent}% of normal` : null} />
+      {WOSI_DOMAINS.map(([name, count]) => (
+        <div key={name}>
+          <SubLabel>{`${name}: ${count} items, each 0 (no problem) to 100 (severe)`}</SubLabel>
+          {Array.from({ length: count }, () => { const i = n++; return <NumberItemRow key={i} n={i + 1} kind="wosi" label="WOSI" value={(v.items || [])[i] ?? null} min={0} max={100} onChange={(x) => setAt(i, x)} />; })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Dispatches to the calculator for one measure. `values` holds every measure's entries, keyed by measure id.
+function MeasureCalculator({ id, values, onChange, sticky = true, stickyTop = 0 }) {
+  const v = values || {};
+  if (id === "quickdash" || id === "dash") return <DashFamilyCalculator kind={id} entry={v[id]} onChange={(entry) => onChange(id, entry)} sticky={sticky} stickyTop={stickyTop} />;
+  if (id === "ases") return <AsesCalculator value={v.ases} onChange={(x) => onChange("ases", x)} />;
+  const NOTE = (MEASURE_CALCULATORS.find((m) => m.id === id) || {}).note;
+  const withNote = (calc) => <div>{calc}{NOTE && <div className="text-[12px] mt-3" style={{ color: T.inkSoft }}>{NOTE}</div>}</div>;
+  if (id === "meps") return withNote(<MepsCalculator value={v.meps} onChange={(x) => onChange("meps", x)} />);
+  if (id === "constant") return withNote(<ConstantCalculator value={v.constant} onChange={(x) => onChange("constant", x)} />);
+  if (id === "prwe") return withNote(<PrweCalculator value={v.prwe} onChange={(x) => onChange("prwe", x)} />);
+  if (id === "wosi") return withNote(<WosiCalculator value={v.wosi} onChange={(x) => onChange("wosi", x)} />);
+  if (id === "sane") {
+    const r = scoreSANE({ saneScore: v.sane });
+    return (<div><ResultCard title="SANE" value={r.value} unit="%" hint={SCORE_DIRECTION.sane} reason={r.reason} /><SubLabel>Overall rating of the limb, 0 to 100% of normal</SubLabel><SliderNumber value={v.sane} min={0} max={100} step={5} label="SANE rating, percent" unit="%" onChange={(x) => onChange("sane", x)} /></div>);
+  }
+  if (id === "vas") {
+    const val = measurePrimaryScore("vas", v);
+    return (<div><ResultCard title="Pain VAS" value={val} unit="/ 10" hint={SCORE_DIRECTION.vas} reason="Not recorded." /><SubLabel>Pain now, 0 to 10</SubLabel><SliderNumber value={v.vas} min={0} max={10} step={0.5} label="Pain VAS" onChange={(x) => onChange("vas", x)} /></div>);
+  }
+  return null;
+}
+
+// A DASH-family calculator folded into a template's Outcome Measures section.
+function DashBlock({ kind, entry, onChange }) {
+  const [open, setOpen] = useState(false);
+  const main = dashFamilyScore(kind, (entry || {}).items);
+  return (
+    <div>
+      <SubLabel>{`${DASH_NAMES[kind]} \u2014 ${kind === "dash" ? "30" : "11"} items (0\u2013100, higher is worse)`}</SubLabel>
+      <button onClick={() => setOpen(!open)} aria-expanded={open} className="w-full flex items-center gap-2 rounded-xl px-3 text-left" style={{ minHeight: 48, background: T.surface, border: `1px solid ${T.border}` }}>
+        <ChevronRight size={18} color={T.inkSoft} className="ut-chevron shrink-0" style={{ transform: open ? "rotate(90deg)" : "rotate(0deg)" }} />
+        <span className="flex-1 text-[14px] font-semibold" style={{ color: T.ink }}>{main.value != null ? `${DASH_NAMES[kind]}: ${main.value}` : `Calculate ${DASH_NAMES[kind]}`}</span>
+      </button>
+      {open && <div className="mt-2"><DashFamilyCalculator kind={kind} entry={entry} onChange={onChange} sticky={false} /></div>}
+    </div>
+  );
+}
+
+// One of these calculators folded into a template's Outcome Measures section.
+function MeasureBlock({ id, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const m = MEASURE_CALCULATORS.find((x) => x.id === id);
+  const score = measurePrimaryScore(id, { [id]: value });
+  return (
+    <div>
+      <SubLabel>{`${m.label} \u2014 ${SCORE_DIRECTION[id]}`}</SubLabel>
+      <button onClick={() => setOpen(!open)} aria-expanded={open} className="w-full flex items-center gap-2 rounded-xl px-3 text-left" style={{ minHeight: 48, background: T.surface, border: `1px solid ${T.border}` }}>
+        <ChevronRight size={18} color={T.inkSoft} className="ut-chevron shrink-0" style={{ transform: open ? "rotate(90deg)" : "rotate(0deg)" }} />
+        <span className="flex-1 text-[14px] font-semibold" style={{ color: T.ink }}>{score != null ? `${m.label}: ${score}` : `Calculate ${m.label}`}</span>
+      </button>
+      {open && <div className="mt-2"><MeasureCalculator id={id} values={{ [id]: value }} onChange={(_, v) => onChange(v)} sticky={false} /></div>}
+    </div>
+  );
+}
+
+// A calculator opened over a screen from a "Calculate" button. "Use this score" hands the number back and closes it.
+function MeasureSheet({ measureId, values, onChange, onUse, onClose }) {
+  const m = MEASURE_CALCULATORS.find((x) => x.id === measureId);
+  const score = measurePrimaryScore(measureId, values);
+  if (!m) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.45)" }} onClick={onClose}>
+      <DragSheet onClose={onClose} className="w-full sm:max-w-lg lg:max-w-xl rounded-t-2xl sm:rounded-2xl flex flex-col" style={{ background: T.surface, maxHeight: "90vh", boxShadow: "0 -8px 28px rgba(16,30,43,0.18)" }}>
+        <div data-sheet-drag className="flex items-center gap-2 px-4 py-3 shrink-0" style={{ background: T.tealTint, borderBottom: `1px solid ${T.teal}`, touchAction: "none", cursor: "grab" }}>
+          <Gauge size={20} color={T.tealDark} />
+          <span className="font-bold text-[15px] flex-1" style={{ color: T.tealDark }}>{m.label} calculator</span>
+          <button onClick={onClose} aria-label="Close calculator" className="shrink-0 flex items-center justify-center p-1 active:opacity-60" style={{ minHeight: 44, minWidth: 44 }}><X size={20} color={T.tealDark} /></button>
+        </div>
+        <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+          <MeasureCalculator id={measureId} values={values} onChange={onChange} stickyTop={0} />
+        </div>
+        <div className="px-4 py-3 shrink-0" style={{ borderTop: `1px solid ${T.border}`, background: T.surface }}>
+          <button onClick={() => onUse(score)} disabled={score == null} className="w-full rounded-xl px-4 py-3 font-semibold text-[15px] active:scale-95" style={{ background: score == null ? T.slateChip : T.gradientTeal, color: score == null ? T.inkSoft : "#fff", minHeight: 48 }}>
+            {score == null ? "Use this score (not yet scored)" : `Use this score (${score})`}
+          </button>
+        </div>
+      </DragSheet>
+    </div>
+  );
+}
+
+// The Measures screen: opened from the home bar, with no diagnosis template. Nothing here is saved to a patient record;
+// a result is copied into the note by hand.
+function MeasuresScreen({ values, onChange, onClearOne, onClearAll, onBack }) {
+  const ref = React.useContext(ReferenceCtx);
+  const [sel, setSel] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const m = MEASURE_CALCULATORS.find((x) => x.id === sel) || null;
+  const doCopy = async () => {
+    const text = measureCopyText(m.id, values);
+    if (!text) return;
+    const ok = await copyTextRobust(text);
+    setCopied(!!ok); setTimeout(() => setCopied(false), 1800);
+  };
+  const any = MEASURE_CALCULATORS.some((x) => measurePrimaryScore(x.id, values) != null);
+  return (
+    <div className="min-h-screen pb-28" style={{ background: T.bg }}>
+      <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
+        <button onClick={m ? () => setSel(null) : onBack} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal, minHeight: 44 }}>
+          <ArrowLeft size={16} /> {m ? "All measures" : "Home"}
+        </button>
+        <h1 className="text-[22px] font-bold leading-tight" style={{ color: T.ink }}>{m ? m.label : "Outcome measures"}</h1>
+        <p className="text-[13px] mt-1" style={{ color: T.inkSoft }}>{m ? m.full : "Calculate a score directly, without opening a diagnosis. Nothing here is saved to a patient record: copy the result into the note."}</p>
+      </div>
+      <div className="px-4 max-w-2xl lg:max-w-4xl mx-auto">
+        {!m && (
+          <>
+            <div className="flex flex-col gap-2.5 mt-3">
+              {MEASURE_CALCULATORS.map((x) => {
+                const score = measurePrimaryScore(x.id, values);
+                return (
+                  <button key={x.id} onClick={() => setSel(x.id)} className="ut-card w-full text-left rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: T.surface, border: `1px solid ${T.border}`, minHeight: 64 }}>
+                    <span className="flex-1 min-w-0">
+                      <span className="block text-[16px] font-semibold" style={{ color: T.ink }}>{x.label}</span>
+                      <span className="block text-[13px]" style={{ color: T.inkSoft }}>{x.use}</span>
+                      <span className="block text-[12px]" style={{ color: T.inkSoft }}>{SCORE_DIRECTION[x.id]}</span>
+                    </span>
+                    {score != null && <span className="shrink-0 text-[15px] font-bold rounded-lg px-2 py-1" style={{ background: T.tealTint, color: T.tealDark }}>{score}</span>}
+                    <ChevronRight size={18} color={T.inkSoft} className="shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
+            {ref && (
+              <button onClick={() => ref.openPanel("outcomes")} className="mt-4 text-[14px] font-semibold underline active:opacity-60" style={{ color: T.teal, minHeight: 44 }}>
+                Official forms and reference links for these measures
+              </button>
+            )}
+            {any && <div><button onClick={onClearAll} className="mt-2 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>Clear all measures</button></div>}
+          </>
+        )}
+        {m && (
+          <>
+            <div className="mt-3">
+              <MeasureCalculator id={m.id} values={values} onChange={onChange} stickyTop={TOPBAR_TOP} />
+            </div>
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button onClick={doCopy} disabled={measurePrimaryScore(m.id, values) == null} className="inline-flex items-center gap-1.5 rounded-xl px-4 font-semibold text-[14px] active:scale-95" style={{ background: measurePrimaryScore(m.id, values) == null ? T.slateChip : T.gradientTeal, color: measurePrimaryScore(m.id, values) == null ? T.inkSoft : "#fff", minHeight: 48 }}>
+                {copied ? <Check size={16} /> : <Copy size={16} />}{copied ? "Copied" : "Copy result"}
+              </button>
+              <button onClick={() => onClearOne(m.id)} className="rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>Clear {m.label}</button>
+              {m.url && <a href={m.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center rounded-xl px-4 text-[14px] font-semibold" style={{ color: T.teal, minHeight: 48 }}>Official form</a>}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // Screens are pushed onto the browser's History API so the device/browser
@@ -31011,12 +31660,12 @@ function opScoresDue(condition, periodId, isFinal) {
 const OP_SCORE_SPECS = [
   { id: "ASES", label: "ASES", max: 100, hint: "higher is better", calc: true, re: /^ASES/i },
   { id: "QuickDASH", label: "QuickDASH", max: 100, hint: "higher is worse", calc: true, re: /^QuickDASH/i },
-  { id: "DASH", label: "DASH", max: 100, hint: "higher is worse", re: /^DASH$/i },
+  { id: "DASH", label: "DASH", max: 100, hint: "higher is worse", calc: true, re: /^DASH$/i },
   { id: "SANE", label: "SANE", max: 100, hint: "higher is better", calc: true, re: /^SANE/i },
-  { id: "Constant", label: "Constant", max: 100, hint: "higher is better", re: /^Constant/i },
-  { id: "MEPS", label: "MEPS", max: 100, hint: "higher is better", re: /^MEPS/i },
-  { id: "PRWE", label: "PRWE", max: 100, hint: "higher is worse", re: /^PRWE/i },
-  { id: "WOSI", label: "WOSI", max: 2100, hint: "lower is better", re: /^WOSI/i },
+  { id: "Constant", label: "Constant", max: 100, hint: "higher is better", calc: true, re: /^Constant/i },
+  { id: "MEPS", label: "MEPS", max: 100, hint: "higher is better", calc: true, re: /^MEPS/i },
+  { id: "PRWE", label: "PRWE", max: 100, hint: "higher is worse", calc: true, re: /^PRWE/i },
+  { id: "WOSI", label: "WOSI", max: 2100, hint: "lower is better", calc: true, re: /^WOSI/i },
   { id: "VAS", label: "VAS", max: 10, hint: "pain, higher is worse", re: /^VAS/i },
 ];
 function opScoreSpecFor(name) { return OP_SCORE_SPECS.find((m) => m.re.test(String(name).trim())) || null; }
@@ -32286,6 +32935,9 @@ function PostopSummaryImport({ onApply }) {
 // any other instrument the table names can be added. A score is written into the note only when it is within its range.
 function PostopScores({ condition, poState, setMany }) {
   const ref = React.useContext(ReferenceCtx);
+  // the calculator open over this review, and what has been entered in it (kept while the review is open)
+  const [calcFor, setCalcFor] = useState(null);
+  const [calcVals, setCalcVals] = useState({});
   const procs = opModulesForPostop(poState);
   const days = daysSinceSurgery(poState.surgeryDate);
   const period = poState.reviewPeriod ? opReviewPeriodById(poState.reviewPeriod) : opReviewPeriodForDays(days);
@@ -32324,7 +32976,7 @@ function PostopScores({ condition, poState, setMany }) {
                 onChange={(e) => setScore(sp.id, e.target.value)} className="rounded-xl px-2 text-center"
                 style={{ width: 88, minHeight: 48, fontSize: 16, color: T.ink, background: T.surface, border: `1px solid ${bad ? T.amber : T.border}` }} />
               <span className="text-[13px] shrink-0" style={{ color: T.inkSoft, minWidth: 34 }}>/ {sp.max}</span>
-              {sp.calc && ref && <button onClick={() => ref.openPanel("outcomes")} className="shrink-0 rounded-xl px-2.5 text-[13px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>Calculate</button>}
+              {sp.calc && MEASURE_BY_SPEC[sp.id] && <button onClick={() => setCalcFor(sp)} aria-label={`Calculate ${sp.label}`} className="shrink-0 rounded-xl px-2.5 text-[13px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>Calculate</button>}
               {!isDue && <button onClick={() => remove(sp.id)} aria-label={`Remove ${sp.label}`} className="shrink-0 flex items-center justify-center active:opacity-60" style={{ minWidth: 44, minHeight: 44 }}><X size={18} color={T.inkSoft} /></button>}
             </div>
             {bad && <div role="alert" className="text-[12px] mt-1" style={{ color: T.amber }}>{sp.label} is scored from 0 to {sp.max}; this entry is not written to the note.</div>}
@@ -32337,6 +32989,10 @@ function PostopScores({ condition, poState, setMany }) {
             <button key={m.id} onClick={() => setMany({ scoresShown: [...added, m.id] })} className="rounded-full px-3.5 text-[14px] font-medium active:scale-95" style={{ minHeight: 44, background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>+ {m.label}</button>
           ))}
         </div>
+      )}
+      {calcFor && (
+        <MeasureSheet measureId={MEASURE_BY_SPEC[calcFor.id]} values={calcVals} onChange={(id, v) => setCalcVals((c) => ({ ...c, [id]: v }))}
+          onUse={(val) => { setScore(calcFor.id, String(val)); setCalcFor(null); }} onClose={() => setCalcFor(null)} />
       )}
     </div>
   );
@@ -32753,7 +33409,7 @@ function applyStandaloneMeta(doc) {
 
 // ---- Moving between screens -----------------------------------------------------------------------------------------------
 // How deep a screen is, so that a change of screen reads as going forward (a push) or back (a pop).
-const NAV_RANK = { visitType: 0, regions: 1, followupSelect: 1, postopSelect: 1, operativeNote: 1, conditions: 2, followupVisit: 2, postopVisit: 2, template: 3 };
+const NAV_RANK = { visitType: 0, regions: 1, followupSelect: 1, postopSelect: 1, operativeNote: 1, measures: 1, conditions: 2, followupVisit: 2, postopVisit: 2, template: 3 };
 function navDirection(fromView, toView) {
   if (!fromView || !toView || fromView === toView) return null;     // the same screen, or one we do not know: no movement
   const a = NAV_RANK[fromView], b = NAV_RANK[toView];
@@ -33337,6 +33993,7 @@ export default function App() {
     openPanel: (section) => { setPanelNote(null); setPanelSection(section || null); setPanelVariant(section ? "sheet" : "panel"); setPanelOpen(true); },
     closePanel: () => setPanelOpen(false),
     openAbout: () => { setPanelOpen(false); setAboutOpen(true); },
+    openMeasures: () => { setPanelOpen(false); setScreen({ view: "measures" }); },
     noteCount: 0,
     recentCount: 0,
     // Which shortcut is currently showing, so its icon stays filled.
@@ -33348,6 +34005,11 @@ export default function App() {
   // Additional comments for the note, per kind of visit. Held with the session
   // (in memory only) and cleared by New patient.
   const [noteComments, setNoteComments] = useState({ visit: "", followup: "", postop: "", operative: "" });
+  // What has been entered in the outcome measure calculators (the Measures screen), by measure. In memory only, like the rest of
+  // the session, and cleared by New patient.
+  const [measuresState, setMeasuresState] = useState({});
+  const setMeasure = useCallback((id, value) => setMeasuresState((m) => ({ ...m, [id]: value })), []);
+  const clearMeasure = useCallback((id) => setMeasuresState((m) => { const n = { ...m }; delete n[id]; return n; }), []);
   const setVisitComments = useCallback((t) => setNoteComments((m) => ({ ...m, visit: t })), []);
   const setFollowupComments = useCallback((t) => setNoteComments((m) => ({ ...m, followup: t })), []);
   const setPostopComments = useCallback((t) => setNoteComments((m) => ({ ...m, postop: t })), []);
@@ -33423,6 +34085,7 @@ export default function App() {
   const endSession = useCallback(() => {
     setSession({ order: [], statesByConditionId: {} });
     setNoteComments({ visit: "", followup: "", postop: "", operative: "" });
+    setMeasuresState({});
     setOpNote({});
     setCombinedNoteOpen(false);
     setScreen({ view: "visitType" }, { replace: true });
@@ -33540,6 +34203,12 @@ export default function App() {
             }
           }}
         />
+        </div>
+      )}
+
+      {screen.view === "measures" && (
+        <div className="ut-page">
+        <MeasuresScreen values={measuresState} onChange={setMeasure} onClearOne={clearMeasure} onClearAll={() => setMeasuresState({})} onBack={goBack} />
         </div>
       )}
 
