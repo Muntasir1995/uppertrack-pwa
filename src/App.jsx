@@ -15380,7 +15380,7 @@ const WHATS_NEW = [
       "Distal radius fracture pattern: the criteria are one list with the instability findings, guide the pathway and suggest operations, and the note adds a line, Features suggesting operative consideration. New operations: dorsal bridge plate, dorsal plate, arthroscopic-assisted and volar rim fixation (drafts to review).",
       "Post-operative follow-up: the next-review buttons show what they did, the choices are real intervals, and every search offers Continue.",
       "Installed on an iPhone, screens now slide in and back like a native app and sections ease open; the app also fits under the notch, does not zoom into text boxes, and a pull can no longer reload it. An optional status-bar setting is in docs/ios-standalone-setup.md.",
-      "Outcome measures: the home screen's Measures button opens calculators for QuickDASH, DASH, ASES, Constant, WOSI, MEPS, PRWE, SANE and pain VAS, also offered by Calculate beside a score after surgery and in each template's outcome section.",
+      "Outcome measures: the home screen's Measures button opens fifteen calculators, including QuickDASH, DASH, ASES, Constant, SPADI, WOSI, MEPS, PRTEE, PRWE, the Boston CTQ, finger motion and grip strength, also offered beside a score after surgery and in each template's outcome section.",
       "Operative note: operations on a particular digit ask which one, each rotator cuff tendon has its own tear category, and EIP transfer is new. Any generated note can be edited in place before copying.",
     ],
   },
@@ -21296,7 +21296,7 @@ function OutcomeScores({ condition, state, onFieldChange }) {
 
       <DashBlock kind="quickdash" entry={state.quickDashScore} onChange={(e) => onFieldChange({ quickDashScore: e })} />
       <DashBlock kind="dash" entry={state.dashScore} onChange={(e) => onFieldChange({ dashScore: e })} />
-      {(TEMPLATE_MEASURES[condition.region] || []).map(([id, key]) => <MeasureBlock key={id} id={id} value={state[key]} onChange={(v) => onFieldChange({ [key]: v })} />)}
+      {templateMeasuresFor(condition).map(([id, key]) => <MeasureBlock key={id} id={id} value={state[key]} onChange={(v) => onFieldChange({ [key]: v })} />)}
 
       <div className="rounded-xl p-3" style={{ background: T.slateChip, border: `1px solid ${T.border}` }}>
         <div className="text-[12px] font-bold uppercase tracking-wide mb-2" style={{ color: T.teal }}>Calculated</div>
@@ -21333,7 +21333,7 @@ function OutcomeScores({ condition, state, onFieldChange }) {
             </div>
           ) : null;
         })}
-        {(TEMPLATE_MEASURES[condition.region] || []).map(([id, key]) => {
+        {templateMeasuresFor(condition).map(([id, key]) => {
           const l = newMeasureLine(id, state[key]);
           return l ? <div key={id} className="py-1 text-[13px]" style={{ color: T.ink }}>{l}</div> : null;
         })}
@@ -25419,13 +25419,135 @@ function scoreWOSI(w) {
   return { value: Math.round(raw * 10) / 10, percent: Math.round((100 - raw / 21) * 10) / 10, answered: 21 };
 }
 
+// ---- More upper-limb measures: SPADI, Boston CTQ, PRTEE, Simple Shoulder Test, finger motion and grip strength --------------------
+// Checked against published scoring rules before being written. Where a published version is unclear or sources differ, the
+// stricter reading is used and stated. (The Mayo wrist score is NOT included: its published versions disagree about the points.)
+
+// Shoulder Pain and Disability Index: 5 pain items and 8 disability items, each 0 to 10. A subscale is its answered items' sum
+// over the most they could have scored (10 each), as a percentage; the total is the unweighted mean of the two. 0 to 100,
+// HIGHER = WORSE; no severity cut-offs exist. A subscale needs at least two thirds of its items (sources differ on the pain
+// subscale, 3 or 4 of 5; the stricter 4 is used) and a missed item is removed from what could have been scored.
+function scoreSPADI(v) {
+  const x = v || {};
+  const take = (arr, n) => Array.from({ length: n }, (_, i) => {
+    const a = (arr || [])[i];
+    if (a === null || a === undefined || a === "") return null;
+    const num = Number(a);
+    return Number.isFinite(num) && num >= 0 && num <= 10 ? num : null;
+  }).filter((a) => a !== null);
+  const pain = take(x.pain, 5), dis = take(x.disability, 8);
+  if (pain.length < 4) return { value: null, reason: `Needs at least 4 of 5 pain items (${pain.length} answered).` };
+  if (dis.length < 6) return { value: null, reason: `Needs at least 6 of 8 disability items (${dis.length} answered).` };
+  const painPct = (pain.reduce((t, a) => t + a, 0) / (10 * pain.length)) * 100;
+  const disPct = (dis.reduce((t, a) => t + a, 0) / (10 * dis.length)) * 100;
+  const r1 = (n) => Math.round(n * 10) / 10;
+  return { value: r1((painPct + disPct) / 2), pain: r1(painPct), disability: r1(disPct), painAnswered: pain.length, disabilityAnswered: dis.length };
+}
+
+// Boston Carpal Tunnel Questionnaire (Levine): a symptom severity scale of 11 items and a functional status scale of 8, each item
+// 1 to 5. Each scale is the MEAN of its items; HIGHER = WORSE (1 to 5). The scales are scored separately. All items of a scale
+// are required (a missing-item rule is not published here).
+function bctqScale(arr, n) {
+  const vals = Array.from({ length: n }, (_, i) => {
+    const a = (arr || [])[i];
+    if (a === null || a === undefined || a === "") return null;
+    const num = Number(a);
+    return Number.isInteger(num) && num >= 1 && num <= 5 ? num : null;
+  }).filter((a) => a !== null);
+  if (vals.length < n) return { value: null, answered: vals.length, reason: `All ${n} items are needed (${vals.length} answered).` };
+  return { value: Math.round((vals.reduce((t, a) => t + a, 0) / n) * 100) / 100, answered: n };
+}
+function scoreBCTQ(v) {
+  const x = v || {};
+  const symptoms = bctqScale(x.symptoms, 11), fn = bctqScale(x.function, 8);
+  return { value: symptoms.value ?? fn.value, symptoms, function: fn };
+}
+
+// Patient-Rated Tennis Elbow Evaluation: 5 pain items and 10 function items (6 specific activities, 4 usual), each 0 to 10. Pain is
+// the sum (0 to 50), function the sum halved (0 to 50), the total 0 to 100, HIGHER = WORSE: the same arithmetic as the PRWE. All 15
+// items are required.
+function scorePRTEE(p) {
+  const x = p || {};
+  const take = (arr, n) => Array.from({ length: n }, (_, i) => {
+    const a = (arr || [])[i];
+    if (a === null || a === undefined || a === "") return null;
+    const num = Number(a);
+    return Number.isFinite(num) && num >= 0 && num <= 10 ? num : null;
+  }).filter((a) => a !== null);
+  const pain = take(x.pain, 5), fn = take(x.function, 10);
+  if (pain.length + fn.length < 15) return { value: null, reason: `All 15 items are needed (${pain.length + fn.length} answered).` };
+  const painScore = pain.reduce((t, a) => t + a, 0), fnScore = fn.reduce((t, a) => t + a, 0) / 2;
+  return { value: Math.round((painScore + fnScore) * 10) / 10, pain: painScore, function: Math.round(fnScore * 10) / 10 };
+}
+
+// Simple Shoulder Test: 12 yes/no questions; the score is the number answered yes, 0 to 12, HIGHER = BETTER. All 12 are required.
+function scoreSST(v) {
+  const a = (v && v.answers) || [];
+  const answered = Array.from({ length: 12 }, (_, i) => a[i]).filter((x) => typeof x === "boolean");
+  if (answered.length < 12) return { value: null, answered: answered.length, reason: `All 12 questions are needed (${answered.length} answered).` };
+  return { value: answered.filter(Boolean).length, answered: 12 };
+}
+
+// Finger motion. Strickland: [(PIP + DIP active flexion) - (PIP + DIP extension lag)] / 175 x 100, as a percentage of normal PIP and
+// DIP motion; excellent 85 to 100, good 70 to 84, fair 50 to 69, poor under 50. With the MCP joint added this is the ASSH total
+// active motion (TAM, degrees) and, against the other finger's TAM (or 260 degrees when that is not normal or not known), a
+// percentage graded excellent 100, good 75 to 99, fair 50 to 74, poor under 50.
+function scoreFingerMotion(v) {
+  const x = v || {};
+  const num = (k) => (x[k] === null || x[k] === undefined || x[k] === "" ? null : Number(x[k]));
+  const pipF = num("pipFlexion"), dipF = num("dipFlexion"), pipL = num("pipLag"), dipL = num("dipLag");
+  const need = [["PIP flexion", pipF], ["DIP flexion", dipF], ["PIP extension lag", pipL], ["DIP extension lag", dipL]].filter(([, a]) => a === null || !Number.isFinite(a) || a < 0).map(([l]) => l);
+  if (need.length) return { value: null, reason: `Still needed: ${need.join(", ")}.` };
+  const r1 = (n) => Math.round(n * 10) / 10;
+  const percent = ((pipF + dipF - pipL - dipL) / 175) * 100;
+  const grade = percent >= 85 ? "excellent" : percent >= 70 ? "good" : percent >= 50 ? "fair" : "poor";
+  const out = { value: r1(percent), grade, degrees: pipF + dipF - pipL - dipL };
+  const mcpF = num("mcpFlexion"), mcpL = num("mcpLag");
+  if (mcpF !== null && mcpL !== null && Number.isFinite(mcpF) && Number.isFinite(mcpL) && mcpF >= 0 && mcpL >= 0) {
+    const tam = mcpF + pipF + dipF - (mcpL + pipL + dipL);
+    const other = num("otherTam"), normal = other !== null && Number.isFinite(other) && other > 0 ? other : 260;
+    const pct = (tam / normal) * 100;
+    out.tam = { degrees: tam, percent: r1(pct), against: normal, grade: pct >= 100 ? "excellent" : pct >= 75 ? "good" : pct >= 50 ? "fair" : "poor" };
+  }
+  return out;
+}
+
+// Grip strength as a percentage of the other hand: the mean of the readings of the affected hand over the mean of the other
+// hand's, times 100 (the same unit for both). Up to three readings each; at least one each.
+function scoreGrip(v) {
+  const x = v || {};
+  const mean = (arr) => { const vals = (arr || []).filter((a) => a !== null && a !== undefined && a !== "" && Number.isFinite(Number(a)) && Number(a) >= 0).map(Number); return vals.length ? vals.reduce((t, a) => t + a, 0) / vals.length : null; };
+  const aff = mean(x.affected), oth = mean(x.other);
+  if (aff === null || oth === null) return { value: null, reason: `Needs at least one reading for the affected hand and one for the other (${aff === null ? "affected missing" : "other missing"}).` };
+  if (oth === 0) return { value: null, reason: "The other hand's reading is 0, so there is nothing to compare with." };
+  return { value: Math.round((aff / oth) * 1000) / 10, affected: Math.round(aff * 10) / 10, other: Math.round(oth * 10) / 10 };
+}
+
 // The credit IWH asks for, shown wherever a DASH or QuickDASH is scored.
 const DASH_CREDIT = "DASH and QuickDASH \u00a9 Institute for Work & Health, Toronto, Canada. Free for clinicians assessing or treating a patient; the instruments must be used unchanged and may not be sold.";
 // The item wording is NOT in this file (see the licensing note). To install it, paste the official wording, unchanged, from
 // the forms downloaded from dash.iwh.on.ca: 30 items for dash, 11 for quickdash, 4 for work and 4 for sport, in the order
 // printed. An incomplete list is ignored, so a partly pasted form can never show some items and not others.
-const MEASURE_WORDING = { dash: [], quickdash: [], work: [], sport: [], prwe: [], wosi: [] };
-const MEASURE_ITEM_COUNTS = { ...DASH_ITEM_COUNTS, prwe: 15, wosi: 21 };
+// MEASURE_WORDING:BEGIN (read and rewritten by tests/tools/install-measure-wording.mjs; keep it as plain JSON)
+const MEASURE_WORDING = {
+  "dash": [],
+  "quickdash": [],
+  "work": [],
+  "sport": [],
+  "workStem": [],
+  "sportStem": [],
+  "prwe": [],
+  "wosi": [],
+  "spadi": [],
+  "sst": [],
+  "bctqSymptoms": [],
+  "bctqFunction": [],
+  "prtee": []
+};
+// MEASURE_WORDING:END
+// Shown with any installed wording.
+const MEASURE_WORDING_NOTICE = "The item wording is the copyright of its owner and is reproduced here unchanged, for clinical use only.";
+const MEASURE_ITEM_COUNTS = { ...DASH_ITEM_COUNTS, workStem: 1, sportStem: 1, prwe: 15, wosi: 21, spadi: 13, sst: 12, bctqSymptoms: 11, bctqFunction: 8, prtee: 15 };
 function measureItemText(kind, i) {
   const w = MEASURE_WORDING[kind];
   return Array.isArray(w) && w.length === MEASURE_ITEM_COUNTS[kind] && typeof w[i] === "string" && w[i].trim() ? w[i] : null;
@@ -25444,6 +25566,12 @@ const SCORE_DIRECTION = {
   constant: "higher is better (0-100)",
   prwe: "higher is worse (0-100)",
   wosi: "lower is better (0-2100)",
+  spadi: "higher is worse (0-100)",
+  bctq: "higher is worse (1-5)",
+  prtee: "higher is worse (0-100)",
+  sst: "higher is better (0-12)",
+  finger: "higher is better (% of normal motion)",
+  grip: "higher is better (% of the other hand)",
 };
 
 // The lines a DASH-family result adds to a note, or to the clipboard: the main score and each module that can be scored.
@@ -25471,7 +25599,7 @@ function buildOutcomeScores(condition, state) {
   if (state.vas != null) lines.push(`\u2022 Pain VAS: ${state.vas}/10 \u2014 ${SCORE_DIRECTION.vas}`);
   dashResultLines("quickdash", state.quickDashScore).forEach((l) => lines.push(`\u2022 ${l}`));
   dashResultLines("dash", state.dashScore).forEach((l) => lines.push(`\u2022 ${l}`));
-  (TEMPLATE_MEASURES[condition.region] || []).forEach(([id, key]) => { const l = newMeasureLine(id, state[key]); if (l) lines.push(`\u2022 ${l}`); });
+  templateMeasuresFor(condition).forEach(([id, key]) => { const l = newMeasureLine(id, state[key]); if (l) lines.push(`\u2022 ${l}`); });
   return lines.length ? lines.join("\n") : null;
 }
 
@@ -25487,10 +25615,19 @@ const MEASURE_CALCULATORS = [
   { id: "constant", label: "Constant", full: "Constant-Murley shoulder score", use: "Shoulder pain, daily activities, movement and strength: patient-reported and measured.", note: "The raw score as published (no age or sex adjustment). No grade bands are shown: published bands differ between sources. Strength is one point per pound of force (kilograms are multiplied by 2.2), best of three, at most 25 points, rounded to the nearest point; if it is painful, or the arm cannot be held at 90 degrees, tick that for 0 points. Nothing is scored until every part has been entered. Constant and Murley, 1987." },
   { id: "wosi", label: "WOSI", full: "Western Ontario Shoulder Instability Index", use: "21 items on shoulder instability, each 0 to 100; lower is better.", note: "Each of the 21 items is 0 (no problem) to 100 (severe), as on the 100 mm line; all 21 are needed. Also shown as a percentage of normal, 100 minus the total divided by 21. The item wording is not stored in this app: enter the patient\u2019s answers from the form. Kirkley and colleagues, 1998." },
   { id: "meps", label: "MEPS", full: "Mayo Elbow Performance Score", use: "Elbow pain, motion, stability and five daily tasks, rated by the examiner.", note: "Rated by the examiner: pain 45, motion 20, stability 10, five daily tasks at 5 points each. Grades: 90 and over excellent, 75 to 89 good, 60 to 74 fair, under 60 poor. Nothing is scored until every part has been entered." },
+  { id: "prtee", label: "PRTEE", full: "Patient-Rated Tennis Elbow Evaluation", use: "Tennis elbow pain (5 items) and function (10 items), each 0 to 10; lower is better.", note: "Pain is the sum of five items (0 to 50); function is the sum of ten items (6 specific activities, 4 usual) halved (0 to 50); the total is 0 to 100, higher is worse. All 15 items are needed. The item wording is not stored in this app: enter the patient\u2019s answers from the form." },
   { id: "prwe", label: "PRWE", full: "Patient-Rated Wrist Evaluation", use: "Wrist pain (5 items) and function (10 items), each 0 to 10; lower is better.", note: "Pain is the sum of five items (0 to 50); function is the sum of ten items halved (0 to 50). A function item left blank (a task the patient never does) is replaced by the mean of those answered; the published method does not say how many blanks are acceptable, so at most two are accepted here. All five pain items are needed. The item wording is not stored in this app: enter the patient\u2019s answers from the form. MacDermid and colleagues, 1998." },
+  { id: "spadi", label: "SPADI", full: "Shoulder Pain and Disability Index", use: "Shoulder pain (5 items) and disability (8 items), each 0 to 10; lower is better.", note: "Each subscale is the sum of its answered items over the most they could have scored, as a percentage; the total is the mean of the two (0 to 100, higher is worse; no severity cut-offs exist). A subscale needs at least two thirds of its items: 4 of 5 pain items and 6 of 8 disability items (sources differ on the pain subscale; the stricter reading is used). The item wording is not stored in this app: enter the patient\u2019s answers from the form." },
+  { id: "sst", label: "Simple Shoulder Test", full: "Simple Shoulder Test", use: "Twelve yes/no shoulder function questions; the number answered yes, 0 to 12.", note: "The score is the number of questions answered yes (0 to 12, higher is better). All 12 are needed. The item wording is not stored in this app: enter the patient\u2019s answers from the form." },
+  { id: "bctq", label: "Boston CTQ", full: "Boston Carpal Tunnel Questionnaire", use: "Carpal tunnel symptom severity (11 items) and functional status (8 items), each 1 to 5.", note: "Each scale is the mean of its items (1 to 5, higher is worse) and the two are scored separately. All items of a scale are needed. The item wording is not stored in this app: enter the patient\u2019s answers from the form. Levine and colleagues, 1993." },
+  { id: "finger", label: "Finger motion", full: "Finger motion: Strickland and total active motion", use: "Percentage of normal PIP and DIP motion (Strickland), and total active motion with the MCP joint.", note: "Strickland: [(PIP + DIP flexion) minus (PIP + DIP extension lag)] divided by 175, as a percentage; excellent 85 to 100, good 70 to 84, fair 50 to 69, poor under 50. Adding the MCP joint gives the ASSH total active motion in degrees, compared with the other finger\u2019s (or 260 degrees when that is not known or not normal): excellent 100%, good 75 to 99, fair 50 to 74, poor under 50. Active motion in the fist position; extension lag is the deficit from full extension." },
+  { id: "grip", label: "Grip strength", full: "Grip strength as a percentage of the other hand", use: "The affected hand\u2019s mean grip as a percentage of the other hand\u2019s.", note: "The mean of up to three readings of the affected hand over the mean of the other hand\u2019s, times 100. Enter both in the same unit." },
   { id: "sane", label: "SANE", full: "Single Assessment Numeric Evaluation", use: "One rating, 0 to 100%, of the limb compared with normal." },
   { id: "vas", label: "Pain VAS", full: "Visual analogue scale for pain", use: "Pain now, 0 to 10." },
 ];
+// Related measures sit together: the whole limb, then the shoulder, elbow, wrist and hand, then the single numbers.
+const MEASURE_ORDER = ["quickdash", "dash", "ases", "constant", "spadi", "sst", "wosi", "meps", "prtee", "prwe", "bctq", "finger", "grip", "sane", "vas"];
+MEASURE_CALCULATORS.sort((a, b) => MEASURE_ORDER.indexOf(a.id) - MEASURE_ORDER.indexOf(b.id));
 // The score names used in the post-operative rows, and the calculator each one opens.
 const MEASURE_BY_SPEC = { ASES: "ases", QuickDASH: "quickdash", DASH: "dash", SANE: "sane", Constant: "constant", MEPS: "meps", PRWE: "prwe", WOSI: "wosi" };
 
@@ -25501,10 +25638,28 @@ function newMeasureLine(id, v) {
   if (id === "constant") { const r = scoreConstant(v); return r.value == null ? null : `Constant score: ${r.value} \u2014 ${SCORE_DIRECTION.constant}`; }
   if (id === "prwe") { const r = scorePRWE(v); return r.value == null ? null : `PRWE: ${r.value} \u2014 ${SCORE_DIRECTION.prwe} (pain ${r.pain}/50, function ${r.function}/50${r.blanks ? `; ${r.blanks} function item${r.blanks === 1 ? "" : "s"} blank, replaced by the mean` : ""})`; }
   if (id === "wosi") { const r = scoreWOSI(v); return r.value == null ? null : `WOSI: ${r.value} \u2014 ${SCORE_DIRECTION.wosi} (${r.percent}% of normal)`; }
+  if (id === "spadi") { const r = scoreSPADI(v); return r.value == null ? null : `SPADI: ${r.value} \u2014 ${SCORE_DIRECTION.spadi} (pain ${r.pain}%, disability ${r.disability}%${r.painAnswered < 5 || r.disabilityAnswered < 8 ? "; missed items removed from what could be scored" : ""})`; }
+  if (id === "prtee") { const r = scorePRTEE(v); return r.value == null ? null : `PRTEE: ${r.value} \u2014 ${SCORE_DIRECTION.prtee} (pain ${r.pain}/50, function ${r.function}/50)`; }
+  if (id === "sst") { const r = scoreSST(v); return r.value == null ? null : `Simple Shoulder Test: ${r.value} of 12 \u2014 ${SCORE_DIRECTION.sst}`; }
+  if (id === "bctq") {
+    const r = scoreBCTQ(v), parts = [];
+    if (r.symptoms.value != null) parts.push(`symptom severity ${r.symptoms.value}`);
+    if (r.function.value != null) parts.push(`functional status ${r.function.value}`);
+    return parts.length ? `Boston CTQ: ${parts.join(", ")} \u2014 ${SCORE_DIRECTION.bctq}` : null;
+  }
+  if (id === "finger") {
+    const r = scoreFingerMotion(v);
+    if (r.value == null) return null;
+    return `Finger motion: ${r.value}% of normal PIP and DIP motion (Strickland), ${r.grade}${r.tam ? `; total active motion ${r.tam.degrees} degrees, ${r.tam.percent}% of ${r.tam.against} degrees, ${r.tam.grade}` : ""}`;
+  }
+  if (id === "grip") { const r = scoreGrip(v); return r.value == null ? null : `Grip strength: ${r.value}% of the other hand (mean ${r.affected} against ${r.other})`; }
   return null;
 }
 // Which of these a template's Outcome Measures section offers, by region, and where its entries are kept in the template's state.
-const TEMPLATE_MEASURES = { shoulder: [["constant", "constantScore"], ["wosi", "wosiScore"]], elbow: [["meps", "mepsScore"]], wrist: [["prwe", "prweScore"]] };
+const TEMPLATE_MEASURES = { shoulder: [["constant", "constantScore"], ["wosi", "wosiScore"], ["spadi", "spadiScore"], ["sst", "sstScore"]], elbow: [["meps", "mepsScore"]], wrist: [["prwe", "prweScore"]] };
+// Measures made for one condition rather than a whole region.
+const TEMPLATE_MEASURES_BY_CONDITION = { "lateral-epicondylopathy": [["prtee", "prteeScore"]], "carpal-tunnel-syndrome": [["bctq", "bctqScore"]] };
+const templateMeasuresFor = (condition) => [...(TEMPLATE_MEASURES[condition.region] || []), ...(TEMPLATE_MEASURES_BY_CONDITION[condition.id] || [])];
 
 function measurePrimaryScore(id, values) {
   const v = values || {};
@@ -25512,6 +25667,12 @@ function measurePrimaryScore(id, values) {
   if (id === "constant") return scoreConstant(v.constant).value;
   if (id === "prwe") return scorePRWE(v.prwe).value;
   if (id === "wosi") return scoreWOSI(v.wosi).value;
+  if (id === "spadi") return scoreSPADI(v.spadi).value;
+  if (id === "prtee") return scorePRTEE(v.prtee).value;
+  if (id === "sst") return scoreSST(v.sst).value;
+  if (id === "bctq") return scoreBCTQ(v.bctq).value;
+  if (id === "finger") return scoreFingerMotion(v.finger).value;
+  if (id === "grip") return scoreGrip(v.grip).value;
   if (id === "quickdash" || id === "dash") return dashFamilyScore(id, (v[id] || {}).items).value;
   if (id === "ases") return scoreASES({ asesScore: v.ases }).value;
   if (id === "sane") return scoreSANE({ saneScore: v.sane }).value;
@@ -25525,7 +25686,7 @@ function measureCopyText(id, values) {
     const lines = dashResultLines(id, v[id]);
     return lines.length ? [...lines.map((l) => `\u2022 ${l}`), `(${DASH_CREDIT})`].join("\n") : null;
   }
-  if (["meps", "constant", "prwe", "wosi"].includes(id)) { const l = newMeasureLine(id, v[id]); return l ? `\u2022 ${l}` : null; }
+  if (["meps", "constant", "prwe", "wosi", "spadi", "prtee", "sst", "bctq", "finger", "grip"].includes(id)) { const l = newMeasureLine(id, v[id]); return l ? `\u2022 ${l}` : null; }
   const val = measurePrimaryScore(id, v);
   if (val == null) return null;
   const name = id === "vas" ? "Pain VAS" : id === "ases" ? "ASES" : "SANE";
@@ -25602,13 +25763,15 @@ function DashFamilyCalculator({ kind, entry, onChange, sticky = true, stickyTop 
       {rows("items", kind, name)}
       <ModuleBlock title="Work module (optional)" summary={modSummary(work)}>
         <div className="text-[12px] mb-1" style={{ color: T.inkSoft }}>Four items, all needed. Scored on its own, apart from the {name} score.{work.value != null ? ` Module score: ${work.value} / 100.` : ""}</div>
+        {measureWordingInstalled("workStem") && <div className="text-[13px] font-semibold py-1.5" style={{ color: T.ink }}>{measureItemText("workStem", 0)}</div>}
         {rows("work", "work", "Work module")}
       </ModuleBlock>
       <ModuleBlock title="Sports / performing arts module (optional)" summary={modSummary(sport)}>
         <div className="text-[12px] mb-1" style={{ color: T.inkSoft }}>Four items, all needed. Scored on its own, apart from the {name} score.{sport.value != null ? ` Module score: ${sport.value} / 100.` : ""}</div>
+        {measureWordingInstalled("sportStem") && <div className="text-[13px] font-semibold py-1.5" style={{ color: T.ink }}>{measureItemText("sportStem", 0)}</div>}
         {rows("sport", "sport", "Sports module")}
       </ModuleBlock>
-      <div className="text-[12px] mt-3" style={{ color: T.inkSoft }}>{DASH_CREDIT}{installed ? "" : " The item wording is not stored in this app."}</div>
+      <div className="text-[12px] mt-3" style={{ color: T.inkSoft }}>{DASH_CREDIT} {installed ? MEASURE_WORDING_NOTICE : "The item wording is not stored in this app."}</div>
     </div>
   );
 }
@@ -25810,6 +25973,109 @@ function WosiCalculator({ value, onChange }) {
   );
 }
 
+function SpadiCalculator({ value, onChange }) {
+  const v = value || {};
+  const setAt = (field, i, x, n) => { const arr = Array.from({ length: n }, (_, k) => (v[field] || [])[k] ?? null); arr[i] = x; onChange({ ...v, [field]: arr }); };
+  const r = scoreSPADI(v);
+  return (
+    <div>
+      <ResultCard title="SPADI" value={r.value} unit="/ 100" hint={SCORE_DIRECTION.spadi} reason={r.reason}
+        extra={r.value != null ? `Pain ${r.pain}% \u00b7 disability ${r.disability}%` : null} />
+      <SubLabel>Pain: 5 items, each 0 (no pain) to 10 (worst imaginable)</SubLabel>
+      {Array.from({ length: 5 }, (_, i) => <NumberItemRow key={`p${i}`} n={i + 1} kind="spadi" label="SPADI" value={(v.pain || [])[i] ?? null} min={0} max={10} onChange={(x) => setAt("pain", i, x, 5)} />)}
+      <SubLabel>Disability: 8 items, each 0 (no difficulty) to 10 (so difficult it needs help)</SubLabel>
+      {Array.from({ length: 8 }, (_, i) => <NumberItemRow key={`d${i}`} n={i + 6} kind="spadi" label="SPADI" value={(v.disability || [])[i] ?? null} min={0} max={10} onChange={(x) => setAt("disability", i, x, 8)} />)}
+    </div>
+  );
+}
+
+function PrteeCalculator({ value, onChange }) {
+  const v = value || {};
+  const setAt = (field, i, x, n) => { const arr = Array.from({ length: n }, (_, k) => (v[field] || [])[k] ?? null); arr[i] = x; onChange({ ...v, [field]: arr }); };
+  const r = scorePRTEE(v);
+  return (
+    <div>
+      <ResultCard title="PRTEE" value={r.value} unit="/ 100" hint={SCORE_DIRECTION.prtee} reason={r.reason} extra={r.value != null ? `Pain ${r.pain}/50 \u00b7 function ${r.function}/50` : null} />
+      <SubLabel>Pain: 5 items, each 0 (none) to 10 (worst imaginable)</SubLabel>
+      {Array.from({ length: 5 }, (_, i) => <NumberItemRow key={`p${i}`} n={i + 1} kind="prtee" label="PRTEE" value={(v.pain || [])[i] ?? null} min={0} max={10} onChange={(x) => setAt("pain", i, x, 5)} />)}
+      <SubLabel>Function, specific activities: 6 items, each 0 (no difficulty) to 10 (unable)</SubLabel>
+      {Array.from({ length: 6 }, (_, i) => <NumberItemRow key={`s${i}`} n={i + 6} kind="prtee" label="PRTEE" value={(v.function || [])[i] ?? null} min={0} max={10} onChange={(x) => setAt("function", i, x, 10)} />)}
+      <SubLabel>Function, usual activities: 4 items, each 0 to 10</SubLabel>
+      {Array.from({ length: 4 }, (_, i) => <NumberItemRow key={`u${i}`} n={i + 12} kind="prtee" label="PRTEE" value={(v.function || [])[i + 6] ?? null} min={0} max={10} onChange={(x) => setAt("function", i + 6, x, 10)} />)}
+    </div>
+  );
+}
+
+function BctqCalculator({ value, onChange }) {
+  const v = value || {};
+  const setAt = (field, i, x, n) => { const arr = Array.from({ length: n }, (_, k) => (v[field] || [])[k] ?? null); arr[i] = x; onChange({ ...v, [field]: arr }); };
+  const r = scoreBCTQ(v);
+  const kindOf = { symptoms: "bctqSymptoms", function: "bctqFunction" };
+  return (
+    <div>
+      <ResultCard title="Symptom severity" value={r.symptoms.value} unit="/ 5" hint={SCORE_DIRECTION.bctq} reason={r.symptoms.reason} />
+      <ResultCard title="Functional status" value={r.function.value} unit="/ 5" hint={SCORE_DIRECTION.bctq} reason={r.function.reason} />
+      <SubLabel>Symptom severity: 11 items, each 1 to 5</SubLabel>
+      {Array.from({ length: 11 }, (_, i) => <ScaleRow key={`s${i}`} n={i + 1} label="Boston symptoms" text={measureItemText(kindOf.symptoms, i)} value={(v.symptoms || [])[i] ?? null} onChange={(x) => setAt("symptoms", i, x, 11)} />)}
+      <SubLabel>Functional status: 8 items, each 1 to 5</SubLabel>
+      {Array.from({ length: 8 }, (_, i) => <ScaleRow key={`f${i}`} n={i + 1} label="Boston function" text={measureItemText(kindOf.function, i)} value={(v.function || [])[i] ?? null} onChange={(x) => setAt("function", i, x, 8)} />)}
+    </div>
+  );
+}
+
+function SstCalculator({ value, onChange }) {
+  const v = value || {};
+  const setAt = (i, x) => { const arr = Array.from({ length: 12 }, (_, k) => (v.answers || [])[k] ?? null); arr[i] = x; onChange({ ...v, answers: arr }); };
+  const r = scoreSST(v);
+  return (
+    <div>
+      <ResultCard title="Simple Shoulder Test" value={r.value} unit="of 12" hint={SCORE_DIRECTION.sst} reason={r.reason} />
+      <SubLabel>Twelve questions, answered yes or no</SubLabel>
+      {Array.from({ length: 12 }, (_, i) => {
+        const text = measureItemText("sst", i);
+        return (
+          <div key={i} role="group" aria-label={`SST item ${i + 1}`} className="flex items-center gap-2 py-1.5" style={{ borderBottom: `1px solid ${T.border}` }}>
+            <div className="flex-1 min-w-0">{text ? <span className="text-[13px]" style={{ color: T.ink }}><span className="font-semibold">{i + 1}.</span> {text}</span> : <span className="text-[14px] font-semibold" style={{ color: T.ink }}>Item {i + 1}</span>}</div>
+            <ChipRow label={`SST item ${i + 1}`} value={(v.answers || [])[i] ?? null} onChange={(x) => setAt(i, x)} options={[{ value: true, label: "Yes" }, { value: false, label: "No" }]} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FingerCalculator({ value, onChange }) {
+  const v = value || {};
+  const set = (k, x) => onChange({ ...v, [k]: x });
+  const r = scoreFingerMotion(v);
+  const F = (label, key, unit = "degrees") => (<div key={key} className="mb-1"><SubLabel>{label}</SubLabel><MeasureNumberInput label={`Finger ${label}`} value={v[key]} min={0} max={180} unit={unit} onChange={(x) => set(key, x)} /></div>);
+  return (
+    <div>
+      <ResultCard title="Strickland" value={r.value} unit="% of normal" hint={r.grade ? `PIP and DIP motion \u00b7 ${r.grade}` : "PIP and DIP motion"} reason={r.reason} extra={r.value != null ? `(PIP + DIP flexion) minus extension lag: ${r.degrees} degrees of 175` : null} />
+      {r.tam && <ResultCard title="Total active motion (ASSH)" value={r.tam.percent} unit={`% of ${r.tam.against}\u00b0`} hint={`${r.tam.degrees} degrees \u00b7 ${r.tam.grade}`} />}
+      {F("PIP flexion", "pipFlexion")}{F("DIP flexion", "dipFlexion")}{F("PIP extension lag", "pipLag")}{F("DIP extension lag", "dipLag")}
+      <SubLabel>Optional: add the MCP joint for total active motion</SubLabel>
+      {F("MCP flexion", "mcpFlexion")}{F("MCP extension lag", "mcpLag")}
+      {F("Other finger total active motion (leave blank to use 260)", "otherTam")}
+    </div>
+  );
+}
+
+function GripCalculator({ value, onChange }) {
+  const v = value || {};
+  const setAt = (field, i, x) => { const arr = Array.from({ length: 3 }, (_, k) => (v[field] || [])[k] ?? null); arr[i] = x; onChange({ ...v, [field]: arr }); };
+  const r = scoreGrip(v);
+  return (
+    <div>
+      <ResultCard title="Grip strength" value={r.value} unit="% of the other hand" hint="same unit for both hands" reason={r.reason} extra={r.value != null ? `Mean ${r.affected} against ${r.other}` : null} />
+      <SubLabel>Affected hand: up to three readings</SubLabel>
+      <div className="flex gap-2">{[0, 1, 2].map((i) => <MeasureNumberInput key={i} label={`Grip affected reading ${i + 1}`} value={(v.affected || [])[i] ?? null} min={0} step={0.1} onChange={(x) => setAt("affected", i, x)} />)}</div>
+      <SubLabel>Other hand: up to three readings</SubLabel>
+      <div className="flex gap-2">{[0, 1, 2].map((i) => <MeasureNumberInput key={i} label={`Grip other reading ${i + 1}`} value={(v.other || [])[i] ?? null} min={0} step={0.1} onChange={(x) => setAt("other", i, x)} />)}</div>
+    </div>
+  );
+}
+
 // Dispatches to the calculator for one measure. `values` holds every measure's entries, keyed by measure id.
 function MeasureCalculator({ id, values, onChange, sticky = true, stickyTop = 0 }) {
   const v = values || {};
@@ -25821,6 +26087,12 @@ function MeasureCalculator({ id, values, onChange, sticky = true, stickyTop = 0 
   if (id === "constant") return withNote(<ConstantCalculator value={v.constant} onChange={(x) => onChange("constant", x)} />);
   if (id === "prwe") return withNote(<PrweCalculator value={v.prwe} onChange={(x) => onChange("prwe", x)} />);
   if (id === "wosi") return withNote(<WosiCalculator value={v.wosi} onChange={(x) => onChange("wosi", x)} />);
+  if (id === "spadi") return withNote(<SpadiCalculator value={v.spadi} onChange={(x) => onChange("spadi", x)} />);
+  if (id === "prtee") return withNote(<PrteeCalculator value={v.prtee} onChange={(x) => onChange("prtee", x)} />);
+  if (id === "bctq") return withNote(<BctqCalculator value={v.bctq} onChange={(x) => onChange("bctq", x)} />);
+  if (id === "sst") return withNote(<SstCalculator value={v.sst} onChange={(x) => onChange("sst", x)} />);
+  if (id === "finger") return withNote(<FingerCalculator value={v.finger} onChange={(x) => onChange("finger", x)} />);
+  if (id === "grip") return withNote(<GripCalculator value={v.grip} onChange={(x) => onChange("grip", x)} />);
   if (id === "sane") {
     const r = scoreSANE({ saneScore: v.sane });
     return (<div><ResultCard title="SANE" value={r.value} unit="%" hint={SCORE_DIRECTION.sane} reason={r.reason} /><SubLabel>Overall rating of the limb, 0 to 100% of normal</SubLabel><SliderNumber value={v.sane} min={0} max={100} step={5} label="SANE rating, percent" unit="%" onChange={(x) => onChange("sane", x)} /></div>);
