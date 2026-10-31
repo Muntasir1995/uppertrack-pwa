@@ -15377,12 +15377,12 @@ const WHATS_NEW = [
   {
     when: "31 October 2026",
     items: [
+      "Visits on hold: when a patient leaves for X-rays or an injection, New patient offers to hold the visit; resume it from the home screen exactly as it was, for new, follow-up and post-operative visits. Held visits stay in memory only.",
       "Post-operative reviews: the note now reads history, examination, assessment, plan and follow-up; restrictions set at surgery take priority over the standard protocol and are shown with every procedure\u2019s own; a ticked complication shows a procedure-specific suggested approach; and plans that contradict each other are flagged.",
       "Operative notes: your audit of the standards is applied; the note reads in seven parts with closure once after all the technique; combined operations show each procedure\u2019s own restrictions to add or confirm; checks before copying; and a Note Summary that carries confirmed details and previews before it fills anything.",
       "Follow-up visits: record adherence, pain and function, an optional focused re-examination with the diagnosis\u2019s own tests, and when to review sooner; the note adds an assessment and keeps decisions apart from suggestions, and the screen flags plans that contradict each other.",
       "Clinic notes: what you decided, what was done today and what the pathway suggests are labelled apart; the impression leads with the diagnosis and adds an assessment drawn only from your entries; the patient is described in one sentence; follow-up can record when to review sooner.",
       "Distal radius, scaphoid, perilunate and hook of hamate fractures moved from Hand to Wrist (a new Fractures & Trauma group), with their operations. Examination findings such as the ulnar nerve, radial pulse and tendons can now be recorded as abnormal, with what was found.",
-      "Distal radius fracture pattern: the criteria are one list with the instability findings, guide the pathway and suggest operations, and the note adds a line, Features suggesting operative consideration. New operations: dorsal bridge plate, dorsal plate, arthroscopic-assisted and volar rim fixation (drafts to review).",
     ],
   },
 ];
@@ -23219,6 +23219,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
+            <HoldVisitOption onDone={() => setConfirmReset(false)} />
             <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with its history, examination, pathway progress and red flags — and returns to the home screen ready for the next patient. This cannot be undone.</div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmReset(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
@@ -24043,7 +24044,7 @@ function AboutSheet({ open, onClose }) {
 
           <H>Your data</H>
           <ul className="mb-1">
-            <Li>Nothing is saved. Entries stay in memory only. New patient clears the current patient; copied notes stay in the Notes list (the last 12) until the app is closed, so close it before handing over a shared device.</Li>
+            <Li>Nothing is saved. Entries stay in memory only. New patient clears the current patient, or puts the visit on hold to resume later (for example after X-rays); held visits and copied notes (the last 12) stay until the app is closed, so close it before handing over a shared device.</Li>
             <Li>No patient data is sent anywhere and there are no analytics. Voice dictation uses your browser&apos;s speech recognition, which may send audio to the browser provider, so avoid identifiers. Copied notes sit on the clipboard, where other apps may read them.</Li>
           </ul>
 
@@ -24075,6 +24076,24 @@ function AboutSheet({ open, onClose }) {
 // home screen and every note preview can open a specific section without
 // threading props through each screen.
 const ReferenceCtx = React.createContext(null);
+// The app's hold action, so every New patient dialog (the session bar and each screen's own) can offer to hold the visit.
+const HoldVisitCtx = React.createContext(null);
+function HoldVisitOption({ onDone }) {
+  const ctx = React.useContext(HoldVisitCtx);
+  const [label, setLabel] = useState("");
+  if (!ctx || !ctx.hold) return null;
+  const full = ctx.heldCount >= HELD_VISITS_MAX;
+  return (
+    <div className="rounded-xl p-3 mb-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
+      <div className="text-[14px] font-semibold mb-1" style={{ color: T.tealDark }}>Coming back to this patient?</div>
+      <div className="text-[13px] mb-2" style={{ color: T.ink }}>Put this visit on hold (for example while the patient has X-rays or an injection) and resume it from the home screen, exactly as it is. Kept in memory until you resume or discard it, or the app is closed.</div>
+      <input value={label} onChange={(e) => setLabel(e.target.value)} aria-label="Label for the visit on hold (optional)" placeholder="Label (optional), e.g. Room 3 or back from X-ray; avoid names" maxLength={40} className="w-full rounded-xl px-3 py-2 text-[14px] mb-2" style={{ border: `1px solid ${T.border}`, color: T.ink, background: T.surface, minHeight: 44 }} />
+      <button onClick={() => { ctx.hold(label); setLabel(""); onDone(); }} disabled={full} className="w-full rounded-xl px-4 py-2.5 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 44, opacity: full ? 0.6 : 1 }}>
+        {full ? `${HELD_VISITS_MAX} visits are on hold already` : "Hold this visit"}
+      </button>
+    </div>
+  );
+}
 const QUICK_REF = [
   { section: "notes", label: "Recent notes", short: "Notes", icon: ClipboardList },
   { section: "recent", label: "Recent diagnoses", short: "Diagnoses", icon: History },
@@ -24817,6 +24836,7 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
+            <HoldVisitOption onDone={() => setConfirmReset(false)} />
             <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with everything recorded for it — and returns to the home screen ready for the next patient. This cannot be undone.</div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmReset(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
@@ -25179,6 +25199,7 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
+            <HoldVisitOption onDone={() => setConfirmReset(false)} />
             <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with everything recorded for it — and returns to the home screen ready for the next patient. This cannot be undone.</div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmReset(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
@@ -25225,7 +25246,58 @@ function PostopVisitScreen({ conditionIds, session, onFieldChange, onBack, onGoH
 /* Persistent strip shown above every screen once a patient session has one
    or more active conditions: quick-switch tabs, one-tap access to the
    combined note across all active diagnoses, and ending the session. */
-function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, searchLabel = "Search templates", onGoHome, onRemoveCondition, onOpenPanel, noteCount = 0, reveal = { id: null, n: 0 } }) {
+// ---- Visits on hold --------------------------------------------------------------------------------------------------------------
+// A visit can be put on hold (the patient has gone for X-rays or an injection) and resumed later, exactly as it was, while other
+// patients are seen. Held visits live in memory only, like everything else: nothing is saved, and closing the app clears them.
+const HELD_VISITS_MAX = 12;
+// What a visit holds, in words: each diagnosis with its kind of visit, and an operative note if one was started.
+function heldVisitSummary(session, opNote) {
+  const has = (o) => o && typeof o === "object" && Object.keys(o).length > 0;
+  const items = (session.order || []).map((id) => {
+    const c = findConditionById(id); if (!c) return null;
+    const st = (session.statesByConditionId || {})[id] || {};
+    return { name: c.name, kind: has(st.postop) ? "Post-operative follow-up" : has(st.followup) ? "Follow-up visit" : "New visit" };
+  }).filter(Boolean);
+  const ops = ((opNote || {}).op__procedures || []).map((id) => (opProcedureById(id) || {}).name).filter(Boolean);
+  if (ops.length) items.push({ name: ops.join(", "), kind: "Operative note" });
+  return items;
+}
+const visitHasContent = (session, opNote) => (session.order || []).length > 0 || ((opNote || {}).op__procedures || []).length > 0;
+
+// The visits on hold, on the home screen: resume (the visit in progress, if any, goes on hold) or discard (asked once).
+function HeldVisits({ visits, inProgress, onResume, onDiscard }) {
+  const [confirm, setConfirm] = useState(null);
+  if (!visits.length) return null;
+  const time = (t) => new Date(t).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return (
+    <section aria-label="Visits on hold" className="px-4 pt-4">
+      <div className="text-[12px] font-semibold uppercase tracking-wide mb-2" style={{ color: T.inkSoft }}>Visits on hold ({visits.length})</div>
+      {visits.map((v) => (
+        <div key={v.id} className="rounded-2xl p-3 mb-2" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+          <div className="flex items-baseline justify-between gap-2">
+            <div className="text-[15px] font-semibold" style={{ color: T.ink }}>{v.label || "Visit on hold"}</div>
+            <div className="text-[12px] shrink-0" style={{ color: T.inkSoft }}>held at {time(v.heldAt)}</div>
+          </div>
+          <div className="text-[13px] mt-1 mb-2" style={{ color: T.inkSoft }}>{v.summary.map((x) => `${x.name} (${x.kind.toLowerCase()})`).join("; ") || "No diagnosis yet"}</div>
+          {confirm === v.id ? (
+            <div className="flex gap-2">
+              <button onClick={() => setConfirm(null)} className="flex-1 rounded-xl px-3 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, minHeight: 44 }}>Keep</button>
+              <button onClick={() => { onDiscard(v.id); setConfirm(null); }} className="flex-1 rounded-xl px-3 font-semibold text-[14px]" style={{ background: T.red, color: "#fff", minHeight: 44 }}>Discard this visit</button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button onClick={() => onResume(v.id)} aria-label={`Resume ${v.label || "visit on hold"}, held at ${time(v.heldAt)}`} className="flex-1 rounded-xl px-3 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 44 }}>Resume</button>
+              <button onClick={() => setConfirm(v.id)} aria-label={`Discard ${v.label || "visit on hold"}, held at ${time(v.heldAt)}`} className="rounded-xl px-4 font-semibold text-[14px] active:scale-95" style={{ background: T.slateChip, color: T.ink, minHeight: 44 }}>Discard</button>
+            </div>
+          )}
+        </div>
+      ))}
+      {inProgress && <div className="text-[12px] mb-1" style={{ color: T.inkSoft }}>Resuming puts the visit in progress on hold, so nothing is lost.</div>}
+    </section>
+  );
+}
+
+function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, onEndSession, onOpenSearch, searchLabel = "Search templates", onGoHome, onRemoveCondition, onOpenPanel, noteCount = 0, reveal = { id: null, n: 0 }, onHoldVisit, heldCount = 0 }) {
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(null);
   const items = session.order.map((id) => findConditionById(id)).filter(Boolean);
@@ -25434,6 +25506,7 @@ function SessionBar({ session, activeConditionId, onSwitch, onViewCombinedNote, 
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
+            <HoldVisitOption onDone={() => setConfirmEnd(false)} />
             <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears everything entered in this session — every diagnosis, along with everything recorded for it — and returns to the home screen ready for the next patient. This cannot be undone.</div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmEnd(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}` }}>Cancel</button>
@@ -33999,6 +34072,7 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{ background: "rgba(16,30,43,0.5)" }}>
           <div className="w-full max-w-sm rounded-2xl p-5" style={{ background: T.surface, boxShadow: T.shadowFloating }}>
             <div className="font-bold text-[15px] mb-1.5" style={{ color: T.ink }}>Start a new patient?</div>
+            <HoldVisitOption onDone={() => setConfirmReset(false)} />
             <div className="text-[14px] mb-4" style={{ color: T.inkSoft }}>This clears the operative note and everything else entered in this session, and returns to the home screen ready for the next patient. This cannot be undone.</div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmReset(false)} className="flex-1 rounded-xl px-4 py-2.5 font-semibold text-[14px]" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 48 }}>Cancel</button>
@@ -35257,11 +35331,12 @@ export default function App() {
     openPanel: (section) => { setPanelNote(null); setPanelSection(section || null); setPanelVariant(section ? "sheet" : "panel"); setPanelOpen(true); },
     closePanel: () => setPanelOpen(false),
     openAbout: () => { setPanelOpen(false); setAboutOpen(true); },
-    openMeasures: () => { setPanelOpen(false); setScreen({ view: "measures" }); },
+    // Already on the calculators (the tab bar is shown there too): tapping Measures again adds no back-step.
+    openMeasures: () => { setPanelOpen(false); if (screen.view !== "measures") setScreen({ view: "measures" }); },
     noteCount: 0,
     recentCount: 0,
     // Which shortcut is currently showing, so its icon stays filled.
-    activeSection: panelOpen ? panelSection : null,
+    activeSection: panelOpen ? panelSection : screen.view === "measures" ? "outcomes" : null,
   };
   // Notes previewed or copied this session, newest first. In memory only,
   // like recentIds - a clinic list is one app session.
@@ -35376,6 +35451,29 @@ export default function App() {
   const [postopOpIds, setPostopOpIds] = useState([]);
   const [postopOpChoice, setPostopOpChoice] = useState({});
   const togglePostopOp = useCallback((id) => setPostopOpIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id])), []);
+
+  // Visits on hold: a snapshot of everything New patient would clear, plus where the clinician was, restored as it was.
+  const [heldVisits, setHeldVisits] = useState([]);
+  const snapshotVisit = () => ({ session, noteComments, measuresState, opNote, screen, followupSelectedIds, postopOpIds, postopOpChoice, postopMode });
+  const heldEntry = (label) => ({ id: `held-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, label: String(label || "").trim() || null, heldAt: Date.now(), summary: heldVisitSummary(session, opNote), snap: snapshotVisit() });
+  const holdVisit = (label) => {
+    if (!visitHasContent(session, opNote) || heldVisits.length >= HELD_VISITS_MAX) return;
+    setHeldVisits((h) => [heldEntry(label), ...h]);
+    endSession();
+  };
+  const resumeVisit = (id) => {
+    const v = heldVisits.find((x) => x.id === id);
+    if (!v) return;
+    // The visit in progress, if any, is put on hold rather than lost.
+    const current = visitHasContent(session, opNote) ? heldEntry(null) : null;
+    setHeldVisits((h) => [...(current ? [current] : []), ...h.filter((x) => x.id !== id)]);
+    const snap = v.snap;
+    setSession(snap.session); setNoteComments(snap.noteComments); setMeasuresState(snap.measuresState); setOpNote(snap.opNote);
+    setFollowupSelectedIds(snap.followupSelectedIds); setPostopOpIds(snap.postopOpIds); setPostopOpChoice(snap.postopOpChoice); setPostopMode(snap.postopMode);
+    setCombinedNoteOpen(false);
+    setScreen(snap.screen && snap.screen.view !== "visitType" ? snap.screen : { view: "visitType" }, { replace: true });
+  };
+  const discardHeld = (id) => setHeldVisits((h) => h.filter((x) => x.id !== id));
   const continueToPostopFromOperations = useCallback((items) => {
     const byDx = new Map();
     items.forEach(({ id, dxId }) => { if (!byDx.has(dxId)) byDx.set(dxId, []); byDx.get(dxId).push(id); });
@@ -35438,6 +35536,7 @@ export default function App() {
   referenceValue.recentCount = recentIds.length;
   return (
     <ReferenceCtx.Provider value={referenceValue}>
+    <HoldVisitCtx.Provider value={{ hold: visitHasContent(session, opNote) ? holdVisit : null, heldCount: heldVisits.length }}>
     <div>
       <style>{DESIGN_SYSTEM_CSS}</style>
       <SessionBar
@@ -35446,6 +35545,8 @@ export default function App() {
         onSwitch={openCondition}
         onViewCombinedNote={() => setCombinedNoteOpen(true)}
         onEndSession={endSession}
+        onHoldVisit={visitHasContent(session, opNote) ? holdVisit : null}
+        heldCount={heldVisits.length}
         onOpenSearch={() => setSearchOpen(true)}
         searchLabel={screen.view === "operativeNote" || (screen.view === "postopSelect" && postopMode === "operation") ? "Search operations" : "Search templates"}
         onOpenPanel={() => { setPanelNote(null); setPanelSection(null); setPanelVariant("panel"); setPanelOpen(true); }}
@@ -35457,6 +35558,7 @@ export default function App() {
 
       {screen.view === "visitType" && (
         <div className="ut-page">
+        <HeldVisits visits={heldVisits} inProgress={visitHasContent(session, opNote)} onResume={resumeVisit} onDiscard={discardHeld} />
         <VisitTypeGate
           onSelect={(type) => {
             if (type === "new") setScreen({ view: "regions" });
@@ -35473,6 +35575,8 @@ export default function App() {
       {screen.view === "measures" && (
         <div className="ut-page">
         <MeasuresScreen values={measuresState} onChange={setMeasure} onClearOne={clearMeasure} onClearAll={() => setMeasuresState({})} onBack={goBack} />
+        {/* room for the tab bar, which stays on this screen for easy switching */}
+        <div aria-hidden="true" className="shrink-0" style={{ height: "var(--ut-homebar-h)" }} />
         </div>
       )}
 
@@ -35552,10 +35656,10 @@ export default function App() {
         </div>
       )}
 
-      {screen.view === "visitType" && <HomeBar />}
+      {(screen.view === "visitType" || screen.view === "measures") && <HomeBar />}
 
       <SidePanel
-        homeBar={screen.view === "visitType"}
+        homeBar={screen.view === "visitType" || screen.view === "measures"}
         open={panelOpen}
         onClose={() => setPanelOpen(false)}
         recentIds={recentIds}
@@ -35658,6 +35762,7 @@ export default function App() {
         ? <OperationSearch selectedIds={postopOpIds} onToggle={togglePostopOp} onClose={() => setSearchOpen(false)} onContinue={continueFromOperationSearch} continueNote={postopSearchAmbiguous ? "Some of these can be reviewed under more than one diagnosis: you choose which next." : ""} />
         : <TemplateSearch onSelect={selectFromSearch} onClose={() => setSearchOpen(false)} selectedIds={inFollowupSelection ? followupSelectedIds : undefined} onContinue={inFollowupSelection ? () => { setSearchOpen(false); if (screen.view === "postopSelect") continueToPostopVisit(); else continueToFollowupVisit(); } : undefined} />)}
     </div>
+    </HoldVisitCtx.Provider>
     </ReferenceCtx.Provider>
   );
 }
