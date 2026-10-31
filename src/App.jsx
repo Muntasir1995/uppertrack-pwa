@@ -46,6 +46,7 @@ const T = {
   tealTint: "#E4F2F1",
   amber: "#B45309",
   amberTint: "#FDF3E2",
+  amberText: "#92400E", // amber text on the amber tint: 4.5:1 or better at small sizes
   red: "#B91C1C",
   redTint: "#FCEAEA",
   green: "#166534",
@@ -15365,7 +15366,7 @@ const ORTHOGUIDELINES = "https://www.orthoguidelines.org/";
 // The version is the date this build was made (year.month.day). A clinician can
 // read it ("is my copy today's?") and it says more than 5.31.1 ever did. Change
 // it, and add a line to WHATS_NEW, with each release.
-const APP_VERSION = "2026.10.26";
+const APP_VERSION = "2026.10.31";
 
 // Where suggestions and problems go. The one address to change if it moves.
 const CONTACT_EMAIL = "namanimuntasir@gmail.com";
@@ -15374,14 +15375,14 @@ const CONTACT_EMAIL = "namanimuntasir@gmail.com";
 // notice. Dated groups are added as releases are made.
 const WHATS_NEW = [
   {
-    when: "26 October 2026",
+    when: "31 October 2026",
     items: [
+      "Post-operative reviews: the note now reads history, examination, assessment, plan and follow-up; restrictions set at surgery take priority over the standard protocol and are shown with every procedure\u2019s own; a ticked complication shows a procedure-specific suggested approach; and plans that contradict each other are flagged.",
+      "Operative notes: your audit of the standards is applied; the note reads in seven parts with closure once after all the technique; combined operations show each procedure\u2019s own restrictions to add or confirm; checks before copying; and a Note Summary that carries confirmed details and previews before it fills anything.",
+      "Follow-up visits: record adherence, pain and function, an optional focused re-examination with the diagnosis\u2019s own tests, and when to review sooner; the note adds an assessment and keeps decisions apart from suggestions, and the screen flags plans that contradict each other.",
+      "Clinic notes: what you decided, what was done today and what the pathway suggests are labelled apart; the impression leads with the diagnosis and adds an assessment drawn only from your entries; the patient is described in one sentence; follow-up can record when to review sooner.",
       "Distal radius, scaphoid, perilunate and hook of hamate fractures moved from Hand to Wrist (a new Fractures & Trauma group), with their operations. Examination findings such as the ulnar nerve, radial pulse and tendons can now be recorded as abnormal, with what was found.",
       "Distal radius fracture pattern: the criteria are one list with the instability findings, guide the pathway and suggest operations, and the note adds a line, Features suggesting operative consideration. New operations: dorsal bridge plate, dorsal plate, arthroscopic-assisted and volar rim fixation (drafts to review).",
-      "Post-operative follow-up: the next-review buttons show what they did, the choices are real intervals, and every search offers Continue.",
-      "Installed on an iPhone, screens now slide in and back like a native app and sections ease open; the app also fits under the notch, does not zoom into text boxes, and a pull can no longer reload it. An optional status-bar setting is in docs/ios-standalone-setup.md.",
-      "Outcome measures: the home screen's Measures button opens fifteen calculators, including QuickDASH, DASH, ASES, Constant, SPADI, WOSI, MEPS, PRTEE, PRWE, the Boston CTQ, finger motion and grip strength, also offered beside a score after surgery and in each template's outcome section.",
-      "Operative note: operations on a particular digit ask which one, each rotator cuff tendon has its own tear category, and EIP transfer is new. Any generated note can be edited in place before copying.",
     ],
   },
 ];
@@ -16111,6 +16112,23 @@ function ensureOtherFreeText(condition) {
 Object.values(REGIONS).forEach((r) => getRegionConditions(r).forEach(ensureOtherFreeText));
 Object.values(GENERAL_ASSESSMENTS).forEach(ensureOtherFreeText);
 
+
+// Earlier review or escalation: written only when the clinician ticks it, so the note never states an escalation plan nobody chose.
+// Added once, here, to every template's follow-up section (after the reason for follow-up) rather than copied into each template.
+const FOLLOWUP_ESCALATION_OPTIONS = ["Persistent or worsening pain", "Progressive weakness", "No improvement with the current treatment", "New or worsening neurological symptoms", "Signs of infection or wound problems", "Loss of position on repeat radiographs", "Other"];
+(function addFollowUpEscalation() {
+  const all = [...Object.values(REGIONS).flatMap((r) => getRegionConditions(r)), ...Object.values(GENERAL_ASSESSMENTS)];
+  all.forEach((c) => {
+    const fu = (c.sections || []).find((sec) => sec.id === "followup");
+    if (!fu || !fu.fields || fu.fields.some((f) => f.key === "followUpEscalation")) return;
+    const i = fu.fields.findIndex((f) => f.key === "followUpReason");
+    if (i < 0) return;
+    const at = fu.fields[i + 1] && fu.fields[i + 1].type === "conditional" ? i + 2 : i + 1;
+    fu.fields.splice(at, 0,
+      { type: "checkbox", key: "followUpEscalation", label: "Earlier review or escalation if (optional)", options: FOLLOWUP_ESCALATION_OPTIONS },
+      { type: "conditional", when: (st) => (st.followUpEscalation || []).includes("Other"), fields: [{ type: "text", key: "followUpEscalationOther", label: "Specify" }] });
+  });
+})();
 
 function findConditionById(id) {
   for (const region of Object.values(REGIONS)) {
@@ -18271,6 +18289,14 @@ function resolveDominantHandSide(side, dominantHandSide, domRelative) {
   return null;
 }
 
+// Work status as it reads after "currently": "working full duties", "on modified duties", "off work".
+function workStatusPhrase(status) {
+  const t = String(status || "").trim();
+  if (t === "Working") return "working full duties";
+  if (/^modified/i.test(t)) return `on ${t.toLowerCase()}`;
+  return t.toLowerCase();
+}
+
 function buildDemographics(condition, state) {
   const allFields = resolveFields(condition.sections.flatMap((s) => s.fields || []), state);
   const val = (re) => {
@@ -18293,57 +18319,91 @@ function buildDemographics(condition, state) {
   const prevSurgery = val(/^prevSurgery$/i);
 
   const sentences = [];
+  // With a numeric age the patient is described in one sentence, as a specialist would write it: "65-year-old right-hand-dominant
+  // retired male", "55-year-old right-hand-dominant male who works as a teacher, currently working full duties, with known history
+  // of diabetes". Every element the separate sentences carried is kept. An age band, or no age, keeps the original wording below.
+  const ageNumeric = age != null && /^\d{1,3}$/.test(String(age).trim());
+  const ageBlank = (age == null || String(age).trim() === "") && state.__generalAssessmentAgeBand == null;
+  if (ageNumeric || (ageBlank && gender)) {
+    const pmh = (() => {
+      const items = (medHistoryItems || []).filter((item) => typeof item === "string" && !/smoking/i.test(item) && !/^(none|nil|n\/a|not applicable)$/i.test(item.trim()));
+      return items.length ? humanizeList(items) : null;
+    })();
+    const dominance = resolveDominantHandSide(side, dominantHandSide, domRelative);
+    const occText = occ && typeof occ === "string" && occ.trim() ? occ.trim() : null;
+    const article = (w) => (/^[aeiou]/i.test(w) ? "an" : "a");
+    let statusWord = null, roleNoun = null, workClause = null;
+    if (occText) {
+      if (/^retired$/i.test(occText)) statusWord = "retired";
+      else if (/^(unemployed|not working)$/i.test(occText)) workClause = "not currently working";
+      else if (/^(student|homemaker)$/i.test(occText)) roleNoun = occText.toLowerCase();
+      else if (!/^none$/i.test(occText)) workClause = `who works as ${article(occText)} ${occText}`;
+    }
+    let workPart = workClause;
+    if (work) workPart = workPart ? `${workPart} with a ${String(work).toLowerCase()} workload` : `with a ${String(work).toLowerCase()} work demand`;
+    if (status) { const st = workStatusPhrase(status); workPart = workPart ? `${workPart}, currently ${st}` : `currently ${st}`; }
+    const core = [ageNumeric ? `${String(age).trim()}-year-old` : null, dominance ? `${dominance.toLowerCase()}-hand-dominant` : null, statusWord, gender ? String(gender).toLowerCase() : "patient", roleNoun].filter(Boolean).join(" ");
+    let sentence = core.charAt(0).toUpperCase() + core.slice(1);
+    if (workPart) sentence += /^who /.test(workPart) ? ` ${workPart}` : `, ${workPart}`;
+    if (pmh) sentence += `, with known history of ${pmh}`;
+    sentences.push(`${sentence}.`);
+  } else {
 
-  // Sentence 1: age, gender, and any known past medical history. Smoking
-  // is excluded here since it's tracked as a risk factor elsewhere in the
-  // note (History section) rather than restated as part of this summary.
-  const diagnoses = (medHistoryItems || []).filter((item) => typeof item === "string" && !/smoking/i.test(item) && !/^(none|nil|n\/a|not applicable)$/i.test(item.trim()));
-  let opening = null;
-  // A plain number takes the "62-year-old" frame; an age band ("Under 20",
-  // "40-59", "75+") has to be phrased differently or it reads as
-  // "a Under 20-year-old male".
-  const ageStr = age != null ? String(age).trim() : (state.__generalAssessmentAgeBand != null ? String(state.__generalAssessmentAgeBand).trim() : null);
-  const ageIsNumeric = ageStr != null && /^\d{1,3}$/.test(ageStr);
-  if (ageIsNumeric && gender) opening = `The patient is a ${ageStr}-year-old ${String(gender).toLowerCase()}`;
-  else if (ageIsNumeric) opening = `The patient is ${ageStr} years old`;
-  else if (ageStr && gender) opening = `The patient is ${String(gender).toLowerCase()}, in the ${ageStr} age group`;
-  else if (ageStr) opening = `The patient is in the ${ageStr} age group`;
-  else if (gender) opening = `The patient is ${String(gender).toLowerCase()}`;
-  if (opening) {
-    if (diagnoses.length) opening += `, with known history of ${humanizeList(diagnoses)}`;
-    sentences.push(`${opening}.`);
-  } else if (diagnoses.length) {
-    sentences.push(`The patient has a known history of ${humanizeList(diagnoses)}.`);
+    // Sentence 1: age, gender, and any known past medical history. Smoking
+    // is excluded here since it's tracked as a risk factor elsewhere in the
+    // note (History section) rather than restated as part of this summary.
+    const diagnoses = (medHistoryItems || []).filter((item) => typeof item === "string" && !/smoking/i.test(item) && !/^(none|nil|n\/a|not applicable)$/i.test(item.trim()));
+    let opening = null;
+    // A plain number takes the "62-year-old" frame; an age band ("Under 20",
+    // "40-59", "75+") has to be phrased differently or it reads as
+    // "a Under 20-year-old male".
+    const ageStr = age != null ? String(age).trim() : (state.__generalAssessmentAgeBand != null ? String(state.__generalAssessmentAgeBand).trim() : null);
+    const ageIsNumeric = ageStr != null && /^\d{1,3}$/.test(ageStr);
+    if (ageIsNumeric && gender) opening = `The patient is a ${ageStr}-year-old ${String(gender).toLowerCase()}`;
+    else if (ageIsNumeric) opening = `The patient is ${ageStr} years old`;
+    else if (ageStr && gender) opening = `The patient is ${String(gender).toLowerCase()}, in the ${ageStr} age group`;
+    else if (ageStr) opening = `The patient is in the ${ageStr} age group`;
+    else if (gender) opening = `The patient is ${String(gender).toLowerCase()}`;
+    if (opening) {
+      if (diagnoses.length) opening += `, with known history of ${humanizeList(diagnoses)}`;
+      sentences.push(`${opening}.`);
+    } else if (diagnoses.length) {
+      sentences.push(`The patient has a known history of ${humanizeList(diagnoses)}.`);
+    }
+
+    // Sentence 2: occupation and work demand, with a pronoun matching the
+    // patient's recorded gender (falling back to "The patient" if gender
+    // isn't documented, rather than guessing).
+    if (occ && typeof occ === "string" && occ.trim()) {
+      const pronoun = gender === "Male" ? "He" : gender === "Female" ? "She" : "The patient";
+      // "Retired" / "Student" / "Homemaker" describe employment status, not a
+      // job title, so they don't fit the "works as a ..." frame.
+      const occText = occ.trim();
+      const NON_JOB = /^(retired|unemployed|student|homemaker|not working|none)$/i;
+      let workSentence;
+      if (/^retired$/i.test(occText)) workSentence = `${pronoun} is retired`;
+      else if (/^(unemployed|not working)$/i.test(occText)) workSentence = `${pronoun} is not currently working`;
+      else if (NON_JOB.test(occText)) workSentence = `${pronoun} is ${/^[aeiou]/i.test(occText) ? "an" : "a"} ${occText.toLowerCase()}`;
+      else workSentence = `${pronoun} works as ${/^[aeiou]/i.test(occText) ? "an" : "a"} ${occText}`;
+      if (work) workSentence += ` with a ${String(work).toLowerCase()} workload`;
+      if (status) workSentence += `, currently ${workStatusPhrase(status)}`;
+      sentences.push(`${workSentence}.`);
+    } else if (work) {
+      sentences.push(`Work demand is ${String(work).toLowerCase()}.`);
+    } else if (status) {
+      sentences.push(`The patient is currently ${workStatusPhrase(status)}.`);
+    }
+
+    // Sentence 3: hand dominance, stated directly rather than "dominant side
+    // affected" - this needs its own sentence since it's a standing fact
+    // about the patient, not something tied to laterality of presentation.
+    const resolvedDominance = resolveDominantHandSide(side, dominantHandSide, domRelative);
+    if (resolvedDominance) {
+      // Folded into the opening ("a 55-year-old right-hand-dominant male") when there is one of that shape; otherwise its own sentence.
+      if (sentences.length && /^The patient is a \d{1,3}-year-old /.test(sentences[0])) sentences[0] = sentences[0].replace(/^(The patient is a \d{1,3}-year-old )/, `$1${resolvedDominance.toLowerCase()}-hand-dominant `);
+      else sentences.push(`The patient is ${resolvedDominance.toLowerCase()} hand dominant.`);
+    }
   }
-
-  // Sentence 2: occupation and work demand, with a pronoun matching the
-  // patient's recorded gender (falling back to "The patient" if gender
-  // isn't documented, rather than guessing).
-  if (occ && typeof occ === "string" && occ.trim()) {
-    const pronoun = gender === "Male" ? "He" : gender === "Female" ? "She" : "The patient";
-    // "Retired" / "Student" / "Homemaker" describe employment status, not a
-    // job title, so they don't fit the "works as a ..." frame.
-    const occText = occ.trim();
-    const NON_JOB = /^(retired|unemployed|student|homemaker|not working|none)$/i;
-    let workSentence;
-    if (/^retired$/i.test(occText)) workSentence = `${pronoun} is retired`;
-    else if (/^(unemployed|not working)$/i.test(occText)) workSentence = `${pronoun} is not currently working`;
-    else if (NON_JOB.test(occText)) workSentence = `${pronoun} is ${/^[aeiou]/i.test(occText) ? "an" : "a"} ${occText.toLowerCase()}`;
-    else workSentence = `${pronoun} works as ${/^[aeiou]/i.test(occText) ? "an" : "a"} ${occText}`;
-    if (work) workSentence += ` with a ${String(work).toLowerCase()} workload`;
-    if (status) workSentence += `, currently ${status === "Working" ? "working full duties" : String(status).toLowerCase()}`;
-    sentences.push(`${workSentence}.`);
-  } else if (work) {
-    sentences.push(`Work demand is ${String(work).toLowerCase()}.`);
-  } else if (status) {
-    sentences.push(`The patient is currently ${status === "Working" ? "working full duties" : String(status).toLowerCase()}.`);
-  }
-
-  // Sentence 3: hand dominance, stated directly rather than "dominant side
-  // affected" - this needs its own sentence since it's a standing fact
-  // about the patient, not something tied to laterality of presentation.
-  const resolvedDominance = resolveDominantHandSide(side, dominantHandSide, domRelative);
-  if (resolvedDominance) sentences.push(`The patient is ${resolvedDominance.toLowerCase()} hand dominant.`);
 
   // Remaining context: previous surgery, activity level - kept as brief
   // trailing sentences so nothing already captured is lost from the
@@ -18373,10 +18433,14 @@ function emptyHistoryGroups() {
 function historyGroupsFor(fields, state) {
   const groups = emptyHistoryGroups();
 
+  // A response to treatment is only meaningful if there was a treatment: "previous treatment: none; the response to treatment was
+  // good" contradicts itself, so the response is left out when no treatment was recorded.
+  const priorTx = (state.prevTreatment || []).filter((t) => !/^(none|nil)$/i.test(String(t).trim()));
   resolveFields(fields, state).forEach((f) => {
     if (isPatientLevelField(f)) return;
     const key = f.key || "";
     if (/^typicalPresentation/i.test(key)) return; // handled as its own leading sentence in buildHistory
+    if (/^treatmentResponse$/i.test(key) && Array.isArray(state.prevTreatment) && !priorTx.length) return;
     const c = fieldClause(f, state);
     if (!c) return;
     if (/mechanismOfInjury/i.test(key) || /injuryFactors/i.test(key) || /^mechanism$/i.test(key) || /^onset$/i.test(key) || /duration/i.test(key) || /^(timeSinceInjury|timeFromInjury|timeSinceInjurySurgery)$/i.test(key) || /affectedDigit/i.test(key) || f.type === "vas" || f.type === "date") {
@@ -18390,7 +18454,7 @@ function historyGroupsFor(fields, state) {
       // condition's field array, so this clause lands last within the
       // bucket rather than before the descriptors it is meant to follow.
       groups.symptoms.push(c);
-    } else if (/symptom/i.test(key) || /painChar/i.test(key)) {
+    } else if (/symptom/i.test(key) || /painChar/i.test(key) || /^weakness$/i.test(key)) {
       groups.symptoms.push(c);
     } else if (/functionalLimit/i.test(key) || /(patientGoals|patientPriorities)/i.test(key)) {
       groups.function.push(c);
@@ -18437,7 +18501,7 @@ function historyGroupsToText(groups) {
 // the side as a separate sentence afterward - "right shoulder symptoms"
 // reads as one clean presenting complaint instead of two disconnected
 // statements.
-function typicalPresentationSentence(typical, state, region) {
+function typicalPresentationSentence(typical, state, region, condition) {
   if (!typical) return null;
   const field = resolveFields(typical.fields, state).find((f) => f.key && /^typicalPresentation/i.test(f.key));
   if (!field) return null;
@@ -18446,7 +18510,12 @@ function typicalPresentationSentence(typical, state, region) {
   if (!items.length) return null;
   const regionLabel = region && REGIONS[region] ? REGIONS[region].label.toLowerCase() : null;
   const sidePrefix = state.side ? `${String(state.side).toLowerCase()} ` : "";
-  return `The patient presented with ${regionLabel ? `${sidePrefix}${regionLabel} symptoms: ` : ""}${humanizeList(items)}.`;
+  // The checklist is the template's "typical presentation", so the sentence says that is what the ticked items are, rather than
+  // listing them as symptoms ("presented with shoulder symptoms: age >40 years").
+  const typicalOf = condition ? ` with features typical of ${conditionNameInText(condition)}` : "";
+  return regionLabel
+    ? `The patient presented with ${sidePrefix}${regionLabel} symptoms${typicalOf ? `,${typicalOf}` : ""}: ${humanizeList(items)}.`
+    : `The patient presented${typicalOf}: ${humanizeList(items)}.`;
 }
 
 // The opening sentence lists the Typical Patient checklist, and the Symptoms
@@ -18514,7 +18583,7 @@ function buildHistory(condition, state) {
   const typical = condition.sections.find((s) => s.id === "typical");
   const history = condition.sections.find((s) => s.id === "history");
   const typicalGroups = typical ? historyGroupsFor(typical.fields, state) : null;
-  const openingSentence = typicalPresentationSentence(typical, state, condition.region);
+  const openingSentence = typicalPresentationSentence(typical, state, condition.region, condition);
 
   // Typical Patient content (risk factors etc.) is shared regardless of
   // laterality; History content is what's actually documented independently
@@ -18681,17 +18750,20 @@ function examinationTextFor(exam, state) {
     palpation: [],
     motion: [],
     special: [],
+    neuro: [],
     other: [],
   };
 
   labelledClauses(fields, state).forEach(({ field: f, clause: c }) => {
     const key = f.key || "";
-    if (/inspection/i.test(key)) groups.inspection.push(c);
+    // Nerves, pulses and perfusion, and the neurovascular status pair, are not special tests: they get their own line.
+    if (f.type !== "testGrid" && (/^stNeuro|^neurovascular/i.test(key) || /(Nerve|Pulse|Artery|Perfusion|Sensation)$/.test(key) || /^(digitalSensation|digitalPerfusion|perfusion)$/i.test(key))) groups.neuro.push(c.replace(/^neurovascular (status|assessment) (was|is) /i, ""));
+    else if (/inspection/i.test(key)) groups.inspection.push(c);
     // A grid prints its own "  \u2022 Label: ..." line; filed under Palpation that
     // repeated the heading ("Palpation:   \u2022 Palpation: ..."), so its label is
     // dropped here and the Palpation bullet supplies it once.
     else if (/palpation/i.test(key)) groups.palpation.push(f.type === "testGrid" ? c.replace(/^\s*\u2022\s*[^:\n]+:\s*/, "") : c);
-    else if (f.type === "testGrid" || /(specialTest|provocat|impingement)/i.test(key) || /^stability[A-Z]/.test(key) || (/^st[A-Z]/.test(key) && key !== "stNeuro")) groups.special.push(c);
+    else if (f.type === "testGrid" || /(specialTest|provocat|impingement)/i.test(key) || /^stability[A-Z]/.test(key) || (/^st[A-Z]/.test(key) && key !== "stNeuro")) groups.special.push(c.replace(/^(\s*\u2022\s*)?Special tests:\s*/i, "$1"));   // the group already says "Special tests"
     else if (f.type === "rom" || f.type === "strength" || f.type === "angleSlider" || /(strength|rom|motion|romFollowUp)/i.test(key)) groups.motion.push(c);
     else groups.other.push(c);
   });
@@ -18713,6 +18785,7 @@ function examinationTextFor(exam, state) {
   if (groups.palpation.length) bullets.push(`\u2022 Palpation: ${joinClausesLower(groups.palpation)}`);
   if (groups.motion.length) bullets.push(`\u2022 Range of motion and strength:\n${subBulletBlock(groups.motion)}`);
   if (groups.special.length) bullets.push(`\u2022 Special tests:\n${subBulletBlock(groups.special)}`);
+  if (groups.neuro.length) bullets.push(`\u2022 Neurovascular: ${joinClausesLower(groups.neuro)}`);
   if (groups.other.length) bullets.push(`\u2022 Other findings: ${joinClausesLower(groups.other)}`);
 
   return bullets.length ? bullets.join("\n") : null;
@@ -18903,7 +18976,9 @@ function buildDifferential(condition, state) {
   }
 
   if (!list.length) return null;
-  return `The following alternative diagnoses were considered and felt to be less likely: ${humanizeList(list, { preserveCase: true })}.`;
+  // A tick records that the diagnosis was considered. It does not record a judgement that it is less likely or excluded, so the
+  // note does not state one (it used to say "considered and felt to be less likely"); the impression gives the working diagnosis.
+  return `Differential diagnoses considered: ${humanizeList(list.map(lowerListItem), { preserveCase: true })}.`;
 }
 
 // A classification asked inside a pathway - the answer both classifies the injury
@@ -19009,6 +19084,118 @@ function buildImpression(condition, state) {
   }
   return [base, line].filter(Boolean).join("\n");
 }
+// ---- Clinical synthesis for the impression ------------------------------------------------------------------------------------------
+// One "Assessment:" line that explains the impression from what was entered, and only from that. Deterministic rules:
+//  * Range of motion: active at least 20 degrees below passive, with passive preserved, reads as weakness or pain inhibition rather
+//    than stiffness; passive below 75% of the region's normal reads as possible stiffness. Spinal-level and extension-type motions are
+//    left out.
+//  * Strength and special tests are tied to the structure they test (TEST_STRUCTURES, by test name). Two or more concordant findings
+//    for one structure are "consistent with" its involvement; a single finding is reported, never concluded from. A positive test for
+//    a structure outside the recorded diagnosis is only ever "possible associated" pathology.
+//  * Imaging "supports" the recorded diagnosis only when a recorded finding names it; when a modality could have shown it and did not,
+//    the note says so and asks for clinical correlation. Free-text findings are never interpreted.
+// Nothing is said about anything that was not entered.
+const TEST_STRUCTURES = [
+  [/\b(jobe|empty can|full can|drop arm)\b/i, "supraspinatus"],
+  [/\b(er lag|external rotation lag|infraspinatus)\b/i, "infraspinatus"],
+  [/\b(hornblower|teres minor)\b/i, "teres minor"],
+  [/\b(belly press|bear hug|lift[- ]off|subscapularis)\b/i, "subscapularis"],
+  [/\b(speed|yergason|biceps|uppercut|o'?brien)\b/i, "long head of biceps"],
+  [/\b(cross[- ]body|ac joint|acromioclavicular|paxinos)\b/i, "AC joint"],
+  [/\b(apprehension|relocation|surprise|anterior drawer)\b/i, "anterior instability"],
+  [/\b(spurling|neck rom|radicular)\b/i, "cervical spine"],
+  [/\b(mill|cozen|maudsley)\b/i, "common extensor origin"],
+  [/\b(golfer|resisted (wrist )?flexion|resisted pronation)\b/i, "common flexor origin"],
+  [/\b(moving valgus|milking|valgus stress)\b/i, "ulnar collateral ligament"],
+  [/\b(hook test|bicipital aponeurosis|biceps squeeze)\b/i, "distal biceps"],
+  [/\b(finkelstein|eichhoff|what test)\b/i, "first dorsal compartment"],
+  [/\b(watson|scaphoid shift)\b/i, "scapholunate ligament"],
+  [/\b(fovea|ulnocarpal stress)\b/i, "TFCC"],
+  [/\b(piano key|druj ballott)/i, "DRUJ"],
+  [/\b(cmc grind|grind test)\b/i, "thumb CMC joint"],
+  [/\b(phalen|durkan|carpal compression|flick sign)\b|tinel.*(carpal|median)/i, "median nerve"],
+  [/tinel.*(cubital|elbow|guyon|ulnar)|elbow flexion test/i, "ulnar nerve"],
+  [/\b(froment|wartenberg sign|cross(ed)? finger)\b/i, "ulnar nerve"],
+  [/\b(elson)\b/i, "central slip"],
+];
+const TENDON_ABBREVIATIONS = { SSP: "supraspinatus", ISP: "infraspinatus", SSC: "subscapularis", "Teres Minor": "teres minor" };
+const structureOf = (name) => { const hit = TEST_STRUCTURES.find(([re]) => re.test(String(name))); return hit ? hit[1] : null; };
+
+function assessmentSynthesis(condition, state) {
+  const fields = resolveFields(condition.sections.flatMap((s) => (s.fields || []).map((f) => ({ ...f, __section: s.id }))), state);
+  const parts = [], associated = [];
+  // range of motion
+  fields.filter((f) => f.type === "rom" && state[`${f.key}Full`] !== "Full").forEach((f) => {
+    const v = state[f.key] || {}; const activeGap = [], passiveLow = [];
+    Object.entries(v).forEach(([m, r]) => {
+      if (!r || r.active == null || r.passive == null) return;
+      if (condition.region === "shoulder" && m === "Internal Rotation") return;
+      const normal = romNormalMax(condition.region, m);
+      if (normal == null || normal <= 10) return;
+      if (r.passive < 0.75 * normal) passiveLow.push(m.toLowerCase());
+      else if (r.passive - r.active >= 20) activeGap.push(m.toLowerCase());
+    });
+    if (activeGap.length) parts.push(`active ${humanizeList(activeGap)} reduced with preserved passive range, suggesting weakness or pain inhibition rather than stiffness`);
+    if (passiveLow.length) parts.push(`passive ${humanizeList(passiveLow)}${activeGap.length ? " also" : ""} restricted, raising the possibility of stiffness`);
+  });
+  // strength and special tests, gathered by the structure they test
+  // Each finding is marked as belonging to the diagnosis or not. Strength always does; a special test does when it sits in the
+  // template's first test group or in a group the diagnosis is named after ("Special tests \u2014 Rotator Cuff"); tests in the other
+  // groups ("\u2014 Biceps", "\u2014 AC Joint") are the ones that can only point to associated pathology.
+  const evidence = new Map(); const add = (structure, text, secondary) => { if (!evidence.has(structure)) evidence.set(structure, []); evidence.get(structure).push({ text, secondary }); };
+  fields.filter((f) => f.type === "strength").forEach((f) => {
+    const v = state[f.key] || {};
+    (f.muscles || []).forEach((m) => {
+      const g = parseFloat(v[m.key]); if (!Number.isFinite(g) || g >= 5) return;
+      const muscle = String(m.label).replace(/\s*\(.*\)\s*$/, "").toLowerCase();
+      add(structureOf(m.label) || muscle, `${muscle} weakness (${v[m.key]}/5)`, false);
+    });
+  });
+  const grids = fields.filter((f) => f.type === "testGrid");
+  const nameWords = new Set(conditionNameInText(condition).toLowerCase().split(/[^a-z]+/).filter((w) => w.length > 3));
+  grids.forEach((f, gi) => {
+    const group = String(f.label || "").split(/\s+\u2014\s+/)[1] || "";
+    const secondary = gi > 0 && !group.toLowerCase().split(/[^a-z]+/).some((w) => nameWords.has(w));
+    Object.entries(state[f.key] || {}).forEach(([t, r]) => { if (!r || !TESTGRID_CONCERNING.has(r)) return; const st = structureOf(t); if (st) add(st, `${r === "positive" ? "positive" : r} ${t}${/\b(test|sign|manoeuvre|maneuver)\b/i.test(t) ? "" : " test"}`, secondary); });
+  });
+  for (const [structure, entries] of evidence) {
+    const items = entries.map((e) => e.text);
+    if (entries.every((e) => e.secondary)) associated.push(`possible associated ${structure} pathology (${humanizeList(items)})`);
+    else if (items.length >= 2) parts.push(`${humanizeList(items)}, consistent with ${structure} involvement`);
+    else parts.push(items[0]);
+  }
+  // imaging against the recorded diagnosis
+  // Only the template's primary diagnosis (its first diagnosis choice) is compared with imaging. If it is blank, imaging is not
+  // compared with anything: a later field (a sub-type, a stage) is not a stand-in for the diagnosis.
+  const dxField = fields.find((f) => f.__section === "diagnosis" && f.type === "select");
+  const dxValue = dxField && state[dxField.key] ? String(state[dxField.key]) : null;
+  const norm = (t) => String(t).toLowerCase().replace(/[-\u2013]/g, " ").replace(/\s+/g, " ").trim();
+  const NORMALISH = /^(normal appearances|no acute bony abnormality|normal)$/i;
+  if (dxValue) {
+    fields.filter((f) => f.type === "checkbox" && /Common$/.test(f.key || "") && Array.isArray(state[f.key]) && state[f.key].length).forEach((f) => {
+      const modality = String(f.label || "").split(/\s+\u2014\s+/)[0];
+      const found = state[f.key].filter((x) => x !== "Other");
+      const d = norm(dxValue);
+      if (found.some((x) => !NORMALISH.test(x) && (norm(x) === d || norm(x).includes(d) || d.includes(norm(x))))) parts.push(`${lowerListItem(modality)} findings support ${lowerListItem(dxValue)}`);
+      else if ((f.options || []).some((o) => norm(o) === d)) parts.push(`${lowerListItem(modality)} did not show ${lowerListItem(dxValue)} (${humanizeList(found.map(lowerListItem))}); correlate clinically`);
+    });
+  }
+  const all = [...parts, ...associated];
+  if (!all.length) return null;
+  const text = all.join("; ");
+  return `Assessment: ${text.charAt(0).toUpperCase()}${text.slice(1)}.`;
+}
+
+// The diagnosis name as it reads inside a sentence: word by word, so "Rotator Cuff Disease" becomes "rotator cuff disease" rather
+// than "rotator Cuff Disease"; abbreviations and eponyms stay as written, a word opening a bracket is lowered inside the bracket,
+// and each part of a hyphenated word is lowered on its own ("Fracture-Dislocations" -> "fracture-dislocations", "Parsonage-Turner" kept).
+function conditionNameInText(condition) {
+  const lowerWord = (w) => w.split("-").map(lowerListItem).join("-");
+  // Roman numerals (zones V\u2013VIII, stage IIIA) are names, not words: kept as written.
+  const roman = (w) => /^\(?[IVX]+[A-D]?(?:[\u2013-][IVX]+[A-D]?)?\)?[,.]?$/.test(w);
+  return String(condition.name || "").split(" ").map((w) => (roman(w) ? w : w.startsWith("(") ? `(${lowerWord(w.slice(1))}` : lowerWord(w))).join(" ");
+}
+
 function buildImpressionBase(condition, state) {
   const dx = condition.sections.find((s) => s.id === "diagnosis");
   // Carried forward from a general assessment at the point this diagnosis
@@ -19027,7 +19214,8 @@ function buildImpressionBase(condition, state) {
     const fix = (s) => s.replace(/;\s+(involving\b)/g, " $1");
     if (rightClauses.length) parts.push(`Right side \u2014 ${fix(joinClausesLower(rightClauses))}`);
     if (leftClauses.length) parts.push(`Left side \u2014 ${fix(joinClausesLower(leftClauses))}`);
-    const body = parts.length ? `Clinical impression: ${parts.join(" ")}` : null;
+    const sideNotes = [["right", rightState], ["left", leftState]].map(([w, st]) => { const t = assessmentSynthesis(condition, st); return t ? t.replace(/^Assessment: /, `Assessment (${w}): `) : null; }).filter(Boolean);
+    const body = parts.length ? `Clinical impression: bilateral ${conditionNameInText(condition)}. ${parts.join(" ")}${sideNotes.length ? `\n${sideNotes.join("\n")}` : ""}` : null;
     if (generalContext && body) return `${generalContext}\n${body}`;
     return generalContext || body;
   }
@@ -19044,12 +19232,11 @@ function buildImpressionBase(condition, state) {
   // written, and a word opening a bracket is lowered inside the bracket.
   // Each part of a hyphenated word is lowered on its own, so "Fracture-Dislocations"
   // becomes "fracture-dislocations" while "Parsonage-Turner" keeps both capitals.
-  const lowerWord = (w) => w.split("-").map(lowerListItem).join("-");
-  const lowerName = condition.name.split(" ").map((w) => (w.startsWith("(") ? `(${lowerWord(w.slice(1))}` : lowerWord(w))).join(" ");
-  const dxName = `${side ? `${side} ` : ""}${lowerName}`;
-  const body = joined
-    ? `Clinical impression: ${side ? `${side} side \u2014 ` : ""}${joined}`
-    : `Clinical impression: ${dxName}.`;
+  const dxName = `${side ? `${side} ` : ""}${conditionNameInText(condition)}`;
+  // The diagnosis first, then what was recorded about it ("right rotator cuff disease \u2014 full thickness tear involving the
+  // supraspinatus"). Previously the name was dropped as soon as any detail was recorded ("right side \u2014 ...").
+  const synthesis = assessmentSynthesis(condition, state);
+  const body = `${joined ? `Clinical impression: ${dxName} \u2014 ${joined}` : `Clinical impression: ${dxName}.`}${synthesis ? `\n${synthesis}` : ""}`;
   if (generalContext && body) return `${generalContext}\n${body}`;
   return generalContext || body;
 }
@@ -19286,8 +19473,8 @@ function buildComplicationsSentence(procedures, state) {
   const procComplications = new Set();
   procedures.forEach((p) => complicationsForProcedure(p).forEach((c) => procComplications.add(c)));
   const modifiers = patientRiskModifiers(state);
-  const lines = [`Risks discussed included: ${humanizeList([...procComplications], { preserveCase: true })}.`];
-  if (modifiers.length) lines.push(`Patient-specific factors increasing risk include: ${humanizeList(modifiers, { preserveCase: true })}.`);
+  const lines = [`Specific risks discussed: ${humanizeList([...procComplications].map(lowerListItem), { preserveCase: true })}.`];
+  if (modifiers.length) lines.push(`Patient factors increasing risk: ${humanizeList(modifiers.map(lowerListItem), { preserveCase: true })}.`);
   return lines.join(" ");
 }
 
@@ -19516,7 +19703,7 @@ function surgeryConsentBullets(surgeryAgreement, surgicalDiscussion, state) {
   }
   const procedureClause = procedures.length ? `proceed with ${humanizeList(procedures, { preserveCase: true })}` : "proceed with the recommended surgical management";
   const out = [
-    `The risks and benefits of surgery, including common complications associated with the proposed procedure, and alternative treatment options, were discussed with the patient, who agreed to ${procedureClause}.`,
+    `Risks (including the common complications of the proposed procedure), benefits and alternative treatment options were discussed, and the patient agreed to ${procedureClause}.`,
   ];
   if (needsPreoperativeReferral(procedures, state)) out.push(PREOP_SENTENCE);
   return out;
@@ -19609,6 +19796,75 @@ function trailToBullets(trail, surgeryAgreement, surgicalDiscussion, state) {
   return bullets;
 }
 
+// The pathway trail as two lists. DECIDED is what the clinician recorded (a surgery agreement or decline); GUIDANCE is what the pathway
+// suggests: its steps and its conclusion. The steps come from the template, not from the clinician, so they are never written as if
+// they had been ordered. The same filters as before apply to both: assessment prompts are left out, "MRI if indicated" is left out
+// once MRI findings are recorded, and "Diagnosis" (making it is the visit itself) is not listed as a step. A step the conclusion
+// already names is not repeated.
+function trailToPlan(trail, surgeryAgreement, surgicalDiscussion, state) {
+  const decided = [], guidance = [];
+  const infoTexts = trail.filter((t) => t.node.type === "info").map((t) => t.node.text);
+  const terminalTexts = trail.filter((t) => t.node.type === "terminal").map((t) => t.node.text);
+  if (!infoTexts.length && !terminalTexts.length) return { decided, guidance };
+  const mriAlreadyDone = !!(state && state.mriFinding && String(state.mriFinding).trim());
+  const MRI_SUGGESTION_RE = /^MRI\b.*\b(if|as)\s+indicated\b/i;
+  const splitSteps = (text) => {
+    const out = []; let buf = ""; let depth = 0;
+    for (const ch of text) {
+      if (ch === "(" || ch === "[") depth++;
+      else if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
+      if (ch === "\u2192" && depth === 0) { out.push(buf); buf = ""; continue; }
+      buf += ch;
+    }
+    out.push(buf);
+    return out.map((x) => x.trim()).filter(Boolean);
+  };
+  const keep = (x) => !(mriAlreadyDone && MRI_SUGGESTION_RE.test(x)) && !isWorkupPrompt(x) && !/^diagnosis$/i.test(x);
+  const conclusions = [];
+  terminalTexts.forEach((t) => { const kept = splitSteps(t).filter(keep); if (kept.length) conclusions.push(kept.join(" \u2192 ")); });
+  // "Already named" means the step's whole phrase, as whole words: "CT" is not named by "fracture".
+  const said = conclusions.join(" ");
+  const named = (x) => new RegExp(`(^|[^A-Za-z0-9])${x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^A-Za-z0-9])`, "i").test(said);
+  const steps = [];
+  infoTexts.forEach((t) => splitSteps(t).filter(keep).forEach((x) => {
+    if (named(x)) return;
+    if (!steps.some((y) => y.toLowerCase() === x.toLowerCase())) steps.push(x);
+  }));
+  if (steps.length) {
+    if (steps.every((x) => x.length <= 48)) guidance.push(`Pathway steps: ${steps.map((x, k) => (k ? lowerListItem(x) : x)).join("; ")}.`);
+    else guidance.push(...steps);
+  }
+  guidance.push(...conclusions);
+  if (SURGERY_KEYWORDS.test([...infoTexts, ...terminalTexts].join(" "))) {
+    if (surgeryAgreement === "Agreed") decided.push(...surgeryConsentBullets(surgeryAgreement, surgicalDiscussion, state));
+    else if (surgeryAgreement === "Not agreed") decided.push(declinedSurgerySentence(surgicalDiscussion));
+  }
+  return { decided, guidance };
+}
+
+// What the clinician decided comes first, under its own heading; what the pathway suggests follows, labelled as guidance. When
+// guidance exists but nothing was decided, the note says so rather than letting the guidance read as the plan.
+// A declined operation: names the procedures that were discussed, when they were recorded.
+function declinedSurgerySentence(discussion) {
+  const procs = proceduresFromDiscussion(discussion);
+  return procs.length ? `Surgery (${humanizeList(procs, { preserveCase: true })}) was discussed; the patient was not keen for surgery at this time.` : "The patient was not keen for surgery at this time.";
+}
+
+function formatPlan(decidedIn, guidanceIn) {
+  // The pre-operative referral is added by a rule (major procedure, age, anticoagulation) once surgery is agreed. Nobody entered it,
+  // so it is written as a suggestion, not as part of the decision.
+  // An injection given today is something done, not decided: it has its own block.
+  const performed = decidedIn.filter((b) => /\binjection\b[^.]* was given\b/.test(b));
+  const decided = decidedIn.filter((b) => b !== PREOP_SENTENCE && !performed.includes(b));
+  const guidance = [...guidanceIn, ...(decidedIn.includes(PREOP_SENTENCE) ? [PREOP_SENTENCE.replace(/^Pre-operative plan: /, "Pre-operative assessment suggested: ")] : [])];
+  const out = [];
+  if (decided.length) out.push("Decision recorded:", ...decided.map((b) => `\u2022 ${b}`));
+  else if (guidance.length && !performed.length) out.push("Decision: none recorded at this visit.");
+  if (performed.length) out.push("Performed today:", ...performed.map((b) => `\u2022 ${b}`));
+  if (guidance.length) out.push("Pathway guidance (not a recorded decision):", ...guidance.map((b) => `\u2022 ${b}`));
+  return out.length ? out.join("\n") : null;
+}
+
 function proceduresFromDiscussion(discussion) {
   const procedures = ((discussion && discussion.selected) || []).filter((p) => p !== "Other");
   if (discussion && (discussion.selected || []).includes("Other") && discussion.otherText && discussion.otherText.trim()) {
@@ -19619,11 +19875,19 @@ function proceduresFromDiscussion(discussion) {
 
 function buildManagementPlan(condition, state) {
   if (!condition.pathway) return null;
+  const consentRecorded = (decided) => decided.some((b) => /agreed to proceed/.test(b));
+  const discussionExtras = (discussion, injectionDetail) => {
+    const out = [];
+    const injection = buildInjectionSentence(injectionDetail);
+    if (injection) out.push(injection);
+    if (discussion && discussion.complicationsDiscussed) {
+      const comp = buildComplicationsSentence(proceduresFromDiscussion(discussion), state);
+      if (comp) out.push(comp);
+    }
+    return out;
+  };
 
-  // Trigger finger: each affected digit is walked through the Management
-  // Pathway independently, since digits can genuinely differ in severity
-  // and end up with different recommendations (one settles with an
-  // injection, another needs release).
+  // Trigger finger: each affected digit is walked through the pathway on its own, since digits can differ in severity.
   if (condition.id === "trigger-finger") {
     const priorTx = (state.prevTreatment || []).length > 0;
     const parts = [];
@@ -19631,109 +19895,56 @@ function buildManagementPlan(condition, state) {
       const digitAnswers = state.pathwayAnswersByDigit?.[digit] || {};
       const digitAlt = state.pathwayAltByDigit?.[digit] || {};
       const digitDiscussion = state.surgicalDiscussionByDigit?.[digit];
-      const bullets = [];
-      if (Object.keys(digitAnswers).length) {
-        const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, priorTx);
-        bullets.push(...trailToBullets(walkPathwayTrail(condition.pathway, digitAnswers, effectiveStart), state.pathwaySurgeryAgreementByDigit?.[digit], digitDiscussion, state));
-      }
-      // The same safety net the single and bilateral notes have: a recorded
-      // agreement must reach the note even if this digit's pathway was not
-      // walked (or was changed afterwards), otherwise the review plan says
-      // "scheduled for surgery" with no record that it was discussed.
       const digitAgreement = state.pathwaySurgeryAgreementByDigit?.[digit];
-      if (digitAgreement === "Agreed" && !bullets.some((b) => /who agreed to /.test(b))) {
-        bullets.push(...surgeryConsentBullets(digitAgreement, digitDiscussion, state));
-      } else if (digitAgreement === "Not agreed" && !bullets.length) {
-        bullets.push("The patient was not keen for surgery at this time.");
-      }
+      const plan = Object.keys(digitAnswers).length
+        ? trailToPlan(walkPathwayTrail(condition.pathway, digitAnswers, skipCompletedInfoSteps(condition.pathway, priorTx).effectiveStart), digitAgreement, digitDiscussion, state)
+        : { decided: [], guidance: [] };
+      // A recorded agreement reaches the note even when this digit's pathway was not walked (or was changed afterwards).
+      if (digitAgreement === "Agreed" && !consentRecorded(plan.decided)) plan.decided.push(...surgeryConsentBullets(digitAgreement, digitDiscussion, state));
+      else if (digitAgreement === "Not agreed" && !plan.decided.length) plan.decided.push(declinedSurgerySentence(digitDiscussion));
       const digitAltPlan = (digitAlt.options || []).filter((p) => p !== "Other");
       if ((digitAlt.options || []).includes("Other") && digitAlt.optionsOther && digitAlt.optionsOther.trim()) digitAltPlan.push(digitAlt.optionsOther.trim());
       if (digitAlt.manualPlan && digitAlt.manualPlan.trim()) digitAltPlan.push(digitAlt.manualPlan.trim());
-      bullets.push(...digitAltPlan);
-      const digitInjectionSentence = buildInjectionSentence(state.injectionDetailByDigit?.[digit]);
-      if (digitInjectionSentence) bullets.push(digitInjectionSentence);
-      if (digitDiscussion && digitDiscussion.complicationsDiscussed) {
-        const compSentence = buildComplicationsSentence(proceduresFromDiscussion(digitDiscussion), state);
-        if (compSentence) bullets.push(compSentence);
-      }
-      if (bullets.length) parts.push(`${digit}:\n${bullets.map((b) => `\u2022 ${b}`).join("\n")}`);
+      plan.decided.push(...digitAltPlan, ...discussionExtras(digitDiscussion, state.injectionDetailByDigit?.[digit]));
+      const text = formatPlan(plan.decided, plan.guidance);
+      if (text) parts.push(`${digit}:\n${text}`);
     });
     return parts.length ? parts.join("\n\n") : null;
   }
 
+  // The alternative or manual plan is chosen by the clinician: it is a decision.
   const altPlan = (state.pathwayAltOptions || []).filter((p) => p !== "Other");
   if ((state.pathwayAltOptions || []).includes("Other") && state.pathwayAltOptionsOther && state.pathwayAltOptionsOther.trim()) altPlan.push(state.pathwayAltOptionsOther.trim());
   if (state.pathwayManualPlan && state.pathwayManualPlan.trim()) altPlan.push(state.pathwayManualPlan.trim());
 
+  const sidePlan = (answers, priorTx, agreement, discussion, injectionDetail, limbState) => {
+    const plan = Object.keys(answers || {}).length
+      ? trailToPlan(walkPathwayTrail(condition.pathway, answers, skipCompletedInfoSteps(condition.pathway, priorTx).effectiveStart), agreement, discussion, limbState)
+      : { decided: [], guidance: [] };
+    // A consent discussion that was recorded must appear even when the pathway questions were not worked through.
+    if (agreement === "Agreed" && !consentRecorded(plan.decided)) plan.decided.push(...surgeryConsentBullets(agreement, discussion, state));
+    else if (agreement === "Not agreed" && !plan.decided.some((b) => /not keen for surgery/.test(b))) plan.decided.push(declinedSurgerySentence(discussion));
+    plan.decided.push(...discussionExtras(discussion, injectionDetail));
+    return plan;
+  };
+
   if (state.side === "Bilateral") {
-    const rightAnswers = state.pathwayAnswersRight || {};
-    const leftAnswers = state.pathwayAnswersLeft || {};
-    const rightPriorTx = ((state.limbData?.right?.prevTreatment) || []).length > 0;
-    const leftPriorTx = ((state.limbData?.left?.prevTreatment) || []).length > 0;
+    const right = sidePlan(state.pathwayAnswersRight, ((state.limbData?.right?.prevTreatment) || []).length > 0, state.pathwaySurgeryAgreementRight, state.surgicalDiscussionRight, state.injectionDetailRight, { mriFinding: state.limbData?.right?.mriFinding });
+    const left = sidePlan(state.pathwayAnswersLeft, ((state.limbData?.left?.prevTreatment) || []).length > 0, state.pathwaySurgeryAgreementLeft, state.surgicalDiscussionLeft, state.injectionDetailLeft, { mriFinding: state.limbData?.left?.mriFinding });
     const parts = [];
-    {
-      const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, rightPriorTx);
-      const bullets = Object.keys(rightAnswers).length
-        ? trailToBullets(walkPathwayTrail(condition.pathway, rightAnswers, effectiveStart), state.pathwaySurgeryAgreementRight, state.surgicalDiscussionRight, { mriFinding: state.limbData?.right?.mriFinding })
-        : [];
-      if (state.pathwaySurgeryAgreementRight === "Agreed" && !bullets.some((b) => /who agreed to /.test(b))) {
-        bullets.push(...surgeryConsentBullets(state.pathwaySurgeryAgreementRight, state.surgicalDiscussionRight, state));
-      } else if (state.pathwaySurgeryAgreementRight === "Not agreed" && !bullets.length) {
-        bullets.push("The patient was not keen for surgery at this time.");
-      }
-      const rightInjectionSentence = buildInjectionSentence(state.injectionDetailRight);
-      if (rightInjectionSentence) bullets.push(rightInjectionSentence);
-      if (state.surgicalDiscussionRight && state.surgicalDiscussionRight.complicationsDiscussed) {
-        const compSentence = buildComplicationsSentence(proceduresFromDiscussion(state.surgicalDiscussionRight), state);
-        if (compSentence) bullets.push(compSentence);
-      }
-      if (bullets.length) parts.push(`Right side:\n${bullets.map((b) => `\u2022 ${b}`).join("\n")}`);
-    }
-    {
-      const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, leftPriorTx);
-      const bullets = Object.keys(leftAnswers).length
-        ? trailToBullets(walkPathwayTrail(condition.pathway, leftAnswers, effectiveStart), state.pathwaySurgeryAgreementLeft, state.surgicalDiscussionLeft, { mriFinding: state.limbData?.left?.mriFinding })
-        : [];
-      if (state.pathwaySurgeryAgreementLeft === "Agreed" && !bullets.some((b) => /who agreed to /.test(b))) {
-        bullets.push(...surgeryConsentBullets(state.pathwaySurgeryAgreementLeft, state.surgicalDiscussionLeft, state));
-      } else if (state.pathwaySurgeryAgreementLeft === "Not agreed" && !bullets.length) {
-        bullets.push("The patient was not keen for surgery at this time.");
-      }
-      const leftInjectionSentence = buildInjectionSentence(state.injectionDetailLeft);
-      if (leftInjectionSentence) bullets.push(leftInjectionSentence);
-      if (state.surgicalDiscussionLeft && state.surgicalDiscussionLeft.complicationsDiscussed) {
-        const compSentence = buildComplicationsSentence(proceduresFromDiscussion(state.surgicalDiscussionLeft), state);
-        if (compSentence) bullets.push(compSentence);
-      }
-      if (bullets.length) parts.push(`Left side:\n${bullets.map((b) => `\u2022 ${b}`).join("\n")}`);
-    }
-    // Alternative/manual plan entries are shared regardless of laterality,
-    // consistent with how Typical Patient content is shared elsewhere.
-    if (altPlan.length) parts.push(`Alternative/additional plan:\n${altPlan.map((b) => `\u2022 ${b}`).join("\n")}`);
+    const r = formatPlan(right.decided, right.guidance), l = formatPlan(left.decided, left.guidance);
+    if (r) parts.push(`Right side:\n${r}`);
+    if (l) parts.push(`Left side:\n${l}`);
+    // Alternative/manual plan entries are shared regardless of laterality.
+    if (altPlan.length) parts.push(`Decision recorded (both sides):\n${altPlan.map((b) => `\u2022 ${b}`).join("\n")}`);
     return parts.length ? parts.join("\n\n") : null;
   }
 
-  const answers = state.pathwayAnswers || {};
-  const priorTx = (state.prevTreatment || []).length > 0;
-  const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, priorTx);
-  const bullets = Object.keys(answers).length ? trailToBullets(walkPathwayTrail(condition.pathway, answers, effectiveStart), state.pathwaySurgeryAgreement, state.surgicalDiscussion, state) : [];
-  // A consent discussion that was recorded must appear even when the pathway
-  // questions were not worked through - otherwise the note could state that
-  // surgery is planned while the discussion justifying it is missing.
-  if (state.pathwaySurgeryAgreement === "Agreed" && !bullets.some((b) => /who agreed to /.test(b))) {
-    bullets.push(...surgeryConsentBullets(state.pathwaySurgeryAgreement, state.surgicalDiscussion, state));
-  } else if (state.pathwaySurgeryAgreement === "Not agreed" && !bullets.some((b) => /not keen for surgery/.test(b))) {
-    bullets.push("The patient was not keen for surgery at this time.");
-  }
-  bullets.push(...altPlan);
-  const injectionSentence = buildInjectionSentence(state.injectionDetail);
-  if (injectionSentence) bullets.push(injectionSentence);
-  if (state.surgicalDiscussion && state.surgicalDiscussion.complicationsDiscussed) {
-    const compSentence = buildComplicationsSentence(proceduresFromDiscussion(state.surgicalDiscussion), state);
-    if (compSentence) bullets.push(compSentence);
-  }
-  if (!bullets.length) return null;
-  return bullets.map((b) => `\u2022 ${b}`).join("\n");
+  const plan = sidePlan(state.pathwayAnswers, (state.prevTreatment || []).length > 0, state.pathwaySurgeryAgreement, state.surgicalDiscussion, state.injectionDetail, state);
+  // The clinician's own choices sit with the other decisions, ahead of the consent's extras.
+  const extrasStart = plan.decided.findIndex((b) => /^(Specific risks discussed|Injection|An? .*injection)/.test(b));
+  if (extrasStart < 0) plan.decided.push(...altPlan); else plan.decided.splice(extrasStart, 0, ...altPlan);
+  return formatPlan(plan.decided, plan.guidance);
 }
 
 // The follow-up interval/objectives are condition-level standard-of-care
@@ -19792,9 +20003,9 @@ function reviewPlanSentence(interval, assessText) {
   // "3-7 days (if repaired)"), which reads naturally after "in".
   else if (/^\d/.test(v)) phrase = `in ${v}`;
   else phrase = `at ${lowerFirst(v)}`;
-  return assessText
-    ? `The patient will be reviewed ${phrase}, when ${lowerFirst(assessText)} will be assessed.`
-    : `The patient will be reviewed ${phrase}.`;
+  // The row is the template's list for that review ("Pain, ROM, strength, physiotherapy adherence"); as a bracket it reads correctly
+  // whatever its grammar ("..., when repeat radiographs, reassess stability will be assessed" did not).
+  return assessText ? `Review ${phrase} (${lowerFirst(String(assessText).trim().replace(/\.$/, ""))}).` : `Review ${phrase}.`;
 }
 
 function buildReviewPlan(condition, state) {
@@ -19828,12 +20039,7 @@ function buildReviewPlan(condition, state) {
       // planning", "Routine review of treatment progress"). "The reason is
       // monitor for progression" is ungrammatical, so verb-initial reasons
       // take an infinitive "to" and noun-initial ones are left as they are.
-      const VERB_INITIAL = /^(monitor|reassess|review|assess|check|confirm|exclude|consider|discuss|repeat|plan)\b/i;
-      const phrased = followUpReasons.map((r) => {
-        const t = String(r).trim();
-        return VERB_INITIAL.test(t) ? `to ${lowerFirst(t)}` : lowerFirst(t);
-      });
-      reviewSentence += ` Follow-up is ${humanizeList(phrased)}.`;
+      reviewSentence += ` Purpose: ${humanizeList(followUpReasons.map((r) => lowerFirst(String(r).trim())))}.`;
     }
   }
   // Any genuinely entered follow-up/healing-dashboard data (as opposed to
@@ -19846,6 +20052,13 @@ function buildReviewPlan(condition, state) {
   if (outcomes) {
     const clauses = labelledClauses(resolveFields(outcomes.fields, state), state).map((e) => e.clause);
     if (clauses.length) addendum = `At this visit, ${joinClausesLower(clauses)}`;
+  }
+  // Earlier review or escalation, only as ticked; on discharge it reads as when to come back.
+  const escalation = resolveOtherItems(state.followUpEscalation || [], state.followUpEscalationOther);
+  if (escalation.length) {
+    const discharged = /discharged from follow-up/.test(reviewSentence || "");
+    const esc = `${discharged ? "Re-refer if" : "Earlier review or escalation if"}: ${humanizeList(escalation.map(lowerListItem))}.`;
+    reviewSentence = reviewSentence ? `${reviewSentence} ${esc}` : esc;
   }
   if (reviewSentence && addendum) return `${reviewSentence} ${addendum}`;
   return reviewSentence || addendum || null;
@@ -20269,9 +20482,18 @@ function buildCombinedNote(session) {
       const text = buildImpression(condition, state);
       if (!text) return null;
       // only the operative-features line is joined on; any other line break in an impression is left exactly as it was
-      const clause = text.replace(/^Clinical impression:\s*/i, "").replace(/\n(?=Features suggesting operative consideration)/, " ").trim().replace(/\.$/, "");
+      let clause = text.replace(/^Clinical impression:\s*/i, "").replace(/\n(?=Features suggesting operative consideration)/, " ").trim().replace(/\.$/, "");
+      // The paragraph already names each diagnosis, so its own impression does not name it again: "Rotator Cuff Disease (primary)
+      // \u2014 right, tendinopathy involving the supraspinatus", not "... \u2014 right rotator cuff disease \u2014 tendinopathy ...".
+      const named = conditionNameInText(condition).toLowerCase();
+      const lead = clause.match(/^(right |left |bilateral )?/i)[0];
+      if (clause.slice(lead.length).toLowerCase().startsWith(named)) {
+        const rest = clause.slice(lead.length + named.length).replace(/^\s*\u2014\s*|^\.\s*/, "").trim();
+        const side = lead.trim();
+        clause = side ? (rest ? `${side}, ${rest}` : side) : rest;
+      }
       const label = labelFor(condition);
-      return `${withLabel(condition.name, label ? label.toLowerCase() : null)} \u2014 ${clause}`;
+      return clause ? `${withLabel(condition.name, label ? label.toLowerCase() : null)} \u2014 ${clause}` : withLabel(condition.name, label ? label.toLowerCase() : null);
     })
     .filter(Boolean);
   if (impressionParts.length) {
@@ -20323,6 +20545,10 @@ function buildCombinedNote(session) {
 const FOLLOWUP_REASON_OPTIONS = ["Scheduled review", "Persistent or worsening symptoms", "New symptoms", "Post-injection review", "Post-operative review", "Patient-initiated concern", "Other"];
 const FOLLOWUP_TREATMENT_OPTIONS = ["Education / activity modification", "Physiotherapy", "Hand therapy", "Splint or brace", "Corticosteroid injection", "Medication (NSAIDs/analgesia)", "Surgery", "Other"];
 const FOLLOWUP_OUTCOME_OPTIONS = ["Resolved", "Improved", "Unchanged", "Worse"];
+// Optional detail of the response, each written only when chosen: nothing is assumed (adherence least of all).
+const FOLLOWUP_ADHERENCE_OPTIONS = ["Completed", "Partial", "Not started", "Unknown"];
+const FOLLOWUP_CHANGE_OPTIONS = ["Improved", "Unchanged", "Worse"];
+const FOLLOWUP_LIMITED_RESPONSE_OPTIONS = ["Incomplete adherence", "Treatment course not yet completed", "Persistent structural problem", "Diagnosis uncertain", "New injury or aggravation", "Other"];
 
 // Reason for the *next* review, distinct from FOLLOWUP_REASON_OPTIONS above
 // (which captures why today's visit happened). Only relevant once a next
@@ -20409,8 +20635,9 @@ function patientDischargedAtFollowup(fuState) {
 const FOLLOWUP_SHARED_KEYS = [
   "lastVisitDate", "reason", "reasonOther", "treatmentOffered", "treatmentOfferedOther",
   "outcome", "followUpInterval", "followUpIntervalOther", "nextReviewReason", "nextReviewReasonOther",
+  "adherence", "painChange", "functionChange", "vas", "followUpEscalation", "followUpEscalationOther",
 ];
-const FOLLOWUP_SHARED_SUMMARY = "date of last visit, reason for review, treatment since last visit, outcome and next review";
+const FOLLOWUP_SHARED_SUMMARY = "date of last visit, reason for review, treatment since last visit and adherence, outcome, pain and function, and next review";
 
 function followupSharedDefaults(primaryFuState) {
   const out = {};
@@ -20431,63 +20658,137 @@ function followupOverriddenKeys(fuState, inherited) {
   return FOLLOWUP_SHARED_KEYS.filter((k) => fuState && fuState[k] !== undefined && JSON.stringify(fuState[k]) !== JSON.stringify(inherited[k]));
 }
 
+// The diagnosis's own examination fields offered for a focused re-examination at follow-up (optional, collapsed). Motion has its own
+// follow-up control (FollowupRom), and inspection and palpation are rarely what changes between visits, so they are left out.
+function followupReexamFields(condition) {
+  const exam = (condition.sections || []).find((sec) => sec.id === "exam");
+  if (!exam) return [];
+  return (exam.fields || []).filter((f) => f.type !== "rom" && f.type !== "info" && !/^(inspection|palpation)/i.test(f.key || ""));
+}
+
+// Lightweight checks for decisions that contradict each other. Shown on screen only, never written into the note, and never blocking.
+function followupConsistencyWarnings(fuState) {
+  const fu = fuState || {};
+  const plan = fu.planOptions || [];
+  const out = [];
+  const discharged = patientDischargedAtFollowup(fu);
+  const surgeryAgreed = patientScheduledForSurgery(fu);
+  if (discharged && plan.includes("Continue routine follow-up")) out.push("Discharge and continued routine follow-up are both selected. The note records the discharge.");
+  if (discharged && fu.followUpInterval && fu.followUpInterval !== "Final") out.push("A next review is still set although discharge is selected. The note records the discharge; clear the one that is wrong.");
+  if (surgeryAgreed && discharged) out.push("Surgery is agreed, but discharge from follow-up is also selected.");
+  if (surgeryAgreed && !proceduresFromDiscussion(fu.surgicalDiscussion).length) out.push("Surgery is agreed, but no procedure is recorded.");
+  if (plan.includes("Continue current management as planned") && plan.some((p) => /^(Progress treatment|Modify or step down)/.test(p))) out.push("\u201cContinue current management\u201d is selected together with a change of treatment.");
+  if (fu.outcome === "Resolved" && plan.some((p) => /^(Trial of injection|Refer for surgical opinion|Further imaging)/.test(p))) out.push("The outcome is recorded as resolved, but an escalation of treatment is selected.");
+  if (fu.followUpInterval === "Final" && plan.includes("Continue routine follow-up")) out.push("\u201cFinal\u201d review is selected together with continued routine follow-up.");
+  return out;
+}
+
 function buildFollowupNoteParts(condition, fuState, fullState) {
   const parts = [];
+  const others = (list, other) => { const out = (list || []).filter((x) => x !== "Other"); if ((list || []).includes("Other") && other && other.trim()) out.push(other.trim()); return out; };
 
-  const reasons = (fuState.reason || []).filter((r) => r !== "Other");
-  if ((fuState.reason || []).includes("Other") && fuState.reasonOther && fuState.reasonOther.trim()) reasons.push(fuState.reasonOther.trim());
+  // 1. Interval history: why the patient is here, when last seen, what treatment they had, and adherence only if recorded.
+  const reasons = others(fuState.reason, fuState.reasonOther);
   const sinceLastVisit = fuState.lastVisitDate ? timeSinceDate(fuState.lastVisitDate) : null;
-  const sinceClause = sinceLastVisit && sinceLastVisit !== "date is in the future" ? ` The last review was ${sinceLastVisit} ago.` : "";
-  if (reasons.length) parts.push({ heading: "Reason for Review", text: `The patient was reviewed today for ${lowerFirst(humanizeList(reasons))}.${sinceClause}` });
-  else if (sinceClause) parts.push({ heading: "Reason for Review", text: sinceClause.trim() });
-
-  const treatments = (fuState.treatmentOffered || []).filter((t) => t !== "Other");
-  if ((fuState.treatmentOffered || []).includes("Other") && fuState.treatmentOfferedOther && fuState.treatmentOfferedOther.trim()) treatments.push(fuState.treatmentOfferedOther.trim());
-  if (treatments.length) parts.push({ heading: "Treatment Since Last Visit", text: `Since the last visit, the patient received ${lowerFirst(humanizeList(treatments))}.` });
-
-  if (fuState.outcome) {
-    let t = `Response to treatment has been ${fuState.outcome.toLowerCase()}`;
-    if (fuState.outcomeNotes && fuState.outcomeNotes.trim()) t += `; ${lowerFirst(fuState.outcomeNotes.trim())}`;
-    parts.push({ heading: "Outcome of Treatment", text: `${t}.` });
+  const since = sinceLastVisit && sinceLastVisit !== "date is in the future" ? sinceLastVisit : null;
+  const treatments = others(fuState.treatmentOffered, fuState.treatmentOfferedOther);
+  const history = [];
+  const sinceText = since ? `, ${since} after the last review` : "";
+  const otherReasons = reasons.filter((r) => r !== "Scheduled review");
+  if (otherReasons.length) history.push(`Reviewed for ${lowerFirst(humanizeList(otherReasons))}${reasons.includes("Scheduled review") ? " at a scheduled review" : ""}${sinceText}.`);
+  else if (reasons.length) history.push(`Scheduled review${sinceText}.`);
+  else if (since) history.push(`Last reviewed ${since} ago.`);
+  if (treatments.length) {
+    const adherence = { Completed: "course completed", Partial: "adherence partial", "Not started": "not started", Unknown: "adherence not known" }[fuState.adherence];
+    history.push(`Treatment since the last visit: ${lowerFirst(humanizeList(treatments))}${adherence ? `; ${adherence}` : ""}.`);
   }
-  // Written only when motion or imaging was recorded, so existing follow-up notes are unchanged.
+  if (history.length) parts.push({ heading: "Interval History", text: history.join(" ") });
+
+  // 2. Response: the overall outcome, pain and function as recorded, pain today (compared only with a score recorded earlier in this
+  //    session), and the reason for a limited response when given.
+  const response = [];
+  const changes = [fuState.painChange ? `pain ${fuState.painChange.toLowerCase()}` : null, fuState.functionChange ? `function ${fuState.functionChange.toLowerCase()}` : null].filter(Boolean);
+  if (fuState.outcome === "Resolved") response.push(`Symptoms have resolved${changes.length ? ` (${changes.join(", ")})` : ""}.`);
+  else if (fuState.outcome) response.push(`Overall ${fuState.outcome.toLowerCase()}${changes.length ? `: ${humanizeList(changes)}` : ""}.`);
+  else if (changes.length) { const t = humanizeList(changes); response.push(`${t.charAt(0).toUpperCase()}${t.slice(1)}.`); }
+  if (fuState.vas) {
+    const before = fullState && fullState.vas && fullState !== fuState ? fullState.vas : null;
+    response.push(`Pain ${fuState.vas}/10${before ? ` (${before}/10 at the earlier assessment in this session)` : ""}.`);
+  }
+  const limited = others(fuState.limitedResponse, fuState.limitedResponseOther);
+  if (limited.length) response.push(`Reason for the limited response: ${humanizeList(limited.map(lowerListItem))}.`);
+  if (fuState.outcomeNotes && fuState.outcomeNotes.trim()) { const n = fuState.outcomeNotes.trim().replace(/\.$/, ""); response.push(`${n.charAt(0).toUpperCase()}${n.slice(1)}.`); }
+  if (response.length) parts.push({ heading: "Response to Treatment", text: response.join(" ") });
+
+  // 3. Current findings: the focused re-examination (the template's own fields), then motion and imaging as before.
+  const reexam = fuState.reexam || {};
+  const reexamFields = followupReexamFields(condition);
+  if (Object.keys(reexam).length && reexamFields.length) {
+    const text = examinationTextFor({ fields: reexamFields }, { ...reexam, side: fullState?.side, __region: condition.region });
+    if (text && text.trim()) parts.push({ heading: "Examination", text: text.trim() });
+  }
   const fuRom = opPostopRomPart(fuState, opDiagnosisRegions().get(condition.id));
   if (fuRom) parts.push(fuRom);
   const fuImaging = opPostopImagingPart(fuState);
   if (fuImaging) parts.push(fuImaging);
 
-  const planBullets = [];
+  // 4. Assessment: what the recorded response and findings mean, by fixed rules, from what was entered only.
+  const assessment = [];
+  const tx = treatments.length ? lowerFirst(humanizeList(treatments)) : null;
+  const stalledNow = followupProgressStalled(fuState);
+  if (fuState.outcome === "Resolved") assessment.push(`Resolved${tx ? ` following ${tx}` : ""}.`);
+  else if (fuState.outcome === "Improved") assessment.push(`Improving${tx ? ` with ${tx}` : ""}.`);
+  else if (fuState.outcome === "Unchanged") assessment.push(`No meaningful improvement${tx ? ` despite ${tx}` : ""}.`);
+  else if (fuState.outcome === "Worse") assessment.push(`Deteriorating${tx ? ` despite ${tx}` : ""}.`);
+  // Said only when a detail runs against the overall outcome; otherwise it would repeat the response section.
+  const against = [["pain", fuState.painChange], ["function", fuState.functionChange]].filter(([, c]) => c && ((fuState.outcome === "Improved" || fuState.outcome === "Resolved") ? c === "Worse" : (fuState.outcome === "Unchanged" || fuState.outcome === "Worse") ? c === "Improved" : false));
+  if (against.length) assessment.push(`Mixed response: ${humanizeList(against.map(([w, c]) => `${w} ${c.toLowerCase()}`))} despite the overall ${fuState.outcome.toLowerCase()} course.`);
+  if (stalledNow && /^(Partial|Not started)$/.test(fuState.adherence || "")) assessment.push(`Treatment was ${fuState.adherence === "Partial" ? "only partly followed" : "not started"}, so it has not had a full trial.`);
+  if (stalledNow && fuState.adherence === "Completed") assessment.push("This follows a completed course of treatment.");
+  if (Object.keys(reexam).length) { const syn = assessmentSynthesis(condition, { ...reexam, side: fullState?.side }); if (syn) assessment.push(syn.replace(/^Assessment: /, "")); }
+  if (assessment.length) parts.push({ heading: "Assessment", text: assessment.join(" ") });
+
+  // 5. Management: the same separation as the clinic note. The pathway's suggestions are guidance; what the clinician chose or
+  //    agreed is the decision; an injection given is performed today. Discharge is written in the review plan, not here as well.
+  let plan = { decided: [], guidance: [] };
   if (condition.pathway && fuState.pathwayAnswers && Object.keys(fuState.pathwayAnswers).length) {
     const priorTx = (fuState.treatmentOffered || []).length > 0;
     const { effectiveStart } = skipCompletedInfoSteps(condition.pathway, priorTx);
-    planBullets.push(...trailToBullets(walkPathwayTrail(condition.pathway, fuState.pathwayAnswers, effectiveStart), fuState.pathwaySurgeryAgreement, fuState.surgicalDiscussion, { mriFinding: fullState?.mriFinding || fullState?.limbData?.right?.mriFinding || fullState?.limbData?.left?.mriFinding }));
+    plan = trailToPlan(walkPathwayTrail(condition.pathway, fuState.pathwayAnswers, effectiveStart), fuState.pathwaySurgeryAgreement, fuState.surgicalDiscussion, { mriFinding: fullState?.mriFinding });
   }
-  const altPlan = (fuState.planOptions || []).filter((p) => p !== "Other");
-  if ((fuState.planOptions || []).includes("Other") && fuState.planOptionsOther && fuState.planOptionsOther.trim()) altPlan.push(fuState.planOptionsOther.trim());
-  planBullets.push(...altPlan);
-  if (fuState.planManualText && fuState.planManualText.trim()) planBullets.push(fuState.planManualText.trim());
-  const followupInjectionSentence = buildInjectionSentence(fuState.injectionDetail);
-  if (followupInjectionSentence) planBullets.push(followupInjectionSentence);
+  if (fuState.pathwaySurgeryAgreement === "Agreed" && !plan.decided.some((x) => /agreed to proceed/.test(x))) plan.decided.push(...surgeryConsentBullets("Agreed", fuState.surgicalDiscussion, fullState || fuState));
+  else if (fuState.pathwaySurgeryAgreement === "Not agreed" && !plan.decided.some((x) => /not keen for surgery/.test(x))) plan.decided.push(declinedSurgerySentence(fuState.surgicalDiscussion));
+  const interval = fuState.followUpInterval === "Other" ? fuState.followUpIntervalOther : fuState.followUpInterval;
+  const chosen = others(fuState.planOptions, fuState.planOptionsOther).filter((x) => x !== "Discharge from follow-up" && !(x === "Continue routine follow-up" && interval && String(interval).trim()));
+  plan.decided.push(...chosen);
+  if (fuState.planManualText && fuState.planManualText.trim()) plan.decided.push(fuState.planManualText.trim());
+  const injection = buildInjectionSentence(fuState.injectionDetail);
+  if (injection) plan.decided.push(injection);
   if (fuState.surgicalDiscussion && fuState.surgicalDiscussion.complicationsDiscussed) {
-    const compSentence = buildComplicationsSentence(proceduresFromDiscussion(fuState.surgicalDiscussion), fullState || fuState);
-    if (compSentence) planBullets.push(compSentence);
+    const comp = buildComplicationsSentence(proceduresFromDiscussion(fuState.surgicalDiscussion), fullState || fuState);
+    if (comp) plan.decided.push(comp);
   }
-  if (planBullets.length) parts.push({ heading: "New Plan of Treatment", text: planBullets.map((b) => `\u2022 ${b}`).join("\n") });
+  const planText = formatPlan(plan.decided, plan.guidance);
+  if (planText) parts.push({ heading: "Management Plan", text: planText });
 
-  const selectedInterval = fuState.followUpInterval === "Other" ? fuState.followUpIntervalOther : fuState.followUpInterval;
-  if (patientScheduledForSurgery(fuState)) {
-    parts.push({ heading: "Review Plan", text: "The patient will be scheduled for surgery." });
-  } else if (patientDischargedAtFollowup(fuState)) {
-    parts.push({ heading: "Review Plan", text: "The patient was discharged from the clinic." });
-  } else if (fuState.followUpInterval === "Final") {
-    parts.push({ heading: "Review Plan", text: "This is the final visit for the patient. They can be discharged from the clinic." });
-  } else if (selectedInterval && selectedInterval.trim()) {
-    let text = `The patient will be reviewed at ${selectedInterval}.`;
-    const nextReasons = (fuState.nextReviewReason || []).filter((r) => r !== "Other");
-    if ((fuState.nextReviewReason || []).includes("Other") && fuState.nextReviewReasonOther && fuState.nextReviewReasonOther.trim()) nextReasons.push(fuState.nextReviewReasonOther.trim());
-    if (nextReasons.length) text += ` The reason for follow-up is ${lowerFirst(humanizeList(nextReasons))}.`;
-    parts.push({ heading: "Review Plan", text });
+  // 6. What happens next: one decision (surgery, discharge, final review, or an interval), its purpose, and the escalation criteria ticked.
+  const escalation = others(fuState.followUpEscalation, fuState.followUpEscalationOther).map(lowerListItem);
+  let review = null;
+  if (patientScheduledForSurgery(fuState)) review = "The patient will be scheduled for surgery.";
+  else if (patientDischargedAtFollowup(fuState)) review = `Discharged from follow-up.${escalation.length ? ` Re-refer if: ${humanizeList(escalation)}.` : ""}`;
+  else if (fuState.followUpInterval === "Final") review = `This is the final review; the patient can be discharged from the clinic.${escalation.length ? ` Re-refer if: ${humanizeList(escalation)}.` : ""}`;
+  else {
+    const bits = [];
+    if (interval && String(interval).trim()) {
+      const t = String(interval).trim();
+      bits.push(`Review ${/^\d/.test(t) ? `in ${t}` : /^(in|at|after|before|on|once|when)\b/i.test(t) ? t : `: ${t}`}.`.replace("Review : ", "Review: "));
+      const nextReasons = others(fuState.nextReviewReason, fuState.nextReviewReasonOther);
+      if (nextReasons.length) bits.push(`Purpose: ${humanizeList(nextReasons.map((r) => lowerFirst(r)))}.`);
+    }
+    if (escalation.length) bits.push(`Earlier review or escalation if: ${humanizeList(escalation)}.`);
+    if (bits.length) review = bits.join(" ");
   }
+  if (review) parts.push({ heading: "Review Plan", text: review });
 
   return parts;
 }
@@ -20537,7 +20838,11 @@ function buildCombinedFollowupNote(session, conditionIds) {
     entries.forEach(({ parts }) => parts.forEach((p) => { if (!order.includes(p.heading)) order.push(p.heading); }));
     const empty = entries.filter((e) => !e.parts.length).map((e) => e.condition.name);
 
-    order.push(...[]);
+    // Sections keep the clinical order whichever diagnosis has them first: a re-examination recorded only for the second diagnosis
+    // still comes before the assessment, not after the review plan. Headings not in the list keep their place at the end.
+    const CLINICAL_ORDER = ["Diagnosis", "Interval History", "Response to Treatment", "Examination", "Range of Motion", "Imaging", "Assessment", "Management Plan", "Review Plan"];
+    const rank = (h) => { const i = CLINICAL_ORDER.indexOf(h); return i < 0 ? CLINICAL_ORDER.length : i; };
+    order.sort((x, y) => rank(x) - rank(y));
     order.forEach((heading) => {
       const present = heading === "Diagnosis"
         ? entries.map((e) => ({ name: e.condition.name, part: e.parts.find((p) => p.heading === heading) || { heading, text: e.condition.name } }))
@@ -20719,6 +21024,7 @@ const POSTOP_RETURN_SPORT_OPTIONS = ["Not yet", "Restricted", "Cleared"];
 // Only what genuinely travels together is shared: the procedure itself, any
 // injection given and the free-text findings stay per-procedure.
 const POSTOP_SHARED_KEYS = [
+  "rehabAdherence", "followUpEscalation", "followUpEscalationOther",
   "surgeryDate", "reason", "reasonOther", "woundStatus", "functionalProgress", "vas",
   "complications", "complicationsOther", "planOptions", "planOptionsOther",
   "followUpInterval", "followUpIntervalOther", "nextReviewReason", "nextReviewReasonOther",
@@ -20749,71 +21055,181 @@ function postopOverriddenKeys(poState, inherited) {
   return POSTOP_SHARED_KEYS.filter((k) => poState && poState[k] !== undefined && JSON.stringify(poState[k]) !== JSON.stringify(inherited[k]));
 }
 
+// ---- Post-operative complications: procedure-specific approaches (decision support, not decisions) -------------------------------
+// DRAFT FOR SURGEON REVIEW. Shown on screen when a complication is ticked, as a structured reminder of the usual sequence; never
+// written into the note, never names a drug or a dose, and never chooses for the clinician (the plan is still what they select).
+// Each guide has general steps, then steps added for the operation recorded for this review (ctx: the modules' names and region).
+const POSTOP_COMPLICATION_GUIDES = [
+  { id: "infection", match: /infect/i, title: "Wound or surgical-site infection",
+    steps: ["Examine the wound: spreading erythema, discharge, fluctuance; check temperature and systemic signs.", "Decide superficial or possibly deep; consider inflammatory markers.", "Take swabs, or deep samples when deep infection is suspected, before starting antibiotics where it is safe to wait.", "Superficial: wound care and antibiotics per local guidance, with review within 48\u201372 hours.", "Same-day senior review for systemic signs, rapid spread, a collection or wound breakdown."],
+    extra: [[(c) => c.implant, "An implant is in place: treat persistent drainage or deep signs as possible deep infection (urgent senior review, cultures before antibiotics, early consideration of surgical debridement; for an arthroplasty, the early window for debridement with implant retention matters). Involve the infection team."],
+            [(c) => c.hand, "Hand: exclude flexor sheath infection (Kanavel signs) and deep-space collections, which need urgent surgical drainage."]] },
+  { id: "dehiscence", match: /dehiscence/i, title: "Wound dehiscence",
+    steps: ["Assess depth and what is exposed (tendon, implant, bone), and look for infection.", "Superficial and clean: dressings, healing by secondary intention or delayed closure.", "Exposed implant or tendon, or infection: urgent surgical review for debridement and closure.", "Address contributing factors: smoking, diabetes, suture tension, early motion."] },
+  { id: "delayed", match: /delayed healing|wound healing/i, title: "Delayed wound healing",
+    steps: ["Look for infection, suture reaction, haematoma or excessive tension.", "Review risk factors: diabetes control, smoking, steroids, nutrition.", "Wound care with closer review; escalate for discharge, breakdown or signs of infection."] },
+  { id: "stiffness", match: /stiff|contracture|adhesion/i, title: "Stiffness",
+    steps: ["Compare active with passive range: passive loss suggests stiffness; active loss with passive range preserved suggests weakness, pain inhibition or repair failure.", "Check protocol adherence and pain control.", "Supervised therapy within the limits the repair or fixation allows."],
+    extra: [[(c) => c.cuff, "After rotator cuff repair, early stiffness is common; avoid forceful stretching that threatens the repair before it heals. Persistent stiffness beyond about six months despite therapy: consider imaging the repair and discussing injection, manipulation or release."],
+            [(c) => c.elbow, "Elbow: look for heterotopic ossification on radiographs and ulnar nerve symptoms; consider static-progressive splinting. Contracture persisting after a period of therapy: discuss release."],
+            [(c) => c.hand, "Hand and wrist: screen for complex regional pain syndrome and involve hand therapy early. After a tendon repair, adhesions (passive better than active) differ from rupture (sudden loss of active motion)."],
+            [(c) => c.fracture, "After fracture fixation, confirm stability and healing before mobilisation is pushed."]] },
+  { id: "neuro", match: /neuro|nerve|numb|palsy|paraesth|sensory/i, title: "New or persistent neurological or vascular symptoms",
+    steps: ["Document the distribution: motor, sensory and vascular, against the pre-operative state.", "Vascular compromise, or a tense and painful compartment: immediate assessment (compartment syndrome is an emergency).", "A new deficit after surgery: urgent senior review; consider the approach, an implant, and a tight dressing, cast or splint.", "Stable sensory symptoms: record a baseline and review; nerve conduction studies if recovery does not follow the expected course."],
+    extra: [[(c) => c.nerve, "After a decompression, symptoms usually improve over weeks to months, and long-standing or severe compression recovers more slowly or incompletely. Persistent or worsening symptoms: re-examine for incomplete release, recurrence or another level, and compare nerve conduction studies with the pre-operative ones; revision is discussed only with concordant findings."]] },
+  { id: "vte", match: /DVT|\bPE\b|thrombo|embol/i, title: "Suspected venous thromboembolism",
+    steps: ["Suspected deep vein thrombosis: urgent assessment and Doppler ultrasound through the local pathway.", "Breathlessness, chest pain or hypoxia: emergency assessment for pulmonary embolism.", "Treatment through the medical or thrombosis team."] },
+  { id: "hardware", match: /hardware|prominent|implant-related|plate|screw|wire|pin/i, title: "Implant-related symptoms",
+    steps: ["Confirm healing or union before planning removal.", "Look for tendon irritation or attrition over a prominent implant (risk of tendon rupture).", "Persistent symptoms once healed: discuss removal; suspected tendon rupture: urgent review."] },
+  { id: "fixation", match: /loss of (fixation|reduction)|displacement|non-?union|malunion|subsidence/i, title: "Loss of fixation, reduction or union",
+    steps: ["Compare the current radiographs with the intra-operative and earlier films.", "Assess alignment, implant position and healing; consider CT when union is uncertain.", "Weigh bone quality, adherence and any new injury.", "Discuss continued protection and observation against revision fixation, with senior review."] },
+  { id: "failure", match: /re-?tear|rupture|repair failure|graft failure|failure/i, title: "Suspected failure of a repair or reconstruction",
+    steps: ["A sudden loss of active strength or motion after a repair suggests failure; examine strength and the specific tests.", "Image the repair (ultrasound or MRI) when it would change management."],
+    extra: [[(c) => c.tendon || c.hand, "Hand and tendon repairs: suspected rupture needs urgent surgical review; early re-repair gives the best results."],
+            [(c) => c.cuff, "Rotator cuff retear: decide by symptoms, function, the tear and the patient; discuss revision repair or alternatives."]] },
+  { id: "recurrence", match: /recurr|instability|dislocation|subluxation/i, title: "Recurrence",
+    steps: ["Establish what has recurred, when and how, on history and examination."],
+    extra: [[(c) => c.instability, "Recurrent instability after stabilisation: radiographs, CT for bone loss and MRI for the soft tissues; discuss revision according to bone loss (for example a bone-block procedure)."],
+            [(c) => c.nerve, "After a nerve decompression, separate persistent symptoms (never improved), recurrent symptoms (improved then returned) and new symptoms; nerve conduction studies, and consider other causes and levels."]] },
+  { id: "crps", match: /regional pain|CRPS/i, title: "Complex regional pain syndrome",
+    steps: ["Look for pain out of proportion with swelling, colour, temperature or sweating change, and stiffness.", "Early therapy and desensitisation, and pain-team input; avoid prolonged immobilisation."] },
+];
+function postopGuideContext(po, condition) {
+  const procs = opModulesForPostop(po);
+  const names = [po.procedureName || "", ...procs.map((p) => `${p.name} ${p.id} ${p.family || ""}`)].join(" ");
+  const region = (procs[0] && procs[0].region) || (condition && condition.region) || "";
+  return {
+    cuff: /rotator cuff|\brcr\b|cuff repair/i.test(names), instability: /bankart|latarjet|remplissage|stabilis|instability/i.test(names),
+    fracture: /fracture|\borif\b|fixation|nail|pinning/i.test(names), implant: /arthroplasty|replacement|\borif\b|fixation|plate|nail|prosthe|hemiarthroplasty/i.test(names),
+    tendon: /tendon repair|tendon reconstruction|flexor tendon|extensor tendon|tenodesis/i.test(names), nerve: /decompression|neurolysis|transposition|carpal tunnel|cubital tunnel|nerve/i.test(names),
+    elbow: region === "elbow", hand: region === "hand" || region === "wrist",
+  };
+}
+// The guides for the complications ticked (each guide once, even if two ticked complications lead to it).
+function postopComplicationGuides(po, condition) {
+  const ctx = postopGuideContext(po, condition);
+  const ticked = (po.complications || []).filter((c) => c !== "None noted" && c !== "Other");
+  if ((po.complications || []).includes("Other") && po.complicationsOther) ticked.push(po.complicationsOther);
+  const out = [];
+  ticked.forEach((c) => { const g = POSTOP_COMPLICATION_GUIDES.find((x) => x.match.test(c)); if (g && !out.some((o) => o.id === g.id)) out.push({ id: g.id, title: g.title, for: c, steps: [...g.steps, ...(g.extra || []).filter(([when]) => when(ctx)).map(([, t]) => t)] }); });
+  return out;
+}
+
+// ---- Post-operative consistency checks: on screen only, never blocking, never in the note ---------------------------------------
+function postopConsistencyWarnings(po, condition) {
+  const out = [];
+  const plan = po.planOptions || [];
+  const comps = (po.complications || []).filter((c) => c !== "None noted");
+  const discharging = plan.includes("Discharge from follow-up") || po.followUpInterval === "Final";
+  if (discharging && comps.length) out.push(`Discharge is selected, but a complication is documented (${humanizeList(comps.filter((c) => c !== "Other").map(lowerListItem)) || "other"}).`);
+  if (comps.length && !plan.some((p) => /Treat complication|Further imaging|Discuss further surgical|Modify or restrict|Continue immobili|Other/.test(p)) && !po.planManual) out.push("A complication is documented, but no management for it is selected in the plan.");
+  if (plan.includes("Discharge from follow-up") && plan.includes("Continue routine follow-up")) out.push("Discharge and continued routine follow-up are both selected.");
+  if (plan.includes("Progress rehabilitation / advance loading") && plan.includes("Modify or restrict rehabilitation")) out.push("Progressing and restricting rehabilitation are both selected.");
+  if (plan.includes("Continue immobilization (splint/cast/sling)") && plan.includes("Wean from immobilization")) out.push("Continuing and weaning immobilisation are both selected.");
+  if (!po.surgeryDate) out.push("The date of surgery is not recorded, so the stage and the protocol cannot be worked out.");
+  else { const d = new Date(`${po.surgeryDate}T00:00:00`); if (Number.isNaN(d.getTime())) out.push("The date of surgery is not a valid date."); else if (d.getTime() > Date.now() + 864e5) out.push("The date of surgery is in the future."); }
+  const progressing = plan.some((p) => /^(Progress rehabilitation|Wean from immobili)/.test(p));
+  if (progressing) {
+    const procs = opModulesForPostop(po);
+    const days = po.surgeryDate ? Math.floor((Date.now() - new Date(`${po.surgeryDate}T00:00:00`).getTime()) / 864e5) : null;
+    const pr = procs.length && days != null ? opProtocolForReview(procs, days, null) : null;
+    if (pr && pr.phase && pr.phase.number === 1) out.push(`Rehabilitation is being progressed during the protocol's first (protection) phase; confirm this is intended for ${pr.primary.name.toLowerCase()}.`);
+    if ((po.opRestrictions || []).length) out.push(`Rehabilitation is being progressed: check against the restrictions set at surgery${po.opRestrictionsEdited ? " (modified by the surgeon)" : ""}.`);
+    if (pr && (pr.fromOthers || []).length) out.push(`Rehabilitation is being progressed: the other procedures have their own restrictions (${pr.fromOthers.map((x) => x.procedure).filter((x, i, a) => a.indexOf(x) === i).join(", ")}).`);
+  }
+  return out;
+}
+
 function buildPostopNoteParts(condition, poState) {
   const parts = [];
+  const others = (list, other) => { const out = (list || []).filter((x) => x !== "Other"); if ((list || []).includes("Other") && other && String(other).trim()) out.push(String(other).trim()); return out; };
+  const cap = (t) => (t ? t.charAt(0).toUpperCase() + t.slice(1) : t);
 
+  // 1. The operation, when, how long ago, and which review this is.
   if (poState.procedureName && poState.procedureName.trim()) {
     const dateText = poState.surgeryDate ? ` on ${formatDateDMY(poState.surgeryDate)}` : "";
     const sinceText = poState.surgeryDate ? timeSinceSurgery(poState.surgeryDate) : null;
-    const sinceClause = sinceText ? ` (${sinceText} since surgery)` : "";
-    parts.push({ heading: "Procedure", text: `The patient underwent ${poState.procedureName.trim()}${dateText}${sinceClause}.` });
+    parts.push({ heading: "Procedure", text: `The patient underwent ${poState.procedureName.trim()}${dateText}${sinceText ? ` (${sinceText} since surgery)` : ""}.` });
   }
-
-  const reasons = (poState.reason || []).filter((r) => r !== "Other");
-  if ((poState.reason || []).includes("Other") && poState.reasonOther && poState.reasonOther.trim()) reasons.push(poState.reasonOther.trim());
-  if (reasons.length) parts.push({ heading: "Reason for Review", text: `The patient was reviewed today for ${lowerFirst(humanizeList(reasons))}.` });
-
-  // Written only when the review-by-period fields are used, so existing post-operative notes are unchanged.
-  const protocolPart = opPostopProtocolPart(poState);
-  if (protocolPart) parts.push(protocolPart);
-  const scoresPart = opPostopScoresPart(poState);
-  if (scoresPart) parts.push(scoresPart);
   const detailsPart = opPostopDetailsPart(poState);
-  if (detailsPart) parts.splice(parts.length && parts[0].heading === "Procedure" ? 1 : 0, 0, detailsPart);   // straight after the procedure line
+  if (detailsPart) parts.push(detailsPart);
 
-  const statusClauses = [];
-  if (poState.woundStatus) statusClauses.push(`the wound was ${lowerFirst(poState.woundStatus)}`);
-  if (poState.vas != null) statusClauses.push(`pain was ${poState.vas}/10`);
-  if (poState.functionalProgress) statusClauses.push(`functional progress was ${lowerFirst(poState.functionalProgress)}`);
-  if (poState.statusNotes && poState.statusNotes.trim()) statusClauses.push(poState.statusNotes.trim());
-  if (statusClauses.length) parts.push({ heading: "Current Status", text: `${statusClauses.join("; ")}.`.replace(/^./, (c) => c.toUpperCase()) });
-  // Written only when motion or imaging was recorded, so existing post-operative notes are unchanged.
+  // 2. Interval history: why seen, pain, rehabilitation adherence, return to activity, and the clinician's notes.
+  const history = [];
+  const reasons = others(poState.reason, poState.reasonOther);
+  if (reasons.length) history.push(`The patient was reviewed today for ${lowerFirst(humanizeList(reasons))}.`);
+  if (poState.vas != null) history.push(`Pain ${poState.vas}/10.`);
+  const adherence = { Completed: "rehabilitation followed as prescribed", Partial: "rehabilitation only partly followed", "Not started": "rehabilitation not started", Unknown: "rehabilitation adherence not known" }[poState.rehabAdherence];
+  if (adherence) history.push(`${cap(adherence)}.`);
+  const activity = [];
+  if (poState.returnToWork) activity.push(`return to work: ${lowerFirst(poState.returnToWork)}`);
+  if (poState.returnToSport) activity.push(`return to sport or driving: ${lowerFirst(poState.returnToSport)}`);
+  if (activity.length) history.push(`${cap(activity.join("; "))}.`);
+  if (poState.statusNotes && poState.statusNotes.trim()) { const n = poState.statusNotes.trim().replace(/\.$/, ""); history.push(`${cap(n)}.`); }
+  if (history.length) parts.push({ heading: "Interval History", text: history.join(" ") });
+
+  // 3. Examination: the wound, a focused re-examination (the diagnosis's own fields), what was assessed against the protocol; then
+  //    motion, imaging and scores as before.
+  const exam = [];
+  if (poState.woundStatus) exam.push(`Wound: ${lowerFirst(poState.woundStatus)}.`);
+  const reexam = poState.reexam || {};
+  if (Object.keys(reexam).length) { const t = examinationTextFor({ fields: followupReexamFields(condition) }, { ...reexam, __region: condition.region }); if (t && t.trim()) exam.push(t.trim()); }
+  if (exam.length) parts.push({ heading: "Examination", text: exam.join("\n") });
   const romSet = opRomSetFor(opModulesForPostop(poState), condition);
   const romPart = opPostopRomPart(poState, romSet && romSet.region);
   if (romPart) parts.push(romPart);
   const imagingPart = opPostopImagingPart(poState);
   if (imagingPart) parts.push(imagingPart);
+  const scoresPart = opPostopScoresPart(poState);
+  if (scoresPart) parts.push(scoresPart);
+  // The review against the protocol (the period, progress against it, what was assessed): one section, shared across procedures
+  // reviewed at one visit, so a combined note writes it once.
+  const protocolPart = opPostopProtocolPart(poState);
+  if (protocolPart) parts.push(protocolPart);
 
-  const activity = [];
-  if (poState.returnToWork) activity.push(`return to work: ${lowerFirst(poState.returnToWork)}`);
-  if (poState.returnToSport) activity.push(`return to sport or driving: ${lowerFirst(poState.returnToSport)}`);
-  if (activity.length) parts.push({ heading: "Return to Activity", text: `${activity.join("; ")}.`.replace(/^./, (c) => c.toUpperCase()) });
+  // 4. Assessment: progress as the clinician judged it, with what supports it; complications as documented. Nothing about healing,
+  //    union or repair integrity is concluded here: only what was recorded.
+  const assessment = [];
+  const progressWord = { "As expected for stage": "progressing as expected for the stage", "Ahead of expected progress": "ahead of the expected progress", "Behind expected progress": "behind the expected progress" }[poState.functionalProgress];
+  const support = [poState.woundStatus ? `wound ${lowerFirst(poState.woundStatus)}` : null, poState.vas != null ? `pain ${poState.vas}/10` : null].filter(Boolean);
+  if (progressWord) assessment.push(`Recovery assessed as ${progressWord}${support.length ? ` (${support.join(", ")})` : ""}.`);
+  else if (poState.functionalProgress) assessment.push(`Functional progress was ${lowerFirst(poState.functionalProgress)}.`);
+  const behind = /Behind/.test(poState.functionalProgress || "") || /behind/i.test(poState.protocolProgress || "");
+  if (behind && /^(Partial|Not started)$/.test(poState.rehabAdherence || "")) assessment.push(`Rehabilitation was ${poState.rehabAdherence === "Partial" ? "only partly followed" : "not started"}, which may contribute.`);
+  const complications = others((poState.complications || []).filter((c) => c !== "None noted"), poState.complicationsOther);
+  if (complications.length) assessment.push(`Complication${complications.length > 1 ? "s" : ""} documented: ${humanizeList(complications.map(lowerListItem))}.`);
+  else if ((poState.complications || []).includes("None noted")) assessment.push("No complications were noted.");
+  if (Object.keys(reexam).length) { const syn = assessmentSynthesis(condition, reexam); if (syn) assessment.push(syn.replace(/^Assessment: /, "")); }
+  if (assessment.length) parts.push({ heading: "Assessment", text: assessment.join(" ") });
 
-  const complications = (poState.complications || []).filter((c) => c !== "None noted" && c !== "Other");
-  if ((poState.complications || []).includes("Other") && poState.complicationsOther && poState.complicationsOther.trim()) complications.push(poState.complicationsOther.trim());
-  if (complications.length) {
-    parts.push({ heading: "Complications", text: `The following complications were noted and require attention: ${humanizeList(complications)}.` });
-  } else if ((poState.complications || []).includes("None noted")) {
-    parts.push({ heading: "Complications", text: "No complications were noted." });
+  // 5. Plan: what the clinician decided, and anything done today. The restrictions set at surgery are written only when the
+  //    clinician confirms they continue; the standard protocol is not written as if prescribed.
+  const interval = poState.followUpInterval === "Other" ? poState.followUpIntervalOther : poState.followUpInterval;
+  const decided = others(poState.planOptions, poState.planOptionsOther).filter((x) => x !== "Discharge from follow-up" && !(x === "Continue routine follow-up" && interval && String(interval).trim()));
+  if (poState.surgeryRestrictionsContinue && (poState.opRestrictions || []).length) decided.push(`Restrictions set at surgery continue${poState.opRestrictionsEdited ? " (as modified by the surgeon)" : ""}: ${poState.opRestrictions.join("; ")}.`);
+  const injection = buildInjectionSentence(poState.injectionDetail);
+  if (injection) decided.push(injection);
+  const planText = decided.length ? formatPlan(decided, []) : null;
+  if (planText) parts.push({ heading: "Plan", text: planText });
+
+  // 6. Follow-up: one decision (discharge, final review, or an interval), its purpose, and the escalation criteria ticked.
+  const escalation = others(poState.followUpEscalation, poState.followUpEscalationOther).map(lowerListItem);
+  let follow = null;
+  // A final visit and a discharge mean the same; said once, with the fuller final-visit wording when both are chosen.
+  if (poState.followUpInterval === "Final") follow = `This is the final visit for the patient. They can be discharged from the clinic.${escalation.length ? ` Re-refer if: ${humanizeList(escalation)}.` : ""}`;
+  else if ((poState.planOptions || []).includes("Discharge from follow-up")) follow = `Discharged from follow-up.${escalation.length ? ` Re-refer if: ${humanizeList(escalation)}.` : ""}`;
+  else {
+    const bits = [];
+    if (interval && String(interval).trim()) {
+      const t = String(interval).trim();
+      bits.push(/^\d/.test(t) ? `Review in ${t}.` : /^(in|at|after|before|on|once|when)\b/i.test(t) ? `Review ${t}.` : `Review: ${t}.`);
+      const nextReasons = others(poState.nextReviewReason, poState.nextReviewReasonOther);
+      if (nextReasons.length) bits.push(`Purpose: ${humanizeList(nextReasons.map((r) => lowerFirst(r)))}.`);
+    }
+    if (escalation.length) bits.push(`Earlier review or escalation if: ${humanizeList(escalation)}.`);
+    if (bits.length) follow = bits.join(" ");
   }
-
-  const plan = (poState.planOptions || []).filter((p) => p !== "Other");
-  if ((poState.planOptions || []).includes("Other") && poState.planOptionsOther && poState.planOptionsOther.trim()) plan.push(poState.planOptionsOther.trim());
-  const postopInjectionSentence = buildInjectionSentence(poState.injectionDetail);
-  if (postopInjectionSentence) plan.push(postopInjectionSentence);
-  if (plan.length) parts.push({ heading: "Follow-up Plan", text: plan.map((p) => `\u2022 ${p}`).join("\n") });
-
-  const selectedInterval = poState.followUpInterval === "Other" ? poState.followUpIntervalOther : poState.followUpInterval;
-  if (poState.followUpInterval === "Final") {
-    parts.push({ heading: "Next Review", text: "This is the final visit for the patient. They can be discharged from the clinic." });
-  } else if (selectedInterval && selectedInterval.trim()) {
-    let text = `The patient will be reviewed at ${selectedInterval}.`;
-    const nextReasons = (poState.nextReviewReason || []).filter((r) => r !== "Other");
-    if ((poState.nextReviewReason || []).includes("Other") && poState.nextReviewReasonOther && poState.nextReviewReasonOther.trim()) nextReasons.push(poState.nextReviewReasonOther.trim());
-    if (nextReasons.length) text += ` The reason for follow-up is ${lowerFirst(humanizeList(nextReasons))}.`;
-    parts.push({ heading: "Next Review", text });
-  }
-
+  if (follow) parts.push({ heading: "Follow-up", text: follow });
   return parts;
 }
 
@@ -20840,6 +21256,11 @@ function buildCombinedPostopNote(session, conditionIds) {
     // still written once with a line per procedure beneath it.
     const order = [];
     entries.forEach(({ parts }) => parts.forEach((p) => { if (!order.includes(p.heading)) order.push(p.heading); }));
+    // The clinical order, whichever procedure has a section first: a re-examination recorded for the second procedure still comes
+    // before the assessment. Headings not listed keep their place after imaging.
+    const POSTOP_ORDER = ["Procedure", "Operative Details", "Interval History", "Examination", "Range of Motion", "Imaging", "Outcome Measures", "Review Against Protocol", "Assessment", "Plan", "Follow-up"];
+    const rank = (h) => { const i = POSTOP_ORDER.indexOf(h); return i < 0 ? POSTOP_ORDER.indexOf("Imaging") + 0.5 : i; };
+    order.sort((x, y) => rank(x) - rank(y));
     const empty = entries.filter((e) => !e.parts.length).map((e) => e.condition.name);
 
     order.forEach((heading) => {
@@ -24094,6 +24515,24 @@ function ConditionList({ regionKey, session, onSelect, onBack, onRemove }) {
 // reusing that condition's own Standard Follow-up intervals. Kept as its
 // own component (rather than inlined in FollowupVisitScreen) since each
 // block manages its own open/closed state independently.
+// The diagnosis's own examination fields, collapsed and optional, stored apart from the initial examination (fuState.reexam).
+function FollowupReexam({ condition, reexam, onChange }) {
+  const fields = followupReexamFields(condition);
+  const value = reexam || {};
+  const [open, setOpen] = useState(Object.keys(value).length > 0);
+  if (!fields.length) return null;
+  const setField = (k, v) => onChange({ ...value, [k]: v });
+  return (
+    <div className="mb-3">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full flex items-center justify-between rounded-xl px-3 py-2.5 active:scale-[0.99] transition" style={{ minHeight: 44, background: T.surface, border: `1px solid ${T.border}` }}>
+        <span className="text-[14px] font-semibold text-left" style={{ color: T.ink }}>Focused re-examination <span className="font-normal" style={{ color: T.inkSoft }}>(optional)</span></span>
+        <ChevronRight size={16} color={T.inkSoft} style={{ transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
+      </button>
+      {open && <div className="pt-2">{fields.map((f, i) => <Field key={f.key || `c${i}`} field={f} state={value} setField={setField} region={condition.region} />)}</div>}
+    </div>
+  );
+}
+
 function FollowupConditionBlock({ index, condition, fuState: ownState, fullState, onChange, defaultOpen, inherited, primaryName }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   // Reads the effective value - this diagnosis's own answer where given,
@@ -24126,7 +24565,11 @@ function FollowupConditionBlock({ index, condition, fuState: ownState, fullState
     !!(fuState.planManualText && fuState.planManualText.trim()) ||
     !!fuState.followUpInterval ||
     (fuState.nextReviewReason || []).length > 0 ||
+    !!fuState.adherence || !!fuState.painChange || !!fuState.functionChange || !!fuState.vas ||
+    Object.keys(fuState.reexam || {}).length > 0 || (fuState.followUpEscalation || []).length > 0 ||
     patientScheduledForSurgery(fuState);
+  const warnings = followupConsistencyWarnings(fuState);
+  const showLimited = stalled || /^(Partial|Not started)$/.test(fuState.adherence || "");
 
   return (
     <CollapsibleSection index={index} title={condition.name} subtitle="Reason, treatment given, outcome, new plan" isOpen={isOpen} onToggle={() => setIsOpen((v) => !v)} hasContent={hasContent}>
@@ -24159,9 +24602,24 @@ function FollowupConditionBlock({ index, condition, fuState: ownState, fullState
       {(fuState.treatmentOffered || []).includes("Other") && (
         <TextField label="Specify treatment" value={fuState.treatmentOfferedOther} onChange={(v) => set("treatmentOfferedOther", v)} />
       )}
+      {(fuState.treatmentOffered || []).length > 0 && (<>
+        <SubLabel>Adherence <span className="font-normal normal-case">(optional)</span></SubLabel>
+        <div role="group" aria-label="Adherence"><ButtonSelect options={FOLLOWUP_ADHERENCE_OPTIONS} value={fuState.adherence || null} onChange={(v) => set("adherence", v)} columns={4} /></div>
+      </>)}
 
       <SubLabel>Outcome of treatment</SubLabel>
-      <ButtonSelect options={FOLLOWUP_OUTCOME_OPTIONS} value={fuState.outcome || null} onChange={(v) => set("outcome", v)} columns={4} />
+      <div role="group" aria-label="Outcome of treatment"><ButtonSelect options={FOLLOWUP_OUTCOME_OPTIONS} value={fuState.outcome || null} onChange={(v) => set("outcome", v)} columns={4} /></div>
+      <SubLabel>Pain <span className="font-normal normal-case">(optional)</span></SubLabel>
+      <div role="group" aria-label="Pain change"><ButtonSelect options={FOLLOWUP_CHANGE_OPTIONS} value={fuState.painChange || null} onChange={(v) => set("painChange", v)} columns={3} /></div>
+      <SubLabel>Function <span className="font-normal normal-case">(optional)</span></SubLabel>
+      <div role="group" aria-label="Function change"><ButtonSelect options={FOLLOWUP_CHANGE_OPTIONS} value={fuState.functionChange || null} onChange={(v) => set("functionChange", v)} columns={3} /></div>
+      <SubLabel>Pain today, VAS <span className="font-normal normal-case">(optional)</span></SubLabel>
+      <VASSlider value={fuState.vas || 0} onChange={(v) => set("vas", v)} />
+      {showLimited && (<>
+        <SubLabel>Reason for the limited response <span className="font-normal normal-case">(optional)</span></SubLabel>
+        <CheckboxGroup options={FOLLOWUP_LIMITED_RESPONSE_OPTIONS} selected={fuState.limitedResponse || []} onChange={(v) => set("limitedResponse", v)} />
+        {(fuState.limitedResponse || []).includes("Other") && <TextField label="Specify reason" value={fuState.limitedResponseOther} onChange={(v) => set("limitedResponseOther", v)} />}
+      </>)}
       <TextField label="Notes on current symptoms / findings" value={fuState.outcomeNotes} onChange={(v) => set("outcomeNotes", v)} placeholder="Optional" />
 
       {/* Progress has stalled, so this condition's own "when to stop and
@@ -24180,6 +24638,8 @@ function FollowupConditionBlock({ index, condition, fuState: ownState, fullState
           ))}
         </div>
       )}
+
+      <FollowupReexam condition={condition} reexam={ownState.reexam} onChange={(r) => set("reexam", r)} />
 
       <FollowupRom condition={condition} fuState={ownState} setMany={(patch) => onChange({ ...ownState, ...patch })} />
 
@@ -24233,7 +24693,7 @@ function FollowupConditionBlock({ index, condition, fuState: ownState, fullState
         <div className="flex items-start gap-2 rounded-xl px-3 py-2.5 mb-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
           <CheckCircle2 size={16} color={T.tealDark} style={{ marginTop: 2, flexShrink: 0 }} />
           <div className="text-[13px] leading-relaxed" style={{ color: T.tealDark }}>
-            Discharge selected, so no review is needed. The note will say: <span className="font-semibold">The patient was discharged from the clinic.</span>
+            Discharge selected, so no review is needed. The note will say: <span className="font-semibold">Discharged from follow-up.</span>
           </div>
         </div>
       ) : (<>
@@ -24251,6 +24711,21 @@ function FollowupConditionBlock({ index, condition, fuState: ownState, fullState
         </>
       )}
       </>)}
+      {!patientScheduledForSurgery(fuState) && (<>
+        <div className="mb-1 mt-3 text-[12px] font-semibold uppercase tracking-wide" style={{ color: T.inkSoft }}>{discharged || fuState.followUpInterval === "Final" ? "Re-refer if (optional)" : "Earlier review or escalation if (optional)"}</div>
+        <CheckboxGroup options={FOLLOWUP_ESCALATION_OPTIONS} selected={fuState.followUpEscalation || []} onChange={(v) => set("followUpEscalation", v)} />
+        {(fuState.followUpEscalation || []).includes("Other") && <TextField label="Specify when to review sooner" value={fuState.followUpEscalationOther} onChange={(v) => set("followUpEscalationOther", v)} />}
+      </>)}
+
+      {warnings.length > 0 && (
+        <div role="status" aria-live="polite" className="rounded-xl px-3 py-2.5 mt-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+          <div className="flex items-center gap-2 mb-1">
+            <AlertTriangle size={16} color={T.amber} />
+            <span className="text-[13px] font-semibold" style={{ color: T.amberText }}>Check before finishing</span>
+          </div>
+          {warnings.map((w, i) => <div key={i} className="text-[13px] leading-relaxed" style={{ color: T.amberText }}>{"\u2022"} {w}</div>)}
+        </div>
+      )}
     </CollapsibleSection>
   );
 }
@@ -24390,6 +24865,48 @@ function FollowupVisitScreen({ conditionIds, session, onFieldChange, onBack, onG
 // when, why we're seeing them today, how they're doing, whether anything's
 // gone wrong, then what happens next. "Time since surgery" is derived from
 // the date rather than asked separately (see timeSinceSurgery above).
+// The complication guides for what is ticked: decision support, on screen only.
+function PostopComplicationGuides({ po, condition }) {
+  const guides = postopComplicationGuides(po, condition);
+  if (!guides.length) return null;
+  return (
+    <div className="mt-2">
+      {guides.map((g) => (
+        <details key={g.id} className="rounded-xl px-3 py-2 mb-2" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+          <summary className="text-[13px] font-semibold cursor-pointer" style={{ color: T.ink, minHeight: 32 }}>Suggested approach: {g.title.toLowerCase()}</summary>
+          <ol className="list-decimal pl-5 mt-1">{g.steps.map((t, i) => <li key={i} className="text-[13px] leading-relaxed mb-1" style={{ color: T.ink }}>{t}</li>)}</ol>
+          <div className="text-[12px] mt-1" style={{ color: T.inkSoft }}>Decision support for your judgement, not a decision; not written into the note. Draft for surgeon review.</div>
+        </details>
+      ))}
+    </div>
+  );
+}
+
+// What surgery set, ahead of the standard protocol: the surgeon's restrictions (from the operative summary) and the other procedures'.
+function PostopSurgeryRestrictions({ po, set }) {
+  const own = po.opRestrictions || [];
+  const procs = opModulesForPostop(po);
+  const pr = procs.length > 1 ? opProtocolForReview(procs, null, po.reviewPeriod || null) : null;
+  const othersList = (pr && pr.fromOthers) || [];
+  if (!own.length && !othersList.length) return null;
+  return (
+    <div className="rounded-xl px-3 py-2.5 mb-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+      {own.length > 0 && (<>
+        <div className="text-[13px] font-semibold mb-1" style={{ color: T.amberText }}>Restrictions set at surgery{po.opRestrictionsEdited ? " (modified by the surgeon)" : ""}: these take priority over the standard protocol</div>
+        {own.map((t, i) => <div key={i} className="text-[13px] leading-relaxed" style={{ color: T.ink }}>{"\u2022"} {t}</div>)}
+        <label className="flex items-center gap-2 mt-1 text-[13px] font-medium" style={{ color: T.ink, minHeight: 44 }}>
+          <input type="checkbox" checked={!!po.surgeryRestrictionsContinue} onChange={(e) => set("surgeryRestrictionsContinue", e.target.checked)} style={{ width: 20, height: 20 }} />
+          These restrictions continue (written into the plan)
+        </label>
+      </>)}
+      {othersList.length > 0 && (<>
+        <div className="text-[13px] font-semibold mt-1 mb-1" style={{ color: T.amberText }}>The other procedures have their own restrictions, not in the primary protocol:</div>
+        {othersList.map((x, i) => <div key={i} className="text-[13px] leading-relaxed" style={{ color: T.ink }}>{"\u2022"} <span className="font-semibold">{x.category}</span> ({x.procedure}): {x.text}</div>)}
+      </>)}
+    </div>
+  );
+}
+
 function PostopConditionBlock({ index, condition, poState: ownState, onChange, defaultOpen, inherited, primaryName }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   // Everything below reads the effective value - this procedure's own answer
@@ -24455,7 +24972,12 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
         </div>
       )}
 
-      <PostopSummaryImport onApply={(patch) => { const merged = { ...ownState, ...patch }; onChange({ ...merged, ...opPostopTimelinePatch(merged, intervalOptions) }); }} />
+      <PostopSummaryImport current={ownState} onApply={(patch) => {
+        // What the clinician has already entered is kept: the timeline fills only what is still empty.
+        const merged = { ...ownState, ...patch };
+        const timeline = opPostopTimelinePatch(merged, intervalOptions);
+        onChange({ ...merged, ...Object.fromEntries(Object.entries(timeline).filter(([k]) => !opHasValue(ownState[k]))) });
+      }} />
       <TextField
         label="Procedure performed"
         value={poState.procedureName}
@@ -24500,6 +25022,9 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
         </div>
       )}
 
+      <SubLabel>Rehabilitation adherence <span className="font-normal normal-case">(optional)</span></SubLabel>
+      <div role="group" aria-label="Rehabilitation adherence"><ButtonSelect options={FOLLOWUP_ADHERENCE_OPTIONS} value={poState.rehabAdherence || null} onChange={(v) => set("rehabAdherence", v)} columns={4} /></div>
+      <FollowupReexam condition={condition} reexam={ownState.reexam} onChange={(r) => set("reexam", r)} />
       <PostopRom condition={condition} poState={poState} setMany={(patch) => onChange({ ...ownState, ...patch })} />
 
       {daysSince != null && daysSince >= 42 && (
@@ -24524,8 +25049,10 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
       {(poState.complications || []).includes("Other") && (
         <TextField label="Specify complication" value={poState.complicationsOther} onChange={(v) => set("complicationsOther", v)} />
       )}
+      <PostopComplicationGuides po={poState} condition={condition} />
 
       <div id="postop-plan" style={{ scrollMarginTop: 120 }} />
+      <PostopSurgeryRestrictions po={poState} set={set} />
       <SubLabel>Follow-up plan</SubLabel>
       <div className="text-[13px] mb-3" style={{ color: T.inkSoft }}>A post-operative plan is not the same decision as a first-presentation Management Pathway — select what applies now that surgery has already been done.</div>
       <CheckboxGroup options={POSTOP_PLAN_OPTIONS} selected={poState.planOptions || []} onChange={(v) => set("planOptions", v)} />
@@ -24551,6 +25078,15 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
           )}
         </>
       )}
+      <div className="mb-1 mt-3 text-[12px] font-semibold uppercase tracking-wide" style={{ color: T.inkSoft }}>{(poState.planOptions || []).includes("Discharge from follow-up") || poState.followUpInterval === "Final" ? "Re-refer if (optional)" : "Earlier review or escalation if (optional)"}</div>
+      <CheckboxGroup options={FOLLOWUP_ESCALATION_OPTIONS} selected={poState.followUpEscalation || []} onChange={(v) => set("followUpEscalation", v)} />
+      {(poState.followUpEscalation || []).includes("Other") && <TextField label="Specify when to review sooner" value={poState.followUpEscalationOther} onChange={(v) => set("followUpEscalationOther", v)} />}
+      {(() => { const w = postopConsistencyWarnings(poState, condition); return w.length > 0 && (
+        <div role="status" aria-live="polite" className="rounded-xl px-3 py-2.5 mt-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+          <div className="flex items-center gap-2 mb-1"><AlertTriangle size={16} color={T.amber} /><span className="text-[13px] font-semibold" style={{ color: T.amberText }}>Check before finishing</span></div>
+          {w.map((x, i) => <div key={i} className="text-[13px] leading-relaxed" style={{ color: T.amberText }}>{"\u2022"} {x}</div>)}
+        </div>
+      ); })()}
     </CollapsibleSection>
   );
 }
@@ -31365,6 +31901,141 @@ const OP_PROCS_BASIC = OP_BASIC.procedures;
 
 const OPERATIVE_PROCEDURES = [...OP_FULL_PROCEDURES, ...OP_PROCS_BASIC];
 
+// ---- Surgeon audit of the operative standards (30 October 2026) ----------------------------------------------------------------
+// Applied exactly as returned in "UpperTrack-operative-standards-audited.docx", compared line by line with the review copy that was
+// sent (19 October). One table, applied once to the procedure data below, so every audited change is visible and testable here:
+//  * OP_AUDIT_CLOSURE_DUPLICATES: a closure line the audit removed because the procedure's own steps already close the wound.
+//  * OP_AUDIT_REWORDS: wording the audit corrected (steps, closure and plan lines), matched exactly; a condition on a step is kept.
+//  * OP_AUDIT_REVIEW_REQUIRED: the audit's procedure-specific warnings, shown to the surgeon on screen, never written into the note.
+// Nothing else in the templates was changed: the audit is the change reference, not a licence to rewrite techniques or protocols.
+const OP_AUDIT_CLOSURE_DUPLICATES = {
+  "latissimus-dorsi-transfer": ["Layered closure"],
+  "subacromial-balloon-spacer": ["Portals closed with nylon sutures"],
+  "slap-debridement": ["Portals closed with nylon sutures"],
+  "latarjet-arthroscopic": ["Portals closed with nylon sutures"],
+  "glenoid-bone-grafting": ["Layered closure"],
+  "shoulder-prosthetic-joint-infection": ["Layered closure"],
+  "shoulder-periprosthetic-fracture-fixation": ["Layered closure"],
+  "sc-joint-open-stabilisation": ["Layered closure"],
+  "medial-clavicle-excision": ["Layered closure"],
+  "pectoralis-major-transfer-scapula": ["Layered closure"],
+  "eden-lange-transfer": ["Layered closure"],
+  "scapulothoracic-arthrodesis": ["Layered closure"],
+  "scapular-tethering": ["Layered closure"],
+  "scapular-nerve-repair": ["Layered closure"],
+  "shoulder-tendon-transfer-nerve-palsy": ["Layered closure"],
+  "elbow-osteochondral-transplantation": ["Layered closure"],
+  "triceps-reconstruction-chronic": ["Layered closure"],
+  "elbow-collateral-ligament-repair": ["Layered closure"],
+  "distal-biceps-reconstruction": ["Layered closure"],
+  "distal-humerus-headless-screw": ["Layered closure"],
+  "distal-humerus-hemiarthroplasty": ["Layered closure"],
+  "olecranon-fragment-excision-advancement": ["Layered closure"],
+  "coronoid-fixation": ["Layered closure"],
+  "revision-elbow-arthroplasty": ["Layered closure"],
+  "elbow-prosthetic-joint-infection": ["Layered closure"],
+  "elbow-periprosthetic-fracture-fixation": ["Layered closure"],
+  "distal-radius-fragment-specific-fixation": ["Layered closure"],
+  "perilunate-fixation": ["Layered closure"],
+  "tfcc-open-repair": ["Layered closure"],
+  "lunotriquetral-ligament-repair": ["Layered closure"],
+  "lunotriquetral-arthrodesis": ["Layered closure"],
+  "druj-ligament-reconstruction": ["Layered closure"],
+  "druj-arthroplasty": ["Layered closure"],
+  "intersection-syndrome-release": ["Layered closure"],
+  "ecu-stabilisation": ["Layered closure"],
+  "carpal-boss-arthrodesis": ["Layered closure"],
+  "dorsal-tenosynovectomy": ["Layered closure"],
+  "wrist-synovectomy": ["Layered closure"],
+  "thumb-cmc-prosthetic-arthroplasty": ["Layered closure"],
+  "thumb-cmc-arthrodesis": ["Layered closure"],
+  "lunate-core-decompression": ["Layered closure"],
+  "lunate-revascularisation": ["Layered closure"],
+  "stt-arthrodesis": ["Layered closure"],
+  "distal-scaphoid-excision": ["Layered closure"],
+  "total-wrist-arthroplasty": ["Layered closure"],
+  "flexor-tendon-staged-reconstruction": ["Layered closure"],
+  "sagittal-band-reconstruction": ["Layered closure"],
+  "inflammatory-extensor-tendon-reconstruction": ["Layered closure"],
+  "hook-of-hamate-orif": ["Layered closure"],
+  "hand-corrective-osteotomy": ["Layered closure"],
+  "tos-vascular-repair": ["Layered closure"],
+  "double-crush-decompression": ["Layered closure"],
+};
+const OP_AUDIT_REWORDS = [
+  { id: "rcr-arthroscopic", from: ["No active shoulder motion or lifting over 0.5–1 kg until cleared by the surgeon"], to: ["No active shoulder elevation or lifting more than approximately 0.5–1 kg until cleared by the surgeon; tailor restrictions to the repair."] },
+  { id: "rotator-cuff-partial-repair-debridement", from: ["Biceps tenotomy or tenodesis performed if the biceps was a pain generator"], to: ["If a biceps procedure was actually performed, document the exact tenotomy or tenodesis technique separately."] },
+  { id: "superior-capsule-reconstruction", from: ["Biceps managed as needed"], to: ["Document biceps treatment only if performed, specifying tenotomy, tenodesis or preservation."] },
+  { id: "sad-arthroscopic", from: ["Coracoacromial ligament managed according to rotator cuff integrity"], to: ["Coracoacromial ligament preserved or released only as documented, with cuff integrity considered."] },
+  { id: "sad-arthroscopic", from: ["Acromial undersurface contoured with a bone-cutting burr from anterior to posterior, converting the acromion to a type I contour"], to: ["Acromioplasty performed to remove the documented offending spur or prominence, if indicated; record the extent of bone resection."] },
+  { id: "latarjet-open", from: ["Follow-up in 10–14 days; repeat imaging (CT) at 3 months to confirm graft union"], to: ["Wound review in 10–14 days; assess graft position and healing using imaging selected by the treating surgeon. CT is reserved for an appropriate clinical indication rather than automatic use."] },
+  { id: "shoulder-prosthetic-joint-infection", from: ["At least five deep tissue samples taken for culture and histology"], to: ["Multiple separate deep tissue samples obtained for microbiology and/or histology as actually performed; record the number and sites sampled."] },
+  { id: "shoulder-prosthetic-joint-infection", from: ["Wound closed over drains", "Layered closure"], to: ["Wound closed in layers; document any drain only when inserted."] },
+  { id: "shoulder-prosthetic-joint-infection", from: ["Sling immobilisation for 4–6 weeks"], to: ["Immobilisation and permitted motion to be confirmed for the selected stage and reconstruction performed."] },
+  { id: "shoulder-prosthetic-joint-infection", from: ["Culture-directed intravenous then oral antibiotics under the infection team"], to: ["Antimicrobial regimen and route to follow microbiology results and infectious-disease / infection-team advice; document actual orders."] },
+  { id: "elbow-prosthetic-joint-infection", from: ["At least five deep tissue samples taken for culture and histology"], to: ["Multiple separate deep tissue samples obtained for microbiology and/or histology as actually performed; record the number and sites sampled."] },
+  { id: "elbow-prosthetic-joint-infection", from: ["Wound closed over drains", "Layered closure"], to: ["Wound closed in layers; document any drain only when inserted."] },
+  { id: "elbow-prosthetic-joint-infection", from: ["Splint for comfort for 2 weeks then protected motion"], to: ["Immobilisation and permitted motion to be confirmed for the selected infection stage, implant stability and soft-tissue reconstruction."] },
+  { id: "elbow-prosthetic-joint-infection", from: ["Culture-directed intravenous then oral antibiotics under the infection team"], to: ["Antimicrobial regimen and route to follow microbiology results and infectious-disease / infection-team advice; document actual orders."] },
+  { id: "flexor-tendon-staged-reconstruction", from: ["Passive and active motion checked"], to: ["Passive tendon excursion and graft tension assessed; active motion testing documented only if feasible and performed."] },
+  { id: "flexor-tendon-staged-reconstruction", from: ["Splint for 3 weeks then guided hand therapy"], to: ["Stage-specific splinting and specialist hand-therapy protocol required; distinguish silicone-rod stage from tendon-graft stage."] },
+  { id: "flexor-tendon-staged-reconstruction", from: ["No resisted flexion for 12 weeks after the second stage"], to: ["After tendon grafting, use the surgeon- and therapist-approved protected mobilisation and loading protocol; avoid unsupervised resisted flexion until cleared."] },
+];
+const OP_AUDIT_REVIEW_REQUIRED = {
+  "rcr-arthroscopic": "Standard steps assume tied-anchor repair; specify single-/double-row, knotless/suture-bridge or other construct actually used. Do not claim dynamic testing if not performed.",
+  "rotator-cuff-partial-repair-debridement": "Partial repair and debridement-only require different protection and rehabilitation schedules. Ensure the chosen operation controls both the plan and the rehab table.",
+  "subacromial-balloon-spacer": "Confirm current indication, availability, device instructions and consent; do not imply this is a routinely recommended option for every irreparable cuff tear.",
+  "latarjet-open": "Confirm whether the capsule was repaired, actual fixation type and graft position; routine CT at 3 months should not be automatic.",
+  "shoulder-prosthetic-joint-infection": "Select DAIR, explant/spacer, or reimplantation. Confirm sampling, implant exchange, antimicrobial plan, immobilisation and rehabilitation for that stage.",
+  "elbow-prosthetic-joint-infection": "Stage-specific antimicrobial, splinting, elbow motion and weight-bearing instructions must be confirmed before copying the plan.",
+  "ctr-open": "Avoid requiring routine exposure of the recurrent motor branch or routine inspection of the entire median nerve; document only exposure actually performed.",
+  "flexor-tendon-staged-reconstruction": "First-stage rod insertion and second-stage graft reconstruction need separate splinting, mobilisation and loading protocols. Do not use the same rehabilitation schedule for both.",
+};
+// Replaces lines wherever they sit in a procedure (a step { t, if }, a plan line { kind, text }, or a plain closure or rehabilitation
+// string). Several consecutive lines replaced by one keep the first one's place and type. Returns how many lines matched.
+function opAuditReplace(node, from, to) {
+  // Several old lines become the new line(s) once, where the first of them was, even when they sit in different lists (a last
+  // step and a closure line): the others are removed, not replaced again.
+  let hits = 0, inserted = false;
+  const textOf = (x) => (typeof x === "string" ? x : x && typeof x === "object" ? (x.t ?? x.text) : undefined);
+  const withText = (x, s) => (typeof x === "string" ? s : { ...x, ...(x.t !== undefined ? { t: s } : { text: s }) });
+  const walk = (v) => {
+    if (Array.isArray(v)) {
+      const at = v.findIndex((x) => from.includes(textOf(x)));
+      if (at >= 0) {
+        const template = v[at];
+        const kept = v.filter((x) => !from.includes(textOf(x)));
+        hits += v.length - kept.length;
+        if (!inserted) { kept.splice(at - v.slice(0, at).filter((x) => from.includes(textOf(x))).length, 0, ...to.map((s) => withText(template, s))); inserted = true; }
+        v.splice(0, v.length, ...kept);
+      }
+      v.forEach(walk);
+    } else if (v && typeof v === "object") Object.values(v).forEach(walk);
+  };
+  walk(node);
+  return hits;
+}
+const OP_AUDIT_UNMATCHED = [];
+(function applyOperativeAudit() {
+  // Templates share arrays (one closure list used by several operations), so an audited procedure gets its own copy before any
+  // edit; otherwise removing a line from one would silently change every operation sharing it. Functions (step conditions) are
+  // kept as they are.
+  const own = (v) => (Array.isArray(v) ? v.map(own) : v && typeof v === "object" && Object.getPrototypeOf(v) === Object.prototype ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, own(x)])) : v);
+  const audited = new Set([...Object.keys(OP_AUDIT_CLOSURE_DUPLICATES), ...OP_AUDIT_REWORDS.map((r) => r.id), ...Object.keys(OP_AUDIT_REVIEW_REQUIRED)]);
+  OPERATIVE_PROCEDURES.forEach((p, i) => { if (audited.has(p.id)) OPERATIVE_PROCEDURES[i] = own(p); });
+  const byId = new Map(OPERATIVE_PROCEDURES.map((p) => [p.id, p]));
+  // Rewordings first (two of them fold a duplicate closure line into a new single line), then the remaining duplicates, wherever
+  // they sit (a closure list or the last steps).
+  for (const r of OP_AUDIT_REWORDS) { const p = byId.get(r.id); if (!p || !opAuditReplace(p, r.from, r.to)) OP_AUDIT_UNMATCHED.push(`reword: ${r.id}: ${r.from[0]}`); }
+  for (const [id, lines] of Object.entries(OP_AUDIT_CLOSURE_DUPLICATES)) {
+    const p = byId.get(id); if (!p) { OP_AUDIT_UNMATCHED.push(`closure: ${id}`); continue; }
+    const handled = OP_AUDIT_REWORDS.filter((r) => r.id === id).flatMap((r) => r.from);
+    const left = lines.filter((l) => !handled.includes(l));
+    if (left.length && opAuditReplace(p, left, []) < left.length) OP_AUDIT_UNMATCHED.push(`closure: ${id}`);
+  }
+  for (const [id, text] of Object.entries(OP_AUDIT_REVIEW_REQUIRED)) { const p = byId.get(id); if (p) p.reviewRequired = text; else OP_AUDIT_UNMATCHED.push(`review: ${id}`); }
+})();
+
 /* ============================================================================
    OPERATIVE NOTES - logic (pure functions: state in, state or text out)
 
@@ -31522,15 +32193,32 @@ function opDigitPhrase(digits) {
   if (w.length === 1) return w[0] === "thumb" ? "thumb" : `${w[0]} finger`;
   return `${opJoin(w)} fingers`;
 }
+// Broad operations whose title should say which technique or stage was done, by the procedure's own choice field.
+const OP_TITLE_FIELDS = {
+  "revision-shoulder-arthroplasty": "procedure", "revision-elbow-arthroplasty": "procedure",
+  "shoulder-prosthetic-joint-infection": "procedure", "elbow-prosthetic-joint-infection": "procedure",
+  "flexor-tendon-staged-reconstruction": "stage",
+};
+// The procedure's name with the technique chosen: "Revision shoulder arthroplasty (conversion to reverse arthroplasty)"; a name
+// that is an either-or ("...: debridement or two-stage revision") is replaced by what was done. Nothing chosen: the name as it is.
+function opTitledName(proc, state) {
+  const key = OP_TITLE_FIELDS[proc.id];
+  const v = key ? opLocalView(state || {}, proc.id)[key] : null;
+  if (!opHasValue(v)) return proc.name;
+  const chosen = opLowerFirstName(String(v).trim());
+  return / or /.test(proc.name) && proc.name.includes(":") ? `${proc.name.split(":")[0]} \u2014 ${chosen}` : `${proc.name} (${chosen})`;
+}
 function opProcedureLabel(proc, state) {
   const side = opSideWord(state).toLowerCase();
   const digit = opDigitPhrase(opDigitsOf(proc, state));
-  return [side ? `${proc.name}, ${side} ${proc.sided}` : proc.name, digit].filter(Boolean).join(", ");
+  const name = opTitledName(proc, state);
+  return [side ? `${name}, ${side} ${proc.sided}` : name, digit].filter(Boolean).join(", ");
 }
 // A procedure's name as it appears in the title and the summary line: with its digit(s), when it has any.
 function opNameWithDigits(proc, state) {
   const digit = opDigitPhrase(opDigitsOf(proc, state));
-  return digit ? `${opLowerFirstName(proc.name)} (${digit})` : opLowerFirstName(proc.name);
+  const name = opLowerFirstName(opTitledName(proc, state));
+  return digit ? `${name} (${digit})` : name;
 }
 // Lower-case the first letter of a name unless it starts an acronym ("ORIF", "TFCC").
 function opLowerFirstName(name) { return String(name).replace(/^([A-Z])([a-z])/, (m, a, b) => a.toLowerCase() + b); }
@@ -31540,34 +32228,58 @@ function opNoteHeadline(s) {
   return opCap([opSideWord(s), opJoin(procs.map((p) => opNameWithDigits(p, s)))].filter(Boolean).join(" "));
 }
 
+// The surgeon's step list split by origin: preparation (the primary's prep lines and anything added among them), technique, and
+// closure (from the primary's first closure line on). Lines the surgeon added stay in the segment where they were placed.
+function opStepSegments(lines) {
+  const kind = (l) => (l.ref || "").split(":")[0];
+  const firstBody = lines.findIndex((l) => kind(l) === "steps");
+  const firstClose = lines.findIndex((l) => kind(l) === "closure");
+  const prepEnd = firstBody >= 0 ? firstBody : firstClose >= 0 ? firstClose : lines.every((l) => kind(l) === "prep" || !l.ref) && lines.some((l) => kind(l) === "prep") ? lines.length : 0;
+  const closeStart = firstClose >= 0 ? firstClose : lines.length;
+  return { prep: lines.slice(0, prepEnd), technique: lines.slice(prepEnd, closeStart), closure: lines.slice(closeStart) };
+}
+
 function buildOperativeNote(s) {
   const procs = opOrderProcs(opSelected(s));
   if (!procs.length) return "";
   const out = [];
   const section = (lines) => { if (lines.length) { if (out.length) out.push(""); out.push(...lines); } };
   const side = opSideWord(s);
+  const many = procs.length > 1;
+  const uniq = (arr) => arr.filter((x, i) => arr.findIndex((y) => String(y).trim().toLowerCase() === String(x).trim().toLowerCase()) === i);
   out.push(`OPERATIVE NOTE \u2014 ${opNoteHeadline(s)}`);
 
+  // 1. Operation details and diagnoses (with the indications, which belong to the decision to operate, not to the technique).
   const op = [];
   if (s.op__date) op.push(`Date of operation: ${formatDateDMY(s.op__date)}`);
   if (side) op.push(`Side: ${side}`);
-  op.push("Procedure" + (procs.length > 1 ? "s" : "") + " performed:");
-  procs.forEach((p) => op.push(`\u2022 ${opProcedureLabel(p, s)}`));
+  op.push("Procedure" + (many ? "s" : "") + " performed:");
+  procs.forEach((p, i) => op.push(`\u2022 ${opProcedureLabel(p, s)}${many && i === 0 ? " (primary procedure)" : ""}`));
   if (opHasValue(s.op__planned)) op.push(`Planned procedure (different from the one performed): ${String(s.op__planned).trim()}`);
   if (opHasValue(s.op__preop)) op.push(`Pre-operative diagnosis: ${String(s.op__preop).trim()}`);
   if (s.op__postop === "Same as pre-operative diagnosis") op.push("Post-operative diagnosis: same as the pre-operative diagnosis");
-  else if (s.op__postop === "Revised") op.push(`Post-operative diagnosis: ${opHasValue(s.op__postopText) ? String(s.op__postopText).trim() : "revised"}`);
+  else if (s.op__postop === "Revised" && opHasValue(s.op__postopText)) op.push(`Post-operative diagnosis: ${String(s.op__postopText).trim()}`);
+  // A "revised" diagnosis with no description is not written: the check before copying flags it instead.
+  const indications = uniq(procs.flatMap((p) => s[opKey(p.id, "indications")] || []));
+  if (indications.length) op.push("Indications:", ...indications.map((x) => `\u2022 ${x}`));
+  const considered = uniq(procs.flatMap((p) => s[opKey(p.id, "considerations")] || []));
+  if (considered.length) op.push("Factors considered:", ...considered.map((x) => `\u2022 ${x}`));
   if (opHasValue(s.op__surgeon)) op.push(`Surgeon: ${String(s.op__surgeon).trim()}`);
   if (opHasValue(s.op__assistant)) {
-    const many = /[,;&\n]|\band\b/i.test(String(s.op__assistant));
-    op.push(`${many ? "Assistants" : "Assistant"}: ${String(s.op__assistant).trim()}`);
+    const several = /[,;&\n]|\band\b/i.test(String(s.op__assistant));
+    op.push(`${several ? "Assistants" : "Assistant"}: ${String(s.op__assistant).trim()}`);
   }
-  section(["OPERATION", ...op.slice(0)].filter((l, i) => i > 0 || op.length));
+  section(["OPERATION", ...op]);
 
+  // The surgeon's steps, by origin. Only the primary procedure carries preparation and closure lines.
+  const stepSets = procs.map((p, idx) => ({ p, seg: opStepSegments(opEffectiveSteps(s, p, procs, idx === 0).filter((l) => l.on && opHasValue(l.text))) }));
+  const txt = (l) => String(l.text).trim();
+
+  // 2. Anaesthesia, positioning, preparation and safety.
   const safe = [];
-  const withDetail = (label, val, detail, joiner) => {
+  const withDetail = (label, val, detail, joiner, list = safe) => {
     if (!opHasValue(val)) return;
-    safe.push(opHasValue(detail) ? `${label}: ${String(val).toLowerCase()}${joiner}${String(detail).trim()}` : `${label}: ${String(val).toLowerCase()}`);
+    list.push(opHasValue(detail) ? `${label}: ${String(val).toLowerCase()}${joiner}${String(detail).trim()}` : `${label}: ${String(val).toLowerCase()}`);
   };
   if (opHasValue(s.op__anaesthesia)) {
     const detail = s.op__anaesthesia === OP_WALANT ? s.op__walantDetail : /block/i.test(s.op__anaesthesia) ? s.op__blockDetail : "";
@@ -31584,54 +32296,133 @@ function buildOperativeNote(s) {
   } else if (s.op__tourniquet === "Not used") safe.push("Tourniquet: not used");
   withDetail("Counts", s.op__counts, null, "");
   if (opHasValue(s.op__ebl)) safe.push(`Estimated blood loss: ${String(s.op__ebl).trim()}`);
-  withDetail("Specimens", s.op__specimens, s.op__specimensDetail, " \u2014 ");
-  withDetail("Drains", s.op__drains, s.op__drainsDetail, " \u2014 ");
-  withDetail("Complications", s.op__complications, s.op__complicationsDetail, " \u2014 ");
-  if (safe.length) section(["ANAESTHESIA AND SAFETY", ...safe]);
+  const positions = uniq(procs.map((p) => s[opKey(p.id, "position")]).filter(opHasValue));
+  if (positions.length) safe.push(`Position: ${positions.join("; ")}`);
+  const prepLines = stepSets.flatMap((x) => x.seg.prep).map(txt);
+  if (prepLines.length) safe.push("Preparation:", ...prepLines.map((t) => `\u2022 ${t}`));
+  if (safe.length) section(["ANAESTHESIA, POSITIONING AND PREPARATION", ...safe]);
 
-  procs.forEach((p, idx) => {
-    const L = [];
-    const pick = (key, heading) => {
-      const arr = s[opKey(p.id, key)];
-      if (Array.isArray(arr) && arr.length) { L.push(heading); arr.forEach((x) => L.push(`\u2022 ${x}`)); }
-    };
-    pick("indications", "Indications:");
-    pick("considerations", "Factors considered:");
-    if (opHasValue(s[opKey(p.id, "position")])) L.push(`Position: ${s[opKey(p.id, "position")]}`);
-    const findings = opFieldLines(p, p.findings, s);
-    if (findings.length) { L.push("Findings:"); L.push(...findings); }
-    const technique = opFieldLines(p, p.technique, s);
-    if (technique.length) { L.push("Technique and implants:"); L.push(...technique); }
-    const closure = opFieldLines(p, p.closure, s);
-    if (closure.length) { L.push("Closure:"); L.push(...closure); }
-    pick("equipment", "Equipment used:");
-    // the steps are the surgeon's own lines: started from the standard steps if wanted, then edited, reworded or added to
-    const stepLines = opEffectiveSteps(s, p, procs, idx === 0).filter((l) => l.on && opHasValue(l.text));
-    if (stepLines.length) {
-      L.push("Operative steps:");
-      stepLines.forEach((l, i) => L.push(`${i + 1}. ${String(l.text).trim()}`));
-    }
-    if (L.length) section([p.name.toUpperCase(), ...L]);
+  // 3. Findings, per procedure when there are several.
+  const findings = [];
+  procs.forEach((p) => { const f = opFieldLines(p, p.findings, s); if (f.length) findings.push(...(many ? [`${p.name}:`] : []), ...f); });
+  if (findings.length) section(["FINDINGS", ...findings]);
+
+  // 4. Operative technique: each procedure's technique details and steps, in procedure order.
+  const technique = [];
+  stepSets.forEach(({ p, seg }) => {
+    const fields = opFieldLines(p, p.technique, s);
+    const steps = seg.technique.map(txt);
+    if (!fields.length && !steps.length) return;
+    if (many) technique.push(`${p.name}:`);
+    technique.push(...fields);
+    steps.forEach((t, i) => technique.push(`${i + 1}. ${t}`));
   });
+  if (technique.length) section(["OPERATIVE TECHNIQUE", ...technique]);
 
+  // 5. Implants (with lot or serial numbers for traceability), specimens and complications.
+  const ics = [];
   const implants = (s.op__implants || []).filter((r) => r && (opHasValue(r.item) || opHasValue(r.size) || opHasValue(r.lot)));
-  if (implants.length) {
-    section(["IMPLANTS", ...implants.map((r) => {
-      const head = [opHasValue(r.item) ? String(r.item).trim() : "Implant", opHasValue(r.size) ? String(r.size).trim() : ""].filter(Boolean).join(", ");
-      return `\u2022 ${head}${opHasValue(r.lot) ? ` (lot/serial ${String(r.lot).trim()})` : ""}`;
-    })]);
-  }
+  implants.forEach((r) => {
+    const head = [opHasValue(r.item) ? String(r.item).trim() : "Implant", opHasValue(r.size) ? String(r.size).trim() : ""].filter(Boolean).join(", ");
+    ics.push(`\u2022 ${head}${opHasValue(r.lot) ? ` (lot/serial ${String(r.lot).trim()})` : ""}`);
+  });
+  if (ics.length) ics.unshift("Implants:");
+  withDetail("Specimens", s.op__specimens, s.op__specimensDetail, " \u2014 ", ics);
+  withDetail("Complications", s.op__complications, s.op__complicationsDetail, " \u2014 ", ics);
+  if (ics.length) section(["IMPLANTS, SPECIMENS AND COMPLICATIONS", ...ics]);
 
+  // 6. Closure and dressing, once, after all the technique: closure details, the primary's closure lines, and any drain.
+  const closure = [];
+  procs.forEach((p) => closure.push(...opFieldLines(p, p.closure, s)));
+  closure.push(...uniq(stepSets.flatMap((x) => x.seg.closure).map(txt)).map((t) => `\u2022 ${t}`));
+  withDetail("Drains", s.op__drains, s.op__drainsDetail, " \u2014 ", closure);
+  if (closure.length) section(["CLOSURE AND DRESSING", ...closure]);
+
+  // 7. The post-operative plan, as the surgeon has it.
   const plan = (s.op__planLines || []).filter((l) => l && l.on && opHasValue(l.text));
   if (plan.length) section(["POST-OPERATIVE PLAN", ...plan.map((l) => `\u2022 ${String(l.text).trim()}`)]);
+
+  // Equipment is a theatre record, not part of the operative report: kept, but apart, after it.
+  const equipment = uniq(procs.flatMap((p) => s[opKey(p.id, "equipment")] || []));
+  if (equipment.length) section(["EQUIPMENT (theatre record, not part of the operative report)", ...equipment.map((x) => `\u2022 ${x}`)]);
 
   out.push("", "---", OP_FOOTER);
   return out.join("\n");
 }
 
-// What the follow-up visit needs to see: the operation, the diagnosis, what was found and done (every ticked or
-// chosen finding and technique, never free text), and the implants, then a compact token the post-operative screen
-// reads back. Nothing here names the patient.
+// ---- Combined operations: what the merged plan leaves out ------------------------------------------------------------------------
+// The pre-filled plan is the primary procedure's, plus the other procedures' extra lines (opMergedPlan, unchanged). An additional
+// procedure's own immobilisation and restrictions, and its rehabilitation protocol, are therefore not in it. They are listed here, by
+// category, for the surgeon to add or to confirm as reviewed; nothing is merged automatically and the primary is not assumed to
+// govern every restriction.
+const OP_PLAN_CATEGORIES = [
+  ["Immobilisation", /\b(sling|splint|cast|brace|immobilis|orthosis|collar|abduction pillow|thermoplastic)/i],
+  ["Weight-bearing and loading", /\b(weight[- ]bear|load|lift|carry|push)/i],
+  ["Strengthening", /\bstrength|resisted/i],
+  ["Tendon or ligament protection", /\b(protect|tendon|ligament|tenodesis|repair)/i],
+  ["Permitted motion", /\b(motion|range|ROM|extension block|flexion|extension|rotation|pendulum|mobilis)/i],
+  ["Return to activity", /\b(return|sport|work|driv)/i],
+];
+const opPlanCategory = (text) => (OP_PLAN_CATEGORIES.find(([, re]) => re.test(text)) || ["Other restriction"])[0];
+
+function opCombinedPlanConflicts(state) {
+  const procs = opOrderProcs(opSelected(state));
+  if (procs.length < 2) return [];
+  const primary = procs[0];
+  const inPlan = new Set((state.op__planLines || []).filter((l) => l && l.on).map((l) => String(l.text).trim()));
+  const inRehab = new Set((state.op__rehabLines || []).filter((l) => l && l.on).map((l) => String(l.text).trim()));
+  const primaryIn = (cat) => primary.plan.filter((l) => (l.kind === "immobilisation" || l.kind === "restriction") && opPlanCategory(l.text) === cat).map((l) => l.text);
+  const out = [];
+  procs.slice(1).forEach((p) => {
+    p.plan.filter((l) => (l.kind === "immobilisation" || l.kind === "restriction") && !inPlan.has(String(l.text).trim())).forEach((l) => {
+      const category = opPlanCategory(l.text);
+      out.push({ kind: "plan", procedure: p.name, category, text: l.text, primary: primary.name, primarySays: primaryIn(category) });
+    });
+    const phases = (p.rehab && p.rehab.phases) || [];
+    if (phases.length && JSON.stringify(phases) !== JSON.stringify(primary.rehab.phases) && !phases.some((t) => inRehab.has(String(t).trim()))) {
+      out.push({ kind: "rehab", procedure: p.name, category: "Rehabilitation protocol", text: `${p.name} has its own rehabilitation protocol (${phases.length} phases); the rehabilitation follows ${primary.name}.`, primary: primary.name, lines: phases });
+    }
+  });
+  return out;
+}
+
+// ---- Before copying: what is missing or contradictory ---------------------------------------------------------------------------
+// Lightweight and never blocking. "critical" is what would make the note wrong or unsafe to act on; "recommended" is what an
+// experienced reader would expect to find. Nothing here is written into the note.
+const OP_STAGED_FIELDS = { "flexor-tendon-staged-reconstruction": "stage", "shoulder-prosthetic-joint-infection": "procedure", "elbow-prosthetic-joint-infection": "procedure" };
+function opNoteChecks(s) {
+  const procs = opOrderProcs(opSelected(s));
+  const out = [];
+  if (!procs.length) return out;
+  const crit = (text) => out.push({ level: "critical", text });
+  const rec = (text) => out.push({ level: "recommended", text });
+  if (!opHasValue(s.op__side) && procs.some((p) => p.sided)) crit("The side is not recorded.");
+  if (s.op__postop === "Revised" && !opHasValue(s.op__postopText)) crit("The post-operative diagnosis is marked as revised but not described; it is left out of the note until it is.");
+  procs.forEach((p) => { const k = OP_STAGED_FIELDS[p.id]; if (k && !opHasValue(opLocalView(s, p.id)[k])) crit(`${p.name}: the stage is not selected; the steps and the plan depend on it.`); });
+  const lines = procs.flatMap((p, i) => opEffectiveSteps(s, p, procs, i === 0).filter((l) => l.on && opHasValue(l.text)).map((l) => String(l.text).trim()));
+  const findings = procs.some((p) => opFieldLines(p, p.findings, s).length);
+  if (!findings) rec("No operative findings are recorded.");
+  if (!lines.length && !procs.some((p) => opFieldLines(p, p.technique, s).length)) rec("No operative technique is recorded: load the standard steps and edit them, or add your own.");
+  const implants = (s.op__implants || []).some((r) => r && (opHasValue(r.item) || opHasValue(r.size) || opHasValue(r.lot)));
+  if (!implants && lines.some((t) => /\b(anchors?|plates?|screws?|nails?|prosthe\w*|implants?|buttons?|k-wires?|stems?|components?|spacer)\b/i.test(t) && !/\b(removed|removal|explant)/i.test(t))) rec("The steps mention implants, but none are recorded (with lot or serial numbers for traceability).");
+  const seen = new Set(), twice = new Set();
+  lines.forEach((t) => { const k = t.toLowerCase(); if (seen.has(k)) twice.add(t); seen.add(k); });
+  twice.forEach((t) => rec(`The same step is written twice: \u201c${t}\u201d.`));
+  if (s.op__tourniquet === "Not used" && lines.some((t) => /tourniquet|\bTQ\b/i.test(t) && !/not used|no tourniquet/i.test(t))) rec("The tourniquet is recorded as not used, but a step describes one.");
+  if (s.op__drains === "Not used" && lines.some((t) => /\bdrains?\b/i.test(t) && /(placed|inserted|left|closed over)/i.test(t))) rec("Drains are recorded as not used, but a step describes one.");
+  if (s.op__complications === "None" && opHasValue(s.op__complicationsDetail)) rec("Complications are recorded as none, but a description is given.");
+  const conflicts = opCombinedPlanConflicts(s);
+  if (conflicts.length && !s.op__planReviewed) rec(`Combined procedures: ${conflicts.length} restriction${conflicts.length === 1 ? "" : "s"} or protocol${conflicts.length === 1 ? "" : "s"} from the additional procedure${procs.length > 2 ? "s" : ""} ${conflicts.length === 1 ? "is" : "are"} not in the plan. Add or confirm in the post-operative plan.`);
+  procs.forEach((p) => { if (OP_STAGED_FIELDS[p.id] && opHasValue(opLocalView(s, p.id)[OP_STAGED_FIELDS[p.id]]) && !s.op__planEdited) rec(`${p.name}: the pre-filled plan is the same for every stage; confirm the instructions for the stage performed.`); });
+  procs.forEach((p) => { if (p.reviewRequired) rec(`${p.name}: ${p.reviewRequired}`); });
+  // Some of the audit's corrected lines are instructions to the surgeon ("document any drain only when inserted", "to be confirmed for
+  // the selected stage"). Left unedited they would be copied into the record as instructions, so each one still present is named.
+  const instructions = new Set(OP_AUDIT_REWORDS.flatMap((r) => r.to).filter((t) => /\b(document|record the|to be confirmed|to follow|tailor|as actually performed|only if performed|only as documented|if indicated|required;)\b/i.test(t)));
+  const planText = (s.op__planLines || []).filter((l) => l && l.on).map((l) => String(l.text).trim());
+  [...lines, ...planText].filter((t) => instructions.has(t)).forEach((t) => rec(`Replace this instruction with what was done or ordered: \u201c${t}\u201d`));
+  return out;
+}
+
 function opSummaryDetails(proc, state) {
   const v = opLocalView(state, proc.id);
   const parts = [];
@@ -31651,6 +32442,33 @@ function opSummaryDetails(proc, state) {
   });
   return parts;
 }
+// ---- Note Summary version 2 -------------------------------------------------------------------------------------------------------
+// The summary is a transfer code for the post-operative review, not a short note. Version 2 adds, as structured data, what the review
+// needs and the surgeon confirmed: the diagnosis, each procedure's findings and repair or fixation details, implants, the restrictions
+// in the plan (and whether the surgeon changed them), and complications. No names of patients or staff are included. The v1 line is
+// still written above it, so an older copy of the app reads the summary as before.
+function opSummaryPayload(s, procs) {
+  const side = opSideWord(s);
+  const plan = (s.op__planLines || []).filter((l) => l && l.on && opHasValue(l.text)).map((l) => String(l.text).trim());
+  const restrictions = plan.filter((t) => opPlanCategory(t) !== "Other restriction" && !/^(red flags|wound|pain|ice|follow-up)/i.test(t));
+  const dx = s.op__postop === "Revised" && opHasValue(s.op__postopText) ? String(s.op__postopText).trim() : opHasValue(s.op__preop) ? String(s.op__preop).trim() : null;
+  const details = {};
+  procs.forEach((p) => { const d = opSummaryDetails(p, s); if (d.length) details[p.id] = d; });
+  // Implant type and size only, never the lot number; and no free text (the complication's category, not its description), as
+  // with version 1: the summary is copied between screens and must not carry anything that could identify anyone.
+  const implants = (s.op__implants || []).filter((r) => r && (opHasValue(r.item) || opHasValue(r.size))).map((r) => ({ item: opHasValue(r.item) ? String(r.item).trim() : "", size: opHasValue(r.size) ? String(r.size).trim() : "" }));
+  const complications = opHasValue(s.op__complications) && s.op__complications !== "None" ? String(s.op__complications).toLowerCase() : null;
+  return { v: 2, date: s.op__date || null, side: side || null, ids: procs.map((p) => p.id), dx, details, implants, restrictions, restrictionsEdited: !!s.op__planEdited, complications };
+}
+// A short checksum, so a truncated or altered summary is recognised rather than half-read.
+function opChecksum(text) { let h = 0x811c9dc5; for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, "0"); }
+function opB64(text) { return btoa(unescape(encodeURIComponent(text))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+function opUnB64(b64) { const t = b64.replace(/-/g, "+").replace(/_/g, "/"); return decodeURIComponent(escape(atob(t + "===".slice((t.length + 3) % 4)))); }
+function opSummaryV2Token(payload) {
+  const json = JSON.stringify(payload);
+  return `UT-OP v2 | ${payload.date || "-"} | ${payload.side ? payload.side.charAt(0) : "-"} | ${payload.ids.join(",")} | ${opB64(json)} | ${opChecksum(json)}`;
+}
+
 function buildOperationSummary(s) {
   const procs = opOrderProcs(opSelected(s));
   if (!procs.length) return "";
@@ -31662,7 +32480,11 @@ function buildOperationSummary(s) {
   procs.forEach((p) => { const d = opSummaryDetails(p, s); if (d.length) lines.push(`${p.name}: ${d.join("; ")}.`); });
   const implants = (s.op__implants || []).filter((r) => r && (opHasValue(r.item) || opHasValue(r.size)));
   if (implants.length) lines.push(`Implants: ${implants.map((r) => [r.item, r.size].filter(opHasValue).map((x) => String(x).trim()).join(" ")).join("; ")}.`);
+  const payload = opSummaryPayload(s, procs);
+  if (payload.restrictions.length) lines.push(`Restrictions set at surgery${payload.restrictionsEdited ? " (modified by the surgeon)" : ""}: ${payload.restrictions.join("; ")}.`);
+  if (payload.complications) lines.push(`Complications: ${payload.complications}.`);
   lines.push(`UT-OP v1 | ${s.op__date || "-"} | ${side ? side.charAt(0).toUpperCase() : "-"} | ${procs.map((p) => p.id).join(",")}`);
+  lines.push(opSummaryV2Token(payload));
   return lines.join("\n");
 }
 function parseOperationSummaryToken(text) {
@@ -31903,7 +32725,12 @@ function opProtocolForReview(procs, days, periodId) {
   ordered.forEach((p) => p.plan.filter((l) => l.kind === "extra").forEach((l) => { if (!extras.includes(l.text)) extras.push(l.text); }));
   const redFlags = [];
   [...kind("redflags"), primary.rehab.redFlags].forEach((t) => { if (t && !redFlags.includes(t)) redFlags.push(t); });
+  // The other procedures' own immobilisation and restrictions: not merged into the primary's, but returned so they are seen.
+  const primaryLines = new Set(primary.plan.map((l) => l.text));
+  const fromOthers = [];
+  ordered.slice(1).forEach((p) => p.plan.filter((l) => (l.kind === "immobilisation" || l.kind === "restriction") && !primaryLines.has(l.text)).forEach((l) => fromOthers.push({ procedure: p.name, text: l.text, category: opPlanCategory(l.text) })));
   return {
+    fromOthers,
     period, primary, phase: current, nextPhase: next,
     immobilisation: kind("immobilisation"), precautions: [...kind("restriction"), ...extras],
     followup: kind("followup")[0] || null, redFlags, returnTo: primary.rehab.returnTo || null,
@@ -32104,6 +32931,80 @@ function opPostopProtocolPart(po) {
 
 // What pasting an operative note summary fills in. The side is reported but not applied: it belongs to the
 // diagnosis, which the clinician set when the patient was first seen.
+// Reads a pasted summary (v2 preferred, v1 accepted) and checks it. Returns errors (nothing can be applied), warnings (it can, with
+// care), and the proposed changes to the review, each against what is already entered. Nothing is applied here.
+function opReadSummary(text) {
+  const raw = String(text || "");
+  const errors = [], warnings = [];
+  const other = /UT-OP v(\d+)/.exec(raw);
+  const v2 = /UT-OP v2 \| (\S+) \| ([RL-]) \| ([a-z0-9,-]+) \| ([A-Za-z0-9_-]+) \| ([0-9a-f]{8})/.exec(raw);
+  let payload = null, version = null;
+  if (v2) {
+    try {
+      const json = opUnB64(v2[4]);
+      if (opChecksum(json) !== v2[5]) errors.push("The summary is incomplete or has been altered: copy it again from the operative note.");
+      else { payload = JSON.parse(json); version = 2; }
+    } catch (e) { errors.push("The summary is incomplete or has been altered: copy it again from the operative note."); }
+  } else if (/UT-OP v1 \|/.test(raw)) {
+    const v1 = parseOperationSummaryToken(raw);
+    const m = /UT-OP v1 \| (\S+) \| ([RL-]) \| ([a-z0-9,-]+)/.exec(raw);
+    if (m) { payload = { v: 1, date: m[1] === "-" ? null : m[1], side: m[2] === "-" ? null : m[2] === "R" ? "Right" : "Left", ids: m[3].split(",") }; version = 1; }
+    else if (!v1) errors.push("That is not an operation summary. Copy the summary from the operative note preview and paste it here.");
+  } else if (other) errors.push(`This summary is version ${other[1]}, which this version of the app cannot read.`);
+  else errors.push("That is not an operation summary. Copy the summary from the operative note preview and paste it here.");
+  if (!payload) return { errors, warnings, version: null };
+  // the date: a real calendar date, and not in the future
+  if (payload.date) {
+    const d = new Date(`${payload.date}T00:00:00`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.date) || Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== payload.date) { errors.push(`The date of surgery (${payload.date}) is not a valid date.`); payload.date = null; }
+    else if (d.getTime() > Date.now() + 864e5) warnings.push(`The date of surgery (${formatDateDMY(payload.date)}) is in the future.`);
+  } else warnings.push("The summary has no date of surgery, so the follow-up timeline cannot be set from it.");
+  // the procedures: known, and each once
+  const ids = payload.ids || [];
+  const dup = ids.filter((x, i) => ids.indexOf(x) !== i);
+  if (dup.length) warnings.push(`A procedure is listed twice (${[...new Set(dup)].join(", ")}); it is taken once.`);
+  const unique = [...new Set(ids)];
+  const known = unique.filter((id) => opProcedureById(id)), unknown = unique.filter((id) => !opProcedureById(id));
+  if (unknown.length) warnings.push(`Not recognised by this version of the app, and left out: ${unknown.join(", ")}.`);
+  if (!known.length) errors.push("None of the procedures in the summary is recognised.");
+  if (version === 1) warnings.push("This is a version 1 summary: it carries the procedure, the side and the date only. Findings, fixation and restrictions need entering by hand.");
+  return { errors, warnings, version, payload: { ...payload, ids: known } };
+}
+
+// The changes a summary would make to a post-operative review, each marked as filling a blank or replacing what is there.
+function opSummaryChanges(read, current, pastedText) {
+  if (!read || !read.payload || read.errors.length) return [];
+  const p = read.payload; const cur = current || {};
+  const procs = opOrderProcs(p.ids.map(opProcedureById).filter(Boolean));
+  const procedureName = opCap(opJoin(procs.map((x) => opLowerFirstName(x.name))));
+  const details = [];
+  if (read.version === 2) {
+    if (p.dx) details.push(`Diagnosis: ${p.dx}.`);
+    procs.forEach((x) => { if ((p.details || {})[x.id] && p.details[x.id].length) details.push(`${x.name}: ${p.details[x.id].join("; ")}.`); });
+    if ((p.implants || []).length) details.push(`Implants: ${p.implants.map((r) => [r.item, r.size].filter(Boolean).join(" ")).join("; ")}.`);
+    if (p.complications) details.push(`Complications: ${p.complications}.`);
+    if ((p.restrictions || []).length) details.push(`Restrictions set at surgery${p.restrictionsEdited ? " (modified by the surgeon)" : ""}: ${p.restrictions.join("; ")}.`);
+  } else details.push(...opSummaryDetailLines(pastedText));
+  const change = (key, label, proposed, extra) => {
+    const has = opHasValue(cur[key]);
+    if (!opHasValue(proposed) || (has && JSON.stringify(cur[key]) === JSON.stringify(proposed))) return null;
+    return { key, label, current: has ? cur[key] : null, proposed, replace: !has, ...extra };
+  };
+  return [
+    change("procedureName", "Procedure", procedureName, { also: { opModuleIds: procs.map((x) => x.id), opModuleProcedureName: procedureName } }),
+    change("surgeryDate", "Date of surgery", p.date),
+    change("opDetails", "Operative details", details.join("\n")),
+    read.version === 2 ? change("opRestrictions", "Restrictions set at surgery", (p.restrictions || []).length ? p.restrictions : null, { also: { opRestrictionsEdited: !!p.restrictionsEdited } }) : null,
+  ].filter(Boolean);
+}
+
+// Only the changes the clinician kept, as one patch.
+function opPatchFromChanges(changes) {
+  const patch = {};
+  changes.filter((c) => c.replace).forEach((c) => { patch[c.key] = c.proposed; Object.assign(patch, c.also || {}); });
+  return patch;
+}
+
 function opPostopPatchFromSummary(text) {
   const parsed = parseOperationSummaryToken(text);
   if (!parsed) return null;
@@ -32828,6 +33729,63 @@ function OpPitfalls({ items }) {
   );
 }
 
+// The audit's review warning for this operation, on screen only.
+function OpReviewRequired({ text }) {
+  if (!text) return null;
+  return (
+    <div role="note" className="flex items-start gap-2 rounded-xl px-3 py-2.5 mb-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+      <AlertTriangle size={16} color={T.amber} style={{ marginTop: 2, flexShrink: 0 }} />
+      <div className="text-[13px] leading-relaxed" style={{ color: T.amberText }}><span className="font-semibold">Review before use. </span>{text}</div>
+    </div>
+  );
+}
+
+// Combined operations: the additional procedures' restrictions and protocols that the pre-filled plan does not contain.
+function OpCombinedPlanBox({ op, setField }) {
+  const conflicts = opCombinedPlanConflicts(op);
+  if (!conflicts.length && !op.op__planReviewed) return null;
+  const add = (c) => {
+    if (c.kind === "rehab") setField("op__rehabLines", [...(op.op__rehabLines || []), ...c.lines.map((text) => ({ text, on: true }))]);
+    else setField("op__planLines", [...(op.op__planLines || []), { text: c.text, on: true }]);
+  };
+  return (
+    <div className="rounded-xl px-3 py-2.5 mb-3" style={{ background: T.amberTint, border: `1px solid ${T.amber}` }}>
+      <div className="flex items-center gap-2 mb-1">
+        <AlertTriangle size={16} color={T.amber} />
+        <span className="text-[13px] font-semibold" style={{ color: T.amberText }}>Combined procedures: check the plan</span>
+      </div>
+      {conflicts.length > 0 && <div className="text-[13px] mb-2" style={{ color: T.amberText }}>The plan below is the primary procedure&apos;s. These come from the other procedures and are not in it:</div>}
+      {conflicts.map((c, i) => (
+        <div key={i} className="flex items-start gap-2 py-1.5" style={{ borderTop: i ? `1px solid ${T.border}` : "none" }}>
+          <div className="flex-1 min-w-0 text-[13px] leading-relaxed" style={{ color: T.ink }}>
+            <span className="font-semibold">{c.category}</span> ({c.procedure}): {c.kind === "rehab" ? "its own rehabilitation protocol." : c.text}
+            {c.primarySays && c.primarySays.length > 0 && <div style={{ color: T.inkSoft }}>Primary procedure: {c.primarySays.join("; ")}</div>}
+          </div>
+          <button type="button" onClick={() => add(c)} className="shrink-0 rounded-lg px-3 text-[13px] font-semibold active:scale-95" style={{ minHeight: 44, background: T.surface, border: `1px solid ${T.border}`, color: T.tealDark }} aria-label={`Add to ${c.kind === "rehab" ? "the rehabilitation" : "the plan"}: ${c.category}, ${c.procedure}`}>Add</button>
+        </div>
+      ))}
+      <label className="flex items-center gap-2 mt-2 text-[13px] font-medium" style={{ color: T.ink, minHeight: 44 }}>
+        <input type="checkbox" checked={!!op.op__planReviewed} onChange={(e) => setField("op__planReviewed", e.target.checked)} style={{ width: 20, height: 20 }} />
+        I have reviewed the plan for all the procedures
+      </label>
+    </div>
+  );
+}
+
+// Before copying: critical and recommended checks, collapsed to a line when there are none of either.
+function OpNoteChecks({ op }) {
+  const checks = opNoteChecks(op);
+  if (!checks.length) return null;
+  const critical = checks.filter((c) => c.level === "critical"), rec = checks.filter((c) => c.level === "recommended");
+  return (
+    <div role="status" aria-live="polite" className="rounded-xl px-3 py-2.5 mb-3" style={{ background: critical.length ? T.redTint : T.amberTint, border: `1px solid ${critical.length ? T.red : T.amber}` }}>
+      <div className="text-[13px] font-semibold mb-1" style={{ color: critical.length ? T.red : T.amberText }}>Before copying{critical.length ? `: ${critical.length} critical` : ""}{rec.length ? `${critical.length ? ", " : ": "}${rec.length} recommended` : ""}</div>
+      {critical.map((c, i) => <div key={`c${i}`} className="text-[13px] leading-relaxed" style={{ color: T.red }}>{"\u2022"} {c.text}</div>)}
+      {rec.map((c, i) => <div key={`r${i}`} className="text-[13px] leading-relaxed" style={{ color: T.amberText }}>{"\u2022"} {c.text}</div>)}
+    </div>
+  );
+}
+
 function OpProcedureBody({ proc, op, procs, isPrimary, setField, onLoadSteps }) {
   const k = (key) => opKey(proc.id, key);
   const ref = proc.reference;
@@ -32837,6 +33795,7 @@ function OpProcedureBody({ proc, op, procs, isPrimary, setField, onLoadSteps }) 
   const hasReference = ref.indications.length || ref.considerations.length;
   return (
     <div>
+      <OpReviewRequired text={proc.reviewRequired} />
       {hasReference ? (
         <OpGroup title="Reference: tick what applies to this patient">
           {ref.indications.length > 0 && <Field field={{ type: "checkbox", key: k("indications"), label: "Indications", options: ref.indications }} state={op} setField={setField} region={proc.region} />}
@@ -32950,6 +33909,7 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
       body: (
         <>
           {(op.op__planLines || []).length === 0 && <div className="text-[14px] mb-3" style={{ color: T.inkSoft }}>{procs.length ? "No standard plan for this operation yet. Add the lines you want." : "Choose a procedure to pre-fill the plan."}</div>}
+          <OpCombinedPlanBox op={op} setField={setField} />
           <OpLinesEditor lines={op.op__planLines} onChange={(l) => setField("op__planLines", l)} addLabel="Add plan line" noun="Plan line" />
           <OpGroup title="Rehabilitation protocol (for the physiotherapist)">
             <OpLinesEditor lines={op.op__rehabLines} onChange={(l) => setField("op__rehabLines", l)} addLabel="Add rehabilitation line" noun="Rehabilitation line" />
@@ -33070,6 +34030,7 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
               </div>
             )}
             <div className="px-4 py-3" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+              {current.id === "note" && ed.text && <OpNoteChecks op={op} />}
               {ed.text ? <NoteEditor ed={ed} /> : <div className="text-[14px]" style={{ color: T.inkSoft }}>Choose the procedures performed to start the note.</div>}
               {current.id === "note" && onNoteCommentsChange && !ed.isEdited && !ed.editing && <NoteComments value={noteComments || ""} onChange={onNoteCommentsChange} />}
             </div>
@@ -33167,33 +34128,65 @@ function OperationSearch({ selectedIds, onToggle, onClose, onContinue, continueN
    POST-OPERATIVE REVIEW BY PERIOD (screen parts)
 ============================================================================ */
 
-function PostopSummaryImport({ onApply }) {
+function PostopSummaryImport({ onApply, current }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [msg, setMsg] = useState(null);
-  const apply = () => {
-    const r = opPostopPatchFromSummary(text);
-    if (!r) { setMsg({ ok: false, text: "That is not an operation summary. Copy the summary line from the operative note preview and paste it here." }); return; }
-    onApply(r.patch);
-    setMsg({ ok: true, text: r.patch.surgeryDate ? `${r.description} The reasons for this visit, the plan and the next review are set from the follow-up timeline: check and edit them.` : r.description });
-    setText("");
-    setOpen(false);
+  const [check, setCheck] = useState(null); // { read, changes }
+  const close = () => { setOpen(false); setText(""); setCheck(null); };
+  const runCheck = () => {
+    const read = opReadSummary(text);
+    if (read.payload && current && opHasValue(current.side) && read.payload.side && current.side !== read.payload.side) read.warnings.push(`The summary is for the ${read.payload.side.toLowerCase()} side; this review is recorded as ${String(current.side).toLowerCase()}. The side is not changed.`);
+    setCheck({ read, changes: opSummaryChanges(read, current, text) });
+    setMsg(null);
   };
+  const toggle = (i) => setCheck((c) => ({ ...c, changes: c.changes.map((x, j) => (j === i ? { ...x, replace: !x.replace } : x)) }));
+  const apply = () => {
+    const patch = opPatchFromChanges(check.changes);
+    const n = check.changes.filter((c) => c.replace).length;
+    if (n) onApply(patch);
+    setMsg({ ok: true, text: n ? `Filled in ${n} item${n === 1 ? "" : "s"} from the summary.${patch.surgeryDate ? " Anything still empty in this visit's reasons, plan and next review is set from the follow-up timeline: check it." : ""}` : "Nothing was changed." });
+    close();
+  };
+  const show = (v) => (Array.isArray(v) ? v.join("; ") : String(v));
   return (
     <div className="mb-3">
       {!open && (
-        <button onClick={() => { setOpen(true); setMsg(null); }} className="flex items-center gap-1.5 rounded-xl px-3 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>
+        <button onClick={() => { setOpen(true); setMsg(null); }} className="flex items-center gap-1.5 rounded-xl px-3 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, minHeight: 44 }}>
           <ClipboardList size={16} /> Fill from an operative note summary
         </button>
       )}
       {open && (
         <div className="rounded-xl p-3" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
-          <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>Paste the summary line copied from the operative note. It fills in the procedure and the date of surgery.</div>
-          <textarea value={text} onChange={(e) => setText(e.target.value)} aria-label="Operation summary" rows={3} placeholder="UT-OP v1 | 2026-10-13 | R | rcr-arthroscopic" className="w-full rounded-lg px-3 py-2.5 text-[14px]" style={{ border: `1px solid ${T.border}`, background: T.surface, color: T.ink, minHeight: 76 }} />
-          <div className="flex gap-2 mt-2">
-            <button onClick={apply} className="flex-1 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 44 }}>Fill in</button>
-            <button onClick={() => { setOpen(false); setText(""); setMsg(null); }} className="rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>Cancel</button>
-          </div>
+          {!check && (<>
+            <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>Paste the summary copied from the operative note. You will see what it would fill in before anything changes.</div>
+            <textarea value={text} onChange={(e) => setText(e.target.value)} aria-label="Operation summary" rows={3} placeholder="UT-OP v2 | 2026-10-13 | R | rcr-arthroscopic | …" className="w-full rounded-xl px-3 py-2 text-[14px]" style={{ border: `1px solid ${T.border}`, color: T.ink, background: T.surface }} />
+            <div className="flex gap-2 mt-2">
+              <button onClick={runCheck} disabled={!text.trim()} className="flex-1 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 44, opacity: text.trim() ? 1 : 0.6 }}>Check</button>
+              <button onClick={close} className="rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, minHeight: 44 }}>Cancel</button>
+            </div>
+          </>)}
+          {check && (<>
+            {check.read.errors.map((e, i) => <div key={`e${i}`} role="alert" className="text-[13px] leading-relaxed mb-1" style={{ color: T.red }}>{"\u2022"} {e}</div>)}
+            {check.read.warnings.map((w, i) => <div key={`w${i}`} className="text-[13px] leading-relaxed mb-1" style={{ color: T.amberText }}>{"\u2022"} {w}</div>)}
+            {!check.read.errors.length && (<>
+              <div className="text-[13px] font-semibold mt-1 mb-1" style={{ color: T.ink }}>{check.changes.length ? "What the summary would fill in:" : "Everything in the summary is already in this review."}</div>
+              {check.changes.map((c, i) => (
+                <label key={c.key} className="flex items-start gap-2 py-1.5" style={{ borderTop: i ? `1px solid ${T.border}` : "none", minHeight: 44 }}>
+                  <input type="checkbox" checked={c.replace} onChange={() => toggle(i)} aria-label={`${c.current == null ? "Fill" : "Replace"} ${c.label}`} style={{ width: 20, height: 20, marginTop: 2 }} />
+                  <span className="text-[13px] leading-relaxed" style={{ color: T.ink }}>
+                    <span className="font-semibold">{c.label}</span>{c.current == null ? " (empty)" : " (replace what is entered)"}: {show(c.proposed)}
+                    {c.current != null && <span className="block" style={{ color: T.inkSoft }}>Now: {show(c.current)}</span>}
+                  </span>
+                </label>
+              ))}
+            </>)}
+            <div className="flex gap-2 mt-2">
+              {!check.read.errors.length && check.changes.length > 0 && <button onClick={apply} className="flex-1 rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 44 }}>Apply</button>}
+              <button onClick={() => setCheck(null)} className="rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, minHeight: 44 }}>Back</button>
+              <button onClick={close} className="rounded-xl px-4 text-[14px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, minHeight: 44 }}>Cancel</button>
+            </div>
+          </>)}
         </div>
       )}
       {msg && (
@@ -33202,7 +34195,6 @@ function PostopSummaryImport({ onApply }) {
     </div>
   );
 }
-
 // Outcome measures for this review. Only the scores this diagnosis's table puts at this point in the follow-up are shown;
 // any other instrument the table names can be added. A score is written into the note only when it is within its range.
 function PostopScores({ condition, poState, setMany }) {
