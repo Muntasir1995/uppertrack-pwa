@@ -27026,6 +27026,9 @@ function ClassificationBrowser({ onOpenCondition, compact }) {
   // Opens on the first body region; General (open fractures and the like) is one tap away, first in the chips.
   const [region, setRegion] = useState(() => (index.find((r) => r.id !== "general") || index[0] || {}).id || null);
   const [query, setQuery] = useState("");
+  // In the sidebar (compact) each diagnosis starts collapsed to its name; tapping it opens it, and a search opens what matches.
+  const [openDx, setOpenDx] = useState(() => new Set());
+  const toggleDx = (id) => setOpenDx((cur) => { const n = new Set(cur); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const q = query.trim().toLowerCase();
   const matches = (d) => !q || d.name.toLowerCase().includes(q) || d.items.some((it) => it.title.toLowerCase().includes(q) || it.grades.some((g) => g.grade.toLowerCase().includes(q) || (g.text || "").toLowerCase().includes(q)));
   const shown = index.filter((r) => q || r.id === region).map((r) => ({ ...r, subsections: r.subsections.map((s) => ({ ...s, diagnoses: s.diagnoses.filter(matches) })).filter((s) => s.diagnoses.length) })).filter((r) => r.subsections.length);
@@ -27047,12 +27050,25 @@ function ClassificationBrowser({ onOpenCondition, compact }) {
           {r.subsections.map((s) => (
             <section key={s.id} aria-label={`${r.label}: ${s.label}`} className="mb-3">
               <div className="text-[12px] font-semibold uppercase tracking-wide mt-2 mb-1.5" style={{ color: T.inkSoft }}>{s.label}</div>
-              {s.diagnoses.map((d) => (
-                <div key={d.id} className="rounded-2xl px-3.5 pt-3 pb-1 mb-2" style={{ background: compact ? T.bg : T.surface, border: `1px solid ${T.border}` }}>
-                  <div className="flex items-center justify-between gap-2 mb-1">
+              {s.diagnoses.map((d) => {
+                const open = !compact || !!q || openDx.has(d.id);
+                const count = d.items.length;
+                return (
+                <div key={d.id} className={`rounded-2xl px-3.5 ${open ? "pt-3 pb-1" : "py-0"} mb-2`} style={{ background: compact ? T.bg : T.surface, border: `1px solid ${T.border}` }}>
+                  {compact && !q && (
+                    <button type="button" onClick={() => toggleDx(d.id)} aria-expanded={open} className="w-full flex items-center justify-between gap-2 text-left py-2 active:opacity-70" style={{ minHeight: 48 }}>
+                      <span className="min-w-0">
+                        <span className="block text-[15px] font-bold leading-snug" style={{ color: T.ink }}>{d.name}</span>
+                        <span className="block text-[12px]" style={{ color: T.inkSoft }}>{count} {count === 1 ? "classification" : "classifications"}</span>
+                      </span>
+                      <ChevronRight size={16} color={T.inkSoft} style={{ flexShrink: 0, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />
+                    </button>
+                  )}
+                  {open && (<>
+                  {!(compact && !q) ? (<div className="flex items-center justify-between gap-2 mb-1">
                     <div className="text-[15px] font-bold" style={{ color: T.ink }}>{d.name}</div>
                     {onOpenCondition && d.condition && <button type="button" onClick={() => onOpenCondition(d.condition)} aria-label={`Open the ${d.name} template`} className="shrink-0 text-[13px] font-semibold px-2 inline-flex items-center gap-0.5" style={{ color: T.teal, minHeight: 44 }}>Template <ChevronRight size={14} /></button>}
-                  </div>
+                  </div>) : (onOpenCondition && d.condition && <div className="flex justify-end -mt-1"><button type="button" onClick={() => onOpenCondition(d.condition)} aria-label={`Open the ${d.name} template`} className="text-[13px] font-semibold px-2 inline-flex items-center gap-0.5" style={{ color: T.teal, minHeight: 44 }}>Template <ChevronRight size={14} /></button></div>)}
                   {d.items.map((it, i) => <ClassificationCard key={i} item={it} />)}
                   {d.usedIn && d.usedIn.length > 0 && (
                     <div className="mt-2 mb-2">
@@ -27064,8 +27080,10 @@ function ClassificationBrowser({ onOpenCondition, compact }) {
                       </div>
                     </div>
                   )}
+                  </>)}
                 </div>
-              ))}
+                );
+              })}
             </section>
           ))}
         </div>
@@ -35507,10 +35525,12 @@ const DESIGN_SYSTEM_CSS = `
   html[data-ut-nav="push"]::view-transition-new(root) { animation-name: ut-vt-push-in; z-index: 2; box-shadow: -10px 0 28px rgba(16,30,43,0.16); }
   html[data-ut-nav="pop"]::view-transition-old(root) { animation-name: ut-vt-pop-out; z-index: 2; box-shadow: -10px 0 28px rgba(16,30,43,0.16); }
   html[data-ut-nav="pop"]::view-transition-new(root) { animation-name: ut-vt-pop-in; z-index: 1; }
-  /* Between home and the tabs: a short cross-fade, no movement. */
+  /* Between home and the tabs: no movement. The old screen stays fully visible underneath while the new one fades in over it.
+     (Fading the old one out at the same time let the dark canvas behind the page show through halfway: a dark flash, measured
+     as a drop of about 40 brightness levels for eight frames.) */
   html[data-ut-nav="fade"] { --ut-nav-ms: 180ms; }
-  html[data-ut-nav="fade"]::view-transition-old(root) { animation-name: ut-vt-fade-out; animation-timing-function: ease-out; }
-  html[data-ut-nav="fade"]::view-transition-new(root) { animation-name: ut-vt-fade-in; animation-timing-function: ease-out; }
+  html[data-ut-nav="fade"]::view-transition-old(root) { animation-name: none; opacity: 1; z-index: 1; }
+  html[data-ut-nav="fade"]::view-transition-new(root) { animation-name: ut-vt-fade-in; animation-timing-function: ease-out; z-index: 2; }
   @keyframes ut-vt-fade-out { to { opacity: 0; } }
   @keyframes ut-vt-fade-in { from { opacity: 0; } }
   @keyframes ut-vt-push-in  { from { transform: translateX(100%); } }
