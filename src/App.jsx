@@ -35239,8 +35239,12 @@ function applyStandaloneMeta(doc) {
 // ---- Moving between screens -----------------------------------------------------------------------------------------------
 // How deep a screen is, so that a change of screen reads as going forward (a push) or back (a pop).
 const NAV_RANK = { visitType: 0, regions: 1, followupSelect: 1, postopSelect: 1, operativeNote: 1, measures: 1, classifications: 1, notes: 1, evidence: 1, conditions: 2, followupVisit: 2, postopVisit: 2, template: 3 };
+// Home and the four tabs of the bottom bar are peers, like the tabs of an iOS tab bar: moving among them is a short cross-fade,
+// with no sideways movement. The slide is kept for going into a screen and back out of it.
+const TAB_VIEWS = new Set(["visitType", "measures", "classifications", "notes", "evidence"]);
 function navDirection(fromView, toView) {
   if (!fromView || !toView || fromView === toView) return null;     // the same screen, or one we do not know: no movement
+  if (TAB_VIEWS.has(fromView) && TAB_VIEWS.has(toView)) return "fade";
   const a = NAV_RANK[fromView], b = NAV_RANK[toView];
   if (a === undefined || b === undefined) return null;
   return b >= a ? "push" : "pop";
@@ -35503,6 +35507,12 @@ const DESIGN_SYSTEM_CSS = `
   html[data-ut-nav="push"]::view-transition-new(root) { animation-name: ut-vt-push-in; z-index: 2; box-shadow: -10px 0 28px rgba(16,30,43,0.16); }
   html[data-ut-nav="pop"]::view-transition-old(root) { animation-name: ut-vt-pop-out; z-index: 2; box-shadow: -10px 0 28px rgba(16,30,43,0.16); }
   html[data-ut-nav="pop"]::view-transition-new(root) { animation-name: ut-vt-pop-in; z-index: 1; }
+  /* Between home and the tabs: a short cross-fade, no movement. */
+  html[data-ut-nav="fade"] { --ut-nav-ms: 180ms; }
+  html[data-ut-nav="fade"]::view-transition-old(root) { animation-name: ut-vt-fade-out; animation-timing-function: ease-out; }
+  html[data-ut-nav="fade"]::view-transition-new(root) { animation-name: ut-vt-fade-in; animation-timing-function: ease-out; }
+  @keyframes ut-vt-fade-out { to { opacity: 0; } }
+  @keyframes ut-vt-fade-in { from { opacity: 0; } }
   @keyframes ut-vt-push-in  { from { transform: translateX(100%); } }
   @keyframes ut-vt-push-out { to   { transform: translateX(-28%); filter: brightness(0.85); } }
   @keyframes ut-vt-pop-in   { from { transform: translateX(-28%); filter: brightness(0.85); } }
@@ -35761,7 +35771,7 @@ export default function App() {
       return resolved;
     });
     // a change of screen slides; the same screen with other content (another diagnosis) does not
-    const dir = opts && opts.replace ? null : navDirection(screenRef.current && screenRef.current.view, typeof next === "function" ? null : next && next.view);
+    const dir = opts && opts.replace && !opts.animate ? null : navDirection(screenRef.current && screenRef.current.view, typeof next === "function" ? null : next && next.view);
     runNav(dir, change);
   }, [runNav]);
 
@@ -35818,35 +35828,37 @@ export default function App() {
   // section is opened - including the one already showing, so tapping Notes
   // while reading a note returns to the list.
   const [panelNote, setPanelNote] = useState(null);
+  // The bottom bar's tabs. From home (or anywhere else) a tab opens its screen as a new step. Moving from one tab to another
+  // replaces the screen rather than adding a step, so Back never bounces between tabs: it returns to where the tabs were opened
+  // from. Tapping the tab that is open goes home: back the one step when the tabs were opened from home, or to the home page
+  // when they were opened from elsewhere. A sheet open over a tab is closed first, as before.
+  const tabOrigin = useRef(null);
+  const openTab = (target) => {
+    const here = screen.view;
+    if (here === target.view) {
+      if (panelOpen) { setPanelOpen(false); return; }
+      if (tabOrigin.current === "visitType") goBack(); else setScreen({ view: "visitType" });
+      tabOrigin.current = null;
+      return;
+    }
+    setPanelOpen(false);
+    if (TAB_VIEWS.has(here) && here !== "visitType") { setScreen(target, { replace: true, animate: true }); return; }
+    tabOrigin.current = here;
+    setScreen(target);
+  };
   const referenceValue = {
     openPanel: (section) => { setPanelNote(null); setPanelSection(section || null); setPanelVariant(section ? "sheet" : "panel"); setPanelOpen(true); },
     closePanel: () => setPanelOpen(false),
     openAbout: () => { setPanelOpen(false); setAboutOpen(true); },
-    // The Measures tab toggles. From elsewhere it opens the calculators. On the calculators it closes them and returns to the page
-    // before, exactly as Back does; but if another tab's sheet is open over them (that tab is the highlighted one), it only closes
-    // the sheet, so the calculators show again.
-    openMeasures: () => {
-      if (screen.view !== "measures") { setPanelOpen(false); setScreen({ view: "measures" }); return; }
-      if (panelOpen) { setPanelOpen(false); return; }
-      goBack();
-    },
+    // The Measures tab: see openTab.
+    openMeasures: () => openTab({ view: "measures" }),
     noteCount: 0,
     recentCount: 0,
     // Which shortcut is currently showing, so its icon stays filled.
     activeSection: panelOpen ? panelSection : screen.view === "measures" ? "outcomes" : screen.view === "classifications" ? "classifications" : screen.view === "notes" ? "notes" : screen.view === "evidence" ? "evidence" : null,
-    // Notes and Evidence toggle exactly like Classifications and Measures.
-    openTabScreen: (section) => {
-      const target = section === "notes" ? { view: "notes" } : { view: "evidence" };   // written out, so the navigation guard sees both screens
-      if (screen.view !== target.view) { setPanelOpen(false); setScreen(target); return; }
-      if (panelOpen) { setPanelOpen(false); return; }
-      goBack();
-    },
-    // Classifications toggles exactly like Measures.
-    openClassifications: () => {
-      if (screen.view !== "classifications") { setPanelOpen(false); setScreen({ view: "classifications" }); return; }
-      if (panelOpen) { setPanelOpen(false); return; }
-      goBack();
-    },
+    // Notes and Evidence, and Classifications: see openTab. (Each screen is written out, so the navigation guard sees it.)
+    openTabScreen: (section) => openTab(section === "notes" ? { view: "notes" } : { view: "evidence" }),
+    openClassifications: () => openTab({ view: "classifications" }),
   };
   // Notes previewed or copied this session, newest first. In memory only,
   // like recentIds - a clinic list is one app session.
