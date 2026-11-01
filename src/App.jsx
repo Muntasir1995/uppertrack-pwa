@@ -1,6 +1,10 @@
 import React, { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import {
   ChevronDown,
+  ExternalLink,
+  Repeat,
+  CalendarCheck,
+  Stethoscope,
   Hourglass,
   Layers,
   ChevronUp,
@@ -64,6 +68,43 @@ const T = {
   shadowFloating: "0 2px 4px rgba(16,30,43,0.06), 0 12px 24px rgba(16,30,43,0.10), 0 24px 48px rgba(16,30,43,0.12)",
   gradientTeal: "linear-gradient(135deg, #0A5D65, #108378)",
 };
+
+// ---- Shared classification references (one definition, used by every template that needs it) ------------------------------------
+// Gustilo-Anderson is the classification of open fractures in general, not of one fracture: every fracture template that records an
+// open fracture offers the same grade, with this one reference, so the text cannot drift apart between templates.
+const GUSTILO_GRADES = ["I", "II", "IIIA", "IIIB", "IIIC"];
+const GUSTILO_REFERENCE = { type: "info", title: "Gustilo-Anderson grades (reference)", items: [
+  "I \u2013 A clean wound shorter than 1 cm.",
+  "II \u2013 A wound longer than 1 cm without extensive soft-tissue damage, flaps or avulsion.",
+  "IIIA \u2013 Extensive soft-tissue damage, or a high-energy injury, with adequate soft-tissue cover of the bone.",
+  "IIIB \u2013 Extensive soft-tissue loss with periosteal stripping and exposed bone, usually needing flap cover.",
+  "IIIC \u2013 An arterial injury needing repair.",
+  "Gustilo and Anderson (J Bone Joint Surg Am, 1976); type III subdivided by Gustilo, Mendoza and Williams (J Trauma, 1984). The grade applies to open fractures in any region and is confirmed at debridement.",
+  "Reference text added on 1 November 2026: draft for surgeon review.",
+] };
+const gustiloField = (key = "openGrade") => ({ type: "select", key, label: "Gustilo-Anderson grade (open fracture)", options: GUSTILO_GRADES, columns: 5, noteLabel: "Open fracture grade" });
+// Hamada: radiographic grading of cuff tear arthropathy, with Walch's division of grade 4.
+// What each Hamada grade writes in a note, with what it means (as Favard's types do).
+const HAMADA_NOTE_PHRASES = {
+  "1": "Hamada grade 1 (acromiohumeral interval of 6 mm or more)",
+  "2": "Hamada grade 2 (acromiohumeral interval of 5 mm or less)",
+  "3": "Hamada grade 3 (acromiohumeral interval of 5 mm or less, with acetabularisation of the acromion)",
+  "4A": "Hamada grade 4A (narrowing of the glenohumeral joint without acetabularisation)",
+  "4B": "Hamada grade 4B (narrowing of the glenohumeral joint with acetabularisation)",
+  "5": "Hamada grade 5 (collapse of the humeral head)",
+};
+const hamadaField = () => ({ type: "select", key: "hamadaGrade", label: "Hamada classification (grade)", options: ["1", "2", "3", "4A", "4B", "5"], columns: 6, noteLabel: "Hamada grade", notePhrases: HAMADA_NOTE_PHRASES });
+const HAMADA_REFERENCE = { type: "info", title: "Hamada classification \u2014 cuff tear arthropathy (reference)", items: [
+  "Grade 1 \u2013 Acromiohumeral interval of 6 mm or more.",
+  "Grade 2 \u2013 Acromiohumeral interval of 5 mm or less.",
+  "Grade 3 \u2013 Acromiohumeral interval of 5 mm or less with acetabularisation of the acromion (a concave undersurface).",
+  "Grade 4A \u2013 Narrowing of the glenohumeral joint without acetabularisation.",
+  "Grade 4B \u2013 Narrowing of the glenohumeral joint with acetabularisation.",
+  "Grade 5 \u2013 Collapse of the humeral head.",
+  "Hamada et al. (Clin Orthop Relat Res, 1990), graded on an anteroposterior radiograph; grade 4 divided into 4A and 4B by Walch et al. (J Shoulder Elbow Surg, 2005).",
+  "Reference text added on 1 November 2026: draft for surgeon review.",
+] };
+
 
 /* ============================================================================
    CONDITION DATA
@@ -222,6 +263,7 @@ const rotatorCuffData = {
       fields: [
         { type: "select", key: "diagPrimary", label: "Primary diagnosis", options: ["Tendinopathy", "Partial thickness tear", "Full thickness tear", "Massive tear", "Irreparable tear", "Cuff tear arthropathy"], columns: 2, noteLabel: "Diagnosis" },
         { type: "checkbox", key: "diagTendons", label: "Tendon(s) involved", options: ["SSP", "ISP", "SSC", "Teres Minor"] },
+        { type: "conditional", when: (st) => st.diagPrimary === "Cuff tear arthropathy", fields: [hamadaField(), HAMADA_REFERENCE] },
       ],
     },
     { id: "redflags", index: 7, title: "When to Stop and Reconsider", subtitle: "Red flags — also pinned via header button", fields: [{ type: "redflag", key: "redFlagsChecked" }] },
@@ -1698,6 +1740,9 @@ const gleroarthritisData = {
           E3: "glenoid erosion was Favard type E3 (global glenoid erosion, more severe superiorly)",
           E4: "glenoid erosion was Favard type E4 (erosion predominantly anteroinferior, with glenoid anteversion)",
         } },
+        // Hamada grades the same cuff-deficient shoulder from the acromial side, alongside Favard's glenoid erosion.
+        { ...hamadaField(), imagingGroup: "Classification" },
+        HAMADA_REFERENCE,
         { type: "info", title: "Favard classification \u2014 cuff tear arthropathy (cuff-deficient)", items: [
           "E0 \u2014 superior humeral head migration without glenoid erosion.",
           "E1 \u2014 concentric (medialised) glenoid erosion.",
@@ -1705,6 +1750,7 @@ const gleroarthritisData = {
           "E3 \u2014 global glenoid erosion, more severe superiorly (superior erosion extending into the inferior glenoid).",
           "E4 \u2014 erosion predominantly anteroinferior, with glenoid anteversion and anterior subluxation; the uncommon pattern.",
           "Use Walch for primary OA with an intact cuff and Favard for a cuff-deficient shoulder; the two answer different questions, so record whichever fits.",
+          "In a cuff-deficient shoulder, Hamada and Favard complement each other: Hamada grades the acromial side (superior migration, acetabularisation, joint narrowing, head collapse) and Favard the glenoid erosion, so both can be recorded.",
         ] },
       ],
     },
@@ -4436,8 +4482,8 @@ const distalHumerusFxData = {
           "13C complete articular: C1 simple articular and simple metaphyseal, C2 simple articular and multifragmentary metaphyseal, C3 multifragmentary articular.",
         ] },
         { type: "select", key: "boneQuality", label: "Bone quality", options: ["Good", "Osteopenic", "Severely osteoporotic"], columns: 3, noteLabel: "Bone quality" },
-        { type: "select", key: "openGrade", label: "Gustilo-Anderson grade (if open)", options: ["Not open", "I", "II", "IIIA", "IIIB", "IIIC"], columns: 3, noteLabel: "Open fracture grade" },
-        { type: "info", title: "Gustilo-Anderson grades (reference)", items: ["I – A clean wound shorter than 1 cm.", "II – A wound longer than 1 cm without extensive soft-tissue damage, flaps or avulsion.", "IIIA – Extensive soft-tissue damage, or a high-energy injury, with adequate soft-tissue cover of the bone.", "IIIB – Extensive soft-tissue loss with periosteal stripping and exposed bone, usually needing flap cover.", "IIIC – An arterial injury needing repair.", "Gustilo and Anderson (J Bone Joint Surg Am, 1976); type III subdivided by Gustilo, Mendoza and Williams (J Trauma, 1984). The grade is confirmed at debridement.", "Reference text added on 1 November 2026: draft for surgeon review."] },
+        { type: "select", key: "openGrade", label: "Gustilo-Anderson grade (if open)", options: ["Not open", ...GUSTILO_GRADES], columns: 3, noteLabel: "Open fracture grade" },
+        GUSTILO_REFERENCE,
       ],
     },
     {
@@ -10117,7 +10163,7 @@ const distalRadiusFxData = {
         {
           type: "conditional",
           when: (s) => s.openFracture === "Yes",
-          fields: [{ type: "text", key: "gustiloClassification", label: "Open fracture \u2014 Gustilo classification" }],
+          fields: [gustiloField("gustiloClassification"), GUSTILO_REFERENCE],
         },
         { type: "info", title: "Fracture pattern (pre-operative)", items: ["Record what the radiographs and CT show. Each finding prompts what is usually considered for it; the choice of treatment stays with the surgeon."] },
         { type: "select", key: "drfDisplacement", label: "Fracture pattern \u2014 Displacement", options: ["Volar displacement", "Dorsal displacement"], columns: 1, noteLabel: "fracture pattern" },
@@ -10788,6 +10834,7 @@ const metacarpalFxData = {
         { type: "select", key: "location", label: "Location", options: ["Head", "Neck", "Shaft", "Base"], columns: 4 },
         { type: "select", key: "pattern", label: "Pattern", options: ["Transverse", "Oblique", "Spiral", "Comminuted", "Intra-articular"], columns: 2 },
         { type: "select", key: "openFractureClass", label: "Open fracture", options: ["Yes", "No"], columns: 2 },
+        { type: "conditional", when: (st) => st.openFractureClass === "Yes", fields: [gustiloField(), GUSTILO_REFERENCE] },
         { type: "checkbox", key: "stableFeatures", label: "Stability Assessment \u2014 Stable", options: ["Minimal displacement", "Acceptable angulation", "No rotation"] },
         { type: "checkbox", key: "unstableFeatures", label: "Stability Assessment \u2014 Unstable", options: ["Rotation", "Significant shortening", "Intra-articular", "Multiple fractures", "Open fracture", "Unstable reduction"] },
       ],
@@ -10996,6 +11043,7 @@ const phalangealFxData = {
         // field, matching the repeated-field pattern seen in the other
         // trauma templates in this subsection.
         { type: "select", key: "openFractureClassification", label: "Open fracture", options: ["Yes", "No"], columns: 2 },
+        { type: "conditional", when: (st) => st.openFractureClassification === "Yes", fields: [gustiloField(), GUSTILO_REFERENCE] },
         { type: "checkbox", key: "stableFeatures", label: "Stability Assessment \u2014 Stable features", options: ["Minimal displacement", "Acceptable angulation", "No rotation", "Extra-articular"] },
         { type: "checkbox", key: "unstableFeatures", label: "Stability Assessment \u2014 Unstable features", options: ["Rotation", "Intra-articular displacement", "Condylar involvement", "Comminution", "Open fracture", "Collateral ligament instability"] },
       ],
@@ -12228,6 +12276,7 @@ const clavicleFxData = {
         { type: "info", title: "Reading the radiograph: how far to trust the type", items: ["Observers agree only fairly to moderately on the Neer type (kappa 0.11 to 0.57 across studies, and the lowest of four systems in one multicentre study), but agree very well on displacement (kappa 0.89 in one study). Record the displacement and let it, not the label alone, drive the decision.", "A fracture that looks like type I can hide ruptured CC ligaments (type IIC): in an MRI series about 1 in 20 fractures read as type I were reclassified, which changed the advice from conservative to operative.", "Signs that a type I fracture may be unstable: displacement of 5 mm or more; a CC distance 5 mm or more wider than the other side, or 15 mm or more in absolute terms; or a fracture angle over about 30\u00b0 (approximate, not a validated cut-off). Posterior displacement and angulation are common and easy to miss on one view, so check an axillary lateral.", "If in doubt: CT shows comminution, fragment size and posterior displacement; MRI shows the ligaments and is for when their integrity cannot be decided and the answer would change management. Standard AP and Zanca views, with an axillary lateral and bilateral comparison, come first."] },
         { type: "select", key: "diagDisplacement", label: "Displacement", options: ["Undisplaced", "Minimally displaced", "Displaced (>100% shaft width or shortening >2cm)"], noteLabel: "Displacement" },
         { type: "checkbox", key: "diagAssociated", label: "Associated features", options: ["Comminution", "Floating shoulder", "Open fracture"] },
+        { type: "conditional", when: (st) => (st.diagAssociated || []).includes("Open fracture"), fields: [gustiloField(), GUSTILO_REFERENCE] },
       ],
     },
     {
@@ -15387,12 +15436,12 @@ const WHATS_NEW = [
   {
     when: "31 October 2026",
     items: [
+      "Notes and Evidence now open as their own screens from the bottom bar, like Classifications and Measures. Notes are colour-coded by kind of visit; on a tablet in landscape or a desktop, the open note sits beside the other notes. Evidence is laid out by region and subsection.",
       "Classifications: a new tab at the bottom of the home screen (in place of Recent diagnoses, which stays in the sidebar) and in the sidebar, with every classification in the templates by region and subsection. Tap a grade to see what it means; colour ladders run from mild to severe.",
       "Visits on hold: when a patient leaves for X-rays or an injection, New patient offers to hold the visit; the hourglass at the top right shows how many are on hold and opens them, to resume exactly as they were. Held visits stay in memory only.",
       "Post-operative reviews: the note now reads history, examination, assessment, plan and follow-up; restrictions set at surgery take priority over the standard protocol and are shown with every procedure\u2019s own; a ticked complication shows a procedure-specific suggested approach; and plans that contradict each other are flagged.",
       "Operative notes: your audit of the standards is applied; the note reads in seven parts with closure once after all the technique; combined operations show each procedure\u2019s own restrictions to add or confirm; checks before copying; and a Note Summary that carries confirmed details and previews before it fills anything.",
       "Follow-up visits: record adherence, pain and function, an optional focused re-examination with the diagnosis\u2019s own tests, and when to review sooner; the note adds an assessment and keeps decisions apart from suggestions, and the screen flags plans that contradict each other.",
-      "Clinic notes: what you decided, what was done today and what the pathway suggests are labelled apart; the impression leads with the diagnosis and adds an assessment drawn only from your entries; the patient is described in one sentence; follow-up can record when to review sooner.",
     ],
   },
 ];
@@ -17873,7 +17922,7 @@ async function copyTextRobust(text) {
 // signs) from the automatic lowercasing applied to ordinary checklist text
 // elsewhere in note generation - without this, note text would read "the
 // patient was positive for spurling" instead of "...Spurling".
-const EPONYM_TERMS_RE = /\b(Parsonage|Turner|Jobe|Neer|Hawkins|Spurling|Yergason|Speed|Phalen|Tinel|Finkelstein|Watson|Froment|Wartenberg|McMurray|Lachman|Cozen|Hornblower|Paxinos|Kienb\u00f6ck|Kienbock|Guyon|Dupuytren|Quervain|Volkmann|Colles|Smith|Galeazzi|Monteggia|Bennett|Rolando|Barton|Grashey|Zanca|Stryker|Bankart|Latarjet|Hill-Sachs|Stener|Mason|Rockwood|Eaton|Littler|Tubiana|Palmer|Cruess|Goutallier|Patte|Warner|Outerbridge|Kashiwagi|Lichtman|Essex|Lopresti|Jersey|Mallet|Bado|Sunderland|Seddon|Kapandji|Wassel|Preiser|Panner|Bunnell|Elson|Kleinert|Mayfield|Linscheid|Taleisnik|Geissler|Judet|Velpeau|Bernageau|Adson|Wright|Roos|Halstead|Kanavel|Nalebuff|Millender|Heberden|Bouchard|Paget|Schroetter)\b/;
+const EPONYM_TERMS_RE = /\b(Hamada|Gustilo|Anderson|Parsonage|Turner|Jobe|Neer|Hawkins|Spurling|Yergason|Speed|Phalen|Tinel|Finkelstein|Watson|Froment|Wartenberg|McMurray|Lachman|Cozen|Hornblower|Paxinos|Kienb\u00f6ck|Kienbock|Guyon|Dupuytren|Quervain|Volkmann|Colles|Smith|Galeazzi|Monteggia|Bennett|Rolando|Barton|Grashey|Zanca|Stryker|Bankart|Latarjet|Hill-Sachs|Stener|Mason|Rockwood|Eaton|Littler|Tubiana|Palmer|Cruess|Goutallier|Patte|Warner|Outerbridge|Kashiwagi|Lichtman|Essex|Lopresti|Jersey|Mallet|Bado|Sunderland|Seddon|Kapandji|Wassel|Preiser|Panner|Bunnell|Elson|Kleinert|Mayfield|Linscheid|Taleisnik|Geissler|Judet|Velpeau|Bernageau|Adson|Wright|Roos|Halstead|Kanavel|Nalebuff|Millender|Heberden|Bouchard|Paget|Schroetter)\b/;
 
 // A finding that used to be a lone "Normal" (or "Present", "Intact") tick, which could say nothing of an abnormal one, so that
 // an unticked box meant "not tested" and "abnormal" alike. It is now a choice: Normal or Abnormal (Present or Absent, Intact
@@ -24131,15 +24180,17 @@ function RefIconButton({ section, label, short, icon: Icon, tone, showLabel }) {
   const toCalculators = section === "outcomes" && tone === "glass" && !!ref.openMeasures;
   // On the home bar, Classifications opens the classifications screen (and closes it, like Measures).
   const toClassifications = section === "classifications" && tone === "glass" && !!ref.openClassifications;
+  // Notes and Evidence open their screens too (the sidebar and the sheets keep their lists).
+  const toScreen = (section === "notes" || section === "evidence") && tone === "glass" && !!ref.openTabScreen;
   return (
     <button
       // Pressing the icon of the section that is already showing closes it
       // (whether the list or a saved note is on screen - the Back button in the
       // sheet is what returns from a note to the list). Any other icon switches.
-      onClick={() => (toCalculators ? ref.openMeasures() : toClassifications ? ref.openClassifications() : isOpen ? ref.closePanel() : ref.openPanel(section))}
+      onClick={() => (toCalculators ? ref.openMeasures() : toClassifications ? ref.openClassifications() : toScreen ? ref.openTabScreen(section) : isOpen ? ref.closePanel() : ref.openPanel(section))}
       className={`ut-ref-icon relative flex flex-col items-center shrink-0 ${showLabel ? "gap-1 px-1" : ""}`}
       style={{ minWidth: showLabel ? 60 : 44 }}
-      aria-label={toCalculators ? (isOpen ? "Close outcome measure calculators" : "Open outcome measure calculators") : toClassifications ? (isOpen ? "Close classifications" : "Open classifications") : count ? `Open ${label.toLowerCase()}, ${count}` : `Open ${label.toLowerCase()}`}
+      aria-label={toCalculators ? (isOpen ? "Close outcome measure calculators" : "Open outcome measure calculators") : toClassifications ? (isOpen ? "Close classifications" : "Open classifications") : toScreen && isOpen ? `Close ${label.toLowerCase()}` : count ? `Open ${label.toLowerCase()}, ${count}` : `Open ${label.toLowerCase()}`}
       aria-current={isOpen ? "true" : undefined}
       aria-expanded={isOpen}
       title={toCalculators ? (isOpen ? "Close outcome measures" : "Calculate outcome measures") : isOpen ? `Close ${label.toLowerCase()}` : label}
@@ -26873,6 +26924,9 @@ function classifFromField(f) {
   return { title: String(f.label).trim(), grades: opts.map((o) => { const t = String(o); const m = t.match(/^(.{1,40}?)\s+[\u2013\u2014]\s+(.+)$/) || t.match(/^(.+?)\s*\((.+)\)$/); return m ? { grade: m[1].trim(), text: m[2].trim() } : { grade: t, text: null }; }), notes: [] };
 }
 let CLASSIFICATION_INDEX_CACHE = null;
+const CLASSIF_GENERAL = [
+  { id: "open-fractures", match: /Gustilo/i, title: "Gustilo-Anderson classification", name: "Open fractures", subsection: "Open fractures (any region)" },
+];
 function classificationIndex() {
   if (CLASSIFICATION_INDEX_CACHE) return CLASSIFICATION_INDEX_CACHE;
   const regions = [];
@@ -26904,8 +26958,22 @@ function classificationIndex() {
     });
     if (subs.length) regions.push({ id: regionId, label: region.label, subsections: subs });
   });
-  CLASSIFICATION_INDEX_CACHE = regions;
-  return regions;
+  // Classifications that belong to no single diagnosis (Gustilo-Anderson grades open fractures anywhere) are shown once, in a General
+  // group first, with the templates that use them, instead of under one diagnosis or repeated under several.
+  const general = [];
+  CLASSIF_GENERAL.forEach((g) => {
+    let item = null; const usedIn = [];
+    regions.forEach((r) => r.subsections.forEach((sub) => sub.diagnoses.forEach((d) => {
+      const keep = [];
+      d.items.forEach((it) => { if (g.match.test(it.title)) { if (!item) item = { ...it, title: g.title }; if (!usedIn.some((u) => u.id === d.id)) usedIn.push({ id: d.id, name: d.name, condition: d.condition }); } else keep.push(it); });
+      d.items = keep;
+    })));
+    if (item) general.push({ id: g.id, label: g.subsection, diagnoses: [{ id: g.id, name: g.name, condition: null, usedIn, items: [item] }] });
+  });
+  regions.forEach((r) => r.subsections.forEach((sub) => { sub.diagnoses = sub.diagnoses.filter((d) => d.items.length); }));
+  const kept = regions.map((r) => ({ ...r, subsections: r.subsections.filter((sub) => sub.diagnoses.length) })).filter((r) => r.subsections.length);
+  CLASSIFICATION_INDEX_CACHE = general.length ? [{ id: "general", label: "General", subsections: general }, ...kept] : kept;
+  return CLASSIFICATION_INDEX_CACHE;
 }
 // A grade's colour: a ladder (teal, amber, red) for systems that progress; neutral for the others.
 function classifTone(item, i) {
@@ -26955,7 +27023,8 @@ function ClassificationCard({ item }) {
 // The browser: search, a region at a time (or everything matching the search), subsections, and a card per diagnosis.
 function ClassificationBrowser({ onOpenCondition, compact }) {
   const index = useMemo(() => classificationIndex(), []);
-  const [region, setRegion] = useState(index[0] ? index[0].id : null);
+  // Opens on the first body region; General (open fractures and the like) is one tap away, first in the chips.
+  const [region, setRegion] = useState(() => (index.find((r) => r.id !== "general") || index[0] || {}).id || null);
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
   const matches = (d) => !q || d.name.toLowerCase().includes(q) || d.items.some((it) => it.title.toLowerCase().includes(q) || it.grades.some((g) => g.grade.toLowerCase().includes(q) || (g.text || "").toLowerCase().includes(q)));
@@ -26982,15 +27051,203 @@ function ClassificationBrowser({ onOpenCondition, compact }) {
                 <div key={d.id} className="rounded-2xl px-3.5 pt-3 pb-1 mb-2" style={{ background: compact ? T.bg : T.surface, border: `1px solid ${T.border}` }}>
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="text-[15px] font-bold" style={{ color: T.ink }}>{d.name}</div>
-                    {onOpenCondition && <button type="button" onClick={() => onOpenCondition(d.condition)} aria-label={`Open the ${d.name} template`} className="shrink-0 text-[13px] font-semibold px-2 inline-flex items-center gap-0.5" style={{ color: T.teal, minHeight: 44 }}>Template <ChevronRight size={14} /></button>}
+                    {onOpenCondition && d.condition && <button type="button" onClick={() => onOpenCondition(d.condition)} aria-label={`Open the ${d.name} template`} className="shrink-0 text-[13px] font-semibold px-2 inline-flex items-center gap-0.5" style={{ color: T.teal, minHeight: 44 }}>Template <ChevronRight size={14} /></button>}
                   </div>
                   {d.items.map((it, i) => <ClassificationCard key={i} item={it} />)}
+                  {d.usedIn && d.usedIn.length > 0 && (
+                    <div className="mt-2 mb-2">
+                      <div className="text-[12px] mb-1" style={{ color: T.inkSoft }}>Used in these templates:</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {d.usedIn.map((u) => onOpenCondition
+                          ? <button key={u.id} type="button" onClick={() => onOpenCondition(u.condition)} aria-label={`Open the ${u.name} template`} className="rounded-full px-3 text-[13px] font-semibold inline-flex items-center gap-0.5 active:scale-95" style={{ minHeight: 44, background: T.tealTint, color: T.tealDark }}>{u.name} <ChevronRight size={13} /></button>
+                          : <span key={u.id} className="rounded-full px-3 text-[13px]" style={{ background: T.slateChip, color: T.ink }}>{u.name}</span>)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </section>
           ))}
         </div>
       ))}
+    </div>
+  );
+}
+
+// ---- Notes and Evidence as screens (like Classifications and Measures) -------------------------------------------------------------
+// What kind of visit a saved note came from, read from how each screen saves it (nothing new is stored), and how each kind looks:
+// a colour bar, an icon and a label, so a new visit, a follow-up, a post-operative review or an operative note is told apart at a
+// glance. Red is kept for warnings and not used here.
+function noteVisitType(n) {
+  const id = String((n && n.id) || "");
+  if (id === "followup-visit") return "followup";
+  if (id === "postop-visit") return "postop";
+  if (id === "operative-note") return "operative";
+  if (id === "operative-note:summary") return "summary";
+  if (id === "operative-note:rehab") return "rehab";
+  if (n && n.kind === "physio") return "referral";
+  return "visit";
+}
+const NOTE_TYPES = {
+  visit: { label: "New visit", bar: T.teal, tint: T.tealTint, fg: T.tealDark, icon: Stethoscope },
+  followup: { label: "Follow-up visit", bar: T.green, tint: T.greenTint, fg: T.ink, icon: Repeat },
+  postop: { label: "Post-operative follow-up", bar: T.amber, tint: T.amberTint, fg: T.amberText, icon: CalendarCheck },
+  operative: { label: "Operative note", bar: T.tealDark, tint: T.slateChip, fg: T.ink, icon: Scissors },
+  summary: { label: "Follow-up summary", bar: T.borderStrong, tint: T.slateChip, fg: T.ink, icon: FileText },
+  rehab: { label: "Rehabilitation protocol", bar: T.borderStrong, tint: T.slateChip, fg: T.ink, icon: Dumbbell },
+  referral: { label: "Physio referral", bar: T.borderStrong, tint: T.slateChip, fg: T.ink, icon: Dumbbell },
+};
+const NOTE_FILTERS = [["all", "All"], ["visit", "New visits"], ["followup", "Follow-up"], ["postop", "Post-operative"], ["operative", "Operative"], ["other", "Summaries & referrals"]];
+const noteMatchesFilter = (n, f) => f === "all" || (f === "other" ? ["summary", "rehab", "referral"].includes(noteVisitType(n)) : noteVisitType(n) === f);
+// Wide enough for two columns: a tablet in landscape, or a desktop.
+function useWideLayout(minWidth = 900) {
+  const query = `(min-width: ${minWidth}px)`;
+  const [wide, setWide] = useState(() => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(query).matches);
+  useEffect(() => {
+    if (!window.matchMedia) return undefined;
+    const m = window.matchMedia(query); const on = () => setWide(m.matches);
+    on(); m.addEventListener ? m.addEventListener("change", on) : m.addListener(on);
+    return () => (m.removeEventListener ? m.removeEventListener("change", on) : m.removeListener(on));
+  }, [query]);
+  return wide;
+}
+
+function NoteCard({ note, active, onOpen, compact }) {
+  const t = NOTE_TYPES[noteVisitType(note)];
+  const Icon = t.icon;
+  // A preview: the first line of real content, skipping the title, headings and dividers ("\u2550\u2550 ROTATOR CUFF DISEASE \u2550\u2550").
+  const first = String(note.text || "").split("\n").map((l) => l.trim()).filter((l) => l && /[a-z]/.test(l) && !/[\u2550\u2500=]{2,}|^-{3,}$/.test(l))[0] || "";
+  return (
+    <button type="button" onClick={onOpen} aria-current={active ? "true" : undefined} aria-label={`${t.label}: ${note.title}, ${note.at}`}
+      className="ut-card w-full text-left rounded-2xl overflow-hidden flex active:scale-[0.99] transition"
+      style={{ background: active ? t.tint : T.surface, border: `1px solid ${active ? t.bar : T.border}`, minHeight: 64 }}>
+      <span aria-hidden="true" style={{ width: 6, background: t.bar, flexShrink: 0 }} />
+      <span className="flex-1 min-w-0 px-3 py-2.5">
+        <span className="flex items-center gap-1.5 mb-0.5">
+          <span className="inline-flex items-center gap-1 rounded-full px-2 text-[11px] font-semibold" style={{ background: t.tint, color: t.fg, minHeight: 20, border: `1px solid ${t.bar}` }}><Icon size={12} color={t.fg} /> {t.label}</span>
+          <span className="text-[12px] ml-1" style={{ color: T.inkSoft }}>{note.at}</span>
+        </span>
+        <span className="block text-[15px] font-semibold truncate" style={{ color: T.ink }}>{note.title}</span>
+        {!compact && first && <span className="block text-[13px] truncate" style={{ color: T.inkSoft }}>{first}</span>}
+      </span>
+      <span className="shrink-0 self-center pr-3"><ChevronRight size={16} color={T.inkSoft} /></span>
+    </button>
+  );
+}
+
+// The notes copied in this session. On a phone a note opens in place; on a wide screen it fills the left and the other notes stay in
+// a column on the right, to open directly.
+function NotesScreen({ notes, onBack }) {
+  const wide = useWideLayout();
+  const [filter, setFilter] = useState("all");
+  const [openId, setOpenId] = useState(null);
+  const list = (notes || []).filter((n) => noteMatchesFilter(n, filter));
+  const open = (notes || []).find((n) => n.id === openId) || null;
+  const present = new Set((notes || []).map(noteVisitType));
+  const filters = NOTE_FILTERS.filter(([k]) => k === "all" || (k === "other" ? ["summary", "rehab", "referral"].some((x) => present.has(x)) : present.has(k)));
+  const header = (
+    <div className="px-4 pt-5 pb-2">
+      <button onClick={open && !wide ? () => setOpenId(null) : onBack} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal, minHeight: 44 }}><ArrowLeft size={16} /> {open && !wide ? "All notes" : "Back"}</button>
+      <h1 className="text-[22px] font-bold leading-tight" style={{ color: T.ink }}>{open && !wide ? open.title : "Notes"}</h1>
+      {(!open || wide) && <p className="text-[13px] mt-1" style={{ color: T.inkSoft }}>Notes copied in this session (the last 12), kept until the app is closed.</p>}
+    </div>
+  );
+  const chips = filters.length > 2 && (
+    <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1" style={{ WebkitOverflowScrolling: "touch" }}>
+      {filters.map(([k, label]) => <button key={k} type="button" onClick={() => setFilter(k)} aria-pressed={filter === k} className="shrink-0 rounded-full px-3.5 text-[14px] font-semibold active:scale-95" style={{ minHeight: 44, background: filter === k ? T.gradientTeal : T.surface, color: filter === k ? "#fff" : T.ink, border: `1px solid ${filter === k ? "transparent" : T.border}` }}>{label}</button>)}
+    </div>
+  );
+  const cards = (compact) => <div className="flex flex-col gap-2">{list.map((n) => <NoteCard key={n.id} note={n} compact={compact} active={n.id === openId} onOpen={() => setOpenId(n.id)} />)}</div>;
+  const viewer = open && (
+    <div className="rounded-2xl overflow-hidden" style={{ border: `1px solid ${T.border}`, background: T.surface }}>
+      <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: `1px solid ${T.border}`, borderLeft: `6px solid ${NOTE_TYPES[noteVisitType(open)].bar}` }}>
+        <span className="text-[12px] font-semibold" style={{ color: T.inkSoft }}>{`${NOTE_TYPES[noteVisitType(open)].label} \u00b7 ${open.at}`}</span>
+      </div>
+      <SavedNoteView note={open} />
+    </div>
+  );
+  if (!(notes || []).length) {
+    return (<div className="min-h-screen" style={{ background: T.bg }}><div className="max-w-2xl mx-auto">{header}<div className="px-4"><EmptyState icon={FileText} title="No notes yet" body="Notes appear here once you copy one. They are kept for this session only." /></div></div></div>);
+  }
+  if (wide) {
+    return (
+      <div className="min-h-screen" style={{ background: T.bg }}>
+        <div className="mx-auto" style={{ maxWidth: 1200 }}>
+          {header}
+          <div className="px-4 flex gap-4 items-start">
+            <div className="flex-1 min-w-0" aria-label="Open note">{viewer || <div className="rounded-2xl p-8 text-center text-[14px]" style={{ border: `1px dashed ${T.borderStrong}`, color: T.inkSoft }}>Choose a note on the right to read it here.</div>}</div>
+            <aside aria-label="Other notes" className="shrink-0" style={{ width: 340, position: "sticky", top: "calc(56px + var(--ut-safe-top, 0px))" }}>
+              <div className="text-[12px] font-semibold uppercase tracking-wide mb-2" style={{ color: T.inkSoft }}>Notes in this session</div>
+              {chips}{cards(true)}
+            </aside>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="min-h-screen" style={{ background: T.bg }}>
+      <div className="max-w-2xl mx-auto">{header}<div className="px-4">{open ? viewer : (<>{chips}{cards(false)}</>)}</div></div>
+    </div>
+  );
+}
+
+// The evidence library, laid out like the classifications: search, a region at a time, subsections, a card per diagnosis. The
+// content is the library's own (summary, key points, sources), unchanged.
+function EvidenceScreen({ onBack, onOpenCondition }) {
+  const regions = useMemo(() => Object.entries(REGIONS).map(([id, r]) => ({ id, label: r.label, subsections: (r.subsections || []).map((sub) => ({ id: sub.id, label: sub.label, entries: (sub.conditions || []).filter((c) => CONDITION_EVIDENCE[c.id]).map((c) => ({ c: findConditionById(c.id) || c, ev: CONDITION_EVIDENCE[c.id] })) })).filter((sub) => sub.entries.length) })).filter((r) => r.subsections.length), []);
+  const [region, setRegion] = useState(regions[0] ? regions[0].id : null);
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const hit = (e) => !q || [e.c.name, e.ev.summary, ...(e.ev.points || []), ...((e.ev.links || []).map((l) => l.label))].join(" ").toLowerCase().includes(q);
+  const shown = regions.filter((r) => q || r.id === region).map((r) => ({ ...r, subsections: r.subsections.map((sub) => ({ ...sub, entries: sub.entries.filter(hit) })).filter((sub) => sub.entries.length) })).filter((r) => r.subsections.length);
+  const total = regions.reduce((n, r) => n + r.subsections.reduce((m, sub) => m + sub.entries.length, 0), 0);
+  return (
+    <div className="min-h-screen pb-6" style={{ background: T.bg }}>
+      <div className="px-4 pt-5 pb-2 max-w-2xl lg:max-w-4xl mx-auto">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-[14px] font-semibold mb-3 active:opacity-60" style={{ color: T.teal, minHeight: 44 }}><ArrowLeft size={16} /> Back</button>
+        <h1 className="text-[22px] font-bold leading-tight" style={{ color: T.ink }}>Evidence library</h1>
+        <p className="text-[13px] mt-1" style={{ color: T.inkSoft }}>{"The evidence behind each template\u2019s pathway, by region, with its sources."}</p>
+      </div>
+      <div className="px-4 max-w-2xl lg:max-w-4xl mx-auto">
+        <input value={query} onChange={(e) => setQuery(e.target.value)} type="search" aria-label="Search the evidence" placeholder={`Search ${total} diagnoses, summaries and sources`} className="w-full rounded-xl px-3 text-[15px] mb-2" style={{ minHeight: 44, border: `1px solid ${T.border}`, background: T.surface, color: T.ink }} />
+        {!q && (
+          <div className="flex gap-1.5 overflow-x-auto pb-2 mb-1" style={{ WebkitOverflowScrolling: "touch" }}>
+            {regions.map((r) => <button key={r.id} type="button" onClick={() => setRegion(r.id)} aria-pressed={region === r.id} className="shrink-0 rounded-full px-3.5 text-[14px] font-semibold active:scale-95" style={{ minHeight: 44, background: region === r.id ? T.gradientTeal : T.surface, color: region === r.id ? "#fff" : T.ink, border: `1px solid ${region === r.id ? "transparent" : T.border}` }}>{r.label}</button>)}
+          </div>
+        )}
+        {shown.length === 0 && <div className="text-[14px] py-6 text-center" style={{ color: T.inkSoft }}>{`No evidence matches \u201c${query}\u201d.`}</div>}
+        {shown.map((r) => (
+          <div key={r.id}>
+            {q && <div className="text-[15px] font-bold mt-2 mb-1" style={{ color: T.ink }}>{r.label}</div>}
+            {r.subsections.map((sub) => (
+              <section key={sub.id} aria-label={`${r.label}: ${sub.label}`} className="mb-3">
+                <div className="text-[12px] font-semibold uppercase tracking-wide mt-2 mb-1.5" style={{ color: T.inkSoft }}>{sub.label}</div>
+                {sub.entries.map(({ c, ev }) => {
+                  const reviewed = (ev.points || []).filter((pt) => /^Reviewed against/i.test(pt));
+                  const points = (ev.points || []).filter((pt) => !/^Reviewed against/i.test(pt));
+                  return (
+                    <article key={c.id} aria-label={c.name} className="rounded-2xl px-3.5 pt-3 pb-3 mb-2" style={{ background: T.surface, border: `1px solid ${T.border}` }}>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="text-[15px] font-bold" style={{ color: T.ink }}>{c.name}</div>
+                        {onOpenCondition && <button type="button" onClick={() => onOpenCondition(c)} aria-label={`Open the ${c.name} template`} className="shrink-0 text-[13px] font-semibold px-2 inline-flex items-center gap-0.5" style={{ color: T.teal, minHeight: 44 }}>Template <ChevronRight size={14} /></button>}
+                      </div>
+                      <div className="text-[14px] leading-relaxed mb-2" style={{ color: T.ink }}>{ev.summary}</div>
+                      {points.length > 0 && <ul className="mb-2">{points.map((pt, i) => <li key={i} className="flex gap-2 text-[13px] leading-relaxed mb-1" style={{ color: T.ink }}><span aria-hidden="true" className="shrink-0 mt-2" style={{ width: 6, height: 6, borderRadius: 6, background: T.teal }} /><span>{pt}</span></li>)}</ul>}
+                      {reviewed.map((pt, i) => <div key={`r${i}`} className="flex items-start gap-1.5 text-[12px] leading-relaxed mb-2 rounded-lg px-2 py-1.5" style={{ background: T.greenTint, color: T.ink }}><CheckCircle2 size={14} color={T.green} style={{ marginTop: 1, flexShrink: 0 }} /><span>{pt}</span></div>)}
+                      {(ev.links || []).length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {ev.links.map((l, i) => <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full px-3 text-[13px] font-semibold" style={{ minHeight: 44, background: T.tealTint, color: T.tealDark }}><ExternalLink size={13} color={T.tealDark} /> {l.label}</a>)}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </section>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -34981,7 +35238,7 @@ function applyStandaloneMeta(doc) {
 
 // ---- Moving between screens -----------------------------------------------------------------------------------------------
 // How deep a screen is, so that a change of screen reads as going forward (a push) or back (a pop).
-const NAV_RANK = { visitType: 0, regions: 1, followupSelect: 1, postopSelect: 1, operativeNote: 1, measures: 1, classifications: 1, conditions: 2, followupVisit: 2, postopVisit: 2, template: 3 };
+const NAV_RANK = { visitType: 0, regions: 1, followupSelect: 1, postopSelect: 1, operativeNote: 1, measures: 1, classifications: 1, notes: 1, evidence: 1, conditions: 2, followupVisit: 2, postopVisit: 2, template: 3 };
 function navDirection(fromView, toView) {
   if (!fromView || !toView || fromView === toView) return null;     // the same screen, or one we do not know: no movement
   const a = NAV_RANK[fromView], b = NAV_RANK[toView];
@@ -35576,7 +35833,14 @@ export default function App() {
     noteCount: 0,
     recentCount: 0,
     // Which shortcut is currently showing, so its icon stays filled.
-    activeSection: panelOpen ? panelSection : screen.view === "measures" ? "outcomes" : screen.view === "classifications" ? "classifications" : null,
+    activeSection: panelOpen ? panelSection : screen.view === "measures" ? "outcomes" : screen.view === "classifications" ? "classifications" : screen.view === "notes" ? "notes" : screen.view === "evidence" ? "evidence" : null,
+    // Notes and Evidence toggle exactly like Classifications and Measures.
+    openTabScreen: (section) => {
+      const target = section === "notes" ? { view: "notes" } : { view: "evidence" };   // written out, so the navigation guard sees both screens
+      if (screen.view !== target.view) { setPanelOpen(false); setScreen(target); return; }
+      if (panelOpen) { setPanelOpen(false); return; }
+      goBack();
+    },
     // Classifications toggles exactly like Measures.
     openClassifications: () => {
       if (screen.view !== "classifications") { setPanelOpen(false); setScreen({ view: "classifications" }); return; }
@@ -35827,6 +36091,20 @@ export default function App() {
         </div>
       )}
 
+      {screen.view === "notes" && (
+        <div className="ut-page">
+        <NotesScreen notes={recentNotes} onBack={goBack} />
+        <div aria-hidden="true" className="shrink-0" style={{ height: "var(--ut-homebar-h)" }} />
+        </div>
+      )}
+
+      {screen.view === "evidence" && (
+        <div className="ut-page">
+        <EvidenceScreen onBack={goBack} onOpenCondition={openCondition} />
+        <div aria-hidden="true" className="shrink-0" style={{ height: "var(--ut-homebar-h)" }} />
+        </div>
+      )}
+
       {screen.view === "classifications" && (
         <div className="ut-page">
         <ClassificationsScreen onBack={goBack} onOpenCondition={openCondition} />
@@ -35910,12 +36188,12 @@ export default function App() {
         </div>
       )}
 
-      {(screen.view === "visitType" || screen.view === "measures" || screen.view === "classifications") && <HomeBar />}
+      {["visitType", "measures", "classifications", "notes", "evidence"].includes(screen.view) && <HomeBar />}
 
       <HeldVisitsPanel open={heldOpen} onClose={() => setHeldOpen(false)} visits={heldVisits} inProgress={visitHasContent(session, opNote)} onResume={resumeVisit} onDiscard={discardHeld} />
 
       <SidePanel
-        homeBar={screen.view === "visitType" || screen.view === "measures" || screen.view === "classifications"}
+        homeBar={["visitType", "measures", "classifications", "notes", "evidence"].includes(screen.view)}
         open={panelOpen}
         onClose={() => setPanelOpen(false)}
         recentIds={recentIds}
