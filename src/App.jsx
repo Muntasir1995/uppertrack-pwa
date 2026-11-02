@@ -24149,7 +24149,7 @@ function HoldVisitOption({ onDone }) {
   return (
     <div className="rounded-xl p-3 mb-3" style={{ background: T.tealTint, border: `1px solid ${T.teal}` }}>
       <div className="text-[14px] font-semibold mb-1" style={{ color: T.tealDark }}>Coming back to this patient?</div>
-      <div className="text-[13px] mb-2" style={{ color: T.ink }}>Put this visit on hold (for example while the patient has X-rays or an injection) and resume it from the hourglass at the top right, exactly as it is. Kept in memory until you resume or discard it, or the app is closed.</div>
+      <div className="text-[13px] mb-2" style={{ color: T.ink }}>Resume it later from the hourglass at the top right.</div>
       <input value={label} onChange={(e) => setLabel(e.target.value)} aria-label="Label for the visit on hold (optional)" placeholder="Label (optional), e.g. Room 3 or back from X-ray; avoid names" maxLength={40} className="w-full rounded-xl px-3 py-2 text-[14px] mb-2" style={{ border: `1px solid ${T.border}`, color: T.ink, background: T.surface, minHeight: 44 }} />
       <button onClick={() => { ctx.hold(label); setLabel(""); onDone(); }} disabled={full} className="w-full rounded-xl px-4 py-2.5 font-semibold text-[14px] active:scale-95" style={{ background: T.gradientTeal, color: "#fff", minHeight: 44, opacity: full ? 0.6 : 1 }}>
         {full ? `${HELD_VISITS_MAX} visits are on hold already` : "Hold this visit"}
