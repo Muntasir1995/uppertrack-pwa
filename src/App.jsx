@@ -11125,38 +11125,24 @@ const bennettRolandoFxData = {
   pathway: {
     start: "initial",
     nodes: {
-      initial: { type: "info", title: "Initial Assessment (Trauma Decision Ladder)", text: "Diagnosis \u2192 Apply Trauma Decision Ladder (recognize \u2192 define pattern \u2192 assess CMC congruity \u2192 assess thumb column stability \u2192 determine treatment \u2192 monitor healing \u2192 restore pinch and opposition) \u2192 Assess Thumb Column Principle", next: "stableQ" },
-      stableQ: {
-        type: "question",
-        title: "CMC congruent and stable? (Decision Point 1)",
-        text: "Pathway suggests this decision once the Thumb Column Principle has been assessed. Non-operative management is generally reserved for <1mm displacement/articular step-off with no CMC subluxation \u2014 the deforming pull of abductor pollicis longus makes these fractures prone to late displacement even when initially well-aligned, so most authors favour operative stabilisation once subluxation is present.",
-        options: [
-          { label: "Yes", next: "conservativeTerminal" },
-          { label: "No", next: "subluxationQ" },
-        ],
-      },
-      conservativeTerminal: { type: "terminal", tone: "green", title: "Selected conservative management", text: "Pathway suggests selected conservative management for minimally displaced injuries, then immobilization and progressive rehabilitation." },
-      subluxationQ: {
-        type: "question",
-        title: "CMC subluxation present? (Decision Point 2)",
-        text: "Pathway suggests this check before finalizing the fixation strategy.",
-        options: [
-          { label: "Yes", next: "reductionStep" },
-          { label: "No", next: "patternQ" },
-        ],
-      },
-      reductionStep: { type: "info", title: "Reduction and reassessment", text: "Reduction \u2192 Reassess stability", next: "patternQ" },
-      patternQ: {
-        type: "question",
-        title: "Rolando fracture with comminution? (Decision Point 3)",
-        text: "Pathway suggests this check once subluxation has been addressed.",
-        options: [
-          { label: "Yes", next: "rolandoCTStep" },
-          { label: "No", next: "operativeTerminal" },
-        ],
-      },
-      rolandoCTStep: { type: "info", title: "CT and fixation strategy", text: "CT \u2192 Discuss fixation strategy", next: "operativeTerminal" },
-      operativeTerminal: { type: "terminal", tone: "amber", title: "Discuss reduction and fixation", text: "Pathway suggests shared decision-making, discussing reduction and fixation, then protecting the fixation, early thumb motion when stability permits, and restoring pinch and opposition." },
+      initial: { type: "info", title: "Initial Assessment (Trauma Decision Ladder)", text: "Diagnosis \u2192 Apply Trauma Decision Ladder (recognize \u2192 define pattern \u2192 assess CMC congruity \u2192 assess thumb column stability \u2192 determine treatment \u2192 monitor healing \u2192 restore pinch and opposition) \u2192 Assess Thumb Column Principle", next: "patternQ" },
+      patternQ: {"type": "question", "title": "Fracture pattern? (Decision Point 1)", "text": "Pathway suggests defining the pattern on a true AP (Robert's) and lateral (Gedda or Bett's) view, with an oblique or 30° pronated view when needed; the five patterns are in the diagnosis section. Bennett fractures are about 30% of thumb metacarpal base fractures, about four times as common as Rolando fractures (Younis et al., Cureus 2025).", "options": [{"label": "Extra-articular (oblique or transverse)", "next": "extraQ"}, {"label": "Bennett", "next": "bennettQ"}, {"label": "Rolando", "next": "rolandoCTStep"}, {"label": "Comminuted intra-articular", "next": "comminutedCTStep"}]},
+      extraQ: {"type": "question", "title": "Angulation 30° or less, and stable? (Decision Point 2)", "text": "Pathway suggests this check: up to about 30° of angulation is tolerated through compensation at the trapeziometacarpal joint, and greater angulation warrants manipulation to avoid hyperextension of the MCP joint. Note any palmar comminution (Winterstein fracture).", "options": [{"label": "Yes", "next": "extraConservativeTerminal"}, {"label": "No", "next": "extraReductionStep"}]},
+      extraReductionStep: {"type": "info", "title": "Closed reduction", "text": "Longitudinal traction, dorsal pressure, gentle pronation and thumb extension → reassess stability", "next": "extraStableQ"},
+      extraStableQ: {"type": "question", "title": "Stable after reduction? (Decision Point 3)", "text": "Pathway suggests this check before choosing between a cast and fixation.", "options": [{"label": "Yes", "next": "extraConservativeTerminal"}, {"label": "No", "next": "extraFixTerminal"}]},
+      extraConservativeTerminal: {"type": "terminal", "tone": "green", "title": "Cast and radiographic follow-up", "text": "Pathway suggests a thumb cast (it need not include the distal phalanx), with radiographs to confirm the position is held, then progressive rehabilitation."},
+      extraFixTerminal: {"type": "terminal", "tone": "amber", "title": "Discuss fixation of the extra-articular fracture", "text": "Pathway suggests shared decision-making about fixation: for an unstable oblique fracture, intermetacarpal pinning or open fixation with one or more lag screws; for an unstable transverse fracture, a locking plate (usually a T-plate) through a radiopalmar (Wagner) or dorsal approach; double-row locking plates are associated with less secondary displacement. Then protect the fixation, start thumb motion when stability permits, and restore pinch and opposition."},
+      bennettQ: {"type": "question", "title": "Articular step-off 1 mm or less, with a congruent joint? (Decision Point 2)", "text": "Pathway suggests this check: treatment is advised when the step-off exceeds 1 mm. A cast often fails to hold an unstable Bennett fracture, because abductor pollicis longus pulls the shaft dorsoradially while the thenar muscles adduct it.", "options": [{"label": "Yes", "next": "bennettConservativeTerminal"}, {"label": "No", "next": "bennettReductionStep"}]},
+      bennettConservativeTerminal: {"type": "terminal", "tone": "green", "title": "Selected conservative management", "text": "Pathway suggests conservative management only for an undisplaced, congruent fracture, with close radiographic follow-up because late displacement is common, then progressive rehabilitation."},
+      bennettReductionStep: {"type": "info", "title": "Closed reduction", "text": "Abduct the thumb to open the first web space and relax abductor pollicis longus, then press on the metacarpal base under fluoroscopy → reassess the joint surface", "next": "bennettReducedQ"},
+      bennettReducedQ: {"type": "question", "title": "Congruent after closed reduction (step-off under 1 mm)? (Decision Point 3)", "text": "Pathway suggests this check to choose between percutaneous and open fixation.", "options": [{"label": "Yes", "next": "bennettPinningTerminal"}, {"label": "No", "next": "bennettOpenTerminal"}]},
+      bennettPinningTerminal: {"type": "terminal", "tone": "amber", "title": "Discuss closed reduction and percutaneous pinning", "text": "Pathway suggests shared decision-making about closed reduction and percutaneous pinning, the first-line treatment for most displaced Bennett fractures: intermetacarpal and/or trans-articular K-wires, often without pinning the volar beak fragment. Its risks include pin-site infection, pin migration and loss of reduction. Then protect the fixation, start thumb motion when stability permits, and restore pinch and opposition."},
+      bennettOpenTerminal: {"type": "terminal", "tone": "amber", "title": "Discuss open or arthroscopic-assisted fixation", "text": "Pathway suggests shared decision-making about open reduction and internal fixation (screws, with supplementary K-wires if needed, through a dorsal or palmar approach) or arthroscopic-assisted fixation, which are reserved for irreducible or complex fractures. Open fixation risks tendon adhesion, nerve injury and loss of reduction. Then protect the fixation, start thumb motion when stability permits, and restore pinch and opposition."},
+      rolandoCTStep: {"type": "info", "title": "CT and fragment assessment", "text": "CT (and traction views where available) to define the fragments; closed reduction rarely holds a Rolando fracture, and trans-articular pinning may fail to reduce it and damage the joint", "next": "rolandoQ"},
+      rolandoQ: {"type": "question", "title": "Fragments large enough for screw or plate fixation? (Decision Point 2)", "text": "Pathway suggests this check to choose the fixation.", "options": [{"label": "Yes", "next": "rolandoFixTerminal"}, {"label": "No", "next": "comminutedTerminal"}]},
+      rolandoFixTerminal: {"type": "terminal", "tone": "amber", "title": "Discuss open reduction and internal fixation", "text": "Pathway suggests shared decision-making about open reduction with lag screws and/or a locking T-plate, aiming for anatomical reduction and fixation stable enough for early motion. For small basal fragments or a soft-tissue injury, external fixation is an alternative, although pin-site infection is common. Then protect the fixation, start thumb motion when stability permits, and restore pinch and opposition."},
+      comminutedCTStep: {"type": "info", "title": "CT and fragment assessment", "text": "CT to define the fragments, the metacarpal length and the first web space", "next": "comminutedTerminal"},
+      comminutedTerminal: {"type": "terminal", "tone": "amber", "title": "Discuss restoring alignment, length and the web space", "text": "Pathway suggests shared decision-making aimed at restoring joint alignment, metacarpal length and the first web space: external fixation (ligamentotaxis), with limited internal fixation and bone graft where needed, or intermetacarpal pinning; trapeziometacarpal arthroscopy can help reduction and remove loose fragments. Arthrodesis or joint replacement is a salvage for refractory cases. There is no consensus on the best approach. Then protect the fixation, start thumb motion when stability permits, and restore pinch and opposition."},
     },
   },
   sections: [{
@@ -11211,9 +11197,9 @@ const bennettRolandoFxData = {
       title: "Imaging",
       subtitle: "Radiographs; CT for Rolando/complex patterns",
       fields: [
-        { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["AP", "Lateral", "Robert view (when available)", "Bett view (when available)"] },
-        { type: "info", title: "Assess", items: ["Intra-articular step", "Subluxation", "Fragment size", "Comminution"] },
-        { type: "info", title: "CT — indications", items: ["Rolando fracture", "Complex comminution", "Surgical planning", "Uncertain articular anatomy"] },
+        { type: "checkbox", key: "imgViews", label: "Radiographs", options: ["AP", "Lateral", "Robert view (when available)", "Bett view (when available)", "Oblique", "30\u00b0 pronated view", "Traction views (complex patterns)"] },
+        { type: "info", title: "Assess", items: ["Intra-articular step", "Subluxation", "Fragment size", "Comminution", "Articular step-off: treatment is usually advised beyond 1 mm in a Bennett fracture", "Angulation: treatment is usually advised beyond 30\u00b0 in an extra-articular fracture", "Palmar comminution (Winterstein fracture)", "Metacarpal length and the first web space"] },
+        { type: "info", title: "CT — indications", items: ["Rolando fracture", "Complex comminution", "Surgical planning", "Uncertain articular anatomy", "Traction radiographs can also clarify Rolando and comminuted patterns"] },
         { type: "checkbox", key: "radiographsCommon", label: "Radiographs — findings", options: ["No acute bony abnormality", "Fracture", "Displacement", "Angulation", "Comminution", "Intra-articular extension", "Dislocation or subluxation", "Avulsion fragment", "Shortening", "Loss of reduction", "Nonunion", "Malunion", "Hardware in situ"] },
         { type: "text", key: "radiographsFinding", label: "Radiographs — additional detail" },
         { type: "checkbox", key: "ctCommon", label: "CT — findings", options: ["Normal appearances", "Fracture", "Intra-articular extension", "Comminution", "Displacement", "Impaction", "Bone loss", "Loose body", "Nonunion", "Malunion"] },
@@ -11233,7 +11219,10 @@ const bennettRolandoFxData = {
       title: "Diagnosis Classification",
       subtitle: "Injury pattern, stability, articular involvement",
       fields: [
-        { type: "select", key: "injuryPattern", label: "Injury pattern", options: ["Bennett", "Rolando", "Other first metacarpal base fracture"], columns: 1, noteLabel: "Injury pattern" },
+        // The five patterns of Younis et al. (Cureus, 2025); the original three options are kept, so nothing already recorded changes.
+        { type: "select", key: "injuryPattern", label: "Injury pattern", options: ["Bennett", "Rolando", "Comminuted intra-articular", "Extra-articular oblique", "Extra-articular transverse", "Other first metacarpal base fracture"], columns: 1, noteLabel: "Injury pattern" },
+        {"type": "info", "title": "First metacarpal base fracture classification (reference)", "items": ["Extra-articular oblique – An oblique fracture line that spares the joint surface.", "Extra-articular transverse – A transverse fracture line that spares the joint surface; at the metaphyseal-diaphyseal junction it is an epibasal fracture, the most common thumb base fracture. With palmar comminution it is a Winterstein fracture.", "Bennett – An intra-articular two-part fracture-subluxation with a single palmar-ulnar (volar beak) fragment held by the volar oblique ligament; the shaft subluxes dorsoradially (abductor pollicis longus) and adducts (thenar muscles).", "Rolando – A complete intra-articular Y- or T-shaped fracture: a transverse fracture separating the shaft from the base, with the base split into volar and dorsal fragments.", "Comminuted intra-articular – A severely comminuted, complete intra-articular fracture, often regarded as a severe Rolando variant.", "Younis et al., Base of thumb fractures: a review of anatomy, classification, and management (Cureus, 2025). Treatment is usually advised for extra-articular angulation over 30° or a Bennett articular step-off over 1 mm.", "Reference text added on 2 November 2026 from Younis et al. (Cureus, 2025): draft for surgeon review."]},
+        { type: "conditional", when: (st) => st.injuryPattern === "Bennett", fields: [{ type: "select", key: "geddaType", label: "Gedda classification (Bennett)", options: ["Type 1", "Type 2", "Type 3"], columns: 3, noteLabel: "Gedda type", notePhrases: { "Type 1": "Gedda type 1 (intra-articular, with subluxation of the metacarpal)", "Type 2": "Gedda type 2 (impacted through the palmar tip, without subluxation)", "Type 3": "Gedda type 3 (small avulsion fragment with complete dislocation)" } }, {"type": "info", "title": "Gedda classification — Bennett fracture (reference)", "items": ["Type 1 – Intra-articular, with subluxation of the metacarpal, with or without further basal fractures.", "Type 2 – An impacted fracture through the palmar tip, without dislocation or subluxation.", "Type 3 – A small avulsion fragment with complete dislocation of the trapeziometacarpal joint.", "Gedda (Acta Chir Scand Suppl, 1954), as summarised by Younis et al. (Cureus, 2025).", "Reference text added on 2 November 2026 from Younis et al. (Cureus, 2025): draft for surgeon review."]}] },
         { type: "select", key: "stabilityClass", label: "Stability", noteLabel: "Fracture stability", options: ["Stable", "Unstable"], columns: 2 },
         { type: "select", key: "articularInvolvement", label: "Articular involvement", options: ["Minimal", "Moderate", "Severe"], columns: 3 },
         { type: "checkbox", key: "stableFeatures", label: "Stability Assessment \u2014 Stable", options: ["Minimal displacement", "Congruent CMC"] },
@@ -15915,12 +15904,19 @@ const CONDITION_EVIDENCE = {
     ],
   },
   "bennett-rolando-fracture": {
-    summary: "The deforming pull of abductor pollicis longus makes these fractures prone to late displacement even when initially well aligned, so follow-up radiographs matter.",
+    summary: "Treatment follows the fracture pattern: stable extra-articular fractures generally do well in a cast, while displaced intra-articular fractures generally need reduction and fixation, aiming for anatomical reduction to prevent joint incongruity, instability and post-traumatic arthritis (Younis et al., 2025).",
     points: [
+      "The deforming pull of abductor pollicis longus makes these fractures prone to late displacement even when initially well aligned, so follow-up radiographs matter.",
       "Non-operative management is generally reserved for under 1mm displacement with no carpometacarpal subluxation.",
       "Most authors favour operative stabilisation once subluxation is present.",
+      "Treatment is advised for extra-articular angulation over 30\u00b0 or a Bennett articular step-off over 1 mm.",
+      "Closed reduction and percutaneous pinning is the first-line treatment for most displaced Bennett fractures; open and arthroscopic fixation are reserved for irreducible or complex fractures.",
+      "A Rolando fracture rarely holds with closed reduction: open fixation with lag screws or a locking T-plate suits large fragments, and external fixation small fragments or a soft-tissue injury.",
+      "For comminuted fractures there is no consensus: external fixation with limited internal fixation is used, with arthrodesis or joint replacement as salvage.",
+      "Outcomes are poorer with Bennett, Rolando and comminuted patterns and with delayed treatment.",
     ],
     links: [
+      { label: "Younis et al. 2025: base of thumb fractures review (Cureus)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11785513/" },
       { label: "Bennett fracture management", url: PM("Bennett fracture thumb displacement threshold operative fixation") },
     ],
   },
@@ -22487,9 +22483,11 @@ function SidePanel({ open, onClose, recentIds, recentNotes, onOpenCondition, onO
         style={{ background: T.bg, boxShadow: "8px 0 28px rgba(16,30,43,0.18)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between gap-2 px-3 py-2 shrink-0" style={{ background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
+        {/* The same height as the app's top bar (48px under the notch strip above it), so the two line up; the close button
+            looks like the bar's buttons and answers a 44px tap (ut-hit). */}
+        <div className="flex items-center justify-between gap-2 px-3 shrink-0" style={{ height: 48, boxSizing: "border-box", background: T.tealDark, boxShadow: "0 1px 3px rgba(16,30,43,0.15)" }}>
           <span className="font-bold text-[15px] pl-1" style={{ color: "#fff" }}>Reference</span>
-          <button onClick={onClose} aria-label="Close reference panel" className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ minWidth: 44, minHeight: 44, background: "rgba(255,255,255,0.16)" }}>
+          <button onClick={onClose} aria-label="Close reference panel" className="ut-hit shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }}>
             <X size={16} color="#fff" />
           </button>
         </div>
@@ -25386,9 +25384,10 @@ function HeldVisitsPanel({ open, onClose, visits, inProgress, onResume, onDiscar
   return (
     <div className="fixed inset-0 z-50 flex justify-end" style={{ background: "rgba(16,30,43,0.45)" }} onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-label="Visits on hold" className="ut-held-panel h-full w-full flex flex-col" style={{ maxWidth: 400, background: T.bg, boxShadow: "-8px 0 28px rgba(16,30,43,0.18)" }} onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between gap-2 px-3 py-2 shrink-0" style={{ background: T.tealDark, paddingTop: "calc(8px + var(--ut-safe-top, 0px))" }}>
+        {/* The same height as the app's top bar, notch included (TOPBAR_TOP), so the two line up. */}
+        <div className="flex items-center justify-between gap-2 px-3 shrink-0" style={{ background: T.tealDark, paddingTop: "var(--ut-safe-top, 0px)", height: TOPBAR_TOP, boxSizing: "border-box" }}>
           <span className="font-bold text-[15px] pl-1 flex items-center gap-2" style={{ color: "#fff" }}><Hourglass size={16} color="#fff" /> Visits on hold</span>
-          <button onClick={onClose} aria-label="Close visits on hold" className="shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ minWidth: 44, minHeight: 44, background: "rgba(255,255,255,0.16)" }}><X size={16} color="#fff" /></button>
+          <button onClick={onClose} aria-label="Close visits on hold" className="ut-hit shrink-0 flex items-center justify-center rounded-full p-2 active:scale-95 transition" style={{ background: "rgba(255,255,255,0.16)" }}><X size={16} color="#fff" /></button>
         </div>
         <div className="flex-1 overflow-y-auto px-3 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
           {visits.length ? (
