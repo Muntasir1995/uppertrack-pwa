@@ -27283,9 +27283,22 @@ function ClassificationsScreen({ onBack, onOpenCondition }) {
   );
 }
 
-function MeasuresScreen({ values, onChange, onClearOne, onClearAll, onBack }) {
+// The open calculator is part of the navigation (screen.measure), so every Back (this screen's button, the phone's back gesture,
+// the browser's) returns to the list of scores first, and the next Back goes home. Opening a score shows its calculator from the
+// top; going back to the list returns to where it was left.
+function MeasuresScreen({ values, onChange, onClearOne, onClearAll, onBack, selected = null, onSelect }) {
   const ref = React.useContext(ReferenceCtx);
-  const [sel, setSel] = useState(null);
+  const [ownSel, setOwnSel] = useState(null);
+  const sel = onSelect ? selected : ownSel;
+  const listScroll = useRef(0);
+  const setSel = (id) => {
+    if (id) listScroll.current = window.scrollY || 0;
+    if (onSelect) { if (id) onSelect(id); else onBack(); } else setOwnSel(id);
+  };
+  useLayoutEffect(() => {
+    // a calculator opens at its top; the list comes back where it was
+    window.scrollTo(0, sel ? 0 : listScroll.current);
+  }, [sel]);
   const [copied, setCopied] = useState(false);
   const m = MEASURE_CALCULATORS.find((x) => x.id === sel) || null;
   const doCopy = async () => {
@@ -35769,11 +35782,14 @@ export default function App() {
   }, []);
   // The app's own Back button. The system's back (an edge swipe on iOS, Android's back button, the browser's) is not animated
   // here: iOS draws its own swipe, and animating again would double it.
-  const goBack = useCallback(() => {
+  const goBack = useCallback((steps = 1) => {
     appBack.current = true;
     setTimeout(() => { appBack.current = false; }, 600);
-    window.history.back();
+    if (steps > 1) window.history.go(-steps); else window.history.back();
   }, []);
+  // A tab switch from a screen that has a step of its own (an open calculator) first steps back over it, then shows the new tab
+  // in that entry, so no step is left behind to come back to.
+  const pendingTab = useRef(null);
   // Wraps every screen change with a matching history entry. `replace: true`
   // updates the current entry in place instead of adding a new one - used
   // for the very first screen and for popstate-driven restores, where a new
@@ -35802,6 +35818,12 @@ export default function App() {
   useEffect(() => {
     window.history.replaceState(screenToHistoryState({ view: "visitType" }), "");
     const onPopState = (e) => {
+      if (pendingTab.current) {
+        const next = pendingTab.current; pendingTab.current = null; appBack.current = false;
+        window.history.replaceState(screenToHistoryState(next), "");
+        runNav("fade", () => setScreenRaw(next));
+        return;
+      }
       const target = historyStateToScreen(e.state);
       const own = appBack.current; appBack.current = false;
       runNav(own ? navDirection(screenRef.current && screenRef.current.view, target && target.view) : null, () => setScreenRaw(target));
@@ -35855,13 +35877,16 @@ export default function App() {
   const tabOrigin = useRef(null);
   const openTab = (target) => {
     const here = screen.view;
+    // an open calculator is a step of its own on top of the Measures tab
+    const extra = here === "measures" && screen.measure ? 1 : 0;
     if (here === target.view) {
       if (panelOpen) { setPanelOpen(false); return; }
-      if (tabOrigin.current === "visitType") goBack(); else setScreen({ view: "visitType" });
+      if (tabOrigin.current === "visitType") goBack(1 + extra); else setScreen({ view: "visitType" });
       tabOrigin.current = null;
       return;
     }
     setPanelOpen(false);
+    if (extra) { pendingTab.current = target; goBack(); return; }
     if (TAB_VIEWS.has(here) && here !== "visitType") { setScreen(target, { replace: true, animate: true }); return; }
     tabOrigin.current = here;
     setScreen(target);
@@ -36117,7 +36142,8 @@ export default function App() {
 
       {screen.view === "measures" && (
         <div className="ut-page">
-        <MeasuresScreen values={measuresState} onChange={setMeasure} onClearOne={clearMeasure} onClearAll={() => setMeasuresState({})} onBack={goBack} />
+        <MeasuresScreen values={measuresState} onChange={setMeasure} onClearOne={clearMeasure} onClearAll={() => setMeasuresState({})} onBack={goBack}
+          selected={screen.measure || null} onSelect={(id) => setScreen({ view: "measures", measure: id })} />
         {/* room for the tab bar, which stays on this screen for easy switching */}
         <div aria-hidden="true" className="shrink-0" style={{ height: "var(--ut-homebar-h)" }} />
         </div>
