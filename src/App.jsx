@@ -15452,6 +15452,8 @@ const WHATS_NEW = [
 // clipped. SessionBar is py-2 (16px) around a 32px control row.
 // The bar is 48px tall plus whatever the device keeps for its status bar and notch (0 in a browser tab). Everything that sits
 // under the bar, or fills the screen beside it, allows for the same sum.
+// Where a section lands when it is opened or jumped to: just under the top bar, at the bar's real height (notch included).
+const SECTION_LANDING = "calc(48px + var(--ut-safe-top, 0px) + 8px)";
 const TOPBAR_TOP = "calc(48px + var(--ut-safe-top, 0px))";
 
 // Outcome measures referenced by the templates, with what each is for and
@@ -22550,15 +22552,17 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
   // "Next" or a different section header lands the user at that section's
   // top rather than leaving them wherever they happened to be scrolled to
   // - previously this required manually scrolling up every time.
+  // The jump happens before the screen is drawn and without a scrolling animation, so the next section simply appears with its
+  // top just under the top bar.
   const sectionRefs = useRef({});
   const isFirstSectionRender = useRef(true);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isFirstSectionRender.current) {
       isFirstSectionRender.current = false;
       return;
     }
     if (openSection && sectionRefs.current[openSection]) {
-      sectionRefs.current[openSection].scrollIntoView({ behavior: "smooth", block: "start" });
+      sectionRefs.current[openSection].scrollIntoView({ behavior: "auto", block: "start" });
     }
   }, [openSection]);
 
@@ -22876,7 +22880,7 @@ function ConditionTemplate({ condition, state, onFieldChange, session, onOpenCon
         {visibleSections.map((section, sectionIdx) => {
           const nextSection = visibleSections[sectionIdx + 1];
           return (
-          <div key={section.id} ref={(el) => { sectionRefs.current[section.id] = el; }} style={{ scrollMarginTop: 130 }}>
+          <div key={section.id} ref={(el) => { sectionRefs.current[section.id] = el; }} style={{ scrollMarginTop: SECTION_LANDING }}>
           <CollapsibleSection
             index={section.index}
             title={section.title}
@@ -25086,7 +25090,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
 
       <PostopProtocolCard condition={condition} poState={poState} set={set} setMany={(patch) => onChange({ ...ownState, ...patch })} intervalOptions={intervalOptions} />
 
-      <div id="postop-reason" style={{ scrollMarginTop: 120 }} />
+      <div id="postop-reason" style={{ scrollMarginTop: SECTION_LANDING }} />
       <SubLabel>Reason for review</SubLabel>
       {stage && (
         <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>
@@ -25145,7 +25149,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
       )}
       <PostopComplicationGuides po={poState} condition={condition} />
 
-      <div id="postop-plan" style={{ scrollMarginTop: 120 }} />
+      <div id="postop-plan" style={{ scrollMarginTop: SECTION_LANDING }} />
       <PostopSurgeryRestrictions po={poState} set={set} />
       <SubLabel>Follow-up plan</SubLabel>
       <div className="text-[13px] mb-3" style={{ color: T.inkSoft }}>A post-operative plan is not the same decision as a first-presentation Management Pathway — select what applies now that surgery has already been done.</div>
@@ -25157,7 +25161,7 @@ function PostopConditionBlock({ index, condition, poState: ownState, onChange, d
         <InjectionPrompt detail={poState.injectionDetail} onChange={(d) => set("injectionDetail", d)} />
       )}
 
-      <div id="postop-next-review" style={{ scrollMarginTop: 120 }} />
+      <div id="postop-next-review" style={{ scrollMarginTop: SECTION_LANDING }} />
       <SubLabel>Next review</SubLabel>
       <ButtonSelect options={intervalOptions} value={poState.followUpInterval || null} onChange={(v) => set("followUpInterval", v)} columns={2} />
       {poState.followUpInterval === "Other" && (
@@ -34455,10 +34459,10 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
   // Opening a section brings its top into view, as the template screens do, so nothing has to be scrolled to.
   const sectionRefs = useRef({});
   const firstRender = useRef(true);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (firstRender.current) { firstRender.current = false; return; }
     const el = openId && sectionRefs.current[openId];
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el) el.scrollIntoView({ behavior: "auto", block: "start" });
   }, [openId]);
 
   const preopSuggestions = useMemo(() => Array.from(new Set(procs.flatMap((p) => p.preop))), [procs]);
@@ -34562,7 +34566,7 @@ function OperativeNoteScreen({ op, onChange, onGoHome, onNewPatient, onNoteSaved
       </div>
       <div className="px-4 pt-4 max-w-2xl lg:max-w-4xl mx-auto">
         {sections.map((sec, i) => (
-          <div key={sec.id} ref={(el) => { sectionRefs.current[sec.id] = el; }} style={{ scrollMarginTop: 130 }}>
+          <div key={sec.id} ref={(el) => { sectionRefs.current[sec.id] = el; }} style={{ scrollMarginTop: SECTION_LANDING }}>
             <CollapsibleSection
               index={i + 1}
               title={sec.title}
@@ -35037,7 +35041,7 @@ function PostopProtocolCard({ condition, poState, set, setMany, intervalOptions 
   const nextTarget = nextReview ? (nextReview.final ? { interval: "Final", other: null } : opNextReviewOption(intervalOptions, nextReview.next.id)) : null;
   const nextIsSet = !!nextTarget && poState.followUpInterval === nextTarget.interval && (nextTarget.interval !== "Other" || (poState.followUpIntervalOther || "") === (nextTarget.other || ""));
   const applyNext = () => { if (nextTarget) setMany({ followUpInterval: nextTarget.interval, followUpIntervalOther: nextTarget.other || null }); };
-  const goTo = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const goTo = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "auto", block: "start" }); };
   const nextLabel = nextTarget ? (nextTarget.interval === "Other" ? nextTarget.other : nextTarget.interval) : "";
   // what is currently set by the timeline, in words, so the effect is visible where the button is
   const setNow = [
