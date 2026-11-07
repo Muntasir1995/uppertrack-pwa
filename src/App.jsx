@@ -15425,12 +15425,12 @@ const WHATS_NEW = [
   {
     when: "31 October 2026",
     items: [
+      "Post-operative review from a summary: paste the operation summary on the post-operative screen and the right template opens, filled in. Choosing by operation or diagnosis works as before.",
       "Notes and Evidence now open as their own screens from the bottom bar, like Classifications and Measures. Notes are colour-coded by kind of visit; on a tablet in landscape or a desktop, the open note sits beside the other notes. Evidence is laid out by region and subsection.",
       "Classifications: a new tab at the bottom of the home screen (in place of Recent diagnoses, which stays in the sidebar) and in the sidebar, with every classification in the templates by region and subsection. Tap a grade to see what it means; colour ladders run from mild to severe.",
       "Visits on hold: when a patient leaves for X-rays or an injection, New patient offers to hold the visit; the hourglass at the top right shows how many are on hold and opens them, to resume exactly as they were. Held visits stay in memory only.",
       "Post-operative reviews: the note now reads history, examination, assessment, plan and follow-up; restrictions set at surgery take priority over the standard protocol and are shown with every procedure\u2019s own; a ticked complication shows a procedure-specific suggested approach; and plans that contradict each other are flagged.",
       "Operative notes: your audit of the standards is applied; the note reads in seven parts with closure once after all the technique; combined operations show each procedure\u2019s own restrictions to add or confirm; checks before copying; and a Note Summary that carries confirmed details and previews before it fills anything.",
-      "Follow-up visits: record adherence, pain and function, an optional focused re-examination with the diagnosis\u2019s own tests, and when to review sooner; the note adds an assessment and keeps decisions apart from suggestions, and the screen flags plans that contradict each other.",
     ],
   },
 ];
@@ -25766,7 +25766,7 @@ function TemplateSearch({ onSelect, onClose, selectedIds, onContinue }) {
 // Selections persist across region changes, so a patient being reviewed
 // for problems in two regions can be assembled without losing the first
 // set - which is why the count lives in the footer rather than the list.
-function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, title, onSwitch, switchLabel }) {
+function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, title, onSwitch, switchLabel, topSlot = null }) {
   const [regionKey, setRegionKey] = useState(null);
 
   const counts = useMemo(() => {
@@ -25855,6 +25855,8 @@ function FollowupConditionPicker({ selectedIds, onToggle, onContinue, onBack, ti
         </div>
         {onSwitch && <button onClick={onSwitch} className="shrink-0 rounded-xl px-3 text-[13px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>{switchLabel}</button>}
       </div>
+
+      {topSlot}
 
       {regionKey && (
         <div className="px-3 pt-3 lg:hidden">
@@ -33067,6 +33069,34 @@ function opSummaryV2Token(payload) {
   return `UT-OP v2 | ${payload.date || "-"} | ${payload.side ? payload.side.charAt(0) : "-"} | ${payload.ids.join(",")} | ${opB64(json)} | ${opChecksum(json)}`;
 }
 
+// The fingerprint of a summary's readable lines, insensitive to spacing and line wrapping (a record system may reflow them).
+const opSummaryFingerprint = (lines) => opChecksum(lines.join(" ").replace(/\s+/g, " ").trim());
+function opSummaryV3Line(payload, lines) {
+  return `UT-OP v3 | ${payload.date || "-"} | ${payload.side ? payload.side.charAt(0) : "-"} | ${payload.ids.join(",")} | ${opSummaryFingerprint(lines)}`;
+}
+// Version 3: the details are read back from the readable lines above the code line.
+function opReadSummaryV3(raw, m) {
+  const all = String(raw).split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const at = all.findIndex((l) => /^UT-OP v3 \|/.test(l));
+  const text = all.slice(0, at < 0 ? all.length : at);
+  const ids = m[3].split(",");
+  const strip = (t) => String(t).trim().replace(/\.$/, "");
+  const payload = { v: 3, date: m[1] === "-" ? null : m[1], side: m[2] === "-" ? null : m[2] === "R" ? "Right" : "Left", ids, dx: null, details: {}, implants: [], restrictions: [], restrictionsEdited: false, complications: null };
+  let inRestrictions = false;
+  text.forEach((l) => {
+    let x;
+    if ((x = /^Restrictions set at surgery( \(modified by the surgeon\))?:\s*(.*)$/.exec(l))) { inRestrictions = true; payload.restrictionsEdited = !!x[1]; if (x[2]) payload.restrictions.push(...strip(x[2]).split("; ").filter(Boolean)); return; }
+    if (inRestrictions && /^[\u2022\-*]\s*/.test(l)) { payload.restrictions.push(l.replace(/^[\u2022\-*]\s*/, "")); return; }
+    inRestrictions = false;
+    if ((x = /^Diagnosis:\s*(.+)$/.exec(l))) { payload.dx = strip(x[1]); return; }
+    if ((x = /^Implants:\s*(.+)$/.exec(l))) { payload.implants = strip(x[1]).split("; ").filter(Boolean).map((t) => ({ item: t, size: "" })); return; }
+    if ((x = /^Complications:\s*(.+)$/.exec(l))) { payload.complications = strip(x[1]); return; }
+    ids.forEach((id) => { const p = opProcedureById(id); if (p && l.startsWith(`${p.name}: `)) payload.details[id] = strip(l.slice(p.name.length + 2)).split("; ").filter(Boolean); });
+  });
+  const changed = m[4] && opSummaryFingerprint(text) !== m[4];
+  return { payload, changed };
+}
+
 function buildOperationSummary(s) {
   const procs = opOrderProcs(opSelected(s));
   if (!procs.length) return "";
@@ -33079,14 +33109,16 @@ function buildOperationSummary(s) {
   const implants = (s.op__implants || []).filter((r) => r && (opHasValue(r.item) || opHasValue(r.size)));
   if (implants.length) lines.push(`Implants: ${implants.map((r) => [r.item, r.size].filter(opHasValue).map((x) => String(x).trim()).join(" ")).join("; ")}.`);
   const payload = opSummaryPayload(s, procs);
-  if (payload.restrictions.length) lines.push(`Restrictions set at surgery${payload.restrictionsEdited ? " (modified by the surgeon)" : ""}: ${payload.restrictions.join("; ")}.`);
   if (payload.complications) lines.push(`Complications: ${payload.complications}.`);
-  lines.push(`UT-OP v1 | ${s.op__date || "-"} | ${side ? side.charAt(0).toUpperCase() : "-"} | ${procs.map((p) => p.id).join(",")}`);
-  lines.push(opSummaryV2Token(payload));
+  // Restrictions one per line: a restriction can itself contain a semicolon, so they are not run together.
+  if (payload.restrictions.length) { lines.push(`Restrictions set at surgery${payload.restrictionsEdited ? " (modified by the surgeon)" : ""}:`); payload.restrictions.forEach((r) => lines.push(`\u2022 ${r}`)); }
+  // Version 3: the readable lines carry the details, so the code line is short (no encoded copy of them): the date, the side,
+  // the procedures and a fingerprint of the text above, which tells the importer whether the text was changed after copying.
+  lines.push(opSummaryV3Line(payload, lines));
   return lines.join("\n");
 }
 function parseOperationSummaryToken(text) {
-  const m = /UT-OP v1 \| (\d{4}-\d{2}-\d{2}|-) \| ([RL-]) \| ([a-z0-9,-]+)/.exec(String(text || ""));
+  const m = /UT-OP v[123] \| (\d{4}-\d{2}-\d{2}|-) \| ([RL-]) \| ([a-z0-9,-]+)/.exec(String(text || ""));
   if (!m) return null;
   const ids = m[3].split(",").filter((id) => opProcedureById(id));
   return ids.length ? { version: 1, date: m[1] === "-" ? null : m[1], side: m[2] === "-" ? null : m[2] === "R" ? "Right" : "Left", ids } : null;
@@ -33536,8 +33568,13 @@ function opReadSummary(text) {
   const errors = [], warnings = [];
   const other = /UT-OP v(\d+)/.exec(raw);
   const v2 = /UT-OP v2 \| (\S+) \| ([RL-]) \| ([a-z0-9,-]+) \| ([A-Za-z0-9_-]+) \| ([0-9a-f]{8})/.exec(raw);
+  const v3 = /UT-OP v3 \| (\S+) \| ([RL-]) \| ([a-z0-9,-]+)(?: \| ([0-9a-f]{8}))?/.exec(raw);
   let payload = null, version = null;
-  if (v2) {
+  if (v3) {
+    const r = opReadSummaryV3(raw, v3);
+    payload = r.payload; version = 3;
+    if (r.changed) warnings.push("The summary's text has changed since it was copied from the operative note: check each detail below before applying.");
+  } else if (v2) {
     try {
       const json = opUnB64(v2[4]);
       if (opChecksum(json) !== v2[5]) errors.push("The summary is incomplete or has been altered: copy it again from the operative note.");
@@ -33553,8 +33590,11 @@ function opReadSummary(text) {
   if (!payload) return { errors, warnings, version: null };
   // the date: a real calendar date, and not in the future
   if (payload.date) {
-    const d = new Date(`${payload.date}T00:00:00`);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.date) || Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== payload.date) { errors.push(`The date of surgery (${payload.date}) is not a valid date.`); payload.date = null; }
+    // A real calendar date, checked on its own parts in local time. (Comparing with toISOString() converted local midnight to
+    // UTC, which is the previous day east of Greenwich: in Muscat every valid date was refused as "not a valid date".)
+    const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(payload.date);
+    const d = parts ? new Date(+parts[1], +parts[2] - 1, +parts[3]) : new Date(NaN);
+    if (!parts || Number.isNaN(d.getTime()) || d.getFullYear() !== +parts[1] || d.getMonth() !== +parts[2] - 1 || d.getDate() !== +parts[3]) { errors.push(`The date of surgery (${payload.date}) is not a valid date.`); payload.date = null; }
     else if (d.getTime() > Date.now() + 864e5) warnings.push(`The date of surgery (${formatDateDMY(payload.date)}) is in the future.`);
   } else warnings.push("The summary has no date of surgery, so the follow-up timeline cannot be set from it.");
   // the procedures: known, and each once
@@ -33576,12 +33616,12 @@ function opSummaryChanges(read, current, pastedText) {
   const procs = opOrderProcs(p.ids.map(opProcedureById).filter(Boolean));
   const procedureName = opCap(opJoin(procs.map((x) => opLowerFirstName(x.name))));
   const details = [];
-  if (read.version === 2) {
+  if (read.version >= 2) {
     if (p.dx) details.push(`Diagnosis: ${p.dx}.`);
     procs.forEach((x) => { if ((p.details || {})[x.id] && p.details[x.id].length) details.push(`${x.name}: ${p.details[x.id].join("; ")}.`); });
     if ((p.implants || []).length) details.push(`Implants: ${p.implants.map((r) => [r.item, r.size].filter(Boolean).join(" ")).join("; ")}.`);
     if (p.complications) details.push(`Complications: ${p.complications}.`);
-    if ((p.restrictions || []).length) details.push(`Restrictions set at surgery${p.restrictionsEdited ? " (modified by the surgeon)" : ""}: ${p.restrictions.join("; ")}.`);
+    if ((p.restrictions || []).length) details.push(`Restrictions set at surgery${p.restrictionsEdited ? " (modified by the surgeon)" : ""}: ${p.restrictions.map((x) => String(x).replace(/\.$/, "")).join("; ")}.`);
   } else details.push(...opSummaryDetailLines(pastedText));
   const change = (key, label, proposed, extra) => {
     const has = opHasValue(cur[key]);
@@ -33592,7 +33632,7 @@ function opSummaryChanges(read, current, pastedText) {
     change("procedureName", "Procedure", procedureName, { also: { opModuleIds: procs.map((x) => x.id), opModuleProcedureName: procedureName } }),
     change("surgeryDate", "Date of surgery", p.date),
     change("opDetails", "Operative details", details.join("\n")),
-    read.version === 2 ? change("opRestrictions", "Restrictions set at surgery", (p.restrictions || []).length ? p.restrictions : null, { also: { opRestrictionsEdited: !!p.restrictionsEdited } }) : null,
+    read.version >= 2 ? change("opRestrictions", "Restrictions set at surgery", (p.restrictions || []).length ? p.restrictions : null, { also: { opRestrictionsEdited: !!p.restrictionsEdited } }) : null,
   ].filter(Boolean);
 }
 
@@ -33662,7 +33702,18 @@ function opDiagnosisCandidates(p) {
 // The lines of an operation summary that describe the operation (diagnosis, findings and technique, implants), without
 // the heading sentence and without the token.
 function opSummaryDetailLines(text) {
-  return String(text || "").split("\n").map((l) => l.trim()).filter((l) => l && !/^Operation summary:/i.test(l) && !/^UT-OP v\d+/i.test(l));
+  const lines = String(text || "").split("\n").map((l) => l.trim()).filter((l) => l && !/^Operation summary:/i.test(l) && !/^UT-OP v\d+/i.test(l));
+  // a version 3 summary lists the restrictions one per line under their heading: rejoin them into the one sentence the note uses
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    const head = /^(Restrictions set at surgery[^:]*):\s*$/.exec(lines[i]);
+    if (!head) { out.push(lines[i]); continue; }
+    const items = [];
+    while (i + 1 < lines.length && /^[\u2022\-*]\s*/.test(lines[i + 1])) items.push(lines[++i].replace(/^[\u2022\-*]\s*/, ""));
+    // each restriction's own full stop is dropped before joining, so the sentence reads "\u2026 repair; Avoid \u2026", not ".;"
+    if (items.length) out.push(`${head[1]}: ${items.map((x) => x.replace(/\.$/, "")).join("; ")}.`);
+  }
+  return out;
 }
 function opPostopDetailsPart(po) {
   const lines = String((po && po.opDetails) || "").split("\n").map((l) => l.trim()).filter(Boolean);
@@ -35154,7 +35205,101 @@ function opPostopItems(selectedIds, choice) {
     return { p, ids: c.ids, exact: c.exact, dxId: picked ? choice[p.id] : c.ids[0], chosen: !!picked };
   });
 }
-function PostopOperationPicker({ selectedIds, onToggle, choice, onChoice, onContinue, onBack, onSwitch }) {
+// Start a post-operative review from a pasted operation summary, without finding the region and the operation first: the summary
+// names the procedures, each opens the diagnosis template it belongs to (asking only when it could belong to more than one), and
+// each review is filled exactly as the import inside the review fills it (only empty fields, then the follow-up timeline).
+function opPostopFromSummary(text, choice = {}) {
+  const read = opReadSummary(text);
+  if (!read.payload || read.errors.length) return { read, items: [], states: {} };
+  const known = (read.payload.ids || []).filter((id) => opProcedureById(id));
+  const items = opPostopItems(known, choice).filter((it) => it.dxId && findConditionById(it.dxId));
+  const byDx = new Map();
+  items.forEach((it) => { if (!byDx.has(it.dxId)) byDx.set(it.dxId, []); byDx.get(it.dxId).push(it.p.id); });
+  const states = {};
+  byDx.forEach((ids, dxId) => {
+    // each review carries its own operations (and their details); the date, diagnosis and restrictions are the operation's
+    const details = Object.fromEntries(Object.entries(read.payload.details || {}).filter(([id]) => ids.includes(id)));
+    const sub = { ...read, payload: { ...read.payload, ids, details } };
+    const patch = opPatchFromChanges(opSummaryChanges(sub, {}, text));
+    const timeline = opPostopTimelinePatch(patch, followupIntervalChoices(findConditionById(dxId)));
+    states[dxId] = { ...patch, ...timeline };
+  });
+  return { read, items, states };
+}
+
+// The way in: a button under the picker's header, and a panel to paste the summary, check what it found, and start.
+function PostopSummaryStart({ onStart }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [choice, setChoice] = useState({});
+  const [result, setResult] = useState(null);
+  const read = () => setResult(opPostopFromSummary(text, choice));
+  const pick = (opId, dxId) => { const c = { ...choice, [opId]: dxId }; setChoice(c); setResult(opPostopFromSummary(text, c)); };
+  const close = () => { setOpen(false); setText(""); setChoice({}); setResult(null); };
+  const ok = result && !result.read.errors.length && Object.keys(result.states).length > 0;
+  const unchosen = ok ? result.items.filter((i) => i.ids.length > 1 && !i.chosen) : [];
+  const p = result && result.read.payload;
+  return (
+    <>
+      <div className="px-3 pt-3 shrink-0">
+        <div className="max-w-2xl lg:max-w-4xl mx-auto">
+          <button type="button" onClick={() => setOpen(true)} className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-left active:scale-[0.99] transition" style={{ background: T.tealTint, border: `1px solid ${T.teal}`, minHeight: 52 }}>
+            <FileText size={18} color={T.tealDark} />
+            <span className="flex-1 min-w-0">
+              <span className="block text-[14px] font-bold" style={{ color: T.tealDark }}>Have the operation summary?</span>
+              <span className="block text-[12px]" style={{ color: T.inkSoft }}>Paste it to open the right template, filled in</span>
+            </span>
+            <ChevronRight size={16} color={T.tealDark} />
+          </button>
+        </div>
+      </div>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(16,30,43,0.45)" }} onClick={close}>
+          <div role="dialog" aria-modal="true" aria-label="Start from an operation summary" className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl p-4 overflow-y-auto" style={{ background: T.surface, maxHeight: "88vh", paddingBottom: "calc(16px + env(safe-area-inset-bottom, 0px))" }} onClick={(e) => e.stopPropagation()}>
+            <div className="font-bold text-[16px] mb-1" style={{ color: T.ink }}>Start from an operation summary</div>
+            <div className="text-[13px] mb-2" style={{ color: T.inkSoft }}>Paste the summary copied from the operative note. The procedure decides which template opens.</div>
+            <textarea value={text} onChange={(e) => { setText(e.target.value); setResult(null); }} aria-label="Operation summary to start from" rows={5} className="w-full rounded-xl px-3 py-2 text-[14px]" style={{ border: `1px solid ${T.border}`, color: T.ink, background: T.bg }} placeholder={"Operation summary: \u2026\nUT-OP v3 | \u2026"} />
+            {!result && <button type="button" onClick={read} disabled={!text.trim()} className="w-full mt-2 rounded-xl font-semibold text-[15px] active:scale-95" style={{ minHeight: 48, background: text.trim() ? T.gradientTeal : T.slateChip, color: text.trim() ? "#fff" : T.inkSoft }}>Read summary</button>}
+            {result && result.read.errors.length > 0 && (
+              <div role="alert" className="mt-2 rounded-xl px-3 py-2 text-[13px]" style={{ background: T.redTint, color: T.red }}>{result.read.errors.map((e, i) => <div key={i}>{e}</div>)}</div>
+            )}
+            {result && result.read.warnings.length > 0 && (
+              <div role="status" className="mt-2 rounded-xl px-3 py-2 text-[13px]" style={{ background: T.amberTint, color: T.amberText }}>{result.read.warnings.map((w, i) => <div key={i}>{w}</div>)}</div>
+            )}
+            {ok && (
+              <div className="mt-3" aria-label="What the summary contains">
+                <div className="text-[14px] mb-2" style={{ color: T.ink }}>
+                  <span className="font-semibold">{[p.side, p.date ? formatDateDMY(p.date) : null].filter(Boolean).join(" \u00b7 ") || "No side or date in the summary"}</span>
+                </div>
+                {result.items.map((i) => (
+                  <div key={i.p.id} className="rounded-xl px-3 py-2 mb-2" style={{ border: `1px solid ${T.border}` }}>
+                    <div className="text-[14px] font-semibold" style={{ color: T.ink }}>{i.p.name}</div>
+                    {i.ids.length > 1 ? (
+                      <>
+                        <div className="text-[12px] mt-1 mb-1.5" style={{ color: T.inkSoft }}>{i.exact ? "Review under which diagnosis?" : "No clinic diagnosis offers this operation: choose the closest."}</div>
+                        <div role="group" aria-label={`Diagnosis for ${i.p.name}`} className="flex flex-wrap gap-1.5">
+                          {i.ids.map((id) => <button key={id} type="button" aria-pressed={i.chosen && i.dxId === id} onClick={() => pick(i.p.id, id)} className="rounded-full px-3 text-[13px] font-medium active:scale-95" style={{ minHeight: 44, background: i.chosen && i.dxId === id ? T.teal : T.slateChip, color: i.chosen && i.dxId === id ? "#fff" : T.ink }}>{opShortDiagnosis(findConditionById(id).name)}</button>)}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-[12px] mt-0.5" style={{ color: T.inkSoft }}>Opens: {findConditionById(i.dxId).name}</div>
+                    )}
+                  </div>
+                ))}
+                <button type="button" disabled={unchosen.length > 0} onClick={() => { onStart(result); close(); }} className="w-full mt-1 rounded-xl font-semibold text-[15px] active:scale-95" style={{ minHeight: 48, background: unchosen.length ? T.slateChip : T.gradientTeal, color: unchosen.length ? T.inkSoft : "#fff" }}>
+                  {unchosen.length ? "Choose the diagnosis above" : "Start post-operative review"}
+                </button>
+              </div>
+            )}
+            <button type="button" onClick={close} className="w-full mt-2 rounded-xl font-semibold text-[14px]" style={{ minHeight: 44, background: T.slateChip, color: T.ink }}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function PostopOperationPicker({ selectedIds, onToggle, choice, onChoice, onContinue, onBack, onSwitch, topSlot = null }) {
   const [region, setRegion] = useState(undefined);
   const toggle = onToggle;
   const procs = selectedIds.map(opProcedureById).filter(Boolean);
@@ -35172,6 +35317,7 @@ function PostopOperationPicker({ selectedIds, onToggle, choice, onChoice, onCont
         </div>
         <button onClick={onSwitch} className="shrink-0 rounded-xl px-3 text-[13px] font-semibold active:scale-95" style={{ background: T.slateChip, color: T.ink, border: `1px solid ${T.border}`, minHeight: 44 }}>By diagnosis</button>
       </div>
+      {topSlot}
       <div className="px-3 pt-3 pb-28" style={{ flex: "1 1 0%", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div className="max-w-2xl lg:max-w-4xl mx-auto">
           <OpProcedurePicker selectedIds={selectedIds} onToggle={toggle} region={activeRegion} onRegion={(r) => setRegion(r)} />
@@ -36045,6 +36191,23 @@ export default function App() {
     setScreen(snap.screen && snap.screen.view !== "visitType" ? snap.screen : { view: "visitType" }, { replace: true });
   };
   const discardHeld = (id) => setHeldVisits((h) => h.filter((x) => x.id !== id));
+  // From a pasted summary: each diagnosis opened with its operations, and its review filled as the in-review import would.
+  const startPostopFromSummary = useCallback((result) => {
+    const dxIds = Object.keys(result.states);
+    dxIds.forEach((dxId) => {
+      const condition = findConditionById(dxId);
+      if (!condition) return;
+      setSession((s) => {
+        const withCondition = addConditionToSession(s, condition);
+        const prev = (withCondition.statesByConditionId[dxId] || {}).postop || {};
+        return applyConditionUpdate(withCondition, dxId, { postop: { ...prev, ...result.states[dxId] } });
+      });
+    });
+    setFollowupSelectedIds(dxIds);
+    setPostopOpIds([]);
+    setPostopOpChoice({});
+    setScreen({ view: "postopVisit", conditionIds: dxIds });
+  }, []);
   const continueToPostopFromOperations = useCallback((items) => {
     const byDx = new Map();
     items.forEach(({ id, dxId }) => { if (!byDx.has(dxId)) byDx.set(dxId, []); byDx.get(dxId).push(id); });
@@ -36188,7 +36351,7 @@ export default function App() {
       {screen.view === "postopSelect" && (
         <div className="ut-page">
         {postopMode === "operation" ? (
-          <PostopOperationPicker selectedIds={postopOpIds} onToggle={togglePostopOp} choice={postopOpChoice} onChoice={(opId, dxId) => setPostopOpChoice((c) => ({ ...c, [opId]: dxId }))} onContinue={continueToPostopFromOperations} onBack={goHome} onSwitch={() => setPostopMode("diagnosis")} />
+          <PostopOperationPicker selectedIds={postopOpIds} onToggle={togglePostopOp} choice={postopOpChoice} onChoice={(opId, dxId) => setPostopOpChoice((c) => ({ ...c, [opId]: dxId }))} onContinue={continueToPostopFromOperations} topSlot={<PostopSummaryStart onStart={startPostopFromSummary} />} onBack={goHome} onSwitch={() => setPostopMode("diagnosis")} />
         ) : (
           <FollowupConditionPicker
             title="Post-operative Follow-up"
@@ -36197,6 +36360,7 @@ export default function App() {
             onContinue={continueToPostopVisit}
             onBack={goHome}
             onSwitch={() => setPostopMode("operation")}
+            topSlot={<PostopSummaryStart onStart={startPostopFromSummary} />}
             switchLabel="By operation"
           />
         )}
